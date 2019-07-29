@@ -22,28 +22,39 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, const vector<d
   variation = variation_;
 
   // setup jetmass hists
-  TString xtitle = "jet mass";
-  double min = 0;
-  double max = 300;
-  int Nbins = 50;
+  TString xtitleMass = "jet mass";
+  double minMass = 0;
+  double maxMass = 300;
+  int nMass = 150;
+  TString xtitleRho = "rho";
+  double minRho = -10;
+  double maxRho = 2;
+  int nRho = 150;
 
-  TH1F* dummy = new TH1F("dummy", xtitle, Nbins, min, max);
-  h_variationsUP.resize(Nbins_pt, std::vector<TH1F*>(Nbins_eta-1, dummy));
-  h_variationsDOWN.resize(Nbins_pt, std::vector<TH1F*>(Nbins_eta-1, dummy));
+  TH1F* dummy = new TH1F("dummy", "dummy", 1, 0, 1);
+  h_mass_UP.resize(Nbins_pt, std::vector<TH1F*>(Nbins_eta-1, dummy));
+  h_mass_DOWN.resize(Nbins_pt, std::vector<TH1F*>(Nbins_eta-1, dummy));
+  h_rho_UP.resize(Nbins_pt, std::vector<TH1F*>(Nbins_eta-1, dummy));
+  h_rho_DOWN.resize(Nbins_pt, std::vector<TH1F*>(Nbins_eta-1, dummy));
   delete dummy;
 
-  h_central = book<TH1F>("JetMass_central", xtitle, Nbins, min, max);
-  h_central_mjet = book<TH1F>("JetMass_central_mjet", xtitle, Nbins, min, max);
+  h_mass = book<TH1F>("Mass_central", xtitleMass, nMass, minMass, maxMass);
+  h_mass_jet = book<TH1F>("Mass_central_jet", xtitleMass, nMass, minMass, maxMass);
+  h_rho = book<TH1F>("Rho_central", xtitleRho, nRho, minRho, maxRho);
+  h_rho_jet = book<TH1F>("Rho_central_jet", xtitleRho, nRho, minRho, maxRho);
   h_particle_pt = book<TH1F>("particle_pt", "p_T", 50, 0, 50);
   h_particle_eta = book<TH1F>("particle_eta", "eta", 50, -5, 5);
   h_weights = book<TH1F>("weights", "weight", 100, -1, 2);
 
   for(unsigned int i=0; i<Nbins_pt; i++){
     for(unsigned int j=0; j<Nbins_eta; j++){
-      TString mjet_name = "mjet";
+      TString mass_name = "Mass";
+      TString rho_name = "Rho";
       TString bin_name = "_" + to_string(i) + "_" + to_string(j);
-      h_variationsUP[i][j] = book<TH1F>(mjet_name+bin_name+"_up", xtitle, Nbins, min, max);
-      h_variationsDOWN[i][j] = book<TH1F>(mjet_name+bin_name+"_down", xtitle, Nbins, min, max);
+      h_mass_UP[i][j] = book<TH1F>(mass_name+bin_name+"_up", xtitleMass, nMass, minMass, maxMass);
+      h_mass_DOWN[i][j] = book<TH1F>(mass_name+bin_name+"_down", xtitleMass, nMass, minMass, maxMass);
+      h_rho_UP[i][j] = book<TH1F>(rho_name+bin_name+"_up", xtitleRho, nRho, minRho, maxRho);
+      h_rho_DOWN[i][j] = book<TH1F>(rho_name+bin_name+"_down", xtitleRho, nRho, minRho, maxRho);
     }
   }
 }
@@ -76,11 +87,16 @@ void JetMassHists::fill(const Event & event){
 
   // fill central histograms
   double mass = CalculateMJet(particles);
+  double rho = CalculateRho(particles);
   double mjet;
   if(use_SD) mjet = topjets->at(0).softdropmass();
   else       mjet = topjets->at(0).v4().M();
-  h_central->Fill(mass, weight);
-  h_central_mjet->Fill(mjet, weight);
+  double ptjet = topjets->at(0).v4().Pt();
+  double rhojet = TMath::Log(mjet*mjet/(ptjet*ptjet));
+  h_mass->Fill(mass, weight);
+  h_mass_jet->Fill(mjet, weight);
+  h_rho->Fill(rho, weight);
+  h_rho_jet->Fill(rhojet, weight);
 
 
   // fill some particle histograms
@@ -98,8 +114,10 @@ void JetMassHists::fill(const Event & event){
       vector<vector<double>> sf_down = GetSF(i,j,"down");
       vector<PFParticle> new_particles_up = VaryParticles(particles, sf_up);
       vector<PFParticle> new_particles_down = VaryParticles(particles, sf_down);
-      h_variationsUP[i][j]->Fill(CalculateMJet(new_particles_up), weight);
-      h_variationsDOWN[i][j]->Fill(CalculateMJet(new_particles_down), weight);
+      h_mass_UP[i][j]->Fill(CalculateMJet(new_particles_up), weight);
+      h_mass_DOWN[i][j]->Fill(CalculateMJet(new_particles_down), weight);
+      h_rho_UP[i][j]->Fill(CalculateRho(new_particles_up), weight);
+      h_rho_DOWN[i][j]->Fill(CalculateRho(new_particles_down), weight);
     }
   }
 }
@@ -151,6 +169,18 @@ double JetMassHists::CalculateMJet(vector<PFParticle> Particles){
   }
   double mjet = jet_v4.M();
   return mjet;
+}
+
+// calculate jet rho from vector of PF particles
+double JetMassHists::CalculateRho(vector<PFParticle> Particles){
+  LorentzVector jet_v4;
+  for(auto p:Particles){
+    jet_v4 += p.v4() * p.puppiWeight();
+  }
+  double mjet = jet_v4.M();
+  double pt = jet_v4.Pt();
+  double rho = TMath::Log(mjet*mjet/(pt*pt));
+  return rho;
 }
 
 
