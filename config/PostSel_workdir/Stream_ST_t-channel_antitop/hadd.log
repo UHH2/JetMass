@@ -1,0 +1,12 @@
+hadd Target file: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.ST_t-channel_antitop.root
+hadd compression setting for all ouput: 1
+hadd Source file 1: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/PostSel_workdir/uhh2.AnalysisModuleRunner.MC.ST_t-channel_antitop_0.root
+hadd Source file 2: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/PostSel_workdir/uhh2.AnalysisModuleRunner.MC.ST_t-channel_antitop_1.root
+hadd Target path: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.ST_t-channel_antitop.root:/
+hadd Target path: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.ST_t-channel_antitop.root:/JetMass_pt200
+hadd Target path: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.ST_t-channel_antitop.root:/JetMass_pt300
+hadd Target path: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.ST_t-channel_antitop.root:/JetMass_pt400
+hadd Target path: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.ST_t-channel_antitop.root:/JetMass_2jets_pt200
+hadd Target path: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.ST_t-channel_antitop.root:/JetMass_2jets_pt300
+hadd Target path: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.ST_t-channel_antitop.root:/JetMass_2jets_pt400
+hadd Target path: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.ST_t-channel_antitop.root:/SFrame

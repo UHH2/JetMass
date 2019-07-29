@@ -1,0 +1,15 @@
+hadd Target file: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.WJetsToLNu_Pt0100to0250.root
+hadd compression setting for all ouput: 1
+hadd Source file 1: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/PostSel_workdir/uhh2.AnalysisModuleRunner.MC.WJetsToLNu_Pt0100to0250_0.root
+hadd Source file 2: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/PostSel_workdir/uhh2.AnalysisModuleRunner.MC.WJetsToLNu_Pt0100to0250_1.root
+hadd Source file 3: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/PostSel_workdir/uhh2.AnalysisModuleRunner.MC.WJetsToLNu_Pt0100to0250_2.root
+hadd Source file 4: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/PostSel_workdir/uhh2.AnalysisModuleRunner.MC.WJetsToLNu_Pt0100to0250_3.root
+hadd Source file 5: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/PostSel_workdir/uhh2.AnalysisModuleRunner.MC.WJetsToLNu_Pt0100to0250_4.root
+hadd Target path: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.WJetsToLNu_Pt0100to0250.root:/
+hadd Target path: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.WJetsToLNu_Pt0100to0250.root:/JetMass_pt200
+hadd Target path: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.WJetsToLNu_Pt0100to0250.root:/JetMass_pt300
+hadd Target path: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.WJetsToLNu_Pt0100to0250.root:/JetMass_pt400
+hadd Target path: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.WJetsToLNu_Pt0100to0250.root:/JetMass_2jets_pt200
+hadd Target path: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.WJetsToLNu_Pt0100to0250.root:/JetMass_2jets_pt300
+hadd Target path: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.WJetsToLNu_Pt0100to0250.root:/JetMass_2jets_pt400
+hadd Target path: /nfs/dust/cms/user/schwarzd/JetMass/PostSel/uhh2.AnalysisModuleRunner.MC.WJetsToLNu_Pt0100to0250.root:/SFrame
