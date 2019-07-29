@@ -28,7 +28,7 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, const vector<d
   int nMass = 150;
   TString xtitleRho = "rho";
   double minRho = -10;
-  double maxRho = 2;
+  double maxRho = 0;
   int nRho = 150;
 
   TH1F* dummy = new TH1F("dummy", "dummy", 1, 0, 1);
