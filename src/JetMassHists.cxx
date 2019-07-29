@@ -73,8 +73,8 @@ void JetMassHists::fill(const Event & event){
 
   double mass = CalculateMJet(particles);
   double mjet;
-  if(use_SD) mjet = topjets->at(0).v4().M();
-  else       mjet = topjets->at(0).softdropmass();
+  if(use_SD) mjet = topjets->at(0).softdropmass();
+  else       mjet = topjets->at(0).v4().M();
   h_central->Fill(mass, weight);
   h_central_mjet->Fill(mjet, weight);
 
