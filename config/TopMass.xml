@@ -54,9 +54,9 @@
    <ConfigSGE RAM="4" DISK="2" Mail="dennis.schwarz@desy.de" Notification="as" Workdir="PostSel_workdir"/>
 -->
 
-<JobConfiguration JobName="JetMassJob" OutputLevel="INFO">
-  <Library Name="libSUHH2JetMass"/>
-  <Package Name="SUHH2JetMass.par"/>
+<JobConfiguration JobName="TopMassJob" OutputLevel="INFO">
+  <Library Name="libSUHH2TopMass"/>
+  <Package Name="SUHH2TopMass.par"/>
 
 
   <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/" PostFix="" TargetLumi="35867">
@@ -210,7 +210,7 @@
   <Item Name="pileup_directory_data_up" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MyDataPileupHistogram_72383.root" />
   <Item Name="pileup_directory_data_down" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MyDataPileupHistogram_66017.root" />
 
-     <Item Name="AnalysisModule" Value="JetMassModule"/>
+     <Item Name="AnalysisModule" Value="TopMassModule"/>
     </UserConfig>
 
   </Cycle>

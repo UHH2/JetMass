@@ -14,10 +14,10 @@
 using namespace std;
 using namespace uhh2;
 
-class JetMassModule: public AnalysisModule {
+class TopMassModule: public AnalysisModule {
 public:
 
-  explicit JetMassModule(Context & ctx);
+  explicit TopMassModule(Context & ctx);
   virtual bool process(Event & event) override;
 
 private:
@@ -37,7 +37,7 @@ private:
 };
 
 
-JetMassModule::JetMassModule(Context & ctx){
+TopMassModule::TopMassModule(Context & ctx){
 
   isMC = (ctx.get("dataset_type") == "MC");
 
@@ -64,7 +64,7 @@ JetMassModule::JetMassModule(Context & ctx){
 }
 
 
-bool JetMassModule::process(Event & event) {
+bool TopMassModule::process(Event & event) {
 
   if(isMC){
     lumiweight->process(event);
@@ -98,5 +98,5 @@ bool JetMassModule::process(Event & event) {
 }
 
 // as we want to run the ExampleCycleNew directly with AnalysisModuleRunner,
-// make sure the JetMassModule is found by class name. This is ensured by this macro:
-UHH2_REGISTER_ANALYSIS_MODULE(JetMassModule)
+// make sure the TopMassModule is found by class name. This is ensured by this macro:
+UHH2_REGISTER_ANALYSIS_MODULE(TopMassModule)
