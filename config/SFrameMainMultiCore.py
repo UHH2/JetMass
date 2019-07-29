@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 from datetime import datetime
 import sys, time, subprocess
 from ROOT import *
