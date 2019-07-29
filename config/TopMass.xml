@@ -189,11 +189,11 @@
 
   <Item Name="JetCollection"           Value="jetsAk4CHS"/>
   <Item Name="GenJetCollection"        Value="slimmedGenJets"/>
-  <Item Name="TopJetCollection"        Value="jetsAk8CHSSubstructure_SoftDropCHS"/>
+  <Item Name="TopJetCollection"        Value="jetsAk8PuppiSubstructure_SoftDropPuppi"/>
   <Item Name="GenTopJetCollection"     Value="genjetsAk8SubstructureSoftDrop" />
   <Item Name="PFParticleCollection"    Value="PFParticles"/>
 
-  <Item Name="additionalBranches"      Value="jetsAk8PuppiSubstructure_SoftDropPuppi h_rec_weight_kin h_gen_weight_kin h_passed_rec"/>
+  <Item Name="additionalBranches"      Value="h_rec_weight_kin h_gen_weight_kin h_passed_rec"/>
 
   <Item Name="METName"                 Value="slimmedMETs"/>
 

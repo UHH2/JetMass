@@ -22,6 +22,7 @@ private:
   bool use_SD;
   double variation;
   vector<double> ptbins, etabins;
+  unsigned int Nbins_pt, Nbins_eta;
   TH1F *h_central, *h_central_mjet;
   vector<vector<TH1F*>> h_variationsUP;
   vector<vector<TH1F*>> h_variationsDOWN;

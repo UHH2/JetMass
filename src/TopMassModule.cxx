@@ -22,15 +22,13 @@ public:
 
 private:
 
-  //std::unique_ptr<Selection> ;
-  // uhh2::Event::Handle<double> h_rec_weight;
-  // uhh2::Event::Handle<double> h_gen_weight;
   uhh2::Event::Handle<bool> h_passed_rec;
   std::unique_ptr<AnalysisModule> PUreweight, lumiweight, sf_btag, muo_tight_noniso_SF, muo_trigger_SF;
 
 
   std::unique_ptr<Hists> h_mjet_2jets_pt400, h_mjet_2jets_pt300, h_mjet_2jets_pt200;
   std::unique_ptr<Hists> h_mjet_pt400, h_mjet_pt300, h_mjet_pt200;
+  std::unique_ptr<Hists> h_mjet_pt400_noSD, h_mjet_pt300_noSD, h_mjet_pt200_noSD;
 
   bool isMC;
 
@@ -42,8 +40,6 @@ TopMassModule::TopMassModule(Context & ctx){
   isMC = (ctx.get("dataset_type") == "MC");
 
   h_passed_rec = ctx.get_handle<bool>("h_passed_rec");
-  // h_rec_weight = ctx.get_handle<double>("h_rec_weight_kin");
-  // h_gen_weight = ctx.get_handle<double>("h_gen_weight_kin");
 
   lumiweight.reset(new MCLumiWeight(ctx));
   PUreweight.reset(new MCPileupReweight(ctx, "central"));
@@ -54,13 +50,15 @@ TopMassModule::TopMassModule(Context & ctx){
   vector<double> ptbins = {0, 5, 10000000};
   vector<double> etabins = {0, 1, 10};
   double variation = 0.1;
-  h_mjet_pt200.reset(new JetMassHists(ctx, "JetMass_pt200", ptbins, etabins, variation));
-  h_mjet_pt400.reset(new JetMassHists(ctx, "JetMass_pt300", ptbins, etabins, variation));
-  h_mjet_pt300.reset(new JetMassHists(ctx, "JetMass_pt400", ptbins, etabins, variation));
-  h_mjet_2jets_pt200.reset(new JetMassHists(ctx, "JetMass_2jets_pt200", ptbins, etabins, variation));
-  h_mjet_2jets_pt400.reset(new JetMassHists(ctx, "JetMass_2jets_pt300", ptbins, etabins, variation));
-  h_mjet_2jets_pt300.reset(new JetMassHists(ctx, "JetMass_2jets_pt400", ptbins, etabins, variation));
-
+  h_mjet_pt200.reset(new JetMassHists(ctx, "JetMass_pt200", ptbins, etabins, variation, "SD"));
+  h_mjet_pt300.reset(new JetMassHists(ctx, "JetMass_pt300", ptbins, etabins, variation, "SD"));
+  h_mjet_pt400.reset(new JetMassHists(ctx, "JetMass_pt400", ptbins, etabins, variation, "SD"));
+  h_mjet_pt200_noSD.reset(new JetMassHists(ctx, "JetMass_pt200_noSD", ptbins, etabins, variation, "ungroomed"));
+  h_mjet_pt300_noSD.reset(new JetMassHists(ctx, "JetMass_pt300_noSD", ptbins, etabins, variation, "ungroomed"));
+  h_mjet_pt400_noSD.reset(new JetMassHists(ctx, "JetMass_pt400_noSD", ptbins, etabins, variation, "ungroomed"));
+  h_mjet_2jets_pt200.reset(new JetMassHists(ctx, "JetMass_2jets_pt200", ptbins, etabins, variation, "SD"));
+  h_mjet_2jets_pt300.reset(new JetMassHists(ctx, "JetMass_2jets_pt300", ptbins, etabins, variation, "SD"));
+  h_mjet_2jets_pt400.reset(new JetMassHists(ctx, "JetMass_2jets_pt400", ptbins, etabins, variation, "SD"));
 }
 
 
@@ -84,19 +82,23 @@ bool TopMassModule::process(Event & event) {
 
   // FILL HISTOGRAM
   h_mjet_pt200->fill(event);
-  if(topjets->at(0).pt() > 300) h_mjet_pt300->fill(event);
-  if(topjets->at(0).pt() > 400) h_mjet_pt400->fill(event);
-
+  h_mjet_pt200_noSD->fill(event);
+  if(topjets->at(0).pt() > 300){
+    h_mjet_pt300->fill(event);
+    h_mjet_pt300_noSD->fill(event);
+  }
+  if(topjets->at(0).pt() > 400){
+    h_mjet_pt400->fill(event);
+    h_mjet_pt400_noSD->fill(event);
+  }
   if(topjets->size() == 2){
     h_mjet_2jets_pt200->fill(event);
     if(topjets->at(0).pt() > 300) h_mjet_2jets_pt300->fill(event);
     if(topjets->at(0).pt() > 400) h_mjet_2jets_pt400->fill(event);
   }
 
-  // FINISHED
+  // DONE
   return false;
 }
 
-// as we want to run the ExampleCycleNew directly with AnalysisModuleRunner,
-// make sure the TopMassModule is found by class name. This is ensured by this macro:
 UHH2_REGISTER_ANALYSIS_MODULE(TopMassModule)

@@ -17,6 +17,8 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, const vector<d
   // get binnings and size of variation
   etabins = etabins_;
   ptbins = ptbins_;
+  Nbins_eta = etabins.size()-1;
+  Nbins_pt = ptbins.size()-1;
   variation = variation_;
 
   // setup jetmass hists
@@ -26,8 +28,9 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, const vector<d
   int Nbins = 50;
 
   TH1F* dummy = new TH1F("dummy", xtitle, Nbins, min, max);
-  h_variationsUP.resize(ptbins.size(), std::vector<TH1F*>(etabins.size(), dummy));
-  h_variationsDOWN.resize(ptbins.size(), std::vector<TH1F*>(etabins.size(), dummy));
+  h_variationsUP.resize(Nbins_pt, std::vector<TH1F*>(Nbins_eta-1, dummy));
+  h_variationsDOWN.resize(Nbins_pt, std::vector<TH1F*>(Nbins_eta-1, dummy));
+  delete dummy;
 
   h_central = book<TH1F>("JetMass_central", xtitle, Nbins, min, max);
   h_central_mjet = book<TH1F>("JetMass_central_mjet", xtitle, Nbins, min, max);
@@ -35,8 +38,8 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, const vector<d
   h_particle_eta = book<TH1F>("particle_eta", "eta", 50, -5, 5);
   h_weights = book<TH1F>("weights", "weight", 100, -1, 2);
 
-  for(unsigned int i=0; i<ptbins.size(); i++){
-    for(unsigned int j=0; j<etabins.size(); j++){
+  for(unsigned int i=0; i<Nbins_pt; i++){
+    for(unsigned int j=0; j<Nbins_eta; j++){
       TString mjet_name = "mjet";
       TString bin_name = "_" + to_string(i) + "_" + to_string(j);
       h_variationsUP[i][j] = book<TH1F>(mjet_name+bin_name+"_up", xtitle, Nbins, min, max);
@@ -71,6 +74,7 @@ void JetMassHists::fill(const Event & event){
     }
   }
 
+  // fill central histograms
   double mass = CalculateMJet(particles);
   double mjet;
   if(use_SD) mjet = topjets->at(0).softdropmass();
@@ -78,13 +82,18 @@ void JetMassHists::fill(const Event & event){
   h_central->Fill(mass, weight);
   h_central_mjet->Fill(mjet, weight);
 
+
+  // fill some particle histograms
   for(auto p: particles){
     h_particle_pt->Fill(p.pt(), weight);
     h_particle_eta->Fill(p.eta(), weight);
   }
 
-  for(unsigned int i=0; i<ptbins.size(); i++){
-    for(unsigned int j=0; j<etabins.size(); j++){
+  // loop over every bin in pt and eta
+  // in every bin, vary the grid, apply to pf particles, compute jetmas
+  // and fill up/down histograms
+  for(unsigned int i=0; i<Nbins_pt; i++){
+    for(unsigned int j=0; j<Nbins_eta; j++){
       vector<vector<double>> sf_up = GetSF(i,j,"up");
       vector<vector<double>> sf_down = GetSF(i,j,"down");
       vector<PFParticle> new_particles_up = VaryParticles(particles, sf_up);
@@ -93,14 +102,15 @@ void JetMassHists::fill(const Event & event){
       h_variationsDOWN[i][j]->Fill(CalculateMJet(new_particles_down), weight);
     }
   }
-
 }
 
+// construct a grid with all entries set to 1
+// for up/down variations one particular bin is variead
 vector<vector<double>> JetMassHists::GetSF(unsigned int ptbin, unsigned int etabin, TString direction){
   vector<vector<double>> sf;
-  for(unsigned int i=0; i<ptbins.size(); i++){
+  for(unsigned int i=0; i<Nbins_pt; i++){
     vector<double> sf_oneptbin;
-    for(unsigned int j=0; j<etabins.size(); j++){
+    for(unsigned int j=0; j<Nbins_eta; j++){
       if(i==ptbin && j==etabin){
         if(direction == "up") sf_oneptbin.push_back(1.0 + variation);
         else                  sf_oneptbin.push_back(1.0 - variation);
@@ -112,7 +122,7 @@ vector<vector<double>> JetMassHists::GetSF(unsigned int ptbin, unsigned int etab
   return sf;
 }
 
-
+// this applies the factor to PF particles according to the grid
 vector<PFParticle> JetMassHists::VaryParticles(vector<PFParticle> oldParticles, vector<vector<double>> sf){
   vector<PFParticle> newParticles;
   for(auto p:oldParticles){
@@ -120,10 +130,10 @@ vector<PFParticle> JetMassHists::VaryParticles(vector<PFParticle> oldParticles, 
     double eta = fabs(p.eta());
     unsigned int ptbin = 0;
     unsigned int etabin = 0;
-    for(unsigned int i=0; i<ptbins.size();i++){
+    for(unsigned int i=0; i<Nbins_pt;i++){
       if(pt>ptbins[i]) ptbin = i;
     }
-    for(unsigned int i=0; i<etabins.size();i++){
+    for(unsigned int i=0; i<Nbins_eta;i++){
       if(eta>etabins[i]) etabin = i;
     }
     PFParticle newP;
@@ -133,10 +143,11 @@ vector<PFParticle> JetMassHists::VaryParticles(vector<PFParticle> oldParticles, 
   return newParticles;
 }
 
+// calculate jet mass from vector of PF particles
 double JetMassHists::CalculateMJet(vector<PFParticle> Particles){
   LorentzVector jet_v4;
   for(auto p:Particles){
-    jet_v4 += p.v4();
+    jet_v4 += p.v4() * p.puppiWeight();
   }
   double mjet = jet_v4.M();
   return mjet;
