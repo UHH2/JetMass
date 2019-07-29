@@ -25,7 +25,7 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, const vector<d
   double max = 300;
   int Nbins = 50;
 
-  TH1F* dummy = book<TH1F>("dummy", xtitle, Nbins, min, max);;
+  TH1F* dummy = new TH1F("dummy", xtitle, Nbins, min, max);
   h_variationsUP.resize(ptbins.size(), std::vector<TH1F*>(etabins.size(), dummy));
   h_variationsDOWN.resize(ptbins.size(), std::vector<TH1F*>(etabins.size(), dummy));
 

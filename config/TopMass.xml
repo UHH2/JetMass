@@ -55,8 +55,8 @@
 -->
 
 <JobConfiguration JobName="TopMassJob" OutputLevel="INFO">
-  <Library Name="libSUHH2TopMass"/>
-  <Package Name="SUHH2TopMass.par"/>
+  <Library Name="libSUHH2JetMass"/>
+  <Package Name="SUHH2JetMass.par"/>
 
 
   <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/" PostFix="" TargetLumi="35867">
