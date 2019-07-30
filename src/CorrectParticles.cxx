@@ -18,7 +18,7 @@ CorrectParticles::CorrectParticles(){
 
 
 bool CorrectParticles::process(uhh2::Event & event){
-  // Correction Constructed for soft drop only
+  // Correction for soft drop only
   vector<PFParticle>* particles = event.pfparticles;
   vector<TopJet>* topjets = event.topjets;
   if(topjets->size() < 1) return false;
