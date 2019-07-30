@@ -50,8 +50,8 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, double variati
   h_particle_eta = book<TH1F>("particle_eta", "eta", 50, -5, 5);
   h_weights = book<TH1F>("weights", "weight", 100, -1, 2);
 
-  for(int i=1; i<=Nbins_pt; i++){
-    for(int j=1; j<=Nbins_eta; j++){
+  for(int i=0; i<Nbins_pt; i++){
+    for(int j=0; j<Nbins_eta; j++){
       TString mass_name = "Mass";
       TString rho_name = "Rho";
       TString bin_name = "_" + to_string(i) + "_" + to_string(j);
@@ -113,10 +113,12 @@ void JetMassHists::fill(const Event & event){
   // loop over every bin in pt and eta
   // in every bin, vary the grid, apply to pf particles, compute jetmas
   // and fill up/down histograms
-  for(int i=1; i<=Nbins_pt; i++){
-    for(int j=1; j<=Nbins_eta; j++){
-      vector<PFParticle> new_particles_up = VaryParticles(particles, i, j, "up");
-      vector<PFParticle> new_particles_down = VaryParticles(particles, i, j, "down");
+  for(int i=0; i<Nbins_pt; i++){
+    for(int j=0; j<Nbins_eta; j++){
+      int ptbin = i+1;
+      int etabin = j+1;
+      vector<PFParticle> new_particles_up = VaryParticles(particles, ptbin, etabin, "up");
+      vector<PFParticle> new_particles_down = VaryParticles(particles, ptbin, etabin, "down");
       h_mass_UP[i][j]->Fill(CalculateMJet(new_particles_up), weight);
       h_mass_DOWN[i][j]->Fill(CalculateMJet(new_particles_down), weight);
       h_rho_UP[i][j]->Fill(CalculateRho(new_particles_up), weight);
