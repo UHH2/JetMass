@@ -20,6 +20,7 @@ private:
   vector<PFParticle> VaryParticles(vector<PFParticle> oldParticles, vector<vector<double>> sf);
   double CalculateMJet(vector<PFParticle> Particles);
   double CalculateRho(vector<PFParticle> Particles);
+  bool isMC;
   bool use_SD;
   double variation;
   vector<double> ptbins, etabins;

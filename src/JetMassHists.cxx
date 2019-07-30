@@ -9,6 +9,8 @@ using namespace std;
 using namespace uhh2;
 
 JetMassHists::JetMassHists(Context & ctx, const string & dirname, const vector<double> ptbins_, const vector<double> etabins_, double variation_, TString mode ): Hists(ctx, dirname){
+  auto dataset_type = ctx.get("dataset_type");
+  isMC = dataset_type == "MC";
 
   // should SD be used
   use_SD = false;
@@ -129,7 +131,8 @@ vector<vector<double>> JetMassHists::GetSF(unsigned int ptbin, unsigned int etab
   for(unsigned int i=0; i<Nbins_pt; i++){
     vector<double> sf_oneptbin;
     for(unsigned int j=0; j<Nbins_eta; j++){
-      if(i==ptbin && j==etabin){
+      // in data, all sf are 1.0
+      if(isMC && i==ptbin && j==etabin){
         if(direction == "up") sf_oneptbin.push_back(1.0 + variation);
         else                  sf_oneptbin.push_back(1.0 - variation);
       }
