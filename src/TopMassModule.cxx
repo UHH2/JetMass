@@ -50,18 +50,16 @@ TopMassModule::TopMassModule(Context & ctx){
   muo_tight_noniso_SF.reset(new MCMuonScaleFactor(ctx,"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MuonID_EfficienciesAndSF_average_RunBtoH.root","MC_NUM_TightID_DEN_genTracks_PAR_pt_eta",1, "tightID", false, "central"));
   muo_trigger_SF.reset(new MCMuonScaleFactor(ctx,"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MuonTrigger_EfficienciesAndSF_average_RunBtoH.root","IsoMu50_OR_IsoTkMu50_PtEtaBins",1, "muonTrigger", false, "central"));
 
-  vector<double> ptbins = {0, 5, 10000000};
-  vector<double> etabins = {0, 1, 10};
   double variation = 0.1;
-  h_mjet_pt200.reset(new JetMassHists(ctx, "JetMass_pt200", ptbins, etabins, variation, "SD"));
-  h_mjet_pt300.reset(new JetMassHists(ctx, "JetMass_pt300", ptbins, etabins, variation, "SD"));
-  h_mjet_pt400.reset(new JetMassHists(ctx, "JetMass_pt400", ptbins, etabins, variation, "SD"));
-  h_mjet_pt200_noSD.reset(new JetMassHists(ctx, "JetMass_pt200_noSD", ptbins, etabins, variation, "ungroomed"));
-  h_mjet_pt300_noSD.reset(new JetMassHists(ctx, "JetMass_pt300_noSD", ptbins, etabins, variation, "ungroomed"));
-  h_mjet_pt400_noSD.reset(new JetMassHists(ctx, "JetMass_pt400_noSD", ptbins, etabins, variation, "ungroomed"));
-  h_mjet_2jets_pt200.reset(new JetMassHists(ctx, "JetMass_2jets_pt200", ptbins, etabins, variation, "SD"));
-  h_mjet_2jets_pt300.reset(new JetMassHists(ctx, "JetMass_2jets_pt300", ptbins, etabins, variation, "SD"));
-  h_mjet_2jets_pt400.reset(new JetMassHists(ctx, "JetMass_2jets_pt400", ptbins, etabins, variation, "SD"));
+  h_mjet_pt200.reset(new JetMassHists(ctx, "JetMass_pt200", variation, "SD"));
+  h_mjet_pt300.reset(new JetMassHists(ctx, "JetMass_pt300", variation, "SD"));
+  h_mjet_pt400.reset(new JetMassHists(ctx, "JetMass_pt400", variation, "SD"));
+  h_mjet_pt200_noSD.reset(new JetMassHists(ctx, "JetMass_pt200_noSD", variation, "ungroomed"));
+  h_mjet_pt300_noSD.reset(new JetMassHists(ctx, "JetMass_pt300_noSD", variation, "ungroomed"));
+  h_mjet_pt400_noSD.reset(new JetMassHists(ctx, "JetMass_pt400_noSD", variation, "ungroomed"));
+  h_mjet_2jets_pt200.reset(new JetMassHists(ctx, "JetMass_2jets_pt200", variation, "SD"));
+  h_mjet_2jets_pt300.reset(new JetMassHists(ctx, "JetMass_2jets_pt300", variation, "SD"));
+  h_mjet_2jets_pt400.reset(new JetMassHists(ctx, "JetMass_2jets_pt400", variation, "SD"));
 }
 
 

@@ -8,19 +8,21 @@
 using namespace std;
 using namespace uhh2;
 
-JetMassHists::JetMassHists(Context & ctx, const string & dirname, const vector<double> ptbins_, const vector<double> etabins_, double variation_, TString mode ): Hists(ctx, dirname){
+JetMassHists::JetMassHists(Context & ctx, const string & dirname, double variation_, TString mode ): Hists(ctx, dirname){
   auto dataset_type = ctx.get("dataset_type");
   isMC = dataset_type == "MC";
+
+  TString gfilename = ctx.get("GridFile");
+  TFile* gfile = new TFile(gfilename);
+  grid = (TH2F*) gfile->Get("grid");
 
   // should SD be used
   use_SD = false;
   if(mode == "SD") use_SD = true;
 
   // get binnings and size of variation
-  etabins = etabins_;
-  ptbins = ptbins_;
-  Nbins_eta = etabins.size()-1;
-  Nbins_pt = ptbins.size()-1;
+  Nbins_pt =  grid->GetXaxis()->GetNbins();
+  Nbins_eta = grid->GetYaxis()->GetNbins();
   variation = variation_;
 
   // setup jetmass hists
@@ -48,8 +50,8 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, const vector<d
   h_particle_eta = book<TH1F>("particle_eta", "eta", 50, -5, 5);
   h_weights = book<TH1F>("weights", "weight", 100, -1, 2);
 
-  for(unsigned int i=0; i<Nbins_pt; i++){
-    for(unsigned int j=0; j<Nbins_eta; j++){
+  for(int i=1; i<=Nbins_pt; i++){
+    for(int j=1; j<=Nbins_eta; j++){
       TString mass_name = "Mass";
       TString rho_name = "Rho";
       TString bin_name = "_" + to_string(i) + "_" + to_string(j);
@@ -66,6 +68,7 @@ void JetMassHists::fill(const Event & event){
   // Don't forget to always use the weight when filling.
   double weight = event.weight;
   vector<TopJet>* topjets = event.topjets;
+  if(topjets->size() < 1) return;
   vector<PFParticle>* allparticles = event.pfparticles;
 
   h_weights->Fill(weight);
@@ -110,12 +113,10 @@ void JetMassHists::fill(const Event & event){
   // loop over every bin in pt and eta
   // in every bin, vary the grid, apply to pf particles, compute jetmas
   // and fill up/down histograms
-  for(unsigned int i=0; i<Nbins_pt; i++){
-    for(unsigned int j=0; j<Nbins_eta; j++){
-      vector<vector<double>> sf_up = GetSF(i,j,"up");
-      vector<vector<double>> sf_down = GetSF(i,j,"down");
-      vector<PFParticle> new_particles_up = VaryParticles(particles, sf_up);
-      vector<PFParticle> new_particles_down = VaryParticles(particles, sf_down);
+  for(int i=1; i<=Nbins_pt; i++){
+    for(int j=1; j<=Nbins_eta; j++){
+      vector<PFParticle> new_particles_up = VaryParticles(particles, i, j, "up");
+      vector<PFParticle> new_particles_down = VaryParticles(particles, i, j, "down");
       h_mass_UP[i][j]->Fill(CalculateMJet(new_particles_up), weight);
       h_mass_DOWN[i][j]->Fill(CalculateMJet(new_particles_down), weight);
       h_rho_UP[i][j]->Fill(CalculateRho(new_particles_up), weight);
@@ -124,41 +125,24 @@ void JetMassHists::fill(const Event & event){
   }
 }
 
-// construct a grid with all entries set to 1
-// for up/down variations one particular bin is variead
-vector<vector<double>> JetMassHists::GetSF(unsigned int ptbin, unsigned int etabin, TString direction){
-  vector<vector<double>> sf;
-  for(unsigned int i=0; i<Nbins_pt; i++){
-    vector<double> sf_oneptbin;
-    for(unsigned int j=0; j<Nbins_eta; j++){
-      // in data, all sf are 1.0
-      if(isMC && i==ptbin && j==etabin){
-        if(direction == "up") sf_oneptbin.push_back(1.0 + variation);
-        else                  sf_oneptbin.push_back(1.0 - variation);
-      }
-      else sf_oneptbin.push_back(1.0);
-    }
-    sf.push_back(sf_oneptbin);
-  }
-  return sf;
-}
-
 // this applies the factor to PF particles according to the grid
-vector<PFParticle> JetMassHists::VaryParticles(vector<PFParticle> oldParticles, vector<vector<double>> sf){
+vector<PFParticle> JetMassHists::VaryParticles(vector<PFParticle> oldParticles, int i, int j, TString var){
   vector<PFParticle> newParticles;
   for(auto p:oldParticles){
     double pt = p.pt();
     double eta = fabs(p.eta());
-    unsigned int ptbin = 0;
-    unsigned int etabin = 0;
-    for(unsigned int i=0; i<Nbins_pt;i++){
-      if(pt>ptbins[i]) ptbin = i;
-    }
-    for(unsigned int i=0; i<Nbins_eta;i++){
-      if(eta>etabins[i]) etabin = i;
+    int ptbin = grid->GetXaxis()->FindBin(pt);
+    int etabin = grid->GetYaxis()->FindBin(eta);
+    // if bin is overflow, set manually to last bin
+    if(ptbin > Nbins_pt) ptbin = Nbins_pt;
+    if(etabin > Nbins_eta) etabin = Nbins_eta;
+    double factor = 1.0;
+    if(isMC && ptbin == i && etabin == j){
+      if(var == "up") factor += variation;
+      else            factor -= variation;
     }
     PFParticle newP;
-    newP.set_v4(sf[ptbin][etabin] * p.v4());
+    newP.set_v4(factor * p.v4());
     newParticles.push_back(newP);
   }
   return newParticles;
