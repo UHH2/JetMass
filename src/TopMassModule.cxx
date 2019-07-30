@@ -10,6 +10,7 @@
 #include "UHH2/common/include/NSelections.h"
 #include "UHH2/JetMass/include/JetMassSelections.h"
 #include "UHH2/JetMass/include/JetMassHists.h"
+#include "UHH2/JetMass/include/CorrectParticles.h"
 
 using namespace std;
 using namespace uhh2;
@@ -24,6 +25,7 @@ private:
 
   uhh2::Event::Handle<bool> h_passed_rec;
   std::unique_ptr<AnalysisModule> PUreweight, lumiweight, sf_btag, muo_tight_noniso_SF, muo_trigger_SF;
+  std::unique_ptr<AnalysisModule> particle_corrector;
 
 
   std::unique_ptr<Hists> h_mjet_2jets_pt400, h_mjet_2jets_pt300, h_mjet_2jets_pt200;
@@ -38,8 +40,9 @@ private:
 TopMassModule::TopMassModule(Context & ctx){
 
   isMC = (ctx.get("dataset_type") == "MC");
-
   h_passed_rec = ctx.get_handle<bool>("h_passed_rec");
+
+  particle_corrector.reset(new CorrectParticles());
 
   lumiweight.reset(new MCLumiWeight(ctx));
   PUreweight.reset(new MCPileupReweight(ctx, "central"));
@@ -79,6 +82,9 @@ bool TopMassModule::process(Event & event) {
   if(!passed_presel) return false;
   if(topjets->size() < 1) return false;
   if(topjets->at(0).pt() < 200) return false;
+
+  // CORRECT PARTICLES
+  particle_corrector->process(event);
 
   // FILL HISTOGRAM
   h_mjet_pt200->fill(event);

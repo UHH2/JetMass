@@ -23,9 +23,9 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, const vector<d
 
   // setup jetmass hists
   TString xtitleMass = "jet mass";
-  double minMass = 0;
+  double minMass = 40;
   double maxMass = 300;
-  int nMass = 150;
+  int nMass = 130;
   TString xtitleRho = "rho";
   double minRho = -10;
   double maxRho = 0;
