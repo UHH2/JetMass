@@ -12,9 +12,15 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, double variati
   auto dataset_type = ctx.get("dataset_type");
   isMC = dataset_type == "MC";
 
+  // read configuration from root file
   TString gfilename = ctx.get("GridFile");
   TFile* gfile = new TFile(gfilename);
   grid = (TH2F*) gfile->Get("grid");
+  TH1F* h_cat = (TH1F*) gfile->Get("categories");
+  for(int bin=1; bin<=h_cat->GetXaxis()->GetNbins(); bin++) categories.push_back(h_cat->GetXaxis()->GetBinLabel(bin));
+  ConstructOtherIDs();
+  if(categories.size() > all_cat.size()+1) throw runtime_error("you gave too many categories");
+  if(categories.size() + otherIDs.size() -1 != 8) throw runtime_error("categories and size of 'other' does not match");
 
   // should SD be used
   use_SD = false;
@@ -23,6 +29,7 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, double variati
   // get binnings and size of variation
   Nbins_pt =  grid->GetXaxis()->GetNbins();
   Nbins_eta = grid->GetYaxis()->GetNbins();
+  Nbins_cat = categories.size();
   variation = variation_;
 
   // setup jetmass hists
@@ -35,13 +42,20 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, double variati
   double maxRho = 0;
   int nRho = 150;
 
-  TH1F* dummy = new TH1F("dummy", "dummy", 1, 0, 1);
-  h_mass_UP.resize(Nbins_pt, std::vector<TH1F*>(Nbins_eta-1, dummy));
-  h_mass_DOWN.resize(Nbins_pt, std::vector<TH1F*>(Nbins_eta-1, dummy));
-  h_rho_UP.resize(Nbins_pt, std::vector<TH1F*>(Nbins_eta-1, dummy));
-  h_rho_DOWN.resize(Nbins_pt, std::vector<TH1F*>(Nbins_eta-1, dummy));
-  delete dummy;
 
+  // resize vectors of histograms
+  h_mass_UP.resize(Nbins_pt);
+  h_mass_DOWN.resize(Nbins_pt);
+  for (int i = 0; i < Nbins_pt; i++){
+      h_mass_UP[i].resize(Nbins_eta);
+      h_mass_DOWN[i].resize(Nbins_eta);
+      for (int j = 0; j < Nbins_eta; j++){
+         h_mass_UP[i][j].resize(Nbins_cat);
+         h_mass_DOWN[i][j].resize(Nbins_cat);
+      }
+  }
+
+  // book some hists without variations
   h_mass = book<TH1F>("Mass_central", xtitleMass, nMass, minMass, maxMass);
   h_mass_jet = book<TH1F>("Mass_central_jet", xtitleMass, nMass, minMass, maxMass);
   h_rho = book<TH1F>("Rho_central", xtitleRho, nRho, minRho, maxRho);
@@ -50,20 +64,21 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, double variati
   h_particle_eta = book<TH1F>("particle_eta", "eta", 50, -5, 5);
   h_weights = book<TH1F>("weights", "weight", 100, -1, 2);
 
+  // book hists for variations
   for(int i=0; i<Nbins_pt; i++){
     for(int j=0; j<Nbins_eta; j++){
-      TString mass_name = "Mass";
-      TString rho_name = "Rho";
-      TString bin_name = "_" + to_string(i) + "_" + to_string(j);
-      h_mass_UP[i][j] = book<TH1F>(mass_name+bin_name+"_up", xtitleMass, nMass, minMass, maxMass);
-      h_mass_DOWN[i][j] = book<TH1F>(mass_name+bin_name+"_down", xtitleMass, nMass, minMass, maxMass);
-      h_rho_UP[i][j] = book<TH1F>(rho_name+bin_name+"_up", xtitleRho, nRho, minRho, maxRho);
-      h_rho_DOWN[i][j] = book<TH1F>(rho_name+bin_name+"_down", xtitleRho, nRho, minRho, maxRho);
+      for(int k=0; k<Nbins_cat; k++){
+        TString mass_name = "Mass";
+        TString bin_name = "_" + to_string(i) + "_" + to_string(j) + "_" + categories[k];
+        h_mass_UP[i][j][k] = book<TH1F>(mass_name+bin_name+"_up", xtitleMass, nMass, minMass, maxMass);
+        h_mass_DOWN[i][j][k] = book<TH1F>(mass_name+bin_name+"_down", xtitleMass, nMass, minMass, maxMass);
+      }
     }
   }
 }
-
-
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// fill Hists
 void JetMassHists::fill(const Event & event){
   // Don't forget to always use the weight when filling.
   double weight = event.weight;
@@ -115,20 +130,21 @@ void JetMassHists::fill(const Event & event){
   // and fill up/down histograms
   for(int i=0; i<Nbins_pt; i++){
     for(int j=0; j<Nbins_eta; j++){
-      int ptbin = i+1;
-      int etabin = j+1;
-      vector<PFParticle> new_particles_up = VaryParticles(particles, ptbin, etabin, "up");
-      vector<PFParticle> new_particles_down = VaryParticles(particles, ptbin, etabin, "down");
-      h_mass_UP[i][j]->Fill(CalculateMJet(new_particles_up), weight);
-      h_mass_DOWN[i][j]->Fill(CalculateMJet(new_particles_down), weight);
-      h_rho_UP[i][j]->Fill(CalculateRho(new_particles_up), weight);
-      h_rho_DOWN[i][j]->Fill(CalculateRho(new_particles_down), weight);
+      for(int k=0; k<Nbins_cat; k++){
+        int ptbin = i+1;
+        int etabin = j+1;
+        vector<PFParticle> new_particles_up = VaryParticles(particles, ptbin, etabin, categories[k], "up");
+        vector<PFParticle> new_particles_down = VaryParticles(particles, ptbin, etabin, categories[k], "down");
+        h_mass_UP[i][j][k]->Fill(CalculateMJet(new_particles_up), weight);
+        h_mass_DOWN[i][j][k]->Fill(CalculateMJet(new_particles_down), weight);
+      }
     }
   }
 }
-
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // this applies the factor to PF particles according to the grid
-vector<PFParticle> JetMassHists::VaryParticles(vector<PFParticle> oldParticles, int i, int j, TString var){
+vector<PFParticle> JetMassHists::VaryParticles(vector<PFParticle> oldParticles, int i, int j, TString cat, TString var){
   vector<PFParticle> newParticles;
   for(auto p:oldParticles){
     double pt = p.pt();
@@ -139,7 +155,7 @@ vector<PFParticle> JetMassHists::VaryParticles(vector<PFParticle> oldParticles, 
     if(ptbin > Nbins_pt) ptbin = Nbins_pt;
     if(etabin > Nbins_eta) etabin = Nbins_eta;
     double factor = 1.0;
-    if(isMC && ptbin == i && etabin == j){
+    if(isMC && ptbin == i && etabin == j && inCategory(p,cat)){
       if(var == "up") factor += variation;
       else            factor -= variation;
     }
@@ -149,7 +165,40 @@ vector<PFParticle> JetMassHists::VaryParticles(vector<PFParticle> oldParticles, 
   }
   return newParticles;
 }
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// check if particle is in category
+bool JetMassHists::inCategory(PFParticle p, TString cat){
+  bool inCat = false;
+  int id = p.particleID();
+  for(unsigned int i=0; i<all_cat.size(); i++){
+    if(cat == all_cat[i] && abs(id) == i) inCat = true;
+  }
+  if(cat = "other"){
+    for(auto oID: otherIDs) if(id == oID) inCat = true;
+  }
+  return inCat;
+}
 
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// this function creates a vector containing all IDs that are not covered
+void JetMassHists::ConstructOtherIDs(){
+  vector<bool> AddIDToOther(8, true);
+  for(unsigned int i=0; i<all_cat.size(); i++){
+    for(auto cat: categories){
+      if(cat == all_cat[i]) AddIDToOther[i] = false;
+    }
+  }
+  for(unsigned int id=0; id<AddIDToOther.size(); id++){
+    if(AddIDToOther[id]) otherIDs.push_back(id);
+  }
+  return;
+}
+
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // calculate jet mass from vector of PF particles
 double JetMassHists::CalculateMJet(vector<PFParticle> Particles){
   LorentzVector jet_v4;
@@ -159,7 +208,8 @@ double JetMassHists::CalculateMJet(vector<PFParticle> Particles){
   double mjet = jet_v4.M();
   return mjet;
 }
-
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // calculate jet rho from vector of PF particles
 double JetMassHists::CalculateRho(vector<PFParticle> Particles){
   LorentzVector jet_v4;
