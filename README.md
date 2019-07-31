@@ -11,10 +11,12 @@ Requires:
   ```bash
   mkdir DAZSLE/rhalphabet
   cd DAZSLE/rhalphabet
-  git clone git@github.com:DryRun/coffeandbacon.git # For environment setup script
-  source coffeandbacon/setup_lcg.sh
+  #git clone git@github.com:DryRun/coffeandbacon.git # For environment setup script
+  wget https://raw.githubusercontent.com/DryRun/coffeandbacon/master/setup_lcg.sh  
+  wget https://raw.githubusercontent.com/DryRun/coffeandbacon/master/env_lcg.sh
+  source setup_lcg.sh
+  (source env_lcg.sh)
   git clone git@github.com:DryRun/rhalphalib.git
-  (source coffeandbacon/env_lcg.sh)
   cd rhalphalib
   python test_rhalphabet.py
   ```
