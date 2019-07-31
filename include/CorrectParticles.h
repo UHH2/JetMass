@@ -7,16 +7,20 @@
 #include "UHH2/core/include/AnalysisModule.h"
 #include <vector>
 #include <TH2.h>
+#include <TString.h>
+#include <TFile.h>
 
+using namespace std;
 
 class CorrectParticles: public uhh2::AnalysisModule {
 public:
-    CorrectParticles(TH2*);
-    CorrectParticles();
+    CorrectParticles(TString filename);
+    CorrectParticles();  
     virtual bool process(uhh2::Event & ) override;
 private:
     double GetGridFactor(PFParticle p);
-    TH2F *grid;
+    vector<TH2F*> grid;
     bool use_JECfactor = false;
     bool use_grid = false;
+    vector<TString> all_cat = {"undef", "chargedH", "elec", "muon", "gamma", "neutralH", "had", "em"};
 };
