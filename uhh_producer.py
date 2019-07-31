@@ -39,7 +39,7 @@ def uhh_producer(channelConfigs=None,ModelName='UHH_Model',gridHistFileName='/af
     for channelName,config in channelConfigs.items():
         histLocation=config['histLocation']
         Variable=config['variable']
-        HistDir=config['histDir']
+        histDir=config['histDir']
         Samples=config['samples']
 
         if ('regions' not in config) or (len(config['regions'])==0):
@@ -52,11 +52,11 @@ def uhh_producer(channelConfigs=None,ModelName='UHH_Model',gridHistFileName='/af
             for sName in Samples:
                 sampleType=rl.Sample.SIGNAL if sName==config['signal'] else rl.Sample.BACKGROUND
                 sFile=TFile('%s/%s.root'%(histLocation,sName),'READ')
-                hist=sFile.Get(HistDir+'/'+Variable+'_central')
+                hist=sFile.Get(histDir+'/'+Variable+'_central')
                 sample=rl.TemplateSample(ch.name+'_'+sName,sampleType,hist)
                 for (gridNuisance,x,y,category) in gridNuisances:
-                    histUp=sFile.Get('%s/%s_%i_%i_%s_up'%(HistDir,Variable,x,y,category))
-                    histDown=sFile.Get('%s/%s_%i_%i_%s_down'%(HistDir,Variable,x,y,category))
+                    histUp=sFile.Get('%s/%s_%i_%i_%s_up'%(histDir,Variable,x,y,category))
+                    histDown=sFile.Get('%s/%s_%i_%i_%s_down'%(histDir,Variable,x,y,category))
                     sample.setParamEffect(gridNuisance,histUp,histDown)
                     sample.setParamEffect(lumi, 1.027)
                 ch.addSample(sample)
@@ -64,10 +64,13 @@ def uhh_producer(channelConfigs=None,ModelName='UHH_Model',gridHistFileName='/af
             dataFile=TFile('%s/%s.root'%(histLocation,config['obs']))
 
             if 'varyPseudoLike' in config:
-                dataHist=dataFile.Get(HistDir+'/'+config['varyPseudoLike'])
+                histPath=config['varyPseudoLike']
+                if '/' not in histPath:
+                    histPath=histDir+'/'+histPath
+                dataHist=dataFile.Get(histPath)
                 dataHist.SetName('Mass_central')
             else:
-                dataHist=dataFile.Get(HistDir+'/'+'Mass_central')
+                dataHist=dataFile.Get(histDir+'/'+'Mass_central')
 
             ch.setObservation(dataHist)
 
