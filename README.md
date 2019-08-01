@@ -19,6 +19,7 @@ Requires:
   python test_rhalphabet.py
   ```
   * Combine environment (new shell):
+  (following instructions from [Combined Wiki](http://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/) )
   ```bash
   export SCRAM_ARCH=slc6_amd64_gcc530
   cmsrel CMSSW_8_1_0
