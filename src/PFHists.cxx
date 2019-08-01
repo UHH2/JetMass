@@ -13,16 +13,14 @@ PFHists::PFHists(Context & ctx, const string & dirname): Hists(ctx, dirname){
   TString gfilename = ctx.get("GridFile");
   TFile* gfile = new TFile(gfilename);
   TH2F* grid = (TH2F*) gfile->Get("grid");
-  h_count_all = (TH2F*) grid->Clone("h_count_all");
-  h_count_chargedH = (TH2F*) grid->Clone("h_count_chargedH");
-  h_count_neutralH = (TH2F*) grid->Clone("h_count_neutralH");
-  h_count_gamma = (TH2F*) grid->Clone("h_count_gamma");
-  h_count_other = (TH2F*) grid->Clone("h_count_other");
-  h_count_all->Reset();
-  h_count_chargedH->Reset();
-  h_count_neutralH->Reset();
-  h_count_gamma->Reset();
-  h_count_other->Reset();
+  vector<double> binsX = ExtractBinning(grid, "x");
+  vector<double> binsY = ExtractBinning(grid, "y");
+
+  h_count_all = book<TH2F>("count_all", "x=pt y=eta", binsX.size()-1, &binsX[0], binsY.size()-1, &binsY[0]);
+  h_count_chargedH = book<TH2F>("count_chargedH", "x=pt y=eta", binsX.size()-1, &binsX[0], binsY.size()-1, &binsY[0]);
+  h_count_neutralH = book<TH2F>("count_neutralH", "x=pt y=eta", binsX.size()-1, &binsX[0], binsY.size()-1, &binsY[0]);
+  h_count_gamma = book<TH2F>("count_gamma", "x=pt y=eta", binsX.size()-1, &binsX[0], binsY.size()-1, &binsY[0]);
+  h_count_other = book<TH2F>("count_other", "x=pt y=eta", binsX.size()-1, &binsX[0], binsY.size()-1, &binsY[0]);
   h_pt_all = book<TH1F>("pt_all", "p_T", 50, 0, 50);
   h_pt_chargedH = book<TH1F>("pt_chargedH", "p_T", 50, 0, 50);
   h_pt_neutralH = book<TH1F>("pt_neutralH", "p_T", 50, 0, 50);
@@ -33,6 +31,12 @@ PFHists::PFHists(Context & ctx, const string & dirname): Hists(ctx, dirname){
   h_eta_neutralH = book<TH1F>("eta_neutralH", "eta", 50, -5, 5);
   h_eta_gamma = book<TH1F>("eta_gamma", "eta", 50, -5, 5);
   h_eta_other = book<TH1F>("eta_other", "eta", 50, -5, 5);
+  h_eta_Eweight_all = book<TH1F>("eta_Eweight_all", "eta", 50, -5, 5);
+  h_eta_Eweight_chargedH = book<TH1F>("eta_Eweight_chargedH", "eta", 50, -5, 5);
+  h_eta_Eweight_neutralH = book<TH1F>("eta_Eweight_neutralH", "eta", 50, -5, 5);
+  h_eta_Eweight_gamma = book<TH1F>("eta_Eweight_gamma", "eta", 50, -5, 5);
+  h_eta_Eweight_other = book<TH1F>("eta_Eweight_other", "eta", 50, -5, 5);
+  h_particle_injet = book<TH1F>("particle_injet", "number particles", 30, 0, 300);
 }
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -55,6 +59,8 @@ void PFHists::fill(const Event & event){
     }
   }
 
+  h_particle_injet->Fill(particles.size(), weight);
+
   // fill some particle histograms
   for(auto p: particles){
     h_pt_all->Fill(p.pt(), weight);
@@ -75,26 +81,43 @@ void PFHists::fill(const Event & event){
     if(id == 1){
       h_pt_chargedH->Fill(p.pt(), weight);
       h_eta_chargedH->Fill(p.eta(), weight);
+      h_eta_Eweight_chargedH->Fill(p.eta(), p.energy()*weight);
       h_count_chargedH->Fill(p.pt(), p.eta(), weight);
     }
     else if(id == 4){
       h_pt_gamma->Fill(p.pt(), weight);
       h_eta_gamma->Fill(p.eta(), weight);
+      h_eta_Eweight_gamma->Fill(p.eta(), p.energy()*weight);
       h_count_gamma->Fill(p.pt(), p.eta(), weight);
     }
     else if(id == 5){
       h_pt_neutralH->Fill(p.pt(), weight);
       h_eta_neutralH->Fill(p.eta(), weight);
+      h_eta_Eweight_neutralH->Fill(p.eta(), p.energy()*weight);
       h_count_neutralH->Fill(p.pt(), p.eta(), weight);
     }
     else{
       h_pt_other->Fill(p.pt(), weight);
       h_eta_other->Fill(p.eta(), weight);
+      h_eta_Eweight_other->Fill(p.eta(), p.energy()*weight);
       h_count_other->Fill(p.pt(), p.eta(), weight);
     }
   }
 
 }
 
+vector<double> PFHists::ExtractBinning(TH2F* hist, TString xy){
+  vector<double> bins;
+  TAxis *axis;
+  if(xy == "x") axis = hist->GetXaxis();
+  else          axis = hist->GetYaxis();
+
+  // first bin lower edge:
+  bins.push_back(axis->GetBinLowEdge(1));
+  // now get all other upper edges
+  int Nbins = axis->GetNbins();
+  for(int i=1; i<=Nbins; i++) bins.push_back(axis->GetBinUpEdge(i));
+  return bins;
+}
 
 PFHists::~PFHists(){}

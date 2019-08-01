@@ -65,6 +65,5 @@ double CorrectParticles::GetGridFactor(PFParticle p){
   if(ptbin > Nbins_pt) ptbin = Nbins_pt;
   if(etabin > Nbins_eta) etabin = Nbins_eta;
   double factor = grid[id]->GetBinContent(ptbin, etabin);
-  cout << factor << endl;
   return factor;
 }
