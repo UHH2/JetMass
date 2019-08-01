@@ -5,8 +5,8 @@ using namespace std;
 
 int main(int argc, char* argv[]){
 
-  vector<double> ptbins = {0, 2, 5, 10, 50};
-  vector<double> etabins = {0, 0.522, 1.653, 5.191};
+  vector<double> ptbins = {0, 10, 50};
+  vector<double> etabins = {0, 0.522, 1.305, 5.191};
   // eta bins from jec: {0, 0.261, 0.522, 0.783, 1.044, 1.305, 1.479, 1.653, 1.930, 2.322, 2.65, 3.139, 5.191}
   vector<TString> categories = {"chargedH", "neutralH", "gamma", "other"};
   int Npt  = ptbins.size()-1;

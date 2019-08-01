@@ -43,3 +43,4 @@
 #include "RooFitResult.h"
 #include "RooPlot.h"
 #include "RooAbsCollection.h"
+#include "THStack.h"

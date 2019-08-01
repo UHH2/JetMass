@@ -116,7 +116,7 @@ void PlotNuisance(vector<TString> parname, vector<double> par, vector<double> er
   g->SetMarkerStyle(8);
   g->SetMarkerSize(1);
   g->Draw("P SAME");
-  c->SaveAs("Nuisance.pdf");
+  c->SaveAs("../Plots/Nuisance.pdf");
   return;
 }
 

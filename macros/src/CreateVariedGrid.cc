@@ -39,7 +39,9 @@ int main(int argc, char* argv[]){
         parameter_name += "_eta" + to_string(j);
         parameter_name += "_" + categories[k];
         double central = 0.0;
-        if(categories[k] == "chargedH") central = randomBetween(0, 1);
+        if(categories[k] == "neutralH") central = randomBetween(-1, -2);
+        if(categories[k] == "gamma") central = randomBetween(-0.5, -1);
+        // if(i == (Npt-1)) central = randomBetween(0.5, 1);
         double bincont = 1.0 + central*variation;
         grid_fit[k]->SetBinContent(i+1,j+1,bincont);
         parname.push_back(parameter_name);
