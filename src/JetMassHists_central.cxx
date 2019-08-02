@@ -56,7 +56,7 @@ void JetMassHists_central::fill(const Event & event){
 double JetMassHists_central::CalculateMJet(vector<PFParticle> Particles){
   LorentzVector jet_v4;
   for(auto p:Particles){
-    jet_v4 += p.v4() * p.puppiWeight();
+    jet_v4 += p.v4();
   }
   double mjet = jet_v4.M();
   return mjet;
@@ -67,7 +67,7 @@ double JetMassHists_central::CalculateMJet(vector<PFParticle> Particles){
 double JetMassHists_central::CalculateRho(vector<PFParticle> Particles){
   LorentzVector jet_v4;
   for(auto p:Particles){
-    jet_v4 += p.v4() * p.puppiWeight();
+    jet_v4 += p.v4();
   }
   double mjet = jet_v4.M();
   double pt = jet_v4.Pt();

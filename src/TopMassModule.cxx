@@ -12,7 +12,10 @@
 #include "UHH2/JetMass/include/JetMassHists.h"
 #include "UHH2/JetMass/include/JetMassHists_central.h"
 #include "UHH2/JetMass/include/PFHists.h"
+#include "UHH2/JetMass/include/EFJetHists.h"
 #include "UHH2/JetMass/include/CorrectParticles.h"
+#include "UHH2/JetMass/include/ApplyPuppiToPF.h"
+
 
 using namespace std;
 using namespace uhh2;
@@ -27,9 +30,13 @@ private:
   uhh2::Event::Handle<vector<PFParticle>> h_pfparticles;
   uhh2::Event::Handle<bool> h_passed_rec;
   std::unique_ptr<AnalysisModule> PUreweight, lumiweight, sf_btag, muo_tight_noniso_SF, muo_trigger_SF;
+  std::unique_ptr<AnalysisModule> pf_applyPUPPI;
   std::unique_ptr<AnalysisModule> pf_jec;
   std::unique_ptr<AnalysisModule> pf_var1, pf_var2, pf_var3, pf_var4;
   std::unique_ptr<Selection> masscut;
+
+  std::unique_ptr<Hists> h_EnergyFractions;
+  std::unique_ptr<Hists> h_mjet_efcharedH_00, h_mjet_efcharedH_30, h_mjet_efcharedH_70;
 
   std::unique_ptr<Hists> h_pf;
   std::unique_ptr<Hists> h_mjet, h_mjet_pt400, h_mjet_pt300, h_mjet_pt200;
@@ -82,6 +89,8 @@ TopMassModule::TopMassModule(Context & ctx){
   pf_var3.reset(new CorrectParticles(f3));
   pf_var4.reset(new CorrectParticles(f4));
 
+  pf_applyPUPPI.reset(new ApplyPuppiToPF());
+
   masscut.reset(new MassCut());
 
   lumiweight.reset(new MCLumiWeight(ctx));
@@ -89,6 +98,11 @@ TopMassModule::TopMassModule(Context & ctx){
   sf_btag.reset(new MCBTagScaleFactor(ctx, BTag::DEEPCSV, BTag::WP_MEDIUM, "jets", "central"));
   muo_tight_noniso_SF.reset(new MCMuonScaleFactor(ctx,"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MuonID_EfficienciesAndSF_average_RunBtoH.root","MC_NUM_TightID_DEN_genTracks_PAR_pt_eta",1, "tightID", false, "central"));
   muo_trigger_SF.reset(new MCMuonScaleFactor(ctx,"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MuonTrigger_EfficienciesAndSF_average_RunBtoH.root","IsoMu50_OR_IsoTkMu50_PtEtaBins",1, "muonTrigger", false, "central"));
+
+  h_EnergyFractions.reset(new EFJetHists(ctx, "EnergyFractions"));
+  h_mjet_efcharedH_00.reset(new JetMassHists_central(ctx, "JetMass_erchargedH_00"));
+  h_mjet_efcharedH_30.reset(new JetMassHists_central(ctx, "JetMass_erchargedH_30"));
+  h_mjet_efcharedH_70.reset(new JetMassHists_central(ctx, "JetMass_erchargedH_70"));
 
   double variation = 0.1;
   h_pf.reset(new PFHists(ctx, "PFHists"));
@@ -184,8 +198,11 @@ bool TopMassModule::process(Event & event) {
   if(topjets->at(0).pt() < 200) return false;
 
   // CORRECT PARTICLES
+  pf_applyPUPPI->process(event);
   pf_jec->process(event);
   h_pf->fill(event);
+
+  h_EnergyFractions->fill(event);
 
   // store input particles
   // (do not use pointer here!)
@@ -193,6 +210,7 @@ bool TopMassModule::process(Event & event) {
 
   // FILL MJET HISTOGRAMS
   double pt = topjets->at(0).pt();
+  double chf = topjets->at(0).chargedHadronEnergyFraction();
   h_mjet->fill(event);
   if(pt > 200 && pt < 300) h_mjet_pt200->fill(event);
   else if(pt > 300 && pt < 400) h_mjet_pt300->fill(event);
@@ -210,6 +228,14 @@ bool TopMassModule::process(Event & event) {
     else if(pt > 300 && pt < 400) h_mjet_failmasscut_pt300->fill(event);
     else if(pt > 400) h_mjet_failmasscut_pt400->fill(event);
   }
+
+  if(pt > 400){
+    if(chf > 0.0 && chf < 0.3) h_mjet_efcharedH_00->fill(event);
+    if(chf > 0.3 && chf < 0.7) h_mjet_efcharedH_30->fill(event);
+    if(chf > 0.7 && chf < 1.0) h_mjet_efcharedH_70->fill(event);
+
+  }
+
 
   // include some variation
   pf_var1->process(event);

@@ -203,7 +203,7 @@ void JetMassHists::ConstructOtherIDs(){
 double JetMassHists::CalculateMJet(vector<PFParticle> Particles){
   LorentzVector jet_v4;
   for(auto p:Particles){
-    jet_v4 += p.v4() * p.puppiWeight();
+    jet_v4 += p.v4();
   }
   double mjet = jet_v4.M();
   return mjet;
@@ -214,7 +214,7 @@ double JetMassHists::CalculateMJet(vector<PFParticle> Particles){
 double JetMassHists::CalculateRho(vector<PFParticle> Particles){
   LorentzVector jet_v4;
   for(auto p:Particles){
-    jet_v4 += p.v4() * p.puppiWeight();
+    jet_v4 += p.v4();
   }
   double mjet = jet_v4.M();
   double pt = jet_v4.Pt();
