@@ -7,14 +7,15 @@ void SetPlotStyle();
 
 int main(int argc, char* argv[]){
 
-  TString filename;
-
   if(argc != 2){
-    cout << "specify file!" << endl;
+    cout << "Usage: ./PlotInputParameters <postfix-rootfile>" << endl;
+    cout << "    - if rootfile = '../Histograms/grid_chargedH', use 'chargedH' as argument" << endl;
     return 1;
   }
-  else filename = argv[1];
-  TFile* file = new TFile(filename);
+
+  TString filename = argv[1];
+
+  TFile* file = new TFile("../Histograms/grid_"+filename+".root");
 
   TGraph* input = (TGraph*) file->Get("params_graph");
   TH2F* grid = (TH2F*) file->Get("grid_fit_chargedH");
@@ -55,7 +56,7 @@ int main(int argc, char* argv[]){
   input->SetMarkerStyle(8);
   input->SetMarkerSize(1);
   input->Draw("P SAME");
-  c->SaveAs("../Plots/Nuisance_Input.pdf");
+  c->SaveAs("../Plots/Nuisance_Input_"+filename+".pdf");
 
   return 0;
 }

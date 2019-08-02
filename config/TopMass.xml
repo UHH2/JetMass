@@ -207,7 +207,9 @@
 
   <Item Name="GridFile" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/grid.root" />
   <Item Name="Grid_highptUP" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/grid_highptUP.root" />
+  <Item Name="Grid_highetaDOWN" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/grid_highetaDOWN.root" />
   <Item Name="Grid_netrualHDOWN_gammaDOWN" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/grid_neutralHDOWN_gammaDOWN.root" />
+  <Item Name="Grid_chargedHUP_oneBin" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/grid_chargedHUP_oneBin.root" />
 
   <Item Name="pileup_directory_data" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MyDataPileupHistogram.root" />
   <Item Name="pileup_directory" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MyMCPileupHistogram.root" />

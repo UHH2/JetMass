@@ -107,9 +107,9 @@ void PlotNuisance(vector<TString> parname, vector<double> par, vector<double> er
     frame->GetXaxis()->SetBinLabel(bin, parname[i]);
   }
 
-  TCanvas* c = new TCanvas("c", "c", 1800, 600);
+  TCanvas* c = new TCanvas("c", "c", 2000, 600);
   gPad->SetBottomMargin(.2);
-  gPad->SetRightMargin(.2);
+  // gPad->SetRightMargin(.2);
   frame->SetFillColor(kWhite);
   frame->Draw();
   g->SetMarkerColor(kBlack);
