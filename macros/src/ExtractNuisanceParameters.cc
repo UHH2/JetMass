@@ -37,8 +37,7 @@ int main(int argc, char* argv[]){
     grid_fit_down.push_back((TH2F*) grid->Clone("grid_fit_down"+cat));
   }
 
-  RooFitResult* result = (RooFitResult*) file->Get("nuisances_prefit_res");
-  // RooFitResult* result = (RooFitResult*) file->Get("fit_s");
+  RooFitResult* result = (RooFitResult*) file->Get("fit_s");
   RooArgSet fitargs = result->floatParsFinal();
 
   int Npt = grid->GetXaxis()->GetNbins();

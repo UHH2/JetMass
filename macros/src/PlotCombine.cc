@@ -85,6 +85,7 @@ void PlotHist(TGraphAsymmErrors* h_dat, TH1F* h_mc, TH1F* h_bkg, TString name){
   h_mc->GetXaxis()->SetLabelSize(0.05);
   h_mc->GetXaxis()->SetNdivisions(505);
   h_mc->GetYaxis()->SetNdivisions(505);
+  h_mc->GetYaxis()->SetRangeUser(0, h_mc->GetMaximum()*1.3);
   h_mc->SetFillColor(kRed-4);
   h_mc->SetLineColor(kRed-4);
   h_bkg->SetLineColor(13);
@@ -96,6 +97,14 @@ void PlotHist(TGraphAsymmErrors* h_dat, TH1F* h_mc, TH1F* h_bkg, TString name){
   h_bkg->Draw("HIST SAME");
   h_dat->Draw("P SAME");
   gPad->RedrawAxis();
+  TLegend *leg = new TLegend(0.61,0.67,0.83,0.87);
+  leg->SetBorderSize(0);
+  leg->SetFillStyle(0);
+  leg->AddEntry(h_dat, "pseudo data","pe");
+  leg->AddEntry(h_mc, "t#bar{t}","f");
+  leg->AddEntry(h_bkg, "background","f");
+  leg->SetTextSize(0.04);
+  leg->Draw();
   c->SaveAs("../Plots/"+name+".pdf");
   delete c;
   return;
