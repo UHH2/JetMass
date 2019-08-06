@@ -4,7 +4,6 @@ import sys
 from ROOT import TFile, TH1F
 
 def uhh_producer(configs=None):
-    RebinMSD=True
     if('ModelName' not in configs):
         ModelName='UHH_Model'
     else:
@@ -28,9 +27,7 @@ def uhh_producer(configs=None):
     print('used variation categories:',ParticleCategories)
     print('X: %s , %i bins'%(gridAxises['x'],len(xBins)))
     print('Y: %s , %i bins'%(gridAxises['y'],len(yBins)))
-    if(channelConfigs == None):
-        print('must specify channel Configurations!')
-        exit(0)
+
 
     model = rl.Model(ModelName)
     gridNuisances=[]
@@ -45,15 +42,13 @@ def uhh_producer(configs=None):
     print('CMS_lumi', 'lnN')
     lumi = rl.NuisanceParameter('CMS_lumi', 'lnN')
 
-
     #########
     #QCD ESTIMATION
     ptbins = np.array([500, 550, 600, 675, 800, 1200])
     npt = len(ptbins) - 1
     # msdbins = np.linspace(40, 201, 24)
-    msdbins = np.linspace(50, 250, 21)
+    msdbins = np.linspace(50, 250, 101)
     nmsd = len(msdbins) - 1
-    print(msdbins)
 
     tf = rl.BernsteinPoly("qcd_pass_ralhpTF",(2,3),['pt','rho'])
     # here we derive these all at once with 2D array
@@ -74,18 +69,24 @@ def uhh_producer(configs=None):
 
     for channelName,config in channels.items():
         histLocation=config['histLocation']
-        Variable=config['variable']
-        histDir=config['histDir']
+        if('variable' in config):
+            Variable=config['variable']
+        else:
+            Variable='Mass'
         Samples=config['samples']
 
         if ('regions' not in config) or (len(config['regions'])==0):
             config['regions']=['']
 
         for region in config['regions']:
+            region_suffix= ('_'+region) if len(region) > 0 else ''
+            histDir=config['histDir']+ region_suffix
             regionName=channelName+region
             ch=rl.Channel(regionName)
             model.addChannel(ch)
             for sName in Samples:
+                if('QCD' in sName):
+                    continue
                 sampleType=rl.Sample.SIGNAL if sName==config['signal'] else rl.Sample.BACKGROUND
                 sFile=TFile('%s/%s.root'%(histLocation,sName),'READ')
                 hist=sFile.Get(histDir+'/'+Variable+'_central')
@@ -121,6 +122,7 @@ def uhh_producer(configs=None):
         if 'QCD' not in Samples:
             continue
         # steal observable definition from fail channel
+        # failCh = model['ptbin%dfail' % ptbin]
         ptbin=np.where(ptbins==float(channelName.split('Pt')[-1]))[0][0]
         failCh = model[channelName+'fail']
         obs = failCh.observable
@@ -132,11 +134,24 @@ def uhh_producer(configs=None):
         if np.any(initial_qcd < 0.):
             raise ValueError("uh-oh")
         sigmascale = 10  # to scale the deviation from initial
+        # print(qcdparams)
+        # print(initial_qcd)
         scaledparams = initial_qcd + sigmascale*np.sqrt(initial_qcd)*qcdparams
+        # fail_qcd = rl.ParametericSample('ptbin%dfail_qcd' % ptbin, rl.Sample.BACKGROUND, obs, scaledparams)
         fail_qcd = rl.ParametericSample('%sfail_qcd' % channelName, rl.Sample.BACKGROUND, obs, scaledparams)
         failCh.addSample(fail_qcd)
+        # pass_qcd = rl.TransferFactorSample('ptbin%dpass_qcd' % ptbin, rl.Sample.BACKGROUND, tf_params[ptbin, :], fail_qcd)
         pass_qcd = rl.TransferFactorSample('%spass_qcd' % channelName, rl.Sample.BACKGROUND, tf_params[ptbin, :], fail_qcd)
         model[channelName+'pass'].addSample(pass_qcd)
+
+
+        # qcdparams = np.array([rl.IndependentParameter('qcdparam_ptbin%d_msdbin%d' % (ptbin, i), 0) for i in range(nmsd)])
+
+        # model['ptbin%dpass' % ptbin].addSample(pass_qcd)
+
+    # import pickle
+    # with open("model.pkl", "wb") as fout:
+    #     pickle.dump(model, fout)
 
     print("ROOT used? ", 'ROOT' in sys.modules)
     model.renderCombine(ModelName)
@@ -145,10 +160,9 @@ def uhh_producer(configs=None):
 
 if __name__ == '__main__':
     import json
-    configs=json.load(open(sys.argv[1]))
+    configs=json.load(open('WMass.json'))
     uhh_producer(configs)
     from runFit import runFits
-    if('pathCMSSW' in configs):
-        runFits([configs['ModelName']],configs['pathCMSSW'])
-    else:
-        runFits([configs['ModelName']])
+    runFits([configs['ModelName']])
+    # for modelName in ['UHH_Model_0','UHH_Model_1','UHH_Model_2']:
+    #     uhh_producer(channels,ModelName=modelName)
