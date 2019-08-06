@@ -67,4 +67,4 @@ def runFits(models=['UHH_Model']):
 
 
 if __name__ == "__main__":
-    runFits()
+    runFits([sys.argv[1]])
