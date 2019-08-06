@@ -32,30 +32,31 @@ def update_progress(iteration,complete):
     sys.stdout.flush()
 
 
-def write_wrapper(dir):
+def write_wrapper(dir,pathCMSSW):
+    absdir=os.path.abspath(dir)
     with open(dir+'/wrapper.sh','w') as wrapper:
         wrapper.write("""
         #!/bin/bash
         #module use -a /afs/desy.de/group/cms/modulefiles/; module load cmssw
         source /cvmfs/cms.cern.ch/cmsset_default.sh
-        cd ../CMSSW_8_1_0/src/
+        cd """+pathCMSSW+"""/src/
         eval `scramv1 runtime -sh`
-        cd ../../rhalphalib/"""+dir+"""
+        cd """+absdir+"""
         source build.sh
-        combine -M FitDiagnostics """+dir+"""_combined.txt --plots --saveShapes
+        combine -M FitDiagnostics """+absdir+"""/"""+dir+"""_combined.txt --plots --saveShapes
         echo "Fit Done!!!"
         """)
         wrapper.close()
     os.system('chmod u+x '+dir+'/wrapper.sh')
 
-def runFits(models=['UHH_Model']):
+def runFits(models=['UHH_Model'],pathCMSSW='../CMSSW_8_1_0'):
     fitProcesses=[]
     finishedProcesses=[]
     for model in models:
         if(not os.path.exists(model)):
             print('Model directory %s does not exists. skipping..')
             continue
-        write_wrapper(model)
+        write_wrapper(model,pathCMSSW)
         command=['env','-i','bash',model+'/wrapper.sh']
         fitProcesses.append(subprocess.Popen(command, shell=None,stdout=open(model+'/log.o','w'),stderr=open(model+'/log.e','w')))
 
@@ -67,4 +68,4 @@ def runFits(models=['UHH_Model']):
 
 
 if __name__ == "__main__":
-    runFits([sys.argv[1]])
+    runFits([sys.argv[1]],sys.argv[2])

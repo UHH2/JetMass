@@ -1,5 +1,6 @@
 import rhalphalib as rl
 import numpy as np
+import sys
 from ROOT import TFile, TH1F
 def uhh_producer(channelConfigs=None,ModelName='UHH_Model',gridHistFileName='/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/grid.root'):
 
@@ -78,33 +79,16 @@ def uhh_producer(channelConfigs=None,ModelName='UHH_Model',gridHistFileName='/af
     # with open("model.pkl", "wb") as fout:
     #     pickle.dump(model, fout)
 
-    import sys
     print("ROOT used? ", 'ROOT' in sys.modules)
     model.renderCombine(ModelName)
     print("ROOT used? ", 'ROOT' in sys.modules)
 
 
 if __name__ == '__main__':
-    channels={
-    'TopMass':{
-    'histLocation':'/afs/desy.de/user/a/albrechs/xxl/af-cms/dazsle/JetMass/Histograms/top',
-    'variable':'Mass',
-    'histDir':'JetMass_pt300',
-    'samples':['SingleTop','TTbar','WJets','other'],
-    'signal':'TTbar',
-    'obs':'Pseudo',
-    'varyPseudoLike':'Mass_1_0_chargedH_up'
-    }#,
-    # 'WMass':{
-    # 'histLocation':'/afs/desy.de/user/a/albrechs/xxl/af-cms/dazsle/JetMass/Histograms/W',
-    # 'variable':'Mass',
-    # 'histDir':'JetMass_Nak8_500sel',
-    # 'samples':['QCD','WJetsToQQ'],
-    # 'signal':'WJetsToQQ',
-    # 'obs':'Pseudo',
-    # 'regions':['pass','fail']
-    # }
-    }
-    uhh_producer(channels)
+    import json
+    configs=json.load(open(sys.argv[1]))
+    uhh_producer(configs)
+    from runFit import runFits
+    runFits([configs['ModelName']],configs['pathCMSSW'])
     # for modelName in ['UHH_Model_0','UHH_Model_1','UHH_Model_2']:
     #     uhh_producer(channels,ModelName=modelName)
