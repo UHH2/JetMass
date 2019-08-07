@@ -4,7 +4,6 @@ import sys
 from ROOT import TFile, TH1F
 
 def uhh_producer(configs=None):
-    RebinMSD=True
     if('ModelName' not in configs):
         ModelName='UHH_Model'
     else:
@@ -48,7 +47,7 @@ def uhh_producer(configs=None):
     ptbins = np.array([500, 550, 600, 675, 800, 1200])
     npt = len(ptbins) - 1
     # msdbins = np.linspace(40, 201, 24)
-    msdbins = np.linspace(50, 250, 21)
+    msdbins = np.linspace(50, 250, 11)
     nmsd = len(msdbins) - 1
     print(msdbins)
 
@@ -70,6 +69,9 @@ def uhh_producer(configs=None):
         exit(0)
 
     for channelName,config in channels.items():
+        print(channelName)
+        # RebinMSD='W' in channelName
+        RebinMSD=True
         histLocation=config['histLocation']
         if('variable' in config):
             Variable=config['variable']
@@ -111,10 +113,10 @@ def uhh_producer(configs=None):
                 histPath=config['varyPseudoLike']
                 if '/' not in histPath:
                     histPath=histDir+'/'+histPath
-                dataHist=dataFile.Get(histPath).Rebin(len(msdbins)-1,"",msdbins)
+                dataHist=dataFile.Get(histPath)
                 dataHist.SetName('Mass_central')
             else:
-                dataHist=dataFile.Get(histDir+'/'+'Mass_central').Rebin(len(msdbins)-1,"",msdbins)
+                dataHist=dataFile.Get(histDir+'/'+'Mass_central')
             if(RebinMSD):
                 dataHist=dataHist.Rebin(len(msdbins)-1,dataHist.GetName()+'_newBinning',msdbins)
 
@@ -128,15 +130,16 @@ def uhh_producer(configs=None):
         failCh = model[channelName+'fail']
         obs = failCh.observable
         print('channelName',channelName)
-        qcdparams = np.array([rl.IndependentParameter('qcdparam_%s_msdbin%d' % (channelName, i), 0) for i in range(nmsd)])
+        qcdparams = np.array([rl.IndependentParameter('qcdparam_%s_msdbin%d' % (channelName, i), 0,-200.,200.) for i in range(nmsd)])
         initial_qcd = failCh.getObservation().astype(float)  # was integer, and numpy complained about subtracting float from it
         for sample in failCh:
             initial_qcd -= sample.getExpectation(nominal=True)
         if np.any(initial_qcd < 0.):
             raise ValueError("uh-oh")
-        sigmascale = 10  # to scale the deviation from initial
-        scaledparams = initial_qcd + sigmascale*np.sqrt(initial_qcd)*qcdparams
-        fail_qcd = rl.ParametericSample('%sfail_qcd' % channelName, rl.Sample.BACKGROUND, obs, scaledparams)
+
+        print(initial_qcd)
+        print(qcdparams)
+        fail_qcd = rl.ParametericSample('%sfail_qcd' % channelName, rl.Sample.BACKGROUND, obs, initial_qcd * qcdparams)
         failCh.addSample(fail_qcd)
         pass_qcd = rl.TransferFactorSample('%spass_qcd' % channelName, rl.Sample.BACKGROUND, tf_params[ptbin, :], fail_qcd)
         model[channelName+'pass'].addSample(pass_qcd)

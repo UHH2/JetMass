@@ -9,7 +9,8 @@
       "histDir":"JetMass_pt200",
       "samples":["SingleTop","TTbar","WJets","other"],
       "signal":"TTbar",
-      "obs":"Pseudo"
+      "obs":"Pseudo",
+      "varyPseudoLike":"JetMass_pt200/Mass_1_0_chargedH_up"
     },
     "TopMass300":{
       "histLocation":"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/top",
@@ -17,7 +18,8 @@
       "histDir":"JetMass_pt300",
       "samples":["SingleTop","TTbar","WJets","other"],
       "signal":"TTbar",
-      "obs":"Pseudo"
+      "obs":"Pseudo",
+      "varyPseudoLike":"JetMass_pt300/Mass_1_0_chargedH_up"
     },
     "TopMass400":{
       "histLocation":"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/top",
@@ -25,7 +27,8 @@
       "histDir":"JetMass_pt400",
       "samples":["SingleTop","TTbar","WJets","other"],
       "signal":"TTbar",
-      "obs":"Pseudo"
+      "obs":"Pseudo",
+      "varyPseudoLike":"JetMass_pt400/Mass_1_0_chargedH_up"
     },
     "WMassPt500":{
       "histLocation":"/afs/desy.de/user/a/albrechs/xxl/af-cms/dazsle/JetMass/Histograms/W",
@@ -33,6 +36,7 @@
       "samples":["QCD","WUnmatched","WMatched"],
       "signal":"WMatched",
       "obs":"Pseudo",
+      "varyPseudoLike":"Mass_1_0_chargedH_up",
       "regions":["pass","fail"]
     },
     "WMassPt550":{
@@ -41,6 +45,7 @@
       "samples":["QCD","WUnmatched","WMatched"],
       "signal":"WMatched",
       "obs":"Pseudo",
+      "varyPseudoLike":"Mass_1_0_chargedH_up",
       "regions":["pass","fail"]
     },
     "WMassPt675":{
@@ -49,6 +54,7 @@
       "samples":["QCD","WUnmatched","WMatched"],
       "signal":"WMatched",
       "obs":"Pseudo",
+      "varyPseudoLike":"Mass_1_0_chargedH_up",
       "regions":["pass","fail"]
     },
     "WMassPt800":{
@@ -57,6 +63,7 @@
       "samples":["QCD","WUnmatched","WMatched"],
       "signal":"WMatched",
       "obs":"Pseudo",
+      "varyPseudoLike":"Mass_1_0_chargedH_up",
       "regions":["pass","fail"]
     }
   }
