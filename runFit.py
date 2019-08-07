@@ -44,7 +44,6 @@ def write_wrapper(dir,pathCMSSW):
         cd """+absdir+"""
         source build.sh
         combine -M FitDiagnostics """+absdir+"""/"""+dir.replace('/','')+"""_combined.txt --plots --saveShapes
-        echo "Fit Done!!!"
         """)
         wrapper.close()
     os.system('chmod u+x '+dir+'/wrapper.sh')
