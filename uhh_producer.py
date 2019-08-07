@@ -47,11 +47,13 @@ def uhh_producer(configs=None):
     ptbins = np.array([500, 550, 600, 675, 800, 1200])
     npt = len(ptbins) - 1
     # msdbins = np.linspace(40, 201, 24)
-    msdbins = np.linspace(50, 250, 11)
+    msdbins = np.linspace(50, 170, 13)
     nmsd = len(msdbins) - 1
     print(msdbins)
 
     tf = rl.BernsteinPoly("qcd_pass_ralhpTF",(2,3),['pt','rho'])
+    # tf = rl.BernsteinPoly("qcd_pass_ralhpTF",(2,3),['pt','rho'])
+
     # here we derive these all at once with 2D array
     ptpts, msdpts = np.meshgrid(ptbins[:-1] + 0.3 * np.diff(ptbins), msdbins[:-1] + 0.3 * np.diff(msdbins), indexing='ij')
     rhopts = 2*np.log(msdpts/ptpts)
@@ -95,14 +97,14 @@ def uhh_producer(configs=None):
                 sFile=TFile('%s/%s.root'%(histLocation,sName),'READ')
                 hist=sFile.Get(histDir+'/'+Variable+'_central')
                 if(RebinMSD):
-                    hist=hist.Rebin(len(msdbins)-1,hist.GetName()+'_newBinning',msdbins)
+                    hist=hist.Rebin(len(msdbins)-1,hist.GetName(),msdbins)
                 sample=rl.TemplateSample(ch.name+'_'+sName,sampleType,hist)
                 for (gridNuisance,x,y,category) in gridNuisances:
                     histUp=sFile.Get('%s/%s_%i_%i_%s_up'%(histDir,Variable,x,y,category))
                     histDown=sFile.Get('%s/%s_%i_%i_%s_down'%(histDir,Variable,x,y,category))
                     if(RebinMSD):
-                        histUp=histUp.Rebin(len(msdbins)-1,histUp.GetName()+'_newBinning',msdbins)
-                        histDown=histDown.Rebin(len(msdbins)-1,histDown.GetName()+'_newBinning',msdbins)
+                        histUp=histUp.Rebin(len(msdbins)-1,histUp.GetName(),msdbins)
+                        histDown=histDown.Rebin(len(msdbins)-1,histDown.GetName(),msdbins)
                     sample.setParamEffect(gridNuisance,histUp,histDown)
                     sample.setParamEffect(lumi, 1.027)
                 ch.addSample(sample)
@@ -118,7 +120,7 @@ def uhh_producer(configs=None):
             else:
                 dataHist=dataFile.Get(histDir+'/'+'Mass_central')
             if(RebinMSD):
-                dataHist=dataHist.Rebin(len(msdbins)-1,dataHist.GetName()+'_newBinning',msdbins)
+                dataHist=dataHist.Rebin(len(msdbins)-1,dataHist.GetName(),msdbins)
 
             ch.setObservation(dataHist)
 
@@ -130,7 +132,7 @@ def uhh_producer(configs=None):
         failCh = model[channelName+'fail']
         obs = failCh.observable
         print('channelName',channelName)
-        qcdparams = np.array([rl.IndependentParameter('qcdparam_%s_msdbin%d' % (channelName, i), 0,-200.,200.) for i in range(nmsd)])
+        qcdparams = np.array([rl.IndependentParameter('qcdparam_%s_msdbin%d' % (channelName, i), 0,-10.,10.) for i in range(nmsd)])
         initial_qcd = failCh.getObservation().astype(float)  # was integer, and numpy complained about subtracting float from it
         for sample in failCh:
             initial_qcd -= sample.getExpectation(nominal=True)
@@ -138,8 +140,9 @@ def uhh_producer(configs=None):
             raise ValueError("uh-oh")
 
         print(initial_qcd)
-        print(qcdparams)
-        fail_qcd = rl.ParametericSample('%sfail_qcd' % channelName, rl.Sample.BACKGROUND, obs, initial_qcd * qcdparams)
+        scaledparams = initial_qcd + 2*np.sqrt(initial_qcd)*qcdparams
+        # print(scaledparams)
+        fail_qcd = rl.ParametericSample('%sfail_qcd' % channelName, rl.Sample.BACKGROUND, obs, scaledparams)
         failCh.addSample(fail_qcd)
         pass_qcd = rl.TransferFactorSample('%spass_qcd' % channelName, rl.Sample.BACKGROUND, tf_params[ptbin, :], fail_qcd)
         model[channelName+'pass'].addSample(pass_qcd)
