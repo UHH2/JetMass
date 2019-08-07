@@ -23,5 +23,5 @@ private:
   TH1F* h_neutralH_frac;
   TH1F* h_gamma_frac;
   TH1F* h_chargedEM_frac;
-
+  TH2F* h_chf_nhf;
 };

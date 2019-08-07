@@ -14,6 +14,7 @@ EFJetHists::EFJetHists(Context & ctx, const string & dirname): Hists(ctx, dirnam
   h_neutralH_frac = book<TH1F>("neutralH_frac", "neutral hadron energy fraction", 50, 0, 1);
   h_gamma_frac = book<TH1F>("gamma_frac", "gamma energy fraction", 50, 0, 1);
   h_chargedEM_frac = book<TH1F>("chargedEM_frac", "charged EM energy fraction", 50, 0, 1);
+  h_chf_nhf = book<TH2F>("chf_nhf", "x=chf y=nhf", 50, 0, 1, 50, 0, 1);
 
 }
 //------------------------------------------------------------------------------
@@ -29,6 +30,7 @@ void EFJetHists::fill(const Event & event){
   h_neutralH_frac->Fill(topjets->at(0).neutralHadronEnergyFraction(), weight);
   h_gamma_frac->Fill(topjets->at(0).photonEnergyFraction(), weight);
   h_chargedEM_frac->Fill(topjets->at(0).chargedEmEnergyFraction(), weight);
+  h_chf_nhf->Fill(topjets->at(0).chargedHadronEnergyFraction(), topjets->at(0).neutralHadronEnergyFraction(), weight);
 
 }
 

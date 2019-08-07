@@ -86,8 +86,7 @@ int main(int argc, char* argv[]){
 
   SetPlotStyle();
   PlotNuisance(parname, par, errU, errD);
-
-
+  
   return 0;
 }
 
@@ -110,6 +109,7 @@ void PlotNuisance(vector<TString> parname, vector<double> par, vector<double> er
   TCanvas* c = new TCanvas("c", "c", 2000, 600);
   gPad->SetBottomMargin(.2);
   // gPad->SetRightMargin(.2);
+  frame->GetYaxis()->SetTitle("#sigma");
   frame->SetFillColor(kWhite);
   frame->Draw();
   g->SetMarkerColor(kBlack);

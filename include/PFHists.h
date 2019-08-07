@@ -51,4 +51,8 @@ private:
   // number of pf in jet
   TH1F* h_particle_injet;
 
+  // density
+  TH1F* h_density_number;
+  TH1F* h_density_energy;
+
 };

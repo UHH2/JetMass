@@ -37,6 +37,8 @@ PFHists::PFHists(Context & ctx, const string & dirname): Hists(ctx, dirname){
   h_eta_Eweight_gamma = book<TH1F>("eta_Eweight_gamma", "eta", 50, -5, 5);
   h_eta_Eweight_other = book<TH1F>("eta_Eweight_other", "eta", 50, -5, 5);
   h_particle_injet = book<TH1F>("particle_injet", "number particles", 30, 0, 300);
+  h_density_energy = book<TH1F>("h_density_energy", "energy density", 50, 0, 500);
+  h_density_number = book<TH1F>("h_density_number", "number density", 50, 0, 50);
 }
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -59,6 +61,25 @@ void PFHists::fill(const Event & event){
     }
   }
 
+  // Calculate densities
+  // double R = 0.2;
+  // vector<int> number_density;
+  // vector<double> energy_density;
+  // for(unsigned int i=0; i<particles.size(); i++){
+  //   int Nparts = 0;
+  //   double Eparts = 0.0;
+  //   for(unsigned int j=0; j<particles.size(); j++){
+  //     if(i==j) continue;
+  //     if(deltaR(particles[i], particles[j]) < R){
+  //       Nparts ++;
+  //       Eparts += particles[j].energy();
+  //     }
+  //   }
+  // h_density_number->Fill(Nparts, weight);
+  // h_density_energy->Fill(Eparts, weight);
+  // }
+
+  // N particles in Jet
   h_particle_injet->Fill(particles.size(), weight);
 
   // fill some particle histograms
