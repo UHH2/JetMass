@@ -43,7 +43,7 @@ def write_wrapper(dir,pathCMSSW):
         eval `scramv1 runtime -sh`
         cd """+absdir+"""
         source build.sh
-        combine -M FitDiagnostics """+absdir+"""/"""+dir+"""_combined.txt --plots --saveShapes
+        combine -M FitDiagnostics """+absdir+"""/"""+dir.replace('/','')+"""_combined.txt --plots --saveShapes
         echo "Fit Done!!!"
         """)
         wrapper.close()
@@ -68,4 +68,7 @@ def runFits(models=['UHH_Model'],pathCMSSW='../CMSSW_8_1_0'):
 
 
 if __name__ == "__main__":
-    runFits([sys.argv[1]],sys.argv[2])
+    if(len(sys.argv)<3):
+        runFits([sys.argv[1]])
+    else:
+        runFits([sys.argv[1]],sys.argv[2])
