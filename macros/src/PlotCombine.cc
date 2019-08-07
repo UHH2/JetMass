@@ -24,7 +24,8 @@ int main(int argc, char* argv[]){
 
 
   vector<TString> directories = {"fit_s", "prefit"};
-  vector<TString> channels = {"TopMass200", "TopMass300", "TopMass400"};
+  // vector<TString> channels = {"TopMass200", "TopMass300", "TopMass400"};
+  vector<TString> channels = {"TopMass200", "TopMass300", "TopMass400", "WMassPt500pass","WMassPt550pass","WMassPt675pass","WMassPt800pass","WMassPt500fail","WMassPt550fail","WMassPt675fail","WMassPt800fail"};
 
   for(auto dir: directories){
     for(auto ch: channels){
@@ -86,10 +87,18 @@ void PlotHist(TGraphAsymmErrors* h_dat, TH1F* h_mc, TH1F* h_bkg, TString name){
   h_mc->GetXaxis()->SetNdivisions(505);
   h_mc->GetYaxis()->SetNdivisions(505);
   h_mc->GetYaxis()->SetRangeUser(0, h_mc->GetMaximum()*1.3);
-  h_mc->SetFillColor(kRed-4);
-  h_mc->SetLineColor(kRed-4);
-  h_bkg->SetLineColor(13);
-  h_bkg->SetFillColor(13);
+  h_mc->SetFillColor(kGreen+2);
+  h_mc->SetLineColor(kGreen+2);
+  if(name.Contains("TopMass")){
+    h_mc->SetFillColor(kRed-4);
+    h_mc->SetLineColor(kRed-4);
+  }
+  h_bkg->SetLineColor(kAzure-9);
+  h_bkg->SetFillColor(kAzure-9);
+  if(name.Contains("TopMass")){
+    h_bkg->SetLineColor(13);
+    h_bkg->SetFillColor(13);
+  }
   h_dat->SetMarkerColor(kBlack);
   h_dat->SetMarkerStyle(8);
   h_dat->SetMarkerSize(1);
@@ -101,7 +110,8 @@ void PlotHist(TGraphAsymmErrors* h_dat, TH1F* h_mc, TH1F* h_bkg, TString name){
   leg->SetBorderSize(0);
   leg->SetFillStyle(0);
   leg->AddEntry(h_dat, "pseudo data","pe");
-  leg->AddEntry(h_mc, "t#bar{t}","f");
+  if(name.Contains("TopMass")) leg->AddEntry(h_mc, "t#bar{t}","f");
+  else                         leg->AddEntry(h_mc, "W #rightarrow qq","f");
   leg->AddEntry(h_bkg, "background","f");
   leg->SetTextSize(0.04);
   leg->Draw();
