@@ -3,6 +3,33 @@
   "gridHistFileName":"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/grid.root",
   "pathCMSSW":"/nfs/dust/cms/user/schwarzd/CMSSW_8_1_0",
   "channels":{
+    "TopMass200":{
+      "histLocation":"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/top",
+      "variable":"Mass",
+      "histDir":"JetMass_pt200",
+      "samples":["SingleTop","TTbar","WJets","other"],
+      "signal":"TTbar",
+      "obs":"Pseudo",
+      "varyPseudoLike":"JetMass_pt200/Mass_central"
+    },
+    "TopMass300":{
+      "histLocation":"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/top",
+      "variable":"Mass",
+      "histDir":"JetMass_pt300",
+      "samples":["SingleTop","TTbar","WJets","other"],
+      "signal":"TTbar",
+      "obs":"Pseudo",
+      "varyPseudoLike":"JetMass_pt300/Mass_central"
+    },
+    "TopMass400":{
+      "histLocation":"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/top",
+      "variable":"Mass",
+      "histDir":"JetMass_pt400",
+      "samples":["SingleTop","TTbar","WJets","other"],
+      "signal":"TTbar",
+      "obs":"Pseudo",
+      "varyPseudoLike":"JetMass_pt400/Mass_central"
+    },
     "WMassPt500":{
       "histLocation":"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/W",
       "histDir":"JetMass_Tau21DDT_pt500To550",
@@ -47,33 +74,6 @@
       "obs":"Pseudo",
       "varyPseudoLike":"Mass_central",
       "regions":["pass","fail"]
-    },
-    "TopMass200":{
-      "histLocation":"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/top",
-      "variable":"Mass",
-      "histDir":"JetMass_pt200",
-      "samples":["SingleTop","TTbar","WJets","other"],
-      "signal":"TTbar",
-      "obs":"Pseudo",
-      "varyPseudoLike":"JetMass_pt200/Mass_central"
-    },
-    "TopMass300":{
-      "histLocation":"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/top",
-      "variable":"Mass",
-      "histDir":"JetMass_pt300",
-      "samples":["SingleTop","TTbar","WJets","other"],
-      "signal":"TTbar",
-      "obs":"Pseudo",
-      "varyPseudoLike":"JetMass_pt300/Mass_central"
-    },
-    "TopMass400":{
-      "histLocation":"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/top",
-      "variable":"Mass",
-      "histDir":"JetMass_pt400",
-      "samples":["SingleTop","TTbar","WJets","other"],
-      "signal":"TTbar",
-      "obs":"Pseudo",
-      "varyPseudoLike":"JetMass_pt400/Mass_central"
     }
   }
 }
