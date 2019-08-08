@@ -57,6 +57,15 @@
       "varyPseudoLike":"Mass_central",
       "regions":["pass","fail"]
     },
+    "WMassPt600":{
+      "histLocation":"/afs/desy.de/user/a/albrechs/xxl/af-cms/dazsle/JetMass/Histograms/W",
+      "histDir":"JetMass_Tau21DDT_pt600To675",
+      "samples":["QCD","WUnmatched","WMatched"],
+      "signal":"WMatched",
+      "obs":"Pseudo",
+      "varyPseudoLike":"Mass_1_0_chargedH_up",
+      "regions":["pass","fail"]
+    },
     "WMassPt675":{
       "histLocation":"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/W",
       "histDir":"JetMass_Tau21DDT_pt675To800",
