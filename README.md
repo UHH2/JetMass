@@ -60,7 +60,7 @@ environments to a CMSSW+combine environment and proceed from there.
 The producer script reads the model from a .json file, builds data cards and runs combine.
 Also paths to the combine installation, root files and a 2D grid are taken from the .json.
 The grid is created before running the analysis code containing the bins in pt and eta that are used to vary PF particles.
-There is one grid per particle category (charged, neutral,...). This way the nuisance parameters are constructed consistently with the varied histograms. If QCD is part of the given samples, rhalphabet takes care of the the background estimation in the pass region.
+There is one grid per particle category (charged, neutral,...). The grid is constructed as root file and contains all necessary information to construct nuisance parameters that are consistent with the varied histograms. If QCD is part of the given samples, rhalphabet takes care of the the background estimation in the pass region.
 
 How to run:
 ```bash
