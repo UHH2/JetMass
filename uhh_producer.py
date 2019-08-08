@@ -46,6 +46,8 @@ def uhh_producer(configs=None):
     #QCD ESTIMATION
     ptbins = np.array([500, 550, 600, 675, 800, 1200])
     npt = len(ptbins) - 1
+    # msdbins = np.linspace(40, 201, 24)
+    # msdbins = np.linspace(50, 180, 14)
     msdbins = np.linspace(50, 170, 21)
     nmsd = len(msdbins) - 1
 
@@ -140,6 +142,8 @@ def uhh_producer(configs=None):
         if np.any(initial_qcd < 0.):
             raise ValueError("uh-oh")
         scaledparams = initial_qcd  + 2.*np.sqrt(initial_qcd)*qcdparams
+        
+        print(scaledparams[0].formula(True))
         fail_qcd = rl.ParametericSample('%sfail_qcd' % channelName, rl.Sample.BACKGROUND, obs, scaledparams)
         failCh.addSample(fail_qcd)
         pass_qcd = rl.TransferFactorSample('%spass_qcd' % channelName, rl.Sample.BACKGROUND, tf_params[ptbin, :], fail_qcd)
