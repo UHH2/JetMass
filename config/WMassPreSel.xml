@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE JobConfiguration PUBLIC "" "JobConfig.dtd" [
+
+  <!ENTITY NEVT "-1">
+
+ <!ENTITY OUTdir   "/nfs/dust/cms/user/albrechs/SingleJetTrees/WMassPreSel/">
+
+ <!-- =============================================== QCD ===================================================================== -->
+
+<!ENTITY MC_QCD_HT50to100  SYSTEM  "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2016v3/MC_QCD_HT50to100.xml">
+<!ENTITY MC_QCD_HT100to200 SYSTEM  "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2016v3/MC_QCD_HT100to200.xml">
+<!ENTITY MC_QCD_HT200to300 SYSTEM  "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2016v3/MC_QCD_HT200to300.xml">
+<!ENTITY MC_QCD_HT300to500 SYSTEM  "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2016v3/MC_QCD_HT300to500.xml">
+<!ENTITY MC_QCD_HT500to700   SYSTEM  "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2016v3/MC_QCD_HT500to700.xml">
+<!ENTITY MC_QCD_HT700to1000  SYSTEM  "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2016v3/MC_QCD_HT700to1000.xml">
+<!ENTITY MC_QCD_HT1000to1500 SYSTEM  "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2016v3/MC_QCD_HT1000to1500.xml">
+<!ENTITY MC_QCD_HT1500to2000 SYSTEM  "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2016v3/MC_QCD_HT1500to2000.xml">
+<!ENTITY MC_QCD_HT2000toInf  SYSTEM  "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2016v3/MC_QCD_HT2000toInf.xml">
+
+
+<!-- =============================================== W+jets =========================================================================== -->
+<!ENTITY WJetsToQQ SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2016v3/MC_WJetsToQQ_HT-600ToInf.xml" >
+
+]>
+
+<!--
+   <ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="4"/>
+   <ConfigSGE RAM="4" DISK="2" Mail="steffen.albrecht@desy.de" Notification="as" Workdir="workdir_WMassPreSel"/>
+-->
+
+<JobConfiguration JobName="WMassPreSelJob" OutputLevel="INFO">
+  <Library Name="libSUHH2JetMass"/>
+  <Package Name="SUHH2JetMass.par"/>
+
+
+  <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="35867">
+
+      <!--
+   ██████   ██████ ██████
+  ██    ██ ██      ██   ██
+  ██    ██ ██      ██   ██
+  ██ ▄▄ ██ ██      ██   ██
+   ██████   ██████ ██████
+      ▀▀
+      -->
+
+			<InputData Version="MC_QCD_HT50to100_2016v3" Lumi="0.01695242903" Type="MC" NEventsMax="-1" Cacheable="False">
+				&MC_QCD_HT50to100;
+				<InputTree Name="AnalysisTree" />
+				<OutputTree Name="AnalysisTree" />
+			</InputData>
+
+			<InputData Version="MC_QCD_HT100to200_2016v3" Lumi="2.914202787" Type="MC" NEventsMax="-1" Cacheable="False">
+				&MC_QCD_HT100to200;
+				<InputTree Name="AnalysisTree" />
+				<OutputTree Name="AnalysisTree" />
+			</InputData>
+
+      <InputData Version="MC_QCD_HT200to300_2016v3" Lumi="33.12492699" Type="MC" NEventsMax="-1" Cacheable="False">
+				&MC_QCD_HT200to300;
+				<InputTree Name="AnalysisTree" />
+				<OutputTree Name="AnalysisTree" />
+			</InputData>
+
+      <InputData Version="MC_QCD_HT300to500_2016v3" Lumi="152.707843" Type="MC" NEventsMax="-1" Cacheable="False">
+				&MC_QCD_HT300to500;
+				<InputTree Name="AnalysisTree" />
+				<OutputTree Name="AnalysisTree" />
+			</InputData>
+
+			<InputData Version="MC_QCD_HT500to700_2016v3" Lumi="1648.17919" Type="MC" NEventsMax="-1" Cacheable="False">
+				&MC_QCD_HT500to700;
+				<InputTree Name="AnalysisTree" />
+				<OutputTree Name="AnalysisTree" />
+			</InputData>
+
+			<InputData Version="MC_QCD_HT700to1000_2016v3" Lumi="5378.647343" Type="MC" NEventsMax="-1" Cacheable="False">
+				&MC_QCD_HT700to1000;
+				<InputTree Name="AnalysisTree" />
+				<OutputTree Name="AnalysisTree" />
+			</InputData>
+
+			<InputData Version="MC_QCD_HT1000to1500_2016v3" Lumi="12602.26926" Type="MC" NEventsMax="-1" Cacheable="False">
+				&MC_QCD_HT1000to1500;
+				<InputTree Name="AnalysisTree" />
+				<OutputTree Name="AnalysisTree" />
+			</InputData>
+
+			<InputData Version="MC_QCD_HT1500to2000_2016v3" Lumi="98743.59466" Type="MC" NEventsMax="-1" Cacheable="False">
+				&MC_QCD_HT1500to2000;
+				<InputTree Name="AnalysisTree" />
+				<OutputTree Name="AnalysisTree" />
+			</InputData>
+
+			<InputData Version="MC_QCD_HT2000toInf_2016v3" Lumi="235651.7036" Type="MC" NEventsMax="-1" Cacheable="False">
+				&MC_QCD_HT2000toInf;
+				<InputTree Name="AnalysisTree" />
+				<OutputTree Name="AnalysisTree" />
+			</InputData>
+
+      <!--
+    ██     ██      ██ ███████ ████████ ███████
+    ██     ██      ██ ██         ██    ██
+    ██  █  ██      ██ █████      ██    ███████
+    ██ ███ ██ ██   ██ ██         ██         ██
+     ███ ███   █████  ███████    ██    ███████
+      -->
+
+      <InputData Version="MC_WJetsToQQ_WUnmatched_2016v3" Lumi="10372.71" Type="MC" NEventsMax="-1" Cacheable="False">
+				&WJetsToQQ;
+				<InputTree Name="AnalysisTree"/>
+				<OutputTree Name="AnalysisTree"/>
+			</InputData>
+
+      <InputData Version="MC_WJetsToQQ_WMatched_2016v3" Lumi="10372.71" Type="MC" NEventsMax="-1" Cacheable="False">
+        &WJetsToQQ;
+        <InputTree Name="AnalysisTree"/>
+        <OutputTree Name="AnalysisTree"/>
+      </InputData>
+
+
+      <!--
+      ██████  ██    ██    ██ ███████ ████████ ███████
+      ██   ██  ██  ██     ██ ██         ██    ██
+      ██   ██   ████      ██ █████      ██    ███████
+      ██   ██    ██  ██   ██ ██         ██         ██
+      ██████     ██   █████  ███████    ██    ███████
+      -->
+
+			<!-- <InputData Version="MC_DYJetsToQQ_2016v3" Lumi="10372.71" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+			<!-- 	&DYJetsToQQ; -->
+			<!-- 	<InputTree Name="AnalysisTree"/> -->
+			<!-- 	<OutputTree Name="AnalysisTree"/> -->
+			<!-- </InputData> -->
+
+<!-- ================================================================================================================================== -->
+<!-- ====================================================== User Config =============================================================== -->
+<!-- ================================================================================================================================== -->
+
+    <UserConfig>
+
+  <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
+  <Item Name="GenParticleCollection"   Value="GenParticles"/>
+  <Item Name="ElectronCollection"      Value="slimmedElectronsUSER"/>
+  <Item Name="MuonCollection"          Value="slimmedMuonsUSER"/>
+
+  <Item Name="JetCollection"           Value="jetsAk4CHS"/>
+  <Item Name="GenJetCollection"        Value="slimmedGenJets"/>
+  <Item Name="TopJetCollection"        Value="jetsAk8PuppiSubstructure_SoftDropPuppi"/>
+  <Item Name="GenTopJetCollection"     Value="genjetsAk8SubstructureSoftDrop" />
+  <Item Name="PFParticleCollection"    Value="PFParticles"/>
+
+
+  <Item Name="METName"                 Value="slimmedMETs"/>
+
+  <Item Name="use_sframe_weight" Value="false"/>
+  <Item Name="dometfilters" Value="true" />
+  <Item Name="dopvfilter" Value="true" />
+  <Item Name="doSpikeKiller" Value="true" />
+  <Item Name="lumi_file" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.root"/>
+
+  <Item Name="MCBtagEfficiencies" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/BTagMCEfficiency/BTagMCEfficiencyHists.root" />
+  <Item Name="BTagCalibration" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/CSVv2_Moriond17_B_H.csv" />
+
+  <Item Name="GridFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/grid.root" />
+
+
+  <Item Name="pileup_directory_data" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MyDataPileupHistogram.root" />
+  <Item Name="pileup_directory" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MyMCPileupHistogram.root" />
+  <Item Name="pileup_directory_data_up" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MyDataPileupHistogram_72383.root" />
+  <Item Name="pileup_directory_data_down" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MyDataPileupHistogram_66017.root" />
+
+     <Item Name="AnalysisModule" Value="WMassPreSelModule"/>
+    </UserConfig>
+
+  </Cycle>
+</JobConfiguration>
