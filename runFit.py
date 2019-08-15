@@ -32,7 +32,8 @@ def runFits(models=['UHH_Model'],pathCMSSW='../CMSSW_8_1_0'):
         print('Fitting', model,'...')
 
     finishedProcesses=[p.wait() for p in fitProcesses]
-
+    for model in models:
+        os.system('tail %s/log.o'%model)
 
 if __name__ == "__main__":
     if(len(sys.argv)<3):
