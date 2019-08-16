@@ -66,6 +66,7 @@ namespace uhh2examples {
     // std::unique_ptr<AnalysisModule> pf_applyPUPPI;
 
     std::unique_ptr<Hists> h_PreSel,h_PreSel_Substr,h_PreSel_Substr_MyDDT;
+    std::unique_ptr<Hists> h_spikeKiller_1p5,h_spikeKiller_1p6,h_spikeKiller_1p7,h_spikeKiller_1p8,h_spikeKiller_2p0,h_spikeKiller_2p5;
     // std::unique_ptr<Hists> h_n2_physical_Substr;
 
     std::unique_ptr<Selection> n2ddtsel,MYn2ddtsel,n2sel;
@@ -203,7 +204,15 @@ namespace uhh2examples {
     tau21DDTsel.reset(new Tau21DDTSelection(0.38,0.063));
 		// if(is_mc)h_ECF_comparison.reset(new ECFHists(ctx,"ECFComparisonHists"));
 
-    if(is_mc) h_PreSel.reset(new JetMassHists(ctx,"JetMass_PreSel",variation,"SD"));
+    if(is_mc){
+      h_PreSel.reset(new JetMassHists(ctx,"JetMass_PreSel",variation,"SD"));
+      h_spikeKiller_1p5.reset(new JetMassHists(ctx,"JetMass_spikeKiller_1p5",variation,"SD"));
+      h_spikeKiller_1p6.reset(new JetMassHists(ctx,"JetMass_spikeKiller_1p6",variation,"SD"));
+      h_spikeKiller_1p7.reset(new JetMassHists(ctx,"JetMass_spikeKiller_1p7",variation,"SD"));
+      h_spikeKiller_1p8.reset(new JetMassHists(ctx,"JetMass_spikeKiller_1p8",variation,"SD"));
+      h_spikeKiller_2p0.reset(new JetMassHists(ctx,"JetMass_spikeKiller_2p0",variation,"SD"));
+      h_spikeKiller_2p5.reset(new JetMassHists(ctx,"JetMass_spikeKiller_2p5",variation,"SD"));
+    }
     h_PreSel_Substr_MyDDT.reset(new SubstructureHists(ctx,"SubstructureHists_PreSel_MyDDT",MYddtMap,true));
     h_PreSel_Substr.reset(new SubstructureHists(ctx,"SubstructureHists_PreSel",ddtMap,true));
 
@@ -372,7 +381,6 @@ namespace uhh2examples {
   }
 
   bool WMassModule::process(Event & event){
-    std::cout << "new Event" << std::endl;
     if(is_mc){
       MC_LumiWeight->process(event);
       MC_PUWeight->process(event);
@@ -386,6 +394,28 @@ namespace uhh2examples {
     h_PreSel_Substr_MyDDT->fill(event);
     if(event.topjets->size() < 1 ) return false;
     double pt = event.topjets->at(0).pt();
+
+    double pTave=0.0;
+		double ratio=0.0;
+		if(is_mc){
+			if(event.jets->size()>0){
+				pTave=event.jets->at(0).pt();
+			}else	if(event.jets->size()>1){
+				pTave=(event.jets->at(0).pt()+event.jets->at(1).pt())/2.0;
+			}
+			double pThat=event.genInfo->qScale();
+			ratio=pThat/pTave;
+		}
+    if(is_mc && (ratio <2.5))h_spikeKiller_2p5->fill(event);
+    if(is_mc && (ratio <2.0))h_spikeKiller_2p0->fill(event);
+    if(is_mc && (ratio <1.8))h_spikeKiller_1p8->fill(event);
+    if(is_mc && (ratio <1.7))h_spikeKiller_1p7->fill(event);
+    if(is_mc && (ratio <1.6))h_spikeKiller_1p6->fill(event);
+    double qScale_max=1.5;
+    if(is_mc && (ratio > qScale_max)) return false;
+    h_spikeKiller_1p5->fill(event);
+
+
 
 		// if(NEleSel->passes(event) || NMuonSel->passes(event)) return false;
 
