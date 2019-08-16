@@ -72,7 +72,7 @@ int main(int argc, char* argv[]){
   // cout << "BernsteinParameter:" << endl;
   // for(auto name : bernsteinParNames)cout << name << endl;
 
-  TString category="JetMass_Tau21DDT_pt";
+  TString category="JetMass_N2DDT_pt";
   vector<TString> FileNames= {"Pseudo.root","WMatched.root","WUnmatched.root"};
   vector<TFile*> Files;
   Files.reserve(FileNames.size());
