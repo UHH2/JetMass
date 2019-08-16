@@ -25,7 +25,7 @@ int main(int argc, char* argv[]){
 
   vector<TString> directories = {"fit_s", "prefit"};
   // vector<TString> channels = {"TopMass200", "TopMass300", "TopMass400"};
-  vector<TString> channels = {"TopMass200", "TopMass300", "TopMass400", "WMassPt500pass","WMassPt550pass","WMassPt675pass","WMassPt800pass","WMassPt500fail","WMassPt550fail","WMassPt675fail","WMassPt800fail"};
+  vector<TString> channels = {"TopMass200", "TopMass300", "TopMass400", "WMassPt500pass","WMassPt550pass","WMassPt600pass","WMassPt675pass","WMassPt800pass","WMassPt500fail","WMassPt550fail","WMassPt600fail","WMassPt675fail","WMassPt800fail"};
 
   for(auto dir: directories){
     for(auto ch: channels){

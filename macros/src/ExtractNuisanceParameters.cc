@@ -4,7 +4,7 @@
 using namespace std;
 using namespace RooFit;
 
-void PlotNuisance(vector<TString> parname, vector<double> par, vector<double> errU, vector<double> errD);
+void PlotNuisance(vector<TString> parname, vector<double> par, vector<double> errU, vector<double> errD, TString name);
 void SetPlotStyle();
 
 int main(int argc, char* argv[]){
@@ -74,6 +74,35 @@ int main(int argc, char* argv[]){
     }
   }
 
+  // vector<TString> parname_qcd ={
+  //   "qcd_pass_ralhpTF_pt_par0_rho_par0",
+  //   "qcd_pass_ralhpTF_pt_par0_rho_par1",
+  //   "qcd_pass_ralhpTF_pt_par0_rho_par2",
+  //   "qcd_pass_ralhpTF_pt_par1_rho_par0",
+  //   "qcd_pass_ralhpTF_pt_par1_rho_par1",
+  //   "qcd_pass_ralhpTF_pt_par1_rho_par2",
+  //   "qcd_pass_ralhpTF_pt_par2_rho_par0",
+  //   "qcd_pass_ralhpTF_pt_par2_rho_par1",
+  //   "qcd_pass_ralhpTF_pt_par2_rho_par2"
+  // };
+  //
+  // vector<double> par_qcd;
+  // vector<double> errU_qcd;
+  // vector<double> errD_qcd;
+  // for(auto name: parname_qcd){
+  //   RooRealVar* params = (RooRealVar*) result->floatParsFinal().find(name);
+  //   double central = params->getValV();
+  //   double error_up = fabs(params->getErrorHi());
+  //   double error_down = fabs(params->getErrorLo());
+  //   par.push_back(central);
+  //   errU.push_back(error_up);
+  //   errD.push_back(error_down);
+  // }
+
+  SetPlotStyle();
+  PlotNuisance(parname, par, errU, errD, "Nuicance_JetMass");
+  // PlotNuisance(parname_qcd, par_qcd, errU_qcd, errD_qcd, "Nuicance_QCDfit");
+
   TFile* outputFile=new TFile("../Histograms/grid_fit.root","recreate");
   outputFile->cd();
   for(int k=0; k<Ncat; k++){
@@ -83,15 +112,11 @@ int main(int argc, char* argv[]){
   }
   h_cat->Write("categories");
   outputFile->Close();
-
-  SetPlotStyle();
-  PlotNuisance(parname, par, errU, errD);
-  
   return 0;
 }
 
 
-void PlotNuisance(vector<TString> parname, vector<double> par, vector<double> errU, vector<double> errD){
+void PlotNuisance(vector<TString> parname, vector<double> par, vector<double> errU, vector<double> errD, TString name){
   int Npoints = parname.size();
   TGraphAsymmErrors* g = new TGraphAsymmErrors(Npoints);
   for(unsigned int i=0; i<parname.size(); i++){
@@ -106,6 +131,7 @@ void PlotNuisance(vector<TString> parname, vector<double> par, vector<double> er
     frame->GetXaxis()->SetBinLabel(bin, parname[i]);
   }
 
+  double width = 200 + Npoints*75;
   TCanvas* c = new TCanvas("c", "c", 2000, 600);
   gPad->SetBottomMargin(.2);
   // gPad->SetRightMargin(.2);
@@ -116,7 +142,10 @@ void PlotNuisance(vector<TString> parname, vector<double> par, vector<double> er
   g->SetMarkerStyle(8);
   g->SetMarkerSize(1);
   g->Draw("P SAME");
-  c->SaveAs("../Plots/Nuisance.pdf");
+  c->SaveAs("../Plots/"+name+".pdf");
+  delete g;
+  delete c;
+  delete frame;
   return;
 }
 
