@@ -34,11 +34,6 @@ int main(int argc, char* argv[]){
   vector<TString> bernsteinParNames;
   vector<double> bernsteinPars;
 
-  // vector<TString> qcdParNames;
-  //
-  // vector<double> qcdPars,qcdParsPt,qcdParsMSD;
-  // set<double> Ptbins,MSDbins;
-
   RooFitResult* result = (RooFitResult*) file->Get("fit_s");
   RooArgList fitargs = result->floatParsFinal();
   for(int i = 0 ; i < fitargs.getSize() ; ++i){
@@ -50,27 +45,7 @@ int main(int argc, char* argv[]){
       RooRealVar* par = (RooRealVar*) result->floatParsFinal().find(parName);
       bernsteinPars.push_back(par->getValV());
     }
-    // if(parName.Contains("qcdparam")){
-    //   TString pT_TString=parName(TRegexp("Pt[0-9]+"));
-    //   string pT_string=(string) pT_TString.ReplaceAll("Pt","");
-    //   double pT = stod(pT_string);
-    //
-    //   TString mSD_TString=parName(TRegexp("msdbin[0-9]+"));
-    //   string mSD_string=(string) mSD_TString.ReplaceAll("msdbin","");
-    //   double mSD = stod(mSD_string);
-    //
-    //   RooRealVar* params = (RooRealVar*) result->floatParsFinal().find(parName);
-    //
-    //   qcdPars.push_back(params->getValV());
-    //   qcdParsPt.push_back(pT);
-    //   Ptbins.insert(pT);
-    //   qcdParsMSD.push_back(mSD);
-    //   MSDbins.insert(mSD);
-    // }
   }
-
-  // cout << "BernsteinParameter:" << endl;
-  // for(auto name : bernsteinParNames)cout << name << endl;
 
   TString category="JetMass_N2DDT_pt";
   vector<TString> FileNames= {"Pseudo.root","WMatched.root","WUnmatched.root"};
@@ -141,7 +116,6 @@ int main(int argc, char* argv[]){
     h_Rpf->Divide(h_fail);
 
     for(int j = 0 ; j < N_MsdBins ; ++j){
-    // for(int j = 55 ; j < 56 ; ++j){
       double pT = PtBins[i]+0.3*(PtBins[i+1]-PtBins[i]);
       double msd = h_info->GetXaxis()->GetBinLowEdge(j)+0.3*h_info->GetXaxis()->GetBinWidth(j);
       double rho = 2*TMath::Log(msd/pT);
@@ -176,33 +150,6 @@ int main(int argc, char* argv[]){
   R_pf_surf->Write();
   OutFile->Close();
 
-  // TCanvas* c = new TCanvas("c", "c", 600, 600);
-  // gPad->SetBottomMargin(.2);
-  // // gPad->SetRightMargin(.2);
-  // R_pf_surf->SetMarkerColor(kBlack);
-  // R_pf_surf->SetMarkerStyle(8);
-  // R_pf_surf->SetMarkerSize(1);
-  // R_pf_surf->Draw("P");
-  // c->SaveAs("~/www/R_pf.root");
-
-
-  // TH1F * h_pass = (TH1F*) Files[0]->Get("")
-
-  // cout << "QcdParameter:"<<endl;
-  //
-  // // TH2D * QCD = new TH2D("QCD","x=m_{SD},y=p_{T}",MSDbins.size(),qcdParsMSD[0],qcdParsMSD[qcdParsMSD.size()-1],Ptbins.size(),qcdParsPt[0],qcdParsPt[qcdParsPt.size()-1]);
-  //   const int NbinsX=MSDbins.size();
-  //   Double_t BoundariesX[NbinsX] = {};
-  //
-  //   // TH1F* mass=new TH1F("dijet_mass","M_{jj}",NBINS-1,BOUNDARIES);
-  //
-  // TH2D * QCD = new TH2D("QCD","x=m_{SD},y=p_{T}",MSDbins.size(),50,170,Ptbins.size(),qcdParsPt[0],qcdParsPt[qcdParsPt.size()-1]);
-  // for(int i = 1; i<QCD->GetNbinsX() ; ++i){
-  //   cout << "X: BinCenter("<< i << "): " << QCD->GetXaxis()->GetBinLowEdge(i)<< endl;
-  // }
-  // for(int j = 1; j<QCD->GetNbinsY() ; ++j){
-  //   cout << "Y: BinCenter("<< j << "): " << QCD->GetYaxis()->GetBinLowEdge(j)<< endl;
-  // }
   return 0;
 }
 
@@ -212,10 +159,8 @@ TString generateBernsteinPolyLinComb(int n_pt,int n_rho){
   int parCount=0;
   for(int l=0; l<= n_pt; ++l){
     for(int k=0; k<= n_rho;++k){
-			// cout << "x,y order" << k << "/" <<n_rho << " , " << l<<"/"<<n_pt << endl;
       linComb+=TString::Format("[%i]*",parCount)+generateBernsteinPoly(k,n_rho,"x")+"*"+generateBernsteinPoly(l,n_pt,"y");
       if(parCount + 1  < (n_pt+1)*(n_rho+1))linComb+="+";
-      // linComb+=TString::Format("[%i]*%s*%s",parCount,generateBernsteinPoly(k,n_rho,"x"),generateBernsteinPoly(l,n_pt,"y"));
       ++parCount;
     }
   }
