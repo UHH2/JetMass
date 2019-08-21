@@ -43,13 +43,12 @@ def uhh_producer(configs=None):
 
     print('CMS_lumi', 'lnN')
     lumi = rl.NuisanceParameter('CMS_lumi', 'lnN')
+    channels=configs['channels']
 
     
     #########
     #QCD ESTIMATION
-
-    #Do the following only for WMass channels (only those have pass/fail region templates)
-    Wchannels={k: v for k, v in channels.items() if "WMass" in k}
+    Wchannels=[channel for channel in channels if "WMass" in channel ]
     ptEdges=[float(channel.replace("WMassPt","")) for channel in Wchannels]    
     ptEdges.append(float(channels["WMassPt%i"%ptEdges[-1]]["histDir"].split("To")[-1]))
     # ptbins = np.array([500, 550, 600, 675, 800, 1200])
@@ -69,14 +68,6 @@ def uhh_producer(configs=None):
     validbins = (rhoscaled >= 0) & (rhoscaled <= 1)
     rhoscaled[~validbins] = 1  # we will mask these out later
     tf = rl.BernsteinPoly("qcd_pass_ralhpTF",(3,3),['pt','rho'])
-
-    qcdeff=getQcdEfficiency(Wchannels,msdbins)[0]
-    
-    tf_params = 0.05*tf(ptscaled, rhoscaled) #To Be replaced with following:
-
-    #Build QCD MC for fail and pass and fit to Bernstein
-    # tf_params = buildQcdModel(Wchannels,ptbins,msdbins) 
-    #########
 
     #create NormParams
     sampleNormSF={k:{} for k,v in channels.items() if "NormUnc" in v}
@@ -98,7 +89,7 @@ def uhh_producer(configs=None):
     for channelName,config in channels.items():
         print(channelName)
         RebinMSD='W' in channelName
-        # RebinMSD=True
+
         histLocation=config['histLocation']
         if('variable' in config):
             Variable=config['variable']
@@ -123,14 +114,17 @@ def uhh_producer(configs=None):
                 sFile=TFile('%s/%s.root'%(histLocation,sName),'READ')
                 hist=sFile.Get(histDir+'/'+Variable+'_central')
                 if(RebinMSD):
-                    hist=hist.Rebin(len(msdbins)-1,hist.GetName()+'_newBinning',msdbins)
+                    hist=hist.Rebin(len(msdbins)-1,hist.GetName()+'_'+channelName,msdbins)
+                    # hist=hist.Rebin(len(msdbins)-1,hist.GetName()+'_newbinning',msdbins)
                 sample=rl.TemplateSample(ch.name+'_'+sName,sampleType,hist)
                 for (gridNuisance,x,y,category) in gridNuisances:
                     histUp=sFile.Get('%s/%s_%i_%i_%s_up'%(histDir,Variable,x,y,category))
                     histDown=sFile.Get('%s/%s_%i_%i_%s_down'%(histDir,Variable,x,y,category))
                     if(RebinMSD):
-                        histUp=histUp.Rebin(len(msdbins)-1,histUp.GetName()+'_newBinning',msdbins)
-                        histDown=histDown.Rebin(len(msdbins)-1,histDown.GetName()+'_newBinning',msdbins)
+                        histUp=histUp.Rebin(len(msdbins)-1,histUp.GetName()+'_'+channelName,msdbins)
+                        histDown=histDown.Rebin(len(msdbins)-1,histDown.GetName()+'_'+channelName,msdbins)
+                        # histUp=histUp.Rebin(len(msdbins)-1,histUp.GetName()+'_newbinning',msdbins)
+                        # histDown=histDown.Rebin(len(msdbins)-1,histDown.GetName()+'_newbinning',msdbins)
                     sample.setParamEffect(gridNuisance,histUp,histDown)
                     sample.setParamEffect(lumi, 1.027)
                     
@@ -154,7 +148,8 @@ def uhh_producer(configs=None):
                     dataHistDir=histDir
                 dataHist=dataFile.Get(dataHistDir+'/'+'Mass_central')
             if(RebinMSD):
-                dataHist=dataHist.Rebin(len(msdbins)-1,dataHist.GetName()+'_newBinning',msdbins)
+                dataHist=dataHist.Rebin(len(msdbins)-1,dataHist.GetName()+'_'+channelName,msdbins)
+                # dataHist=dataHist.Rebin(len(msdbins)-1,dataHist.GetName()+'_newbinning',msdbins)
 
             ch.setObservation(dataHist)
 
@@ -166,6 +161,7 @@ def uhh_producer(configs=None):
         failCh = model[channelName+'fail']
         obs = failCh.observable
         print('channelName',channelName)
+        print(obs)
         qcdparams = np.array([rl.IndependentParameter('qcdparam_%s_msdbin%d' % (channelName, i), 0) for i in range(nmsd)])
         initial_qcd = failCh.getObservation().astype(float)  # was integer, and numpy complained about subtracting float from it
         for sample in failCh:
