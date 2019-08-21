@@ -67,7 +67,7 @@ def uhh_producer(configs=None):
     rhoscaled = (rhopts - (-6)) / ((-2.1) - (-6))
     validbins = (rhoscaled >= 0) & (rhoscaled <= 1)
     rhoscaled[~validbins] = 1  # we will mask these out later
-    tf = rl.BernsteinPoly("qcd_pass_ralhpTF",(3,3),['pt','rho'])
+    tf_params = tf(ptscaled, rhoscaled)
 
     #create NormParams
     sampleNormSF={k:{} for k,v in channels.items() if "NormUnc" in v}
