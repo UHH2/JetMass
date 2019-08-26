@@ -3,6 +3,8 @@ import numpy as np
 import sys
 from ROOT import TFile, TH1F
 
+from qcdmodel import buildQcdModel,getQcdEfficiency
+
 def uhh_producer(configs=None):
     if('ModelName' not in configs):
         ModelName='UHH_Model'
@@ -42,28 +44,53 @@ def uhh_producer(configs=None):
     print('CMS_lumi', 'lnN')
     lumi = rl.NuisanceParameter('CMS_lumi', 'lnN')
 
+    
     #########
     #QCD ESTIMATION
-    ptbins = np.array([500, 550, 600, 675, 800, 1200])
+
+    #Do the following only for WMass channels (only those have pass/fail region templates)
+    Wchannels={k: v for k, v in channels.items() if "WMass" in k}
+    ptEdges=[float(channel.replace("WMassPt","")) for channel in Wchannels]    
+    ptEdges.append(float(channels["WMassPt%i"%ptEdges[-1]]["histDir"].split("To")[-1]))
+    # ptbins = np.array([500, 550, 600, 675, 800, 1200])
+    ptbins = np.array(ptEdges)
     npt = len(ptbins) - 1
     # msdbins = np.linspace(40, 201, 24)
     # msdbins = np.linspace(50, 180, 14)
     msdbins = np.linspace(50, 170, 21)
     nmsd = len(msdbins) - 1
 
-    tf = rl.BernsteinPoly("qcd_pass_ralhpTF",(3,3),['pt','rho'])
     # here we derive these all at once with 2D array
-    ptpts, msdpts = np.meshgrid(ptbins[:-1] + 0.3 * np.diff(ptbins), msdbins[:-1] + 0.3 * np.diff(msdbins), indexing='ij')
+    ptpts, msdpts = np.meshgrid(ptbins[:-1] + 0.3 * np.diff(ptbins), msdbins[:-1] + 0.5 * np.diff(msdbins), indexing='ij')
     rhopts = 2*np.log(msdpts/ptpts)
-    ptscaled = (ptpts - 450.) / (1200. - 450.)
+    # ptscaled = (ptpts - 450.) / (1200. - 450.)
+    ptscaled = (ptpts - ptbins[0]) / (ptbins[-1] - ptbins[0])
     rhoscaled = (rhopts - (-6)) / ((-2.1) - (-6))
     validbins = (rhoscaled >= 0) & (rhoscaled <= 1)
     rhoscaled[~validbins] = 1  # we will mask these out later
-    tf_params = tf(ptscaled, rhoscaled)
+    tf = rl.BernsteinPoly("qcd_pass_ralhpTF",(3,3),['pt','rho'])
+
+    qcdeff=getQcdEfficiency(Wchannels,msdbins)[0]
+    
+    tf_params = 0.05*tf(ptscaled, rhoscaled) #To Be replaced with following:
+
+    #Build QCD MC for fail and pass and fit to Bernstein
+    # tf_params = buildQcdModel(Wchannels,ptbins,msdbins) 
     #########
 
-    channels=configs['channels']
-
+    #create NormParams
+    sampleNormSF={k:{} for k,v in channels.items() if "NormUnc" in v}
+    
+    for channelName,scaleFactors in sampleNormSF.items():
+        for i,sample in enumerate(channels[channelName]["samples"]):
+            NormSF=channels[channelName]["NormUnc"][i]
+            if(NormSF==0): continue
+            NormSfPar=rl.NuisanceParameter(channelName+sample+"NormSF",'lnN')
+            # NormSfPar = rl.IndependentParameter(channelName+sample+"NormSF",1.,0,10)
+            scaleFactors.update({sample:NormSfPar})
+            # sampleNormSF[channelName].update(){}
+    
+    
     if(channels == None):
         print('must specify channel Configurations!')
         exit(0)
@@ -106,6 +133,10 @@ def uhh_producer(configs=None):
                         histDown=histDown.Rebin(len(msdbins)-1,histDown.GetName()+'_newBinning',msdbins)
                     sample.setParamEffect(gridNuisance,histUp,histDown)
                     sample.setParamEffect(lumi, 1.027)
+                    
+                    if(channelName in sampleNormSF and sName in sampleNormSF[channelName]):
+                       sample.setParamEffect(sampleNormSF[channelName][sName],1.1)
+                       # sample.setParamEffect(sampleNormSF[channelName][sName],1*sampleNormSF[channelName][sName])
                 ch.addSample(sample)
             dataFile=TFile('%s/%s.root'%(histLocation,config['obs']))
 
@@ -141,9 +172,9 @@ def uhh_producer(configs=None):
             initial_qcd -= sample.getExpectation(nominal=True)
         if np.any(initial_qcd < 0.):
             raise ValueError("uh-oh")
-        scaledparams = initial_qcd  + 2.*np.sqrt(initial_qcd)*qcdparams
-        
-        print(scaledparams[0].formula(True))
+        # scaledparams = initial_qcd  + 2.*np.sqrt(initial_qcd)*qcdparams
+        sigmascale = 10  # to scale the deviation from initial
+        scaledparams = initial_qcd * (1 + sigmascale/np.maximum(1., np.sqrt(initial_qcd)))**qcdparams
         fail_qcd = rl.ParametericSample('%sfail_qcd' % channelName, rl.Sample.BACKGROUND, obs, scaledparams)
         failCh.addSample(fail_qcd)
         pass_qcd = rl.TransferFactorSample('%spass_qcd' % channelName, rl.Sample.BACKGROUND, tf_params[ptbin, :], fail_qcd)

@@ -5,32 +5,45 @@
   "channels":{
     "WMassPt500":{
       "histLocation":"/afs/desy.de/user/a/albrechs/xxl/af-cms/dazsle/JetMass/Histograms/W",
-      "histDir":"JetMass_Tau21DDT_pt500To550",
-      "samples":["QCD","WUnmatched","WMatched"],
+      "histDir":"JetMass_N2DDT_pt500To550",
+			"samples":["QCD","WUnmatched","WMatched"],
+			"NormUnc":[0,1.025,1.025],
       "signal":"WMatched",
-      "obs":"Pseudo",
+      "obs":"Data",
       "regions":["pass","fail"]
     },
     "WMassPt550":{
       "histLocation":"/afs/desy.de/user/a/albrechs/xxl/af-cms/dazsle/JetMass/Histograms/W",
-      "histDir":"JetMass_Tau21DDT_pt550To600",
+      "histDir":"JetMass_N2DDT_pt550To600",
       "samples":["QCD","WUnmatched","WMatched"],
+			"NormUnc":[0,1.025,1.025],
       "signal":"WMatched",
-      "obs":"Pseudo",
+      "obs":"Data",
+      "regions":["pass","fail"]
+    },
+    "WMassPt600":{
+      "histLocation":"/afs/desy.de/user/a/albrechs/xxl/af-cms/dazsle/JetMass/Histograms/W",
+      "histDir":"JetMass_N2DDT_pt600To675",
+      "samples":["QCD","WUnmatched","WMatched"],
+			"NormUnc":[0,1.025,1.025],
+      "signal":"WMatched",
+      "obs":"Data",
       "regions":["pass","fail"]
     },
     "WMassPt675":{
       "histLocation":"/afs/desy.de/user/a/albrechs/xxl/af-cms/dazsle/JetMass/Histograms/W",
-      "histDir":"JetMass_Tau21DDT_pt675To800",
+      "histDir":"JetMass_N2DDT_pt675To800",
       "samples":["QCD","WUnmatched","WMatched"],
+			"NormUnc":[0,1.025,1.025],
       "signal":"WMatched",
-      "obs":"Pseudo",
+      "obs":"Data",
       "regions":["pass","fail"]
     },
     "WMassPt800":{
       "histLocation":"/afs/desy.de/user/a/albrechs/xxl/af-cms/dazsle/JetMass/Histograms/W",
-      "histDir":"JetMass_Tau21DDT_pt800To1200",
+      "histDir":"JetMass_N2DDT_pt800To1200",
       "samples":["QCD","WUnmatched","WMatched"],
+			"NormUnc":[0,1.025,1.025],
       "signal":"WMatched",
       "obs":"Data",
       "regions":["pass","fail"]
