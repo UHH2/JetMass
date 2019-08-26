@@ -2,7 +2,6 @@ import rhalphalib as rl
 import numpy as np
 import sys
 from ROOT import TFile, TH1F
-
 from qcdmodel import buildQcdModel,getQcdEfficiency
 
 def uhh_producer(configs=None):
@@ -48,7 +47,8 @@ def uhh_producer(configs=None):
     
     #########
     #QCD ESTIMATION
-    Wchannels=[channel for channel in channels if "WMass" in channel ]
+    #Do the following only for WMass channels (only those have pass/fail region templates)
+    Wchannels={k: v for k, v in channels.items() if "WMass" in k}
     ptEdges=[float(channel.replace("WMassPt","")) for channel in Wchannels]    
     ptEdges.append(float(channels["WMassPt%i"%ptEdges[-1]]["histDir"].split("To")[-1]))
     # ptbins = np.array([500, 550, 600, 675, 800, 1200])
@@ -67,7 +67,15 @@ def uhh_producer(configs=None):
     rhoscaled = (rhopts - (-6)) / ((-2.1) - (-6))
     validbins = (rhoscaled >= 0) & (rhoscaled <= 1)
     rhoscaled[~validbins] = 1  # we will mask these out later
-    tf_params = tf(ptscaled, rhoscaled)
+    tf = rl.BernsteinPoly("qcd_pass_ralhpTF",(3,3),['pt','rho'])
+
+    qcdeff=getQcdEfficiency(Wchannels,msdbins)[0]
+    
+    tf_params = 0.05*tf(ptscaled, rhoscaled) #To Be replaced with following:
+
+    #Build QCD MC for fail and pass and fit to Bernstein
+    # tf_params = buildQcdModel(Wchannels,ptbins,msdbins) 
+    #########
 
     #create NormParams
     sampleNormSF={k:{} for k,v in channels.items() if "NormUnc" in v}
