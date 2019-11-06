@@ -413,7 +413,7 @@ namespace uhh2examples {
     if(is_mc && (ratio <1.6))h_spikeKiller_1p6->fill(event);
     double qScale_max=1.5;
     if(is_mc && (ratio > qScale_max)) return false;
-    h_spikeKiller_1p5->fill(event);
+    if(is_mc)h_spikeKiller_1p5->fill(event);
 
 
 
@@ -425,8 +425,8 @@ namespace uhh2examples {
     // if(!rhoCut) return false;
     bool MyN2DDT_Selection = MYn2ddtsel->passes(event);
 
-    if(MyN2DDT_Selection){
-      if(is_mc){
+    if(is_mc){
+      if(MyN2DDT_Selection){
         // h_MyN2ddt_ECF_comparison_pass->fill(event);
         h_MyN2ddt_pass->fill(event);
         h_MyN2ddt_Substr_pass->fill(event);
@@ -438,17 +438,6 @@ namespace uhh2examples {
         else if (pt >= 800 && pt < 1200)h_MyN2ddt_pt800To1200_Sel_pass->fill(event);
         else h_MyN2ddt_pt1200ToInf_Sel_pass->fill(event);
       }else{
-        h_MyN2ddt_noConst_pass->fill(event);
-        if(pt > 450 && pt < 500)h_MyN2ddt_pt450To500_Sel_noConst_pass->fill(event);
-        else if(pt >= 500 && pt < 550)h_MyN2ddt_pt500To550_Sel_noConst_pass->fill(event);
-        else if(pt >= 550 && pt < 600)h_MyN2ddt_pt550To600_Sel_noConst_pass->fill(event);
-        else if (pt >= 600 && pt < 675)h_MyN2ddt_pt600To675_Sel_noConst_pass->fill(event);
-        else if (pt >= 675 && pt < 800)h_MyN2ddt_pt675To800_Sel_noConst_pass->fill(event);
-        else if (pt >= 800 && pt < 1200)h_MyN2ddt_pt800To1200_Sel_noConst_pass->fill(event);
-        else h_MyN2ddt_pt1200ToInf_Sel_noConst_pass->fill(event);
-      }
-    }else{
-      if(is_mc){
         // h_MyN2ddt_ECF_comparison_fail->fill(event);
         h_MyN2ddt_fail->fill(event);
         h_MyN2ddt_Substr_fail->fill(event);
@@ -459,22 +448,33 @@ namespace uhh2examples {
         else if (pt >= 675 && pt < 800)h_MyN2ddt_pt675To800_Sel_fail->fill(event);
         else if (pt >= 800 && pt < 1200)h_MyN2ddt_pt800To1200_Sel_fail->fill(event);
         else h_MyN2ddt_pt1200ToInf_Sel_fail->fill(event);
-      }else{
-        h_MyN2ddt_noConst_fail->fill(event);
-        if(pt > 450 && pt < 500)h_MyN2ddt_pt450To500_Sel_noConst_fail->fill(event);
-        else if(pt >= 500 && pt < 550)h_MyN2ddt_pt500To550_Sel_noConst_fail->fill(event);
-        else if(pt >= 550 && pt < 600)h_MyN2ddt_pt550To600_Sel_noConst_fail->fill(event);
-        else if (pt >= 600 && pt < 675)h_MyN2ddt_pt600To675_Sel_noConst_fail->fill(event);
-        else if (pt >= 675 && pt < 800)h_MyN2ddt_pt675To800_Sel_noConst_fail->fill(event);
-        else if (pt >= 800 && pt < 1200)h_MyN2ddt_pt800To1200_Sel_noConst_fail->fill(event);
-        else h_MyN2ddt_pt1200ToInf_Sel_noConst_fail->fill(event);
       }
     }
+    if(MyN2DDT_Selection){
+      h_MyN2ddt_noConst_pass->fill(event);
+      if(pt > 450 && pt < 500)h_MyN2ddt_pt450To500_Sel_noConst_pass->fill(event);
+      else if(pt >= 500 && pt < 550)h_MyN2ddt_pt500To550_Sel_noConst_pass->fill(event);
+      else if(pt >= 550 && pt < 600)h_MyN2ddt_pt550To600_Sel_noConst_pass->fill(event);
+      else if (pt >= 600 && pt < 675)h_MyN2ddt_pt600To675_Sel_noConst_pass->fill(event);
+      else if (pt >= 675 && pt < 800)h_MyN2ddt_pt675To800_Sel_noConst_pass->fill(event);
+      else if (pt >= 800 && pt < 1200)h_MyN2ddt_pt800To1200_Sel_noConst_pass->fill(event);
+      else h_MyN2ddt_pt1200ToInf_Sel_noConst_pass->fill(event);
+    }else{
+      h_MyN2ddt_noConst_fail->fill(event);
+      if(pt > 450 && pt < 500)h_MyN2ddt_pt450To500_Sel_noConst_fail->fill(event);
+      else if(pt >= 500 && pt < 550)h_MyN2ddt_pt500To550_Sel_noConst_fail->fill(event);
+      else if(pt >= 550 && pt < 600)h_MyN2ddt_pt550To600_Sel_noConst_fail->fill(event);
+      else if (pt >= 600 && pt < 675)h_MyN2ddt_pt600To675_Sel_noConst_fail->fill(event);
+      else if (pt >= 675 && pt < 800)h_MyN2ddt_pt675To800_Sel_noConst_fail->fill(event);
+      else if (pt >= 800 && pt < 1200)h_MyN2ddt_pt800To1200_Sel_noConst_fail->fill(event);
+      else h_MyN2ddt_pt1200ToInf_Sel_noConst_fail->fill(event);
+    }
+
 
     bool N2DDT_Selection = n2ddtsel->passes(event);
 
-    if(N2DDT_Selection){
-      if(is_mc){
+    if(is_mc){
+      if(N2DDT_Selection){
 				// h_ECF_comparison_pass->fill(event);
         h_N2ddt_pass->fill(event);
         h_N2ddt_Substr_pass->fill(event);
@@ -486,18 +486,7 @@ namespace uhh2examples {
         else if (pt >= 800 && pt < 1200)h_N2ddt_pt800To1200_Sel_pass->fill(event);
         else h_N2ddt_pt1200ToInf_Sel_pass->fill(event);
       }else{
-        h_N2ddt_noConst_pass->fill(event);
-        if(pt > 450 && pt < 500)h_N2ddt_pt450To500_Sel_noConst_pass->fill(event);
-        else if(pt >= 500 && pt < 550)h_N2ddt_pt500To550_Sel_noConst_pass->fill(event);
-        else if(pt >= 550 && pt < 600)h_N2ddt_pt550To600_Sel_noConst_pass->fill(event);
-        else if (pt >= 600 && pt < 675)h_N2ddt_pt600To675_Sel_noConst_pass->fill(event);
-        else if (pt >= 675 && pt < 800)h_N2ddt_pt675To800_Sel_noConst_pass->fill(event);
-        else if (pt >= 800 && pt < 1200)h_N2ddt_pt800To1200_Sel_noConst_pass->fill(event);
-        else h_N2ddt_pt1200ToInf_Sel_noConst_pass->fill(event);
-      }
-    }else{
-      if(is_mc){
-				// h_ECF_comparison_fail->fill(event);
+        // h_ECF_comparison_fail->fill(event);
         h_N2ddt_fail->fill(event);
         h_N2ddt_Substr_fail->fill(event);
         if(pt > 450 && pt < 500)h_N2ddt_pt450To500_Sel_fail->fill(event);
@@ -507,17 +496,28 @@ namespace uhh2examples {
         else if (pt >= 675 && pt < 800)h_N2ddt_pt675To800_Sel_fail->fill(event);
         else if (pt >= 800 && pt < 1200)h_N2ddt_pt800To1200_Sel_fail->fill(event);
         else h_N2ddt_pt1200ToInf_Sel_fail->fill(event);
-      }else{
-        h_N2ddt_noConst_fail->fill(event);
-        if(pt > 450 && pt < 500)h_N2ddt_pt450To500_Sel_noConst_fail->fill(event);
-        else if(pt >= 500 && pt < 550)h_N2ddt_pt500To550_Sel_noConst_fail->fill(event);
-        else if(pt >= 550 && pt < 600)h_N2ddt_pt550To600_Sel_noConst_fail->fill(event);
-        else if (pt >= 600 && pt < 675)h_N2ddt_pt600To675_Sel_noConst_fail->fill(event);
-        else if (pt >= 675 && pt < 800)h_N2ddt_pt675To800_Sel_noConst_fail->fill(event);
-        else if (pt >= 800 && pt < 1200)h_N2ddt_pt800To1200_Sel_noConst_fail->fill(event);
-        else h_N2ddt_pt1200ToInf_Sel_noConst_fail->fill(event);
       }
     }
+    if(N2DDT_Selection){
+      h_N2ddt_noConst_pass->fill(event);
+      if(pt > 450 && pt < 500)h_N2ddt_pt450To500_Sel_noConst_pass->fill(event);
+      else if(pt >= 500 && pt < 550)h_N2ddt_pt500To550_Sel_noConst_pass->fill(event);
+      else if(pt >= 550 && pt < 600)h_N2ddt_pt550To600_Sel_noConst_pass->fill(event);
+      else if (pt >= 600 && pt < 675)h_N2ddt_pt600To675_Sel_noConst_pass->fill(event);
+      else if (pt >= 675 && pt < 800)h_N2ddt_pt675To800_Sel_noConst_pass->fill(event);
+      else if (pt >= 800 && pt < 1200)h_N2ddt_pt800To1200_Sel_noConst_pass->fill(event);
+      else h_N2ddt_pt1200ToInf_Sel_noConst_pass->fill(event);
+    }else{
+      h_N2ddt_noConst_fail->fill(event);
+      if(pt > 450 && pt < 500)h_N2ddt_pt450To500_Sel_noConst_fail->fill(event);
+      else if(pt >= 500 && pt < 550)h_N2ddt_pt500To550_Sel_noConst_fail->fill(event);
+      else if(pt >= 550 && pt < 600)h_N2ddt_pt550To600_Sel_noConst_fail->fill(event);
+      else if (pt >= 600 && pt < 675)h_N2ddt_pt600To675_Sel_noConst_fail->fill(event);
+      else if (pt >= 675 && pt < 800)h_N2ddt_pt675To800_Sel_noConst_fail->fill(event);
+      else if (pt >= 800 && pt < 1200)h_N2ddt_pt800To1200_Sel_noConst_fail->fill(event);
+      else h_N2ddt_pt1200ToInf_Sel_noConst_fail->fill(event);
+    }
+
 
     // bool N2_Selection = n2sel->passes(event);
     //
