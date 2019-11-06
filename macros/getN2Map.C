@@ -1,9 +1,12 @@
 TH2F* computeDDTMap(double working_point, TH3D* n2_msd_pt );
+void setStyle();
+void set2DHistStyle(TH2 * hist);
+void plotDDTMap(TH2 * hist, TString title,TString outFile);
+
 
 
 void getN2Map(){
-  gROOT->SetBatch(true);
-
+	setStyle();
 // std::string h3_fileName = "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/W/wrongWeights/N2_v_mSD_v_pT.root";
 // std::string h3_fileName = "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/Wtmp/QCD_H3_N2_hists.root";
   std::string h3_fileName = "/nfs/dust/cms/user/albrechs/SingleJetTrees/WMassPreSel_TMP/N2_3Dmap.root";
@@ -31,12 +34,12 @@ void getN2Map(){
   }
   std::cout << "Done!"<< std::endl;
   TCanvas* c = new TCanvas("c", "c", 600, 600);
-  gStyle->SetOptStat(kFALSE);
-  gStyle->SetPadTickY(1);
-  gStyle->SetPadTickX(1);
-  gStyle->SetLegendBorderSize(0);
-  gPad->SetBottomMargin(.2);
-  gPad->SetRightMargin(.2);
+  // gStyle->SetOptStat(kFALSE);
+  // gStyle->SetPadTickY(1);
+  // gStyle->SetPadTickX(1);
+  // gStyle->SetLegendBorderSize(0);
+  // gPad->SetBottomMargin(.2);
+  // gPad->SetRightMargin(.2);
   N2_v_rho->GetXaxis()->SetTitle("#rho=log(m^{2}_{SD}/p^{2}_{T})");
   N2_v_rho->GetYaxis()->SetTitle("N_{2}^{#beta=1}");
   N2_v_rho->Draw("colz");
@@ -44,51 +47,111 @@ void getN2Map(){
 
 
   TH2F * ddt_0p05= computeDDTMap(0.05,N2_v_mSD_v_pT);
-  ddt_0p05->SetTitle("Simple N2-DDT map");
-  ddt_0p05->SetTitle("Rho2D");
-  TCanvas* c1 = new TCanvas("c1", "c1", 600, 600);
-  gPad->SetRightMargin(0.2);
-  ddt_0p05->GetXaxis()->SetRangeUser(-6.0,-2.1);
-  ddt_0p05->GetYaxis()->SetRangeUser(200,1200);
-  ddt_0p05->GetZaxis()->SetRangeUser(0.12,0.3);
-  ddt_0p05->Draw("colz");
+  // gPad->SetRightMargin(0.2);
+	plotDDTMap(ddt_0p05,"Simple N2-DDT map","DDT_0p05.pdf");
+
   TFile * mymapFile=new TFile("myN2Map.root","RECREATE");
   mymapFile->cd();
+  ddt_0p05->SetTitle("Rho2D");
   ddt_0p05->Write();
   mymapFile->Close();
-  c1->SaveAs("DDT_0p05.pdf");
 
   TFile *mitN2Map = new TFile("/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/GridOutput_v13.root","READ");
   TH2F * mit_ddtMap = (TH2F*) mitN2Map->Get("Rho2D");
-  mit_ddtMap->SetTitle("MIT N2-DDT map (with knn smearing)");
-  TCanvas * mit_c1 = new TCanvas("mit_c1","mit_c1",600,600);
-  mit_c1->cd();
-  mit_ddtMap->GetXaxis()->SetRangeUser(-6.0,-2.1);
-  mit_ddtMap->GetYaxis()->SetRangeUser(200,1200);
-  mit_ddtMap->GetZaxis()->SetRangeUser(0.12,0.3);
-  mit_ddtMap->Draw("colz");
-  mit_c1->SaveAs("MIT_DDT_0p05.pdf");
+	plotDDTMap(mit_ddtMap,"MIT N2-DDT map (with knn smearing)","MIT_DDT_0p05.pdf");
 
-  cout << "ddt map N Bins rho: " << ddt_0p05->GetNbinsX() << " pt: "<< ddt_0p05->GetNbinsY() << endl;
-  cout << "MITddt map N Bins rho: " << mit_ddtMap->GetNbinsX() << " pt: "<< mit_ddtMap->GetNbinsY() << endl; 
-  TH2F * ddtMap_Comp = (TH2F*)ddt_0p05->Clone();
-  ddtMap_Comp->Add(mit_ddtMap,-1.);
-  // ddtMap_Comp->Divide(mit_ddtMap);
-  TCanvas * Comp_c = new TCanvas("Comp_c","Comp_c",600,600);
-  Comp_c->cd();
-  ddtMap_Comp->GetZaxis()->SetRangeUser(0,.5);
-  ddtMap_Comp->Draw("colz");
-  Comp_c->SaveAs("DDTMap_Comparison.pdf");
+	
+	// cout << "ddt map N Bins rho: " << ddt_0p05->GetNbinsX() << " pt: "<< ddt_0p05->GetNbinsY() << endl;
+  // cout << "MITddt map N Bins rho: " << mit_ddtMap->GetNbinsX() << " pt: "<< mit_ddtMap->GetNbinsY() << endl; 
+  // TH2F * ddtMap_Comp = (TH2F*)ddt_0p05->Clone();
 
-  // TH2F * ddt_0p26= computeDDTMap(0.26,N2_v_mSD_v_pT);
-  // TCanvas* c2 = new TCanvas("c2", "c2", 600, 600);
-  // ddt_0p26->Draw("colz");
-  // c1->SaveAs("~/www/DDT_0p26.pdf");
-
-
+	// ddtMap_Comp->Add(mit_ddtMap,-1.);
+  
+  // TCanvas * Comp_c = new TCanvas("Comp_c","Comp_c",600,600);
+  // Comp_c->cd();
+  // ddtMap_Comp->GetZaxis()->SetRangeUser(0,.5);
+  // ddtMap_Comp->Draw("colz");
+  // Comp_c->SaveAs("DDTMap_Comparison.pdf");
 
 }
 
+
+
+
+void plotDDTMap(TH2 * hist, TString title,TString outFile){
+
+	hist->GetXaxis()->SetTitle("#rho");
+	hist->GetYaxis()->SetTitle("p_{T} [GeV]");
+	hist->GetZaxis()->SetTitle("N2^{DDT} 5/% quantile");
+
+	hist->GetXaxis()->SetRangeUser(-6.0,-2.1);
+  hist->GetYaxis()->SetRangeUser(200,1200);
+  hist->GetZaxis()->SetRangeUser(0.12,0.3);
+
+	double Font=43;
+	double TitleSize=24.0;
+	double TitleOffset=1.3;
+	double LabelSize=18.0;
+	hist->GetYaxis()->SetTitleFont(Font);
+	hist->GetYaxis()->SetTitleSize(TitleSize);
+	hist->GetYaxis()->SetTitleOffset(TitleOffset);
+	hist->GetYaxis()->SetLabelFont(Font);
+	hist->GetYaxis()->SetLabelSize(LabelSize);
+
+	hist->GetXaxis()->SetTitleFont(Font);
+	hist->GetXaxis()->SetTitleSize(TitleSize);
+	hist->GetXaxis()->SetTitleOffset(TitleOffset);
+	hist->GetXaxis()->SetLabelFont(Font);
+	hist->GetXaxis()->SetLabelSize(LabelSize);
+
+	hist->GetZaxis()->SetTitleFont(Font);
+	hist->GetZaxis()->SetTitleSize(TitleSize);
+	hist->GetZaxis()->SetTitleOffset(TitleOffset);
+	hist->GetZaxis()->SetLabelFont(Font);
+	hist->GetZaxis()->SetLabelSize(LabelSize);
+
+	hist->GetZaxis()->SetNdivisions(510);
+
+	hist->SetTitle(title);
+	hist->SetTitleFont(43);
+	hist->SetTitleSize(20.0);
+	
+  TCanvas * c1 = new TCanvas("c1","c1",700,600);
+  c1->cd();
+  hist->Draw("colz");
+  c1->SaveAs(outFile);
+	delete c1;
+	
+}
+
+void setStyle(){
+
+	gStyle->SetPadTickY(1);
+  gStyle->SetPadTickX(1);
+  gStyle->SetLegendBorderSize(0);
+
+  gROOT->SetBatch(true);
+  gStyle->SetOptStat(0);
+  gStyle->SetOptFit(0);
+  // gStyle->SetOptTitle(0);
+  // gStyle->SetTextFont(43);
+  //
+  gStyle->SetTitleOffset(0.86,"X");
+  gStyle->SetTitleOffset(1.6,"Y");
+
+	// gStyle->SetPadLeftMargin(0.1);
+  gStyle->SetPadLeftMargin(0.14);
+  gStyle->SetPadBottomMargin(0.12);
+  gStyle->SetPadTopMargin(0.08);
+  gStyle->SetPadRightMargin(0.16);
+
+  gStyle->SetMarkerSize(0.5);
+  gStyle->SetHistLineWidth(1);
+  gStyle->SetTitleSize(0.05, "XYZ");
+  gStyle->SetLabelSize(0.04, "XYZ");
+  gStyle->SetNdivisions(506, "XYZ");
+  gStyle->SetLegendBorderSize(0);
+}
 
 TH2F* computeDDTMap(double working_point, TH3D* n2_msd_pt ){
   TH2F * ddtMap= (TH2F*)n2_msd_pt->Project3D("yx");
