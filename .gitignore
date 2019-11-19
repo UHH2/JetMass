@@ -4,3 +4,8 @@
 !*Makefile
 /obj/*
 *.pdf
+__pycache__
+*.pyc
+*.pkl
+*.root
+*.json
