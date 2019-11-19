@@ -176,9 +176,9 @@ def uhh_producer(configs=None):
             initial_qcd -= sample.getExpectation(nominal=True)
         if np.any(initial_qcd < 0.):
             raise ValueError("uh-oh")
-        # scaledparams = initial_qcd  + 2.*np.sqrt(initial_qcd)*qcdparams
-        sigmascale = 10  # to scale the deviation from initial
-        scaledparams = initial_qcd * (1 + sigmascale/np.maximum(1., np.sqrt(initial_qcd)))**qcdparams
+        scaledparams = initial_qcd  + 2.*np.sqrt(initial_qcd)*qcdparams
+        # sigmascale = 10  # to scale the deviation from initial
+        # scaledparams = initial_qcd * (1 + sigmascale/np.maximum(1., np.sqrt(initial_qcd)))**qcdparams
         fail_qcd = rl.ParametericSample('%sfail_qcd' % channelName, rl.Sample.BACKGROUND, obs, scaledparams)
         failCh.addSample(fail_qcd)
         pass_qcd = rl.TransferFactorSample('%spass_qcd' % channelName, rl.Sample.BACKGROUND, tf_params[ptbin, :], fail_qcd)
