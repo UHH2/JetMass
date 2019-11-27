@@ -207,7 +207,6 @@ TopMassModule::TopMassModule(Context & ctx){
 
 
 bool TopMassModule::process(Event & event) {
-
   if(isMC){
     lumiweight->process(event);
     PUreweight->process(event);
