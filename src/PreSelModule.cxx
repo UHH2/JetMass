@@ -24,6 +24,7 @@
 #include "UHH2/common/include/MuonHists.h"
 
 #include "UHH2/JetMass/include/SubstructureSelections.h"
+#include "UHH2/JetMass/include/MatchingSelections.h"
 #include "UHH2/JetMass/include/JetMassSelections.h"
 #include "UHH2/JetMass/include/TopJetCorrections.h"
 #include "UHH2/JetMass/include/CorrectParticles.h"
@@ -58,6 +59,7 @@ private:
 	std::unique_ptr<Selection> TRIGGER_sel, MET_sel;
 	std::unique_ptr<Selection> N_AK8_300_sel, N_AK8_500_sel, RHO_sel;
 	std::unique_ptr<Selection> N_MUON_sel, N_ELEC_sel, TwoD_sel;
+	std::unique_ptr<MatchingSelection> MatchLeadingGenW_sel;
 
 	std::vector<std::unique_ptr<uhh2::Hists>> hists;
 
@@ -76,9 +78,9 @@ PreSelModule::PreSelModule(Context & ctx){
 	// Set some boolians
 	is_mc = ctx.get("dataset_type") == "MC";
 
-	std::string version=ctx.get("dataset_version");
-	is_WSample=version.find("WJets") != std::string::npos;
-	matchW=version.find("WMatched") != std::string::npos;
+	std::string version = ctx.get("dataset_version");
+	is_WSample = version.find("WJets") != std::string::npos;
+	matchW = version.find("WMatched") != std::string::npos;
 
 	const std::string& channel = ctx.get("channel", "");
 	if     (channel == "top") isTopSel = true;
@@ -122,6 +124,7 @@ PreSelModule::PreSelModule(Context & ctx){
 	MET_sel.reset(new METCut(50., 100000.));
 	if(isTopSel)    TRIGGER_sel.reset(new TriggerSelection("HLT_Mu50_v*"));
 	else if(isWSel) TRIGGER_sel.reset(new AndSelection(ctx));
+	MatchLeadingGenW_sel.reset(new MatchingSelection(ctx, MatchingSelection::oIsLeadingGenW));
 
 	// HISTOGRAMS
 	hists.emplace_back(new ElectronHists(ctx, "ElectronHists"));
@@ -173,6 +176,12 @@ bool PreSelModule::process(Event & event) {
 
 	if(!N_AK8_500_sel->passes(event)) passW = false;
 	if(!RHO_sel->passes(event)) passW = false;
+
+	if(isWSel && is_WSample && passW){
+		bool Wmatched = MatchLeadingGenW_sel->passes_matching(event,event.topjets->at(0));
+		if(matchW) passW = Wmatched;
+		else passW = !Wmatched;
+	}
 
 	// RUN CLEANER AGAIN with pt > 30 (has to be after TwoD sel)
 	ak4cleaner->process(event);
