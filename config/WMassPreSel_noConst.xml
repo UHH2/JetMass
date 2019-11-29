@@ -68,6 +68,7 @@
 <!-- ================================================================================================================================== -->
 
     <UserConfig>
+  <Item Name="channel" Value="W"/>
 
   <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
   <Item Name="GenParticleCollection"   Value="GenParticles"/>
@@ -100,7 +101,7 @@
   <Item Name="pileup_directory_data_up" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MyDataPileupHistogram_72383.root" />
   <Item Name="pileup_directory_data_down" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MyDataPileupHistogram_66017.root" />
 
-     <Item Name="AnalysisModule" Value="WMassPreSelModule"/>
+     <Item Name="AnalysisModule" Value="PreSelModule"/>
     </UserConfig>
 
   </Cycle>
