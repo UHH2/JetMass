@@ -19,20 +19,29 @@ namespace uhh2 {
       TH2F* ddtMap;
       bool useRho;
   	};
-    class N2Selection: public uhh2::Selection {
-    	public:
-    		N2Selection(double n2_cutValue,double n2_minValue=0.0);
-    		virtual bool passes(const uhh2::Event &event) override;
-    	private:
-    		double n2_cutValue,n2_minValue;
-    	};
+    
+  class N2Selection: public uhh2::Selection {
+  	public:
+  		N2Selection(double n2_cutValue,double n2_minValue=0.0);
+  		virtual bool passes(const uhh2::Event &event) override;
+  	private:
+  		double n2_cutValue,n2_minValue;
+  	};
 
-    class Tau21DDTSelection: public uhh2::Selection {
-    public:
-      Tau21DDTSelection(double cutValue,double slope);
-      virtual bool passes(const uhh2::Event &event) override;
-    private:
-      double cutValue,slope;
-    };
+  class Tau21DDTSelection: public uhh2::Selection {
+  public:
+    Tau21DDTSelection(double cutValue,double slope);
+    virtual bool passes(const uhh2::Event &event) override;
+  private:
+    double cutValue,slope;
+  };
+    
+  class RhoSelection: public uhh2::Selection {
+  public:
+    RhoSelection(double rho_min, double rho_max);
+    virtual bool passes(const uhh2::Event &event) override;
+  private:
+    double rho_min, rho_max;    
+  };
 }
 #endif
