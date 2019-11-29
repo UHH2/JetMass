@@ -66,3 +66,12 @@ bool Tau21DDTSelection::passes(const uhh2::Event &event){
   double tau21DDT = computeTau21DDT(ak8jet,slope);
   return tau21DDT < cutValue;
 }
+
+RhoSelection::RhoSelection(double rho_min_, double rho_max_):rho_min(rho_min_),rho_max(rho_max_){}
+
+bool RhoSelection::passes(const uhh2::Event &event){
+  assert(event.topjets);
+  if(event.topjets->size()<1) return false;
+  double rho=2*TMath::Log(event.topjets->at(0).softdropmass()/event.topjets->at(0).pt());
+  return ( rho < -2.1 ) && ( rho > -6.0);
+}
