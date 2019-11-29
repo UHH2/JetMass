@@ -27,11 +27,10 @@
 
   <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="35867">
     <!-- <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="2242.207303926122665"> -->
-    <!-- <InputData Version="DATA_JetHTRun2016v3B" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False">
+    <InputData Version="DATA_JetHTRun2016v3B" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False">
       &DATA_JetHTRun2016B;
       <InputTree Name="AnalysisTree" />
-    </InputData> -->
-
+    </InputData>
     <InputData Version="DATA_JetHTRun2016v3C" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False">
       &DATA_JetHTRun2016C;
       <InputTree Name="AnalysisTree" />
@@ -91,6 +90,7 @@
   <Item Name="GridFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/grid.root" />
 
   <Item Name="ddtMapFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/GridOutput_v13.root" />
+  <Item Name="MYddtMapFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/macros/myN2Map.root" />
   <Item Name="ddtMapName" Value="Rho2D"/>
 
   <Item Name="h3File" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/W/QCD.root" /> -->
