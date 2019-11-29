@@ -13,11 +13,14 @@
 #include "UHH2/common/include/JetCorrections.h"
 #include "UHH2/common/include/YearRunSwitchers.h"
 #include "UHH2/common/include/Utils.h" //mainly for runPeriods vectors
+#include "UHH2/core/include/TopJet.h"
 
 #include "UHH2/JetMass/include/H3DDTHist.h"
 #include "UHH2/JetMass/include/JetMassHists.h"
 #include "UHH2/JetMass/include/JetMassHists_central.h"
 #include "UHH2/JetMass/include/JetMassHists_central_noConst.h"
+#include "UHH2/JetMass/include/SubstructureSelections.h"
+#include "UHH2/JetMass/include/MatchingSelections.h"
 
 #include "UHH2/JetMass/include/PFHists.h"
 #include "UHH2/JetMass/include/CorrectParticles.h"
@@ -33,7 +36,6 @@
 using namespace std;
 using namespace uhh2;
 
-namespace uhh2examples {
 
 	Particle GetGeneratorW(Event & event);
 
@@ -51,6 +53,8 @@ namespace uhh2examples {
     std::unique_ptr<TopJetCleaner> ak8cleaner;
 
 		std::unique_ptr<Selection> n2_physical_sel,N_AK8_500_sel;
+		std::unique_ptr<Selection> rho_sel;
+		std::unique_ptr<MatchingSelection> matching_sel;
 
 		std::unique_ptr<Hists> h_nocuts,h_jec,h_cleaner,h_nak8_500sel;
 		std::unique_ptr<Hists> h_nocuts_noConst,h_jec_noConst,h_cleaner_noConst,h_nak8_500sel_noConst;
@@ -176,7 +180,8 @@ namespace uhh2examples {
 
 
 		N_AK8_500_sel.reset(new NTopJetSelection(1,-1,TopJetId(PtEtaCut(500.,100000.))));
-
+		rho_sel.reset(new RhoSelection(-6.0,-2.1));
+		matching_sel.reset(new MatchingSelection(ctx,MatchingSelection::oIsLeadingGenW));
 		// HISTOGRAMS
 	  double variation = 0.1;
 
@@ -267,11 +272,13 @@ namespace uhh2examples {
 		if(is_mc)h_nak8_500sel->fill(event);
  		h_nak8_500sel_noConst->fill(event);
 
-		double rho=2*TMath::Log(event.topjets->at(0).softdropmass()/event.topjets->at(0).pt());
-		bool rhoCut= ( rho < -2.1 ) && ( rho > -6.0);
+		bool rhoCut = rho_sel->passes(event);
 		if(!rhoCut) return false;
 		if(is_mc)h_rhoCut->fill(event);
 		h_rhoCut_noConst->fill(event);
+		
+		TopJet probejet = event.topjets->at(0);
+		if(matching_sel->passes_matching(event,probejet)) return true;
 
 		return true;
 	}
@@ -294,5 +301,3 @@ namespace uhh2examples {
 		}
 		return event.genparticles->at(GenW_index);
 	}
-
-}
