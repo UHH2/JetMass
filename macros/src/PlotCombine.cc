@@ -25,7 +25,8 @@ int main(int argc, char* argv[]){
 
   vector<TString> directories = {"fit_s", "prefit"};
   // vector<TString> channels = {"TopMass200", "TopMass300", "TopMass400"};
-  vector<TString> channels = {"TopMass200", "TopMass300", "TopMass400", "WMassPt500pass","WMassPt550pass","WMassPt600pass","WMassPt675pass","WMassPt800pass","WMassPt500fail","WMassPt550fail","WMassPt600fail","WMassPt675fail","WMassPt800fail"};
+  // vector<TString> channels = {"TopMass200", "TopMass300", "TopMass400", "WMassPt500pass","WMassPt550pass","WMassPt600pass","WMassPt675pass","WMassPt800pass","WMassPt500fail","WMassPt550fail","WMassPt600fail","WMassPt675fail","WMassPt800fail"};
+  vector<TString> channels = {"WMassPt500pass","WMassPt550pass","WMassPt600pass","WMassPt675pass","WMassPt800pass","WMassPt500fail","WMassPt550fail","WMassPt600fail","WMassPt675fail","WMassPt800fail"};
 
   for(auto dir: directories){
     for(auto ch: channels){
@@ -77,7 +78,7 @@ void PlotHist(TGraphAsymmErrors* h_dat, TH1F* h_mc, TH1F* h_bkg, TString name){
   gPad->SetBottomMargin(0.14);
   h_mc->SetTitle(" ");
   h_mc->GetXaxis()->SetTitle("jet mass");
-  h_mc->GetYaxis()->SetTitle("Events");
+  h_mc->GetYaxis()->SetTitle("Events/(1GeV)");
   h_mc->GetYaxis()->SetTitleOffset(1.6);
   h_mc->GetXaxis()->SetTitleOffset(1.1);
   h_mc->GetYaxis()->SetTitleSize(0.05);
@@ -109,12 +110,13 @@ void PlotHist(TGraphAsymmErrors* h_dat, TH1F* h_mc, TH1F* h_bkg, TString name){
   TLegend *leg = new TLegend(0.61,0.67,0.83,0.87);
   leg->SetBorderSize(0);
   leg->SetFillStyle(0);
-  leg->AddEntry(h_dat, "pseudo data","pe");
+  leg->AddEntry(h_dat, "data","pe");
   if(name.Contains("TopMass")) leg->AddEntry(h_mc, "t#bar{t}","f");
   else                         leg->AddEntry(h_mc, "W #rightarrow qq","f");
   leg->AddEntry(h_bkg, "background","f");
   leg->SetTextSize(0.04);
   leg->Draw();
+	// c->SetLogy();
   c->SaveAs("../Plots/"+name+".pdf");
   delete c;
   return;
