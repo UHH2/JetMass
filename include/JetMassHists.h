@@ -12,6 +12,7 @@ using namespace std;
 
 class JetMassHists: public uhh2::Hists {
 public:
+  JetMassHists(uhh2::Context & ctx, const std::string & dirname, TString mode = "SD");
   JetMassHists(uhh2::Context & ctx, const std::string & dirname, double variation_, TString mode = "SD");
 
   virtual void fill(const uhh2::Event & ev) override;
@@ -25,6 +26,8 @@ private:
   double CalculateRho(vector<PFParticle>);
   bool isMC;
   bool use_SD;
+  bool use_constituents;
+  bool do_variations;
   double variation;
   int Nbins_pt, Nbins_eta, Nbins_cat;
   TH1F *h_rho, *h_mass, *h_mass_jet, *h_rho_jet;

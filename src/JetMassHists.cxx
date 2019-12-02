@@ -8,7 +8,13 @@
 using namespace std;
 using namespace uhh2;
 
-JetMassHists::JetMassHists(Context & ctx, const string & dirname, double variation_, TString mode ): Hists(ctx, dirname){
+JetMassHists::JetMassHists(uhh2::Context & ctx, const std::string & dirname, double variation_, TString mode): Hists(ctx, dirname){
+  JetMassHists(ctx, dirname, mode);
+  variation = variation_;
+}
+
+
+JetMassHists::JetMassHists(Context & ctx, const string & dirname, TString mode ): Hists(ctx, dirname){
   auto dataset_type = ctx.get("dataset_type");
   isMC = dataset_type == "MC";
 
@@ -24,13 +30,21 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, double variati
 
   // should SD be used
   use_SD = false;
-  if(mode == "SD") use_SD = true;
+  if(mode.Contains("SD")) use_SD = true;
+
+  // use constituents?
+  use_constituents = true;
+  if(mode.Contains("NC")) use_constituents = false;
+
+  // do variations?
+  do_variations = false;
+  if(mode.Contains("VAR")) do_variations = true;
+  variation = 0.1;
 
   // get binnings and size of variation
   Nbins_pt =  grid->GetXaxis()->GetNbins();
   Nbins_eta = grid->GetYaxis()->GetNbins();
   Nbins_cat = categories.size();
-  variation = variation_;
 
   // setup jetmass hists
   TString xtitleMass = "jet mass";
@@ -47,12 +61,12 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, double variati
   h_mass_UP.resize(Nbins_pt);
   h_mass_DOWN.resize(Nbins_pt);
   for (int i = 0; i < Nbins_pt; i++){
-      h_mass_UP[i].resize(Nbins_eta);
-      h_mass_DOWN[i].resize(Nbins_eta);
-      for (int j = 0; j < Nbins_eta; j++){
-         h_mass_UP[i][j].resize(Nbins_cat);
-         h_mass_DOWN[i][j].resize(Nbins_cat);
-      }
+    h_mass_UP[i].resize(Nbins_eta);
+    h_mass_DOWN[i].resize(Nbins_eta);
+    for (int j = 0; j < Nbins_eta; j++){
+      h_mass_UP[i][j].resize(Nbins_cat);
+      h_mass_DOWN[i][j].resize(Nbins_cat);
+    }
   }
 
   // book some hists without variations
@@ -75,6 +89,7 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, double variati
       }
     }
   }
+
 }
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -91,52 +106,65 @@ void JetMassHists::fill(const Event & event){
   // get the PFParticles inside the first topjet
   // if mode is soft drop, get particles from subjets
   vector<PFParticle> particles;
-  if(use_SD){
-    vector<Jet> subjets = topjets->at(0).subjets();
-    for(auto subjet: subjets){
-      for(const auto candInd : subjet.pfcand_indexs()){
+  if(allparticles->size() != 0 && use_constituents){
+    if(use_SD){
+      vector<Jet> subjets = topjets->at(0).subjets();
+      for(auto subjet: subjets){
+        for(const auto candInd : subjet.pfcand_indexs()){
+          particles.push_back(allparticles->at(candInd));
+        }
+      }
+    }
+    else{
+      for(const auto candInd : topjets->at(0).pfcand_indexs()){
         particles.push_back(allparticles->at(candInd));
       }
     }
   }
-  else{
-    for(const auto candInd : topjets->at(0).pfcand_indexs()){
-      particles.push_back(allparticles->at(candInd));
-    }
-  }
-
   // fill central histograms
-  double mass = CalculateMJet(particles);
-  double rho = CalculateRho(particles);
   double mjet;
   if(use_SD) mjet = topjets->at(0).softdropmass();
   else       mjet = topjets->at(0).v4().M();
   double ptjet = topjets->at(0).v4().Pt();
-  double rhojet = TMath::Log(mjet*mjet/(ptjet*ptjet));
-  h_mass->Fill(mass, weight);
+  double rhojet = 2*TMath::Log(mjet/ptjet);
   h_mass_jet->Fill(mjet, weight);
-  h_rho->Fill(rho, weight);
   h_rho_jet->Fill(rhojet, weight);
+  // fill again but get values from PF particles
+  double mass, rho;
+  if(use_constituents){
+    mass = CalculateMJet(particles);
+    rho = CalculateRho(particles);
+  }
+  else{
+    mass = mjet;
+    rho = rhojet;
+  }
+  h_mass->Fill(mass, weight);
+  h_rho->Fill(rho, weight);
 
 
   // fill some particle histograms
-  for(auto p: particles){
-    h_particle_pt->Fill(p.pt(), weight);
-    h_particle_eta->Fill(p.eta(), weight);
+  if(use_constituents){
+    for(auto p: particles){
+      h_particle_pt->Fill(p.pt(), weight);
+      h_particle_eta->Fill(p.eta(), weight);
+    }
   }
 
   // loop over every bin in pt and eta
   // in every bin, vary the grid, apply to pf particles, compute jetmas
   // and fill up/down histograms
-  for(int i=0; i<Nbins_pt; i++){
-    for(int j=0; j<Nbins_eta; j++){
-      for(int k=0; k<Nbins_cat; k++){
-        int ptbin = i+1;
-        int etabin = j+1;
-        vector<PFParticle> new_particles_up = VaryParticles(particles, ptbin, etabin, categories[k], "up");
-        vector<PFParticle> new_particles_down = VaryParticles(particles, ptbin, etabin, categories[k], "down");
-        h_mass_UP[i][j][k]->Fill(CalculateMJet(new_particles_up), weight);
-        h_mass_DOWN[i][j][k]->Fill(CalculateMJet(new_particles_down), weight);
+  if(do_variations){
+    for(int i=0; i<Nbins_pt; i++){
+      for(int j=0; j<Nbins_eta; j++){
+        for(int k=0; k<Nbins_cat; k++){
+          int ptbin = i+1;
+          int etabin = j+1;
+          vector<PFParticle> new_particles_up = VaryParticles(particles, ptbin, etabin, categories[k], "up");
+          vector<PFParticle> new_particles_down = VaryParticles(particles, ptbin, etabin, categories[k], "down");
+          h_mass_UP[i][j][k]->Fill(CalculateMJet(new_particles_up), weight);
+          h_mass_DOWN[i][j][k]->Fill(CalculateMJet(new_particles_down), weight);
+        }
       }
     }
   }
