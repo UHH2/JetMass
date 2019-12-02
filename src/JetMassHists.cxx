@@ -39,6 +39,8 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, TString mode )
   // do variations?
   do_variations = false;
   if(mode.Contains("VAR")) do_variations = true;
+  if(!use_constituents) do_variations = false;
+
   variation = 0.1;
 
   // get binnings and size of variation
@@ -162,10 +164,16 @@ void JetMassHists::fill(const Event & event){
         for(int k=0; k<Nbins_cat; k++){
           int ptbin = i+1;
           int etabin = j+1;
-          vector<PFParticle> new_particles_up = VaryParticles(particles, ptbin, etabin, categories[k], "up");
-          vector<PFParticle> new_particles_down = VaryParticles(particles, ptbin, etabin, categories[k], "down");
-          h_mass_UP[i][j][k]->Fill(CalculateMJet(new_particles_up), weight);
-          h_mass_DOWN[i][j][k]->Fill(CalculateMJet(new_particles_down), weight);
+          if(isMC){
+            vector<PFParticle> new_particles_up = VaryParticles(particles, ptbin, etabin, categories[k], "up");
+            vector<PFParticle> new_particles_down = VaryParticles(particles, ptbin, etabin, categories[k], "down");
+            h_mass_UP[i][j][k]->Fill(CalculateMJet(new_particles_up), weight);
+            h_mass_DOWN[i][j][k]->Fill(CalculateMJet(new_particles_down), weight);
+          }
+          else{
+            h_mass_UP[i][j][k]->Fill(mass, weight);
+            h_mass_DOWN[i][j][k]->Fill(mass, weight);
+          }
         }
       }
     }
