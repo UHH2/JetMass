@@ -48,7 +48,7 @@ bool CorrectParticles::process(uhh2::Event & event){
       else if(use_grid){
         factor = GetGridFactor(particles->at(candInd));
       }
-			LorentzVectorXYZE old_v4XYZE = toXYZ(particles->at(candInd).v4());
+      LorentzVectorXYZE old_v4XYZE = toXYZ(particles->at(candInd).v4());
       particles->at(candInd).set_v4(toPtEtaPhi(old_v4XYZE * factor));
     }
   }
