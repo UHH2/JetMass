@@ -11,7 +11,6 @@
 #include "UHH2/common/include/NSelections.h"
 #include "UHH2/JetMass/include/JetMassSelections.h"
 #include "UHH2/JetMass/include/JetMassHists.h"
-#include "UHH2/JetMass/include/JetMassHists_central.h"
 #include "UHH2/JetMass/include/PFHists.h"
 #include "UHH2/JetMass/include/EFJetHists.h"
 #include "UHH2/JetMass/include/CorrectParticles.h"
@@ -121,88 +120,87 @@ TopMassModule::TopMassModule(Context & ctx){
   h_EnergyFractions_pt300.reset(new EFJetHists(ctx, "h_EnergyFractions_pt300"));
   h_EnergyFractions_pt400.reset(new EFJetHists(ctx, "h_EnergyFractions_pt400"));
 
-  h_mjet_loCHF_pt200.reset(new JetMassHists_central(ctx, "JetMass_loCHF_pt200"));
-  h_mjet_hiCHF_pt200.reset(new JetMassHists_central(ctx, "JetMass_hiCHF_pt200"));
-  h_mjet_loCHF_pt300.reset(new JetMassHists_central(ctx, "JetMass_loCHF_pt300"));
-  h_mjet_hiCHF_pt300.reset(new JetMassHists_central(ctx, "JetMass_hiCHF_pt300"));
-  h_mjet_loCHF_pt400.reset(new JetMassHists_central(ctx, "JetMass_loCHF_pt400"));
-  h_mjet_hiCHF_pt400.reset(new JetMassHists_central(ctx, "JetMass_hiCHF_pt400"));
+  h_mjet_loCHF_pt200.reset(new JetMassHists(ctx, "JetMass_loCHF_pt200", "SD"));
+  h_mjet_hiCHF_pt200.reset(new JetMassHists(ctx, "JetMass_hiCHF_pt200", "SD"));
+  h_mjet_loCHF_pt300.reset(new JetMassHists(ctx, "JetMass_loCHF_pt300", "SD"));
+  h_mjet_hiCHF_pt300.reset(new JetMassHists(ctx, "JetMass_hiCHF_pt300", "SD"));
+  h_mjet_loCHF_pt400.reset(new JetMassHists(ctx, "JetMass_loCHF_pt400", "SD"));
+  h_mjet_hiCHF_pt400.reset(new JetMassHists(ctx, "JetMass_hiCHF_pt400", "SD"));
 
-  double variation = 0.1;
   h_pf.reset(new PFHists(ctx, "PFHists"));
   h_pf_W.reset(new PFHists(ctx, "PFHists_W"));
   h_pf_top.reset(new PFHists(ctx, "PFHists_top"));
 
-  h_mjet.reset(new JetMassHists(ctx, "JetMass", variation, "SD"));
-  h_mjet_pt200.reset(new JetMassHists(ctx, "JetMass_pt200", variation, "SD"));
-  h_mjet_pt300.reset(new JetMassHists(ctx, "JetMass_pt300", variation, "SD"));
-  h_mjet_pt400.reset(new JetMassHists(ctx, "JetMass_pt400", variation, "SD"));
-  h_mjet_masscut.reset(new JetMassHists(ctx, "JetMass_masscut", variation, "SD"));
-  h_mjet_masscut_pt200.reset(new JetMassHists(ctx, "JetMass_masscut_pt200", variation, "SD"));
-  h_mjet_masscut_pt300.reset(new JetMassHists(ctx, "JetMass_masscut_pt300", variation, "SD"));
-  h_mjet_masscut_pt400.reset(new JetMassHists(ctx, "JetMass_masscut_pt400", variation, "SD"));
-  h_mjet_failmasscut.reset(new JetMassHists(ctx, "JetMass_failmasscut", variation, "SD"));
-  h_mjet_failmasscut_pt200.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt200", variation, "SD"));
-  h_mjet_failmasscut_pt300.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt300", variation, "SD"));
-  h_mjet_failmasscut_pt400.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt400", variation, "SD"));
+  h_mjet.reset(new JetMassHists(ctx, "JetMass", "SDVAR"));
+  h_mjet_pt200.reset(new JetMassHists(ctx, "JetMass_pt200", "SDVAR"));
+  h_mjet_pt300.reset(new JetMassHists(ctx, "JetMass_pt300", "SDVAR"));
+  h_mjet_pt400.reset(new JetMassHists(ctx, "JetMass_pt400", "SDVAR"));
+  h_mjet_masscut.reset(new JetMassHists(ctx, "JetMass_masscut", "SDVAR"));
+  h_mjet_masscut_pt200.reset(new JetMassHists(ctx, "JetMass_masscut_pt200", "SDVAR"));
+  h_mjet_masscut_pt300.reset(new JetMassHists(ctx, "JetMass_masscut_pt300", "SDVAR"));
+  h_mjet_masscut_pt400.reset(new JetMassHists(ctx, "JetMass_masscut_pt400", "SDVAR"));
+  h_mjet_failmasscut.reset(new JetMassHists(ctx, "JetMass_failmasscut", "SDVAR"));
+  h_mjet_failmasscut_pt200.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt200", "SDVAR"));
+  h_mjet_failmasscut_pt300.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt300", "SDVAR"));
+  h_mjet_failmasscut_pt400.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt400", "SDVAR"));
 
   h_pf_aftervar1.reset(new PFHists(ctx, "PFHists_aftervar1"));
 
   h_pf_var1.reset(new PFHists(ctx, "PFHists_var1"));
-  h_mjet_var1.reset(new JetMassHists_central(ctx, "JetMass_var1"));
-  h_mjet_pt200_var1.reset(new JetMassHists_central(ctx, "JetMass_pt200_var1"));
-  h_mjet_pt300_var1.reset(new JetMassHists_central(ctx, "JetMass_pt300_var1"));
-  h_mjet_pt400_var1.reset(new JetMassHists_central(ctx, "JetMass_pt400_var1"));
-  h_mjet_masscut_var1.reset(new JetMassHists_central(ctx, "JetMass_masscut_var1"));
-  h_mjet_masscut_pt200_var1.reset(new JetMassHists_central(ctx, "JetMass_masscut_pt200_var1"));
-  h_mjet_masscut_pt300_var1.reset(new JetMassHists_central(ctx, "JetMass_masscut_pt300_var1"));
-  h_mjet_masscut_pt400_var1.reset(new JetMassHists_central(ctx, "JetMass_masscut_pt400_var1"));
-  h_mjet_failmasscut_var1.reset(new JetMassHists_central(ctx, "JetMass_failmasscut_var1"));
-  h_mjet_failmasscut_pt200_var1.reset(new JetMassHists_central(ctx, "JetMass_failmasscut_pt200_var1"));
-  h_mjet_failmasscut_pt300_var1.reset(new JetMassHists_central(ctx, "JetMass_failmasscut_pt300_var1"));
-  h_mjet_failmasscut_pt400_var1.reset(new JetMassHists_central(ctx, "JetMass_failmasscut_pt400_var1"));
+  h_mjet_var1.reset(new JetMassHists(ctx, "JetMass_var1", "SD"));
+  h_mjet_pt200_var1.reset(new JetMassHists(ctx, "JetMass_pt200_var1", "SD"));
+  h_mjet_pt300_var1.reset(new JetMassHists(ctx, "JetMass_pt300_var1", "SD"));
+  h_mjet_pt400_var1.reset(new JetMassHists(ctx, "JetMass_pt400_var1", "SD"));
+  h_mjet_masscut_var1.reset(new JetMassHists(ctx, "JetMass_masscut_var1", "SD"));
+  h_mjet_masscut_pt200_var1.reset(new JetMassHists(ctx, "JetMass_masscut_pt200_var1", "SD"));
+  h_mjet_masscut_pt300_var1.reset(new JetMassHists(ctx, "JetMass_masscut_pt300_var1", "SD"));
+  h_mjet_masscut_pt400_var1.reset(new JetMassHists(ctx, "JetMass_masscut_pt400_var1", "SD"));
+  h_mjet_failmasscut_var1.reset(new JetMassHists(ctx, "JetMass_failmasscut_var1", "SD"));
+  h_mjet_failmasscut_pt200_var1.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt200_var1", "SD"));
+  h_mjet_failmasscut_pt300_var1.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt300_var1", "SD"));
+  h_mjet_failmasscut_pt400_var1.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt400_var1", "SD"));
 
   h_pf_var2.reset(new PFHists(ctx, "PFHists_var2"));
-  h_mjet_var2.reset(new JetMassHists_central(ctx, "JetMass_var2"));
-  h_mjet_pt200_var2.reset(new JetMassHists_central(ctx, "JetMass_pt200_var2"));
-  h_mjet_pt300_var2.reset(new JetMassHists_central(ctx, "JetMass_pt300_var2"));
-  h_mjet_pt400_var2.reset(new JetMassHists_central(ctx, "JetMass_pt400_var2"));
-  h_mjet_masscut_var2.reset(new JetMassHists_central(ctx, "JetMass_masscut_var2"));
-  h_mjet_masscut_pt200_var2.reset(new JetMassHists_central(ctx, "JetMass_masscut_pt200_var2"));
-  h_mjet_masscut_pt300_var2.reset(new JetMassHists_central(ctx, "JetMass_masscut_pt300_var2"));
-  h_mjet_masscut_pt400_var2.reset(new JetMassHists_central(ctx, "JetMass_masscut_pt400_var2"));
-  h_mjet_failmasscut_var2.reset(new JetMassHists_central(ctx, "JetMass_failmasscut_var2"));
-  h_mjet_failmasscut_pt200_var2.reset(new JetMassHists_central(ctx, "JetMass_failmasscut_pt200_var2"));
-  h_mjet_failmasscut_pt300_var2.reset(new JetMassHists_central(ctx, "JetMass_failmasscut_pt300_var2"));
-  h_mjet_failmasscut_pt400_var2.reset(new JetMassHists_central(ctx, "JetMass_failmasscut_pt400_var2"));
+  h_mjet_var2.reset(new JetMassHists(ctx, "JetMass_var2", "SD"));
+  h_mjet_pt200_var2.reset(new JetMassHists(ctx, "JetMass_pt200_var2", "SD"));
+  h_mjet_pt300_var2.reset(new JetMassHists(ctx, "JetMass_pt300_var2", "SD"));
+  h_mjet_pt400_var2.reset(new JetMassHists(ctx, "JetMass_pt400_var2", "SD"));
+  h_mjet_masscut_var2.reset(new JetMassHists(ctx, "JetMass_masscut_var2", "SD"));
+  h_mjet_masscut_pt200_var2.reset(new JetMassHists(ctx, "JetMass_masscut_pt200_var2", "SD"));
+  h_mjet_masscut_pt300_var2.reset(new JetMassHists(ctx, "JetMass_masscut_pt300_var2", "SD"));
+  h_mjet_masscut_pt400_var2.reset(new JetMassHists(ctx, "JetMass_masscut_pt400_var2", "SD"));
+  h_mjet_failmasscut_var2.reset(new JetMassHists(ctx, "JetMass_failmasscut_var2", "SD"));
+  h_mjet_failmasscut_pt200_var2.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt200_var2", "SD"));
+  h_mjet_failmasscut_pt300_var2.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt300_var2", "SD"));
+  h_mjet_failmasscut_pt400_var2.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt400_var2", "SD"));
 
   h_pf_var3.reset(new PFHists(ctx, "PFHists_var3"));
-  h_mjet_var3.reset(new JetMassHists_central(ctx, "JetMass_var3"));
-  h_mjet_pt200_var3.reset(new JetMassHists_central(ctx, "JetMass_pt200_var3"));
-  h_mjet_pt300_var3.reset(new JetMassHists_central(ctx, "JetMass_pt300_var3"));
-  h_mjet_pt400_var3.reset(new JetMassHists_central(ctx, "JetMass_pt400_var3"));
-  h_mjet_masscut_var3.reset(new JetMassHists_central(ctx, "JetMass_masscut_var3"));
-  h_mjet_masscut_pt200_var3.reset(new JetMassHists_central(ctx, "JetMass_masscut_pt200_var3"));
-  h_mjet_masscut_pt300_var3.reset(new JetMassHists_central(ctx, "JetMass_masscut_pt300_var3"));
-  h_mjet_masscut_pt400_var3.reset(new JetMassHists_central(ctx, "JetMass_masscut_pt400_var3"));
-  h_mjet_failmasscut_var3.reset(new JetMassHists_central(ctx, "JetMass_failmasscut_var3"));
-  h_mjet_failmasscut_pt200_var3.reset(new JetMassHists_central(ctx, "JetMass_failmasscut_pt200_var3"));
-  h_mjet_failmasscut_pt300_var3.reset(new JetMassHists_central(ctx, "JetMass_failmasscut_pt300_var3"));
-  h_mjet_failmasscut_pt400_var3.reset(new JetMassHists_central(ctx, "JetMass_failmasscut_pt400_var3"));
+  h_mjet_var3.reset(new JetMassHists(ctx, "JetMass_var3", "SD"));
+  h_mjet_pt200_var3.reset(new JetMassHists(ctx, "JetMass_pt200_var3", "SD"));
+  h_mjet_pt300_var3.reset(new JetMassHists(ctx, "JetMass_pt300_var3", "SD"));
+  h_mjet_pt400_var3.reset(new JetMassHists(ctx, "JetMass_pt400_var3", "SD"));
+  h_mjet_masscut_var3.reset(new JetMassHists(ctx, "JetMass_masscut_var3", "SD"));
+  h_mjet_masscut_pt200_var3.reset(new JetMassHists(ctx, "JetMass_masscut_pt200_var3", "SD"));
+  h_mjet_masscut_pt300_var3.reset(new JetMassHists(ctx, "JetMass_masscut_pt300_var3", "SD"));
+  h_mjet_masscut_pt400_var3.reset(new JetMassHists(ctx, "JetMass_masscut_pt400_var3", "SD"));
+  h_mjet_failmasscut_var3.reset(new JetMassHists(ctx, "JetMass_failmasscut_var3", "SD"));
+  h_mjet_failmasscut_pt200_var3.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt200_var3", "SD"));
+  h_mjet_failmasscut_pt300_var3.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt300_var3", "SD"));
+  h_mjet_failmasscut_pt400_var3.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt400_var3", "SD"));
 
   h_pf_var4.reset(new PFHists(ctx, "PFHists_var4"));
-  h_mjet_var4.reset(new JetMassHists_central(ctx, "JetMass_var4"));
-  h_mjet_pt200_var4.reset(new JetMassHists_central(ctx, "JetMass_pt200_var4"));
-  h_mjet_pt300_var4.reset(new JetMassHists_central(ctx, "JetMass_pt300_var4"));
-  h_mjet_pt400_var4.reset(new JetMassHists_central(ctx, "JetMass_pt400_var4"));
-  h_mjet_masscut_var4.reset(new JetMassHists_central(ctx, "JetMass_masscut_var4"));
-  h_mjet_masscut_pt200_var4.reset(new JetMassHists_central(ctx, "JetMass_masscut_pt200_var4"));
-  h_mjet_masscut_pt300_var4.reset(new JetMassHists_central(ctx, "JetMass_masscut_pt300_var4"));
-  h_mjet_masscut_pt400_var4.reset(new JetMassHists_central(ctx, "JetMass_masscut_pt400_var4"));
-  h_mjet_failmasscut_var4.reset(new JetMassHists_central(ctx, "JetMass_failmasscut_var4"));
-  h_mjet_failmasscut_pt200_var4.reset(new JetMassHists_central(ctx, "JetMass_failmasscut_pt200_var4"));
-  h_mjet_failmasscut_pt300_var4.reset(new JetMassHists_central(ctx, "JetMass_failmasscut_pt300_var4"));
-  h_mjet_failmasscut_pt400_var4.reset(new JetMassHists_central(ctx, "JetMass_failmasscut_pt400_var4"));
+  h_mjet_var4.reset(new JetMassHists(ctx, "JetMass_var4", "SD"));
+  h_mjet_pt200_var4.reset(new JetMassHists(ctx, "JetMass_pt200_var4", "SD"));
+  h_mjet_pt300_var4.reset(new JetMassHists(ctx, "JetMass_pt300_var4", "SD"));
+  h_mjet_pt400_var4.reset(new JetMassHists(ctx, "JetMass_pt400_var4", "SD"));
+  h_mjet_masscut_var4.reset(new JetMassHists(ctx, "JetMass_masscut_var4", "SD"));
+  h_mjet_masscut_pt200_var4.reset(new JetMassHists(ctx, "JetMass_masscut_pt200_var4", "SD"));
+  h_mjet_masscut_pt300_var4.reset(new JetMassHists(ctx, "JetMass_masscut_pt300_var4", "SD"));
+  h_mjet_masscut_pt400_var4.reset(new JetMassHists(ctx, "JetMass_masscut_pt400_var4", "SD"));
+  h_mjet_failmasscut_var4.reset(new JetMassHists(ctx, "JetMass_failmasscut_var4", "SD"));
+  h_mjet_failmasscut_pt200_var4.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt200_var4", "SD"));
+  h_mjet_failmasscut_pt300_var4.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt300_var4", "SD"));
+  h_mjet_failmasscut_pt400_var4.reset(new JetMassHists(ctx, "JetMass_failmasscut_pt400_var4", "SD"));
 }
 
 
