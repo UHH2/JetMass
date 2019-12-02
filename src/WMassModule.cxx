@@ -18,7 +18,6 @@
 #include "UHH2/JetMass/include/SubstructureHists.h"
 #include "UHH2/JetMass/include/SubstructureSelections.h"
 #include "UHH2/JetMass/include/JetMassHists.h"
-#include "UHH2/JetMass/include/JetMassHists_central_noConst.h"
 #include "UHH2/JetMass/include/CorrectParticles.h"
 #include "UHH2/JetMass/include/ApplyPuppiToPF.h"
 #include "UHH2/JetMass/include/H3DDTHist.h"
@@ -176,8 +175,6 @@ namespace uhh2examples {
       MC_PUWeight.reset(new MCPileupReweight(ctx, "central"));
     }
 
-    double variation = 0.1;
-
     std::string h2_ddt_FileName = ctx.get("ddtMapFile");
     std::string My_h2_ddt_FileName = ctx.get("MYddtMapFile");
     std::string h2_ddt_HistName = ctx.get("ddtMapName");
@@ -205,13 +202,13 @@ namespace uhh2examples {
 		// if(is_mc)h_ECF_comparison.reset(new ECFHists(ctx,"ECFComparisonHists"));
 
     if(is_mc){
-      h_PreSel.reset(new JetMassHists(ctx,"JetMass_PreSel",variation,"SD"));
-      h_spikeKiller_1p5.reset(new JetMassHists(ctx,"JetMass_spikeKiller_1p5",variation,"SD"));
-      h_spikeKiller_1p6.reset(new JetMassHists(ctx,"JetMass_spikeKiller_1p6",variation,"SD"));
-      h_spikeKiller_1p7.reset(new JetMassHists(ctx,"JetMass_spikeKiller_1p7",variation,"SD"));
-      h_spikeKiller_1p8.reset(new JetMassHists(ctx,"JetMass_spikeKiller_1p8",variation,"SD"));
-      h_spikeKiller_2p0.reset(new JetMassHists(ctx,"JetMass_spikeKiller_2p0",variation,"SD"));
-      h_spikeKiller_2p5.reset(new JetMassHists(ctx,"JetMass_spikeKiller_2p5",variation,"SD"));
+      h_PreSel.reset(new JetMassHists(ctx,"JetMass_PreSel""SDVAR"));
+      h_spikeKiller_1p5.reset(new JetMassHists(ctx,"JetMass_spikeKiller_1p5""SDVAR"));
+      h_spikeKiller_1p6.reset(new JetMassHists(ctx,"JetMass_spikeKiller_1p6""SDVAR"));
+      h_spikeKiller_1p7.reset(new JetMassHists(ctx,"JetMass_spikeKiller_1p7""SDVAR"));
+      h_spikeKiller_1p8.reset(new JetMassHists(ctx,"JetMass_spikeKiller_1p8""SDVAR"));
+      h_spikeKiller_2p0.reset(new JetMassHists(ctx,"JetMass_spikeKiller_2p0""SDVAR"));
+      h_spikeKiller_2p5.reset(new JetMassHists(ctx,"JetMass_spikeKiller_2p5""SDVAR"));
     }
     h_PreSel_Substr_MyDDT.reset(new SubstructureHists(ctx,"SubstructureHists_PreSel_MyDDT",MYddtMap,true));
     h_PreSel_Substr.reset(new SubstructureHists(ctx,"SubstructureHists_PreSel",ddtMap,true));
@@ -220,155 +217,155 @@ namespace uhh2examples {
       h_MyN2ddt_Substr_pass.reset(new SubstructureHists(ctx,"MyN2ddt_SubstructureHists_pass",ddtMap,true));
       h_MyN2ddt_Substr_fail.reset(new SubstructureHists(ctx,"MyN2ddt_SubstructureHists_fail",ddtMap,true));
 
-      h_MyN2ddt_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pass",variation,"SD"));
-      h_MyN2ddt_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_fail",variation,"SD"));
+      h_MyN2ddt_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pass""SDVAR"));
+      h_MyN2ddt_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_fail""SDVAR"));
 			// h_MyN2ddt_ECF_comparison_pass.reset(new ECFHists(ctx,"MyN2ddt_ECFComparisonHists_pass"));
 			// h_MyN2ddt_ECF_comparison_fail.reset(new ECFHists(ctx,"MyN2ddt_ECFComparisonHists_fail"));
 
-      h_MyN2ddt_pt450To500_Sel_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt450To500_pass",variation,"SD"));
-      h_MyN2ddt_pt450To500_Sel_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt450To500_fail",variation,"SD"));
-      h_MyN2ddt_pt500To550_Sel_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt500To550_pass",variation,"SD"));
-      h_MyN2ddt_pt500To550_Sel_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt500To550_fail",variation,"SD"));
-      h_MyN2ddt_pt550To600_Sel_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt550To600_pass",variation,"SD"));
-      h_MyN2ddt_pt550To600_Sel_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt550To600_fail",variation,"SD"));
-      h_MyN2ddt_pt600To675_Sel_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt600To675_pass",variation,"SD"));
-      h_MyN2ddt_pt600To675_Sel_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt600To675_fail",variation,"SD"));
-      h_MyN2ddt_pt675To800_Sel_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt675To800_pass",variation,"SD"));
-      h_MyN2ddt_pt675To800_Sel_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt675To800_fail",variation,"SD"));
-      h_MyN2ddt_pt800To1200_Sel_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt800To1200_pass",variation,"SD"));
-      h_MyN2ddt_pt800To1200_Sel_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt800To1200_fail",variation,"SD"));
-      h_MyN2ddt_pt1200ToInf_Sel_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt1200ToInf_pass",variation,"SD"));
-      h_MyN2ddt_pt1200ToInf_Sel_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt1200ToInf_fail",variation,"SD"));
+      h_MyN2ddt_pt450To500_Sel_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt450To500_pass""SDVAR"));
+      h_MyN2ddt_pt450To500_Sel_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt450To500_fail""SDVAR"));
+      h_MyN2ddt_pt500To550_Sel_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt500To550_pass""SDVAR"));
+      h_MyN2ddt_pt500To550_Sel_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt500To550_fail""SDVAR"));
+      h_MyN2ddt_pt550To600_Sel_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt550To600_pass""SDVAR"));
+      h_MyN2ddt_pt550To600_Sel_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt550To600_fail""SDVAR"));
+      h_MyN2ddt_pt600To675_Sel_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt600To675_pass""SDVAR"));
+      h_MyN2ddt_pt600To675_Sel_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt600To675_fail""SDVAR"));
+      h_MyN2ddt_pt675To800_Sel_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt675To800_pass""SDVAR"));
+      h_MyN2ddt_pt675To800_Sel_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt675To800_fail""SDVAR"));
+      h_MyN2ddt_pt800To1200_Sel_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt800To1200_pass""SDVAR"));
+      h_MyN2ddt_pt800To1200_Sel_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt800To1200_fail""SDVAR"));
+      h_MyN2ddt_pt1200ToInf_Sel_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt1200ToInf_pass""SDVAR"));
+      h_MyN2ddt_pt1200ToInf_Sel_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt1200ToInf_fail""SDVAR"));
     }else{
-      h_MyN2ddt_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_MyN2ddt_noConst_pass"));
-      h_MyN2ddt_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_MyN2ddt_noConst_fail"));
+      h_MyN2ddt_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pass","SDNC"));
+      h_MyN2ddt_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_fail","SDNC"));
 
-      h_MyN2ddt_pt450To500_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_MyN2ddt_noConst_pt450To500_pass"));
-      h_MyN2ddt_pt450To500_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_MyN2ddt_noConst_pt450To500_fail"));
-      h_MyN2ddt_pt500To550_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_MyN2ddt_noConst_pt500To550_pass"));
-      h_MyN2ddt_pt500To550_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_MyN2ddt_noConst_pt500To550_fail"));
-      h_MyN2ddt_pt550To600_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_MyN2ddt_noConst_pt550To600_pass"));
-      h_MyN2ddt_pt550To600_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_MyN2ddt_noConst_pt550To600_fail"));
-      h_MyN2ddt_pt600To675_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_MyN2ddt_noConst_pt600To675_pass"));
-      h_MyN2ddt_pt600To675_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_MyN2ddt_noConst_pt600To675_fail"));
-      h_MyN2ddt_pt675To800_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_MyN2ddt_noConst_pt675To800_pass"));
-      h_MyN2ddt_pt675To800_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_MyN2ddt_noConst_pt675To800_fail"));
-      h_MyN2ddt_pt800To1200_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_MyN2ddt_noConst_pt800To1200_pass"));
-      h_MyN2ddt_pt800To1200_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_MyN2ddt_noConst_pt800To1200_fail"));
-      h_MyN2ddt_pt1200ToInf_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_MyN2ddt_noConst_pt1200ToInf_pass"));
-      h_MyN2ddt_pt1200ToInf_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_MyN2ddt_noConst_pt1200ToInf_fail"));
+      h_MyN2ddt_pt450To500_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt450To500_pass","SDNC"));
+      h_MyN2ddt_pt450To500_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt450To500_fail","SDNC"));
+      h_MyN2ddt_pt500To550_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt500To550_pass","SDNC"));
+      h_MyN2ddt_pt500To550_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt500To550_fail","SDNC"));
+      h_MyN2ddt_pt550To600_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt550To600_pass","SDNC"));
+      h_MyN2ddt_pt550To600_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt550To600_fail","SDNC"));
+      h_MyN2ddt_pt600To675_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt600To675_pass","SDNC"));
+      h_MyN2ddt_pt600To675_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt600To675_fail","SDNC"));
+      h_MyN2ddt_pt675To800_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt675To800_pass","SDNC"));
+      h_MyN2ddt_pt675To800_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt675To800_fail","SDNC"));
+      h_MyN2ddt_pt800To1200_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt800To1200_pass","SDNC"));
+      h_MyN2ddt_pt800To1200_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt800To1200_fail","SDNC"));
+      h_MyN2ddt_pt1200ToInf_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt1200ToInf_pass","SDNC"));
+      h_MyN2ddt_pt1200ToInf_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt1200ToInf_fail","SDNC"));
     }
 
     if(is_mc){
       h_N2ddt_Substr_pass.reset(new SubstructureHists(ctx,"N2ddt_SubstructureHists_pass",ddtMap,true));
       h_N2ddt_Substr_fail.reset(new SubstructureHists(ctx,"N2ddt_SubstructureHists_fail",ddtMap,true));
 
-      h_N2ddt_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pass",variation,"SD"));
-      h_N2ddt_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_fail",variation,"SD"));
+      h_N2ddt_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pass""SDVAR"));
+      h_N2ddt_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_fail""SDVAR"));
       // h_ECF_comparison_pass.reset(new ECFHists(ctx,"N2ddt_ECFComparisonHists_pass"));
       // h_ECF_comparison_fail.reset(new ECFHists(ctx,"N2ddt_ECFComparisonHists_fail"));
 
-      h_N2ddt_pt450To500_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt450To500_pass",variation,"SD"));
-      h_N2ddt_pt450To500_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt450To500_fail",variation,"SD"));
-      h_N2ddt_pt500To550_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt500To550_pass",variation,"SD"));
-      h_N2ddt_pt500To550_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt500To550_fail",variation,"SD"));
-      h_N2ddt_pt550To600_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt550To600_pass",variation,"SD"));
-      h_N2ddt_pt550To600_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt550To600_fail",variation,"SD"));
-      h_N2ddt_pt600To675_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt600To675_pass",variation,"SD"));
-      h_N2ddt_pt600To675_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt600To675_fail",variation,"SD"));
-      h_N2ddt_pt675To800_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt675To800_pass",variation,"SD"));
-      h_N2ddt_pt675To800_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt675To800_fail",variation,"SD"));
-      h_N2ddt_pt800To1200_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt800To1200_pass",variation,"SD"));
-      h_N2ddt_pt800To1200_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt800To1200_fail",variation,"SD"));
-      h_N2ddt_pt1200ToInf_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt1200ToInf_pass",variation,"SD"));
-      h_N2ddt_pt1200ToInf_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt1200ToInf_fail",variation,"SD"));
+      h_N2ddt_pt450To500_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt450To500_pass""SDVAR"));
+      h_N2ddt_pt450To500_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt450To500_fail""SDVAR"));
+      h_N2ddt_pt500To550_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt500To550_pass""SDVAR"));
+      h_N2ddt_pt500To550_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt500To550_fail""SDVAR"));
+      h_N2ddt_pt550To600_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt550To600_pass""SDVAR"));
+      h_N2ddt_pt550To600_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt550To600_fail""SDVAR"));
+      h_N2ddt_pt600To675_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt600To675_pass""SDVAR"));
+      h_N2ddt_pt600To675_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt600To675_fail""SDVAR"));
+      h_N2ddt_pt675To800_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt675To800_pass""SDVAR"));
+      h_N2ddt_pt675To800_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt675To800_fail""SDVAR"));
+      h_N2ddt_pt800To1200_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt800To1200_pass""SDVAR"));
+      h_N2ddt_pt800To1200_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt800To1200_fail""SDVAR"));
+      h_N2ddt_pt1200ToInf_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt1200ToInf_pass""SDVAR"));
+      h_N2ddt_pt1200ToInf_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt1200ToInf_fail""SDVAR"));
     }else{
-      h_N2ddt_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2DDT_noConst_pass"));
-      h_N2ddt_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2DDT_noConst_fail"));
+      h_N2ddt_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pass","SDNC"));
+      h_N2ddt_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_fail","SDNC"));
 
-      h_N2ddt_pt450To500_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2DDT_noConst_pt450To500_pass"));
-      h_N2ddt_pt450To500_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2DDT_noConst_pt450To500_fail"));
-      h_N2ddt_pt500To550_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2DDT_noConst_pt500To550_pass"));
-      h_N2ddt_pt500To550_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2DDT_noConst_pt500To550_fail"));
-      h_N2ddt_pt550To600_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2DDT_noConst_pt550To600_pass"));
-      h_N2ddt_pt550To600_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2DDT_noConst_pt550To600_fail"));
-      h_N2ddt_pt600To675_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2DDT_noConst_pt600To675_pass"));
-      h_N2ddt_pt600To675_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2DDT_noConst_pt600To675_fail"));
-      h_N2ddt_pt675To800_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2DDT_noConst_pt675To800_pass"));
-      h_N2ddt_pt675To800_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2DDT_noConst_pt675To800_fail"));
-      h_N2ddt_pt800To1200_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2DDT_noConst_pt800To1200_pass"));
-      h_N2ddt_pt800To1200_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2DDT_noConst_pt800To1200_fail"));
-      h_N2ddt_pt1200ToInf_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2DDT_noConst_pt1200ToInf_pass"));
-      h_N2ddt_pt1200ToInf_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2DDT_noConst_pt1200ToInf_fail"));
+      h_N2ddt_pt450To500_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt450To500_pass","SDNC"));
+      h_N2ddt_pt450To500_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt450To500_fail","SDNC"));
+      h_N2ddt_pt500To550_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt500To550_pass","SDNC"));
+      h_N2ddt_pt500To550_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt500To550_fail","SDNC"));
+      h_N2ddt_pt550To600_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt550To600_pass","SDNC"));
+      h_N2ddt_pt550To600_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt550To600_fail","SDNC"));
+      h_N2ddt_pt600To675_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt600To675_pass","SDNC"));
+      h_N2ddt_pt600To675_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt600To675_fail","SDNC"));
+      h_N2ddt_pt675To800_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt675To800_pass","SDNC"));
+      h_N2ddt_pt675To800_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt675To800_fail","SDNC"));
+      h_N2ddt_pt800To1200_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt800To1200_pass","SDNC"));
+      h_N2ddt_pt800To1200_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt800To1200_fail","SDNC"));
+      h_N2ddt_pt1200ToInf_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt1200ToInf_pass","SDNC"));
+      h_N2ddt_pt1200ToInf_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt1200ToInf_fail","SDNC"));
     }
 
     // if(is_mc){
-    //   h_N2_pass.reset(new JetMassHists(ctx,"JetMass_N2_pass",variation,"SD"));
-    //   h_N2_fail.reset(new JetMassHists(ctx,"JetMass_N2_fail",variation,"SD"));
+    //   h_N2_pass.reset(new JetMassHists(ctx,"JetMass_N2_pass""SDVAR"));
+    //   h_N2_fail.reset(new JetMassHists(ctx,"JetMass_N2_fail""SDVAR"));
     //
-    //   h_N2_pt450To500_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2_pt450To500_pass",variation,"SD"));
-    //   h_N2_pt450To500_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2_pt450To500_fail",variation,"SD"));
-    //   h_N2_pt500To550_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2_pt500To550_pass",variation,"SD"));
-    //   h_N2_pt500To550_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2_pt500To550_fail",variation,"SD"));
-    //   h_N2_pt550To600_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2_pt550To600_pass",variation,"SD"));
-    //   h_N2_pt550To600_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2_pt550To600_fail",variation,"SD"));
-    //   h_N2_pt600To675_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2_pt600To675_pass",variation,"SD"));
-    //   h_N2_pt600To675_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2_pt600To675_fail",variation,"SD"));
-    //   h_N2_pt675To800_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2_pt675To800_pass",variation,"SD"));
-    //   h_N2_pt675To800_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2_pt675To800_fail",variation,"SD"));
-    //   h_N2_pt800To1200_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2_pt800To1200_pass",variation,"SD"));
-    //   h_N2_pt800To1200_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2_pt800To1200_fail",variation,"SD"));
-    //   h_N2_pt1200ToInf_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2_pt1200ToInf_pass",variation,"SD"));
-    //   h_N2_pt1200ToInf_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2_pt1200ToInf_fail",variation,"SD"));
+    //   h_N2_pt450To500_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2_pt450To500_pass""SDVAR"));
+    //   h_N2_pt450To500_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2_pt450To500_fail""SDVAR"));
+    //   h_N2_pt500To550_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2_pt500To550_pass""SDVAR"));
+    //   h_N2_pt500To550_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2_pt500To550_fail""SDVAR"));
+    //   h_N2_pt550To600_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2_pt550To600_pass""SDVAR"));
+    //   h_N2_pt550To600_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2_pt550To600_fail""SDVAR"));
+    //   h_N2_pt600To675_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2_pt600To675_pass""SDVAR"));
+    //   h_N2_pt600To675_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2_pt600To675_fail""SDVAR"));
+    //   h_N2_pt675To800_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2_pt675To800_pass""SDVAR"));
+    //   h_N2_pt675To800_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2_pt675To800_fail""SDVAR"));
+    //   h_N2_pt800To1200_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2_pt800To1200_pass""SDVAR"));
+    //   h_N2_pt800To1200_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2_pt800To1200_fail""SDVAR"));
+    //   h_N2_pt1200ToInf_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2_pt1200ToInf_pass""SDVAR"));
+    //   h_N2_pt1200ToInf_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2_pt1200ToInf_fail""SDVAR"));
     // }else{
-    //   h_N2_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2_noConst_pass"));
-    //   h_N2_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2_noConst_fail"));
+    //   h_N2_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2_noConst_pass","SDNC"));
+    //   h_N2_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2_noConst_fail","SDNC"));
     //
-    //   h_N2_pt450To500_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2_noConst_pt450To500_pass"));
-    //   h_N2_pt450To500_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2_noConst_pt450To500_fail"));
-    //   h_N2_pt500To550_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2_noConst_pt500To550_pass"));
-    //   h_N2_pt500To550_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2_noConst_pt500To550_fail"));
-    //   h_N2_pt550To600_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2_noConst_pt550To600_pass"));
-    //   h_N2_pt550To600_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2_noConst_pt550To600_fail"));
-    //   h_N2_pt600To675_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2_noConst_pt600To675_pass"));
-    //   h_N2_pt600To675_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2_noConst_pt600To675_fail"));
-    //   h_N2_pt675To800_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2_noConst_pt675To800_pass"));
-    //   h_N2_pt675To800_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2_noConst_pt675To800_fail"));
-    //   h_N2_pt800To1200_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2_noConst_pt800To1200_pass"));
-    //   h_N2_pt800To1200_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2_noConst_pt800To1200_fail"));
-    //   h_N2_pt1200ToInf_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2_noConst_pt1200ToInf_pass"));
-    //   h_N2_pt1200ToInf_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_N2_noConst_pt1200ToInf_fail"));
+    //   h_N2_pt450To500_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2_noConst_pt450To500_pass","SDNC"));
+    //   h_N2_pt450To500_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2_noConst_pt450To500_fail","SDNC"));
+    //   h_N2_pt500To550_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2_noConst_pt500To550_pass","SDNC"));
+    //   h_N2_pt500To550_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2_noConst_pt500To550_fail","SDNC"));
+    //   h_N2_pt550To600_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2_noConst_pt550To600_pass","SDNC"));
+    //   h_N2_pt550To600_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2_noConst_pt550To600_fail","SDNC"));
+    //   h_N2_pt600To675_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2_noConst_pt600To675_pass","SDNC"));
+    //   h_N2_pt600To675_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2_noConst_pt600To675_fail","SDNC"));
+    //   h_N2_pt675To800_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2_noConst_pt675To800_pass","SDNC"));
+    //   h_N2_pt675To800_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2_noConst_pt675To800_fail","SDNC"));
+    //   h_N2_pt800To1200_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2_noConst_pt800To1200_pass","SDNC"));
+    //   h_N2_pt800To1200_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2_noConst_pt800To1200_fail","SDNC"));
+    //   h_N2_pt1200ToInf_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2_noConst_pt1200ToInf_pass","SDNC"));
+    //   h_N2_pt1200ToInf_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2_noConst_pt1200ToInf_fail","SDNC"));
     // }
     //
     // if(is_mc){
-    //   h_Tau21DDT_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pass",variation,"SD"));
-    //   h_Tau21DDT_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_fail",variation,"SD"));
+    //   h_Tau21DDT_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pass""SDVAR"));
+    //   h_Tau21DDT_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_fail""SDVAR"));
     //
-    //   h_Tau21DDT_pt450To500_Sel_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt450To500_pass",variation,"SD"));
-    //   h_Tau21DDT_pt450To500_Sel_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt450To500_fail",variation,"SD"));
-    //   h_Tau21DDT_pt500To550_Sel_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt500To550_pass",variation,"SD"));
-    //   h_Tau21DDT_pt500To550_Sel_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt500To550_fail",variation,"SD"));
-    //   h_Tau21DDT_pt550To600_Sel_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt550To600_pass",variation,"SD"));
-    //   h_Tau21DDT_pt550To600_Sel_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt550To600_fail",variation,"SD"));
-    //   h_Tau21DDT_pt600To675_Sel_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt600To675_pass",variation,"SD"));
-    //   h_Tau21DDT_pt600To675_Sel_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt600To675_fail",variation,"SD"));
-    //   h_Tau21DDT_pt675To800_Sel_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt675To800_pass",variation,"SD"));
-    //   h_Tau21DDT_pt675To800_Sel_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt675To800_fail",variation,"SD"));
-    //   h_Tau21DDT_pt800To1200_Sel_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt800To1200_pass",variation,"SD"));
-    //   h_Tau21DDT_pt800To1200_Sel_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt800To1200_fail",variation,"SD"));
-    //   h_Tau21DDT_pt1200ToInf_Sel_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt1200ToInf_pass",variation,"SD"));
-    //   h_Tau21DDT_pt1200ToInf_Sel_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt1200ToInf_fail",variation,"SD"));
+    //   h_Tau21DDT_pt450To500_Sel_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt450To500_pass""SDVAR"));
+    //   h_Tau21DDT_pt450To500_Sel_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt450To500_fail""SDVAR"));
+    //   h_Tau21DDT_pt500To550_Sel_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt500To550_pass""SDVAR"));
+    //   h_Tau21DDT_pt500To550_Sel_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt500To550_fail""SDVAR"));
+    //   h_Tau21DDT_pt550To600_Sel_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt550To600_pass""SDVAR"));
+    //   h_Tau21DDT_pt550To600_Sel_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt550To600_fail""SDVAR"));
+    //   h_Tau21DDT_pt600To675_Sel_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt600To675_pass""SDVAR"));
+    //   h_Tau21DDT_pt600To675_Sel_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt600To675_fail""SDVAR"));
+    //   h_Tau21DDT_pt675To800_Sel_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt675To800_pass""SDVAR"));
+    //   h_Tau21DDT_pt675To800_Sel_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt675To800_fail""SDVAR"));
+    //   h_Tau21DDT_pt800To1200_Sel_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt800To1200_pass""SDVAR"));
+    //   h_Tau21DDT_pt800To1200_Sel_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt800To1200_fail""SDVAR"));
+    //   h_Tau21DDT_pt1200ToInf_Sel_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt1200ToInf_pass""SDVAR"));
+    //   h_Tau21DDT_pt1200ToInf_Sel_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_pt1200ToInf_fail""SDVAR"));
     // }else{
-    //   h_Tau21DDT_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_Tau21DDT_noConst_pass"));
-    //   h_Tau21DDT_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_Tau21DDT_noConst_fail"));
+    //   h_Tau21DDT_noConst_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_noConst_pass","SDNC"));
+    //   h_Tau21DDT_noConst_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_noConst_fail","SDNC"));
     //
-    //   h_Tau21DDT_pt450To500_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_Tau21DDT_noConst_pt450To500_pass"));
-    //   h_Tau21DDT_pt450To500_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_Tau21DDT_noConst_pt450To500_fail"));
-    //   h_Tau21DDT_pt500To550_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_Tau21DDT_noConst_pt500To550_pass"));
-    //   h_Tau21DDT_pt500To550_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_Tau21DDT_noConst_pt500To550_fail"));
-    //   h_Tau21DDT_pt550To600_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_Tau21DDT_noConst_pt550To600_pass"));
-    //   h_Tau21DDT_pt550To600_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_Tau21DDT_noConst_pt550To600_fail"));
-    //   h_Tau21DDT_pt600To675_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_Tau21DDT_noConst_pt600To675_pass"));
+    //   h_Tau21DDT_pt450To500_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_noConst_pt450To500_pass","SDNC"));
+    //   h_Tau21DDT_pt450To500_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_noConst_pt450To500_fail","SDNC"));
+    //   h_Tau21DDT_pt500To550_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_noConst_pt500To550_pass","SDNC"));
+    //   h_Tau21DDT_pt500To550_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_noConst_pt500To550_fail","SDNC"));
+    //   h_Tau21DDT_pt550To600_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_noConst_pt550To600_pass","SDNC"));
+    //   h_Tau21DDT_pt550To600_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_noConst_pt550To600_fail","SDNC"));
+    //   h_Tau21DDT_pt600To675_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_Tau21DDT_noConst_pt600To675_pass","SDNC"));
     //   h_Tau21DDT_pt600To675_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_Tau21DDT_noConst_pt600To675_fail"));
     //   h_Tau21DDT_pt675To800_Sel_noConst_pass.reset(new JetMassHists_central_noConst(ctx,"JetMass_Tau21DDT_noConst_pt675To800_pass"));
     //   h_Tau21DDT_pt675To800_Sel_noConst_fail.reset(new JetMassHists_central_noConst(ctx,"JetMass_Tau21DDT_noConst_pt675To800_fail"));
