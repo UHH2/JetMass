@@ -99,7 +99,9 @@ void JetMassHists::fill(const Event & event){
   double weight = event.weight;
   vector<TopJet>* topjets = event.topjets;
   if(topjets->size() < 1) return;
-  vector<PFParticle>* allparticles = event.pfparticles;
+	vector<PFParticle>* allparticles;
+	if(use_constituents)allparticles = event.pfparticles;
+	else allparticles = new std::vector<PFParticle>();
 
   h_weights->Fill(weight);
 
