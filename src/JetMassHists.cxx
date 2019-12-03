@@ -165,10 +165,9 @@ void JetMassHists::fill(const Event & event){
           int ptbin = i+1;
           int etabin = j+1;
           if(isMC){
-            vector<PFParticle> new_particles_up = VaryParticles(particles, ptbin, etabin, categories[k], "up");
-            vector<PFParticle> new_particles_down = VaryParticles(particles, ptbin, etabin, categories[k], "down");
-            h_mass_UP[i][j][k]->Fill(CalculateMJet(new_particles_up), weight);
-            h_mass_DOWN[i][j][k]->Fill(CalculateMJet(new_particles_down), weight);
+            vector<double> mjet_var = CalculateMJetVariation(particles, ptbin, etabin, categories[k]);
+            h_mass_UP[i][j][k]->Fill(mjet_var[0], weight);
+            h_mass_DOWN[i][j][k]->Fill(mjet_var[1], weight);
           }
           else{
             h_mass_UP[i][j][k]->Fill(mass, weight);
@@ -203,6 +202,33 @@ vector<PFParticle> JetMassHists::VaryParticles(vector<PFParticle> oldParticles, 
   }
   return newParticles;
 }
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// return varied mjet as {mjet_up, mjet_down}
+vector<double> JetMassHists::CalculateMJetVariation(vector<PFParticle>particles, int i, int j, TString cat){
+  LorentzVector up, down;
+  for(auto p:particles){
+    double pt = p.pt();
+    double eta = fabs(p.eta());
+    int ptbin = grid->GetXaxis()->FindBin(pt);
+    int etabin = grid->GetYaxis()->FindBin(eta);
+    // if bin is overflow, set manually to last bin
+    if(ptbin > Nbins_pt) ptbin = Nbins_pt;
+    if(etabin > Nbins_eta) etabin = Nbins_eta;
+    double factor = 1.0;
+    if(isMC && ptbin == i && etabin == j && inCategory(p,cat)){
+      up += (factor+variation) * p.v4();
+      down += (factor-variation) * p.v4();
+    }
+    else{
+      up += p.v4();
+      down += p.v4();
+    }
+  }
+  return (vector<double>) {up.M(), down.M()};
+}
+
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 // check if particle is in category
