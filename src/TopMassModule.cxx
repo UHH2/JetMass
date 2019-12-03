@@ -72,7 +72,6 @@ private:
   std::unique_ptr<Hists> h_mjet_masscut_var4, h_mjet_masscut_pt200_var4, h_mjet_masscut_pt300_var4, h_mjet_masscut_pt400_var4;
   std::unique_ptr<Hists> h_mjet_failmasscut_var4, h_mjet_failmasscut_pt200_var4, h_mjet_failmasscut_pt300_var4, h_mjet_failmasscut_pt400_var4;
 
-
   bool isMC;
 
 };
@@ -87,8 +86,9 @@ TopMassModule::TopMassModule(Context & ctx){
   // Top pT reweighting
   topreweight.reset(new TopPtReweight(ctx, 0.0615, 0.0005));
 
-  // apply JEC
-  pf_jec.reset(new CorrectParticles());
+  // apply JEC and PUPPI
+  // pf_jec.reset(new CorrectParticles());
+  // pf_applyPUPPI.reset(new ApplyPuppiToPF());
 
   // apply some variation
   TString f1 = ctx.get("Grid_highptUP");
@@ -100,7 +100,6 @@ TopMassModule::TopMassModule(Context & ctx){
   pf_var3.reset(new CorrectParticles(f3));
   pf_var4.reset(new CorrectParticles(f4));
 
-  pf_applyPUPPI.reset(new ApplyPuppiToPF());
 
   masscut.reset(new MassCut());
 
