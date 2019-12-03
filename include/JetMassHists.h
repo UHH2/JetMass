@@ -24,6 +24,7 @@ private:
   bool inCategory(PFParticle p, TString cat);
   double CalculateMJet(vector<PFParticle>);
   double CalculateRho(vector<PFParticle>);
+  vector<double> CalculateMJetVariation(vector<PFParticle>, int, int, TString);
   bool isMC;
   bool use_SD;
   bool use_constituents;
