@@ -2,7 +2,7 @@
 
 if [ ! -d "rhalphalib" ]; then
   echo 'rhalphalib does not exists'
-	git clone https://github.com/nsmith-/rhalphalib
+  git clone https://github.com/nsmith-/rhalphalib
 fi
 
 if uname -r | grep -q el6; then
