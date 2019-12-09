@@ -1,3 +1,5 @@
+import sys
+sys.path.append('rhalphalib')
 import rhalphalib as rl
 import numpy as np
 import sys
