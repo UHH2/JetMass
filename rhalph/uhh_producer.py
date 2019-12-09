@@ -5,6 +5,26 @@ import numpy as np
 import sys
 from ROOT import TFile, TH1F
 
+def getQcdEfficiency(channels,msdbins):
+    qcdmodel = rl.Model("qcdmodel")
+    qcdpass, qcdfail = 0., 0.
+    for channelName,config  in channels.items():
+        failCh = rl.Channel(channelName+'fail')
+        passCh = rl.Channel(channelName+'pass')
+        qcdmodel.addChannel(failCh)
+        qcdmodel.addChannel(passCh)
+        sFile=TFile('%s/QCD.root'%config['histLocation'],'READ')
+        failHist=sFile.Get(config['histDir']+'_fail/Mass_central')
+        passHist=sFile.Get(config['histDir']+'_pass/Mass_central')
+        failCh.setObservation(failHist)
+        passCh.setObservation(passHist)
+        qcdfail += failCh.getObservation().sum()
+        qcdpass += passCh.getObservation().sum()
+
+    qcdeff = qcdpass / qcdfail
+    print("QCDEfficiency: ",qcdeff)
+    return qcdeff,qcdmodel
+
 def uhh_producer(configs=None):
     if('ModelName' not in configs):
         ModelName='UHH_Model'
