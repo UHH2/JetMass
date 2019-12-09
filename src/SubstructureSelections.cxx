@@ -32,7 +32,7 @@ double uhh2::computeDDTValue(TopJet ak8jet,TH2F* ddtMap,bool useRho){
 }
 
 double uhh2::computeTau21DDT(TopJet ak8jet, double slope){
-  double rhoddt = TMath::Log( (ak8jet.softdropmass()*ak8jet.softdropmass()) / ak8jet.pt() );
+  double rhoddt = 2 * TMath::Log( ak8jet.softdropmass()/ ak8jet.pt() );
   double tau21 = ak8jet.tau2()/ak8jet.tau1();
   return tau21 + slope*rhoddt;
 }
