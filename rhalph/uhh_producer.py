@@ -4,7 +4,6 @@ import rhalphalib as rl
 import numpy as np
 import sys
 from ROOT import TFile, TH1F
-from qcdmodel import buildQcdModel,getQcdEfficiency
 
 def uhh_producer(configs=None):
     if('ModelName' not in configs):
