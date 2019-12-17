@@ -69,11 +69,13 @@ def uhh_producer(configs=None):
     #########
     #QCD ESTIMATION
     #Do the following only for WMass channels (only those have pass/fail region templates)
-    Wchannels={k: v for k, v in channels.items() if "WMass" in k}
-    ptEdges=[float(channel.replace("WMassPt","")) for channel in Wchannels]    
-    ptEdges.append(float(channels["WMassPt%i"%ptEdges[-1]]["histDir"].split("To")[-1]))
-    # ptbins = np.array([500, 550, 600, 675, 800, 1200])
-    ptbins = np.array(ptEdges)
+    if 'WMass' in ModelName:
+        Wchannels={k: v for k, v in channels.items() if "WMass" in k}
+        ptEdges=[float(channel.replace("WMassPt","")) for channel in Wchannels]    
+        ptEdges.append(float(channels["WMassPt%i"%ptEdges[-1]]["histDir"].split("To")[-1]))
+        ptbins = np.array(ptEdges)
+    else:
+        ptbins = np.array([500, 550, 600, 675, 800, 1200])
     npt = len(ptbins) - 1
     # msdbins = np.linspace(40, 201, 24)
     # msdbins = np.linspace(50, 180, 14)
@@ -89,8 +91,8 @@ def uhh_producer(configs=None):
     validbins = (rhoscaled >= 0) & (rhoscaled <= 1)
     rhoscaled[~validbins] = 1  # we will mask these out later
     tf = rl.BernsteinPoly("qcd_pass_ralhpTF",(3,3),['pt','rho'])
-
-    qcdeff=getQcdEfficiency(Wchannels,msdbins)[0]
+    if 'WMass' in ModelName:
+        qcdeff=getQcdEfficiency(Wchannels,msdbins)[0]
     
     tf_params = 0.05*tf(ptscaled, rhoscaled) #To Be replaced with following:
 
@@ -117,7 +119,7 @@ def uhh_producer(configs=None):
 
     for channelName,config in channels.items():
         print(channelName)
-        RebinMSD='W' in channelName
+        RebinMSD='W' in channelName or True
 
         histLocation=config['histLocation']
         if('variable' in config):
@@ -143,17 +145,17 @@ def uhh_producer(configs=None):
                 sFile=TFile('%s/%s.root'%(histLocation,sName),'READ')
                 hist=sFile.Get(histDir+'/'+Variable+'_central')
                 if(RebinMSD):
-                    hist=hist.Rebin(len(msdbins)-1,hist.GetName()+'_'+channelName,msdbins)
-                    # hist=hist.Rebin(len(msdbins)-1,hist.GetName()+'_newbinning',msdbins)
+                    # hist=hist.Rebin(len(msdbins)-1,hist.GetName()+'_'+channelName,msdbins)
+                    hist=hist.Rebin(len(msdbins)-1,hist.GetName()+'_newbinning',msdbins)
                 sample=rl.TemplateSample(ch.name+'_'+sName,sampleType,hist)
                 for (gridNuisance,x,y,category) in gridNuisances:
                     histUp=sFile.Get('%s/%s_%i_%i_%s_up'%(histDir,Variable,x,y,category))
                     histDown=sFile.Get('%s/%s_%i_%i_%s_down'%(histDir,Variable,x,y,category))
                     if(RebinMSD):
-                        histUp=histUp.Rebin(len(msdbins)-1,histUp.GetName()+'_'+channelName,msdbins)
-                        histDown=histDown.Rebin(len(msdbins)-1,histDown.GetName()+'_'+channelName,msdbins)
-                        # histUp=histUp.Rebin(len(msdbins)-1,histUp.GetName()+'_newbinning',msdbins)
-                        # histDown=histDown.Rebin(len(msdbins)-1,histDown.GetName()+'_newbinning',msdbins)
+                        # histUp=histUp.Rebin(len(msdbins)-1,histUp.GetName()+'_'+channelName,msdbins)
+                        # histDown=histDown.Rebin(len(msdbins)-1,histDown.GetName()+'_'+channelName,msdbins)
+                        histUp=histUp.Rebin(len(msdbins)-1,histUp.GetName()+'_newbinning',msdbins)
+                        histDown=histDown.Rebin(len(msdbins)-1,histDown.GetName()+'_newbinning',msdbins)
                     sample.setParamEffect(gridNuisance,histUp,histDown)
                     sample.setParamEffect(lumi, 1.027)
                     
@@ -177,8 +179,8 @@ def uhh_producer(configs=None):
                     dataHistDir=histDir
                 dataHist=dataFile.Get(dataHistDir+'/'+'Mass_central')
             if(RebinMSD):
-                dataHist=dataHist.Rebin(len(msdbins)-1,dataHist.GetName()+'_'+channelName,msdbins)
-                # dataHist=dataHist.Rebin(len(msdbins)-1,dataHist.GetName()+'_newbinning',msdbins)
+                # dataHist=dataHist.Rebin(len(msdbins)-1,dataHist.GetName()+'_'+channelName,msdbins)
+                dataHist=dataHist.Rebin(len(msdbins)-1,dataHist.GetName()+'_newbinning',msdbins)
 
             ch.setObservation(dataHist)
 
