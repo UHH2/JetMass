@@ -34,10 +34,13 @@ private:
   TH1F *h_rho, *h_mass, *h_mass_jet, *h_rho_jet;
   vector<vector<vector<TH1F*>>> h_mass_UP;
   vector<vector<vector<TH1F*>>> h_mass_DOWN;
+  vector<vector<vector<TH2F*>>> h_pt_v_mass_UP;
+  vector<vector<vector<TH2F*>>> h_pt_v_mass_DOWN;
   TH1F* h_particle_pt;
   TH1F* h_particle_eta;
   TH1F* h_weights;
   TH2F* grid;
+  TH2F* h_pt_v_mass;
   vector<TString> categories;
   vector<int> otherIDs;
 
