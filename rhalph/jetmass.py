@@ -4,6 +4,26 @@ import rhalphalib as rl
 import numpy as np
 import ROOT
 
+def get_qcd_efficiency(channels):
+    '''
+    channels: dict of channels with corresponding config-dicts
+    returns the QCD efficiency for the selection specified with histLocation in config
+    ''' 
+    qcd_model = rl.Model('qcd_helper')
+    qcd_pass, qcd_fail = 0.,0.
+    for channel_name, config in channels.items():
+        fail_ch = rl.Channel(channel_name + 'fail')
+        pass_ch = rl.Channel(channel_name + 'pass')
+        qcd_model.addChannel(fail_ch)
+        qcd_model.addChannel(pass_ch)
+        qcd_file = ROOT.TFile(config['histLocation'] + '/QCD.root','READ')
+        fail_hist = qcd_file.Get(config['histDir'] + '_fail/Mass_central')
+        pass_hist = qcd_file.Get(config['histDir'] + '_pass/Mass_central')
+        fail_ch.setObservation(fail_hist)
+        pass_ch.setObservation(pass_hist)
+        qcd_fail += fail_ch.getObservation().sum()
+        qcd_pass += pass_ch.getObservation().sum()
+    return qcd_pass / qcd_fail
 
 def jet_mass_producer(configs=None):
     """
@@ -24,6 +44,31 @@ def jet_mass_producer(configs=None):
 
     print('channels:',channels.keys())
 
+    #specify if QCD estimation (using Bernstein-polynomial as TF) should be used
+    do_qcd_estimation = 'QcdEstimation' in configs and configs['QcdEstimation']=='True'
+    ################
+    #QCD Estimation#
+    ################
+    qcd_eff = get_qcd_efficiency(w_channels)
+    # derive pt bins from channel names for the pt,rho grid for the Bernstein-Polynomial
+    if(do_qcd_estimation):
+        #get all lower edges from channel names
+        pt_edges = [float(channel.replace('WMassPt','')) for channel in w_channels]
+        #get last upper edge from name of last channel
+        pt_edges.append(float(channels['WMassPt%i'%pt_edges[-1]]['histDir'].split('To')[-1]))
+        pt_bins = np.array(pt_edges)
+        # pt_bins = np.array([500, 550, 600, 675, 800, 1200])
+        n_pt = len(pt_bins) - 1
+        msd = rl.Observable('msd',msd_bins)
+
+        # here we derive these all at once with 2D array
+        ptpts, msdpts = np.meshgrid(pt_bins[:-1] + 0.3 * np.diff(pt_bins), msd_bins[:-1] + 0.5 * np.diff(msd_bins), indexing='ij')
+        rhopts = 2*np.log(msdpts/ptpts)
+        ptscaled = (ptpts - 500.) / (1200. - 500.)
+        rhoscaled = (rhopts - (-6)) / ((-2.1) - (-6))
+        validbins = (rhoscaled >= 0) & (rhoscaled <= 1)
+        rhoscaled[~validbins] = 1  # we will mask these out later
+    
     #get name from config, or fall back to default
     if('ModelName' in configs):
         model_name = configs['ModelName']
@@ -108,7 +153,8 @@ def jet_mass_producer(configs=None):
 
                 #rebin hist
                 if(rebin_msd > 0):
-                    sample_hist = sample_hist.Rebin(len(msd_bins)-1, sample_hist.GetName() + "_" + channel_name, msd_bins)
+                    # sample_hist = sample_hist.Rebin(len(msd_bins)-1, sample_hist.GetName() + "_" + channel_name, msd_bins)
+                    sample_hist = sample_hist.Rebin(len(msd_bins)-1, 'msd', msd_bins)
                 
                 #setup actual rhalphalib sample
                 sample = rl.TemplateSample(ch.name + '_' + sample_name, sample_type, sample_hist)
@@ -120,8 +166,10 @@ def jet_mass_producer(configs=None):
 
                     #rebin hists
                     if(rebin_msd > 0):
-                        hist_up = hist_up.Rebin(len(msd_bins)-1, hist_up.GetName() + "_" + channel_name, msd_bins)
-                        hist_down = hist_down.Rebin(len(msd_bins)-1, hist_down.GetName() + "_" + channel_name, msd_bins)
+                        hist_up = hist_up.Rebin(len(msd_bins)-1, 'msd', msd_bins)
+                        hist_down = hist_down.Rebin(len(msd_bins)-1, 'msd', msd_bins)
+                        # hist_up = hist_up.Rebin(len(msd_bins)-1, hist_up.GetName() + "_" + channel_name, msd_bins)
+                        # hist_down = hist_down.Rebin(len(msd_bins)-1, hist_down.GetName() + "_" + channel_name, msd_bins)
 
                     
                     sample.setParamEffect(grid_nuisance, hist_up, hist_down)
@@ -146,11 +194,35 @@ def jet_mass_producer(configs=None):
                 data_hist=data_file.Get(hist_path+'/'+'Mass_central')
 
             if(rebin_msd > 0):
-                data_hist = data_hist.Rebin(len(msd_bins)-1, data_hist.GetName() + "_" + channel_name, msd_bins)
+                data_hist = data_hist.Rebin(len(msd_bins)-1, 'msd', msd_bins)
+                # data_hist = data_hist.Rebin(len(msd_bins)-1, data_hist.GetName() + "_" + channel_name, msd_bins)
 
             ch.setObservation(data_hist)
 
-        model.renderCombine(model_name)
+    if(do_qcd_estimation):
+        #QCD TF
+        tf_params = rl.BernsteinPoly('tf_params', (2,2), ['pt','rho'], limits = (0,10))
+        tf_params = qcd_eff * tf_params(ptscaled,rhoscaled)
+        
+        for channel_name, config in channels.items():
+            print(channel_name,'qcd estimation')
+            fail_ch = model[channel_name + 'fail']
+            pass_ch = model[channel_name + 'pass']
+            ptbin = np.where(pt_bins==float(channel_name.split('Pt')[-1]))[0][0]
+            qcd_params = np.array( [rl.IndependentParameter('qcdparam_ptbin%i_msdbin%i'%(ptbin,i),0) for i in range(msd.nbins)] )
+            initial_qcd = fail_ch.getObservation().astype(float)
+            for sample in fail_ch:
+                initial_qcd -= sample.getExpectation(nominal=True)
+            if np.any(initial_qcd<0.):
+                raise ValueError('inital qcd (fail qcd from data - mc) negative at least one bin')
+            sigmascale = 10.
+            scaledparams = initial_qcd * ( 1 + sigmascale / np.maximum(1., np.sqrt(initial_qcd)))**qcd_params
+            fail_qcd = rl.ParametericSample('%sfail_qcd' %channel_name, rl.Sample.BACKGROUND, msd, scaledparams)
+            fail_ch.addSample(fail_qcd)
+            pass_qcd = rl.TransferFactorSample('%spass_qcd'% channel_name, rl.Sample.BACKGROUND, tf_params[ptbin,:], fail_qcd)
+            pass_ch.addSample(pass_qcd)
+            
+    model.renderCombine(model_name)
 
 
 if(__name__ == "__main__"):
