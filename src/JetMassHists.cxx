@@ -58,16 +58,27 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, TString mode )
   double maxRho = 0;
   int nRho = 150;
 
+  //for 2D pt_v_mass hists
+  TString titlePt = "p_{T}";
+  double minPt = 500;
+  double maxPt = 1200;
+  int nPt = 100;
 
   // resize vectors of histograms
   h_mass_UP.resize(Nbins_pt);
   h_mass_DOWN.resize(Nbins_pt);
+  h_pt_v_mass_UP.resize(Nbins_pt);
+  h_pt_v_mass_DOWN.resize(Nbins_pt);
   for (int i = 0; i < Nbins_pt; i++){
     h_mass_UP[i].resize(Nbins_eta);
     h_mass_DOWN[i].resize(Nbins_eta);
+    h_pt_v_mass_UP[i].resize(Nbins_eta);
+    h_pt_v_mass_DOWN[i].resize(Nbins_eta);
     for (int j = 0; j < Nbins_eta; j++){
       h_mass_UP[i][j].resize(Nbins_cat);
       h_mass_DOWN[i][j].resize(Nbins_cat);
+      h_pt_v_mass_UP[i][j].resize(Nbins_cat);
+      h_pt_v_mass_DOWN[i][j].resize(Nbins_cat);
     }
   }
 
@@ -79,6 +90,7 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, TString mode )
   h_particle_pt = book<TH1F>("particle_pt", "p_T", 50, 0, 50);
   h_particle_eta = book<TH1F>("particle_eta", "eta", 50, -5, 5);
   h_weights = book<TH1F>("weights", "weight", 100, -1, 2);
+  h_pt_v_mass = book<TH2F>("pt_v_mass","x="+xtitleMass+",y="+titlePt, nMass, minMass, maxMass, nPt, minPt, maxPt);
 
   // book hists for variations
   for(int i=0; i<Nbins_pt; i++){
@@ -88,6 +100,8 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, TString mode )
         TString bin_name = "_" + to_string(i) + "_" + to_string(j) + "_" + categories[k];
         h_mass_UP[i][j][k] = book<TH1F>(mass_name+bin_name+"_up", xtitleMass, nMass, minMass, maxMass);
         h_mass_DOWN[i][j][k] = book<TH1F>(mass_name+bin_name+"_down", xtitleMass, nMass, minMass, maxMass);
+        h_pt_v_mass_UP[i][j][k] = book<TH2F>("Pt_v_"+mass_name+bin_name+"_up", "x="+xtitleMass+",y="+titlePt, nMass, minMass, maxMass, nPt, minPt, maxPt);
+        h_pt_v_mass_DOWN[i][j][k] = book<TH2F>("Pt_v_"+mass_name+bin_name+"_down", "x="+xtitleMass+",y="+titlePt, nMass, minMass, maxMass, nPt, minPt, maxPt);
       }
     }
   }
@@ -145,6 +159,7 @@ void JetMassHists::fill(const Event & event){
   }
   h_mass->Fill(mass, weight);
   h_rho->Fill(rho, weight);
+  h_pt_v_mass->Fill(mass, ptjet, weight);
 
 
   // fill some particle histograms
@@ -168,10 +183,14 @@ void JetMassHists::fill(const Event & event){
             vector<double> mjet_var = CalculateMJetVariation(particles, ptbin, etabin, categories[k]);
             h_mass_UP[i][j][k]->Fill(mjet_var[0], weight);
             h_mass_DOWN[i][j][k]->Fill(mjet_var[1], weight);
+            h_pt_v_mass_UP[i][j][k]->Fill(mjet_var[0], ptjet, weight);
+            h_pt_v_mass_DOWN[i][j][k]->Fill(mjet_var[1], ptjet, weight);
           }
           else{
             h_mass_UP[i][j][k]->Fill(mass, weight);
             h_mass_DOWN[i][j][k]->Fill(mass, weight);
+            h_pt_v_mass_UP[i][j][k]->Fill(mass, ptjet, weight);
+            h_pt_v_mass_DOWN[i][j][k]->Fill(mass, ptjet, weight);
           }
         }
       }
