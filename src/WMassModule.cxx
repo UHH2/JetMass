@@ -41,11 +41,11 @@ bool repairPuppi(uhh2::Event & event){
     double factor = particles->at(i).puppiWeight();
     particles->at(i).set_v4(old_v4 * 1/factor);
   }
-	for (unsigned int i=0; i<particles->size();i++) {
-		LorentzVectorXYZE v4XYZ = toXYZ(particles->at(i).v4());
+  for (unsigned int i=0; i<particles->size();i++) {
+    LorentzVectorXYZE v4XYZ = toXYZ(particles->at(i).v4());
     double puppiWeight = particles->at(i).puppiWeight();
-		particles->at(i).set_v4(toPtEtaPhi(v4XYZ * puppiWeight));
-	}
+    particles->at(i).set_v4(toPtEtaPhi(v4XYZ * puppiWeight));
+  }
   return true;
 }
 
@@ -61,7 +61,7 @@ namespace uhh2examples {
   private:
     std::unique_ptr<AnalysisModule> MC_LumiWeight,MC_PUWeight;
 
-		// moved to Presel
+    // moved to Presel
     // std::unique_ptr<AnalysisModule> pf_applyPUPPI;
 
     std::unique_ptr<Hists> h_PreSel,h_PreSel_Substr,h_PreSel_Substr_MyDDT;
@@ -70,7 +70,7 @@ namespace uhh2examples {
 
     std::unique_ptr<Selection> n2ddtsel,MYn2ddtsel,n2sel;
 
-		std::unique_ptr<Selection> NEleSel,NMuonSel;
+    std::unique_ptr<Selection> NEleSel,NMuonSel;
 
 
     std::unique_ptr<Hists> h_MyN2ddt_ECF_comparison_pass,h_MyN2ddt_ECF_comparison_fail;
@@ -130,9 +130,9 @@ namespace uhh2examples {
     is_mc = ctx.get("dataset_type") == "MC";
 
     if(is_mc){
-			//moved to PreSel
+      //moved to PreSel
       // pf_applyPUPPI.reset(new ApplyPuppiToPF());
-			MC_LumiWeight.reset(new MCLumiWeight(ctx));
+      MC_LumiWeight.reset(new MCLumiWeight(ctx));
       MC_PUWeight.reset(new MCPileupReweight(ctx, "central"));
     }
 
@@ -152,16 +152,16 @@ namespace uhh2examples {
 
     // TH2D* ddtMap_QCD_0p01=SubstructureHists::computeDDTMap(0.01, N2_v_mSD_v_pT);
 
-		// NEleSel.reset(new NElectronSelection(1,-1,(ElectronId) PtEtaCut(10.0,2.5)));
-		// NMuonSel.reset(new NMuonSelection(1,-1,(MuonId) PtEtaCut(10.0,2.4)));
+    // NEleSel.reset(new NElectronSelection(1,-1,(ElectronId) PtEtaCut(10.0,2.5)));
+    // NMuonSel.reset(new NMuonSelection(1,-1,(MuonId) PtEtaCut(10.0,2.4)));
 
 
     MYn2ddtsel.reset(new N2ddtSelection(MYddtMap,true));
     n2ddtsel.reset(new N2ddtSelection(ddtMap,true));
     n2sel.reset(new N2Selection(0.2));
-		// if(is_mc)h_ECF_comparison.reset(new ECFHists(ctx,"ECFComparisonHists"));
+    // if(is_mc)h_ECF_comparison.reset(new ECFHists(ctx,"ECFComparisonHists"));
 
-		if(is_mc)h_PreSel.reset(new JetMassHists(ctx,"JetMass_PreSel""SDVAR"));
+    if(is_mc)h_PreSel.reset(new JetMassHists(ctx,"JetMass_PreSel""SDVAR"));
 
     h_PreSel_Substr_MyDDT.reset(new SubstructureHists(ctx,"SubstructureHists_PreSel_MyDDT",MYddtMap,true));
     h_PreSel_Substr.reset(new SubstructureHists(ctx,"SubstructureHists_PreSel",ddtMap,true));
@@ -172,8 +172,8 @@ namespace uhh2examples {
 
       h_MyN2ddt_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pass","SDVAR"));
       h_MyN2ddt_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_fail","SDVAR"));
-			// h_MyN2ddt_ECF_comparison_pass.reset(new ECFHists(ctx,"MyN2ddt_ECFComparisonHists_pass"));
-			// h_MyN2ddt_ECF_comparison_fail.reset(new ECFHists(ctx,"MyN2ddt_ECFComparisonHists_fail"));
+      // h_MyN2ddt_ECF_comparison_pass.reset(new ECFHists(ctx,"MyN2ddt_ECFComparisonHists_pass"));
+      // h_MyN2ddt_ECF_comparison_fail.reset(new ECFHists(ctx,"MyN2ddt_ECFComparisonHists_fail"));
 
       h_MyN2ddt_pt450To500_Sel_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt450To500_pass","SDVAR"));
       h_MyN2ddt_pt450To500_Sel_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt450To500_fail","SDVAR"));
@@ -190,23 +190,23 @@ namespace uhh2examples {
       h_MyN2ddt_pt1200ToInf_Sel_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt1200ToInf_pass","SDVAR"));
       h_MyN2ddt_pt1200ToInf_Sel_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_pt1200ToInf_fail","SDVAR"));
     }
-		h_MyN2ddt_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pass","SDNC"));
-		h_MyN2ddt_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_fail","SDNC"));
+    h_MyN2ddt_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pass","SDNC"));
+    h_MyN2ddt_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_fail","SDNC"));
 		
-		h_MyN2ddt_pt450To500_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt450To500_pass","SDNC"));
-		h_MyN2ddt_pt450To500_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt450To500_fail","SDNC"));
-		h_MyN2ddt_pt500To550_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt500To550_pass","SDNC"));
-		h_MyN2ddt_pt500To550_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt500To550_fail","SDNC"));
-		h_MyN2ddt_pt550To600_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt550To600_pass","SDNC"));
-		h_MyN2ddt_pt550To600_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt550To600_fail","SDNC"));
-		h_MyN2ddt_pt600To675_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt600To675_pass","SDNC"));
-		h_MyN2ddt_pt600To675_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt600To675_fail","SDNC"));
-		h_MyN2ddt_pt675To800_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt675To800_pass","SDNC"));
-		h_MyN2ddt_pt675To800_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt675To800_fail","SDNC"));
-		h_MyN2ddt_pt800To1200_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt800To1200_pass","SDNC"));
-		h_MyN2ddt_pt800To1200_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt800To1200_fail","SDNC"));
-		h_MyN2ddt_pt1200ToInf_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt1200ToInf_pass","SDNC"));
-		h_MyN2ddt_pt1200ToInf_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt1200ToInf_fail","SDNC"));
+    h_MyN2ddt_pt450To500_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt450To500_pass","SDNC"));
+    h_MyN2ddt_pt450To500_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt450To500_fail","SDNC"));
+    h_MyN2ddt_pt500To550_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt500To550_pass","SDNC"));
+    h_MyN2ddt_pt500To550_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt500To550_fail","SDNC"));
+    h_MyN2ddt_pt550To600_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt550To600_pass","SDNC"));
+    h_MyN2ddt_pt550To600_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt550To600_fail","SDNC"));
+    h_MyN2ddt_pt600To675_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt600To675_pass","SDNC"));
+    h_MyN2ddt_pt600To675_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt600To675_fail","SDNC"));
+    h_MyN2ddt_pt675To800_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt675To800_pass","SDNC"));
+    h_MyN2ddt_pt675To800_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt675To800_fail","SDNC"));
+    h_MyN2ddt_pt800To1200_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt800To1200_pass","SDNC"));
+    h_MyN2ddt_pt800To1200_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt800To1200_fail","SDNC"));
+    h_MyN2ddt_pt1200ToInf_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt1200ToInf_pass","SDNC"));
+    h_MyN2ddt_pt1200ToInf_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_MyN2ddt_noConst_pt1200ToInf_fail","SDNC"));
     
 
     if(is_mc){
@@ -233,23 +233,23 @@ namespace uhh2examples {
       h_N2ddt_pt1200ToInf_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt1200ToInf_pass","SDVAR"));
       h_N2ddt_pt1200ToInf_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt1200ToInf_fail","SDVAR"));
     }
-		h_N2ddt_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pass","SDNC"));
-		h_N2ddt_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_fail","SDNC"));
+    h_N2ddt_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pass","SDNC"));
+    h_N2ddt_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_fail","SDNC"));
 		
-		h_N2ddt_pt450To500_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt450To500_pass","SDNC"));
-		h_N2ddt_pt450To500_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt450To500_fail","SDNC"));
-		h_N2ddt_pt500To550_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt500To550_pass","SDNC"));
-		h_N2ddt_pt500To550_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt500To550_fail","SDNC"));
-		h_N2ddt_pt550To600_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt550To600_pass","SDNC"));
-		h_N2ddt_pt550To600_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt550To600_fail","SDNC"));
-		h_N2ddt_pt600To675_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt600To675_pass","SDNC"));
-		h_N2ddt_pt600To675_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt600To675_fail","SDNC"));
-		h_N2ddt_pt675To800_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt675To800_pass","SDNC"));
-		h_N2ddt_pt675To800_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt675To800_fail","SDNC"));
-		h_N2ddt_pt800To1200_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt800To1200_pass","SDNC"));
-		h_N2ddt_pt800To1200_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt800To1200_fail","SDNC"));
-		h_N2ddt_pt1200ToInf_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt1200ToInf_pass","SDNC"));
-		h_N2ddt_pt1200ToInf_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt1200ToInf_fail","SDNC"));
+    h_N2ddt_pt450To500_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt450To500_pass","SDNC"));
+    h_N2ddt_pt450To500_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt450To500_fail","SDNC"));
+    h_N2ddt_pt500To550_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt500To550_pass","SDNC"));
+    h_N2ddt_pt500To550_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt500To550_fail","SDNC"));
+    h_N2ddt_pt550To600_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt550To600_pass","SDNC"));
+    h_N2ddt_pt550To600_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt550To600_fail","SDNC"));
+    h_N2ddt_pt600To675_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt600To675_pass","SDNC"));
+    h_N2ddt_pt600To675_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt600To675_fail","SDNC"));
+    h_N2ddt_pt675To800_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt675To800_pass","SDNC"));
+    h_N2ddt_pt675To800_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt675To800_fail","SDNC"));
+    h_N2ddt_pt800To1200_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt800To1200_pass","SDNC"));
+    h_N2ddt_pt800To1200_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt800To1200_fail","SDNC"));
+    h_N2ddt_pt1200ToInf_Sel_noConst_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt1200ToInf_pass","SDNC"));
+    h_N2ddt_pt1200ToInf_Sel_noConst_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_noConst_pt1200ToInf_fail","SDNC"));
 	
 
   }
@@ -259,10 +259,10 @@ namespace uhh2examples {
       MC_LumiWeight->process(event);
       MC_PUWeight->process(event);
       // Moved to Presel
-			// if(!repairPuppi(event))return false;
-			// pf_applyPUPPI->process(event);
+      // if(!repairPuppi(event))return false;
+      // pf_applyPUPPI->process(event);
     }
-		// if(is_mc)h_ECF_comparison->fill(event);
+    // if(is_mc)h_ECF_comparison->fill(event);
     if(is_mc)h_PreSel->fill(event);
     h_PreSel_Substr->fill(event);
     h_PreSel_Substr_MyDDT->fill(event);
@@ -270,23 +270,23 @@ namespace uhh2examples {
     double pt = event.topjets->at(0).pt();
 
     double pTave=0.0;
-		double ratio=0.0;
-		if(is_mc){
-			if(event.jets->size()>0){
-				pTave=event.jets->at(0).pt();
-			}else	if(event.jets->size()>1){
-				pTave=(event.jets->at(0).pt()+event.jets->at(1).pt())/2.0;
-			}
-			double pThat=event.genInfo->qScale();
-			ratio=pThat/pTave;
-		}
+    double ratio=0.0;
+    if(is_mc){
+      if(event.jets->size()>0){
+        pTave=event.jets->at(0).pt();
+      }else	if(event.jets->size()>1){
+        pTave=(event.jets->at(0).pt()+event.jets->at(1).pt())/2.0;
+      }
+      double pThat=event.genInfo->qScale();
+      ratio=pThat/pTave;
+    }
 
     double qScale_max=1.5;
     if(is_mc && (ratio > qScale_max)) return false;
 
 
 
-		// if(NEleSel->passes(event) || NMuonSel->passes(event)) return false;
+    // if(NEleSel->passes(event) || NMuonSel->passes(event)) return false;
 
     // Moved to PreSel
     // double rho=2*TMath::Log(event.topjets->at(0).softdropmass()/pt);
@@ -344,7 +344,7 @@ namespace uhh2examples {
 
     if(is_mc){
       if(N2DDT_Selection){
-				// h_ECF_comparison_pass->fill(event);
+        // h_ECF_comparison_pass->fill(event);
         h_N2ddt_pass->fill(event);
         h_N2ddt_Substr_pass->fill(event);
         if(pt > 450 && pt < 500)h_N2ddt_pt450To500_Sel_pass->fill(event);
