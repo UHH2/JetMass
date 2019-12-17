@@ -68,6 +68,117 @@ def jet_mass_producer(configs=None):
         rhoscaled = (rhopts - (-6)) / ((-2.1) - (-6))
         validbins = (rhoscaled >= 0) & (rhoscaled <= 1)
         rhoscaled[~validbins] = 1  # we will mask these out later
+
+        # qcd_model = rl.Model('qcd_helper')
+        # qcd_pass, qcd_fail = 0.,0.
+        # for channel_name, config in channels.items():
+        #     fail_ch = rl.Channel(channel_name + 'fail')
+        #     pass_ch = rl.Channel(channel_name + 'pass')
+        #     qcd_model.addChannel(fail_ch)
+        #     qcd_model.addChannel(pass_ch)
+        #     qcd_file = ROOT.TFile(config['histLocation'] + '/QCD.root','READ')
+        #     fail_hist = qcd_file.Get(config['histDir'] + '_fail/Mass_central')
+        #     pass_hist = qcd_file.Get(config['histDir'] + '_pass/Mass_central')
+        #     if(rebin_msd>0):
+        #         fail_hist = fail_hist.Rebin(len(msd_bins)-1, 'msd', msd_bins)
+        #         pass_hist = pass_hist.Rebin(len(msd_bins)-1, 'msd', msd_bins)   
+        #     # N=1e5
+        #     # fail_hist.Scale(N/fail_hist.Integral())
+        #     # pass_hist.Scale((5*N/100)/pass_hist.Integral())
+            
+                
+        #     fail_ch.setObservation(fail_hist)
+        #     pass_ch.setObservation(pass_hist)
+        #     qcd_fail += fail_ch.getObservation().sum()
+        #     qcd_pass += pass_ch.getObservation().sum()
+        # qcd_eff = qcd_pass / qcd_fail
+        
+        # tf_MCtempl = rl.BernsteinPoly("tf_MCtempl", (1, 2), ['pt', 'rho'], limits=(0, 10))
+        # tf_MCtempl_params = qcd_eff * tf_MCtempl(ptscaled, rhoscaled)
+     
+        # for ptbin in range(n_pt):
+        #     failCh = qcd_model['WMassPt%ifail' % pt_bins[ptbin]]
+        #     passCh = qcd_model['WMassPt%ipass' % pt_bins[ptbin]]
+        #     failObs = failCh.getObservation()
+        #     qcdparams = np.array([rl.IndependentParameter('qcdparam_ptbin%d_msdbin%d' % (ptbin, i), 0) for i in range(msd.nbins)])
+        #     sigmascale = 10.
+        #     scaledparams = failObs * (1 + sigmascale/np.maximum(1., np.sqrt(failObs)))**qcdparams
+        #     fail_qcd = rl.ParametericSample('WMassPt%ifail_qcd' % pt_bins[ptbin], rl.Sample.BACKGROUND, msd, scaledparams)
+        #     failCh.addSample(fail_qcd)
+        #     pass_qcd = rl.TransferFactorSample('WMassPt%ipass_qcd' % pt_bins[ptbin], rl.Sample.BACKGROUND, tf_MCtempl_params[ptbin, :], fail_qcd)
+        #     passCh.addSample(pass_qcd)
+
+        #     failCh.mask = validbins[ptbin]
+        #     passCh.mask = validbins[ptbin]
+        # qcdfit_ws = ROOT.RooWorkspace('qcdfit_ws')
+        # simpdf, obs = qcd_model.renderRoofit(qcdfit_ws)
+        # qcdfit = simpdf.fitTo(obs,
+        #                       ROOT.RooFit.Extended(True),
+        #                       ROOT.RooFit.SumW2Error(True),
+        #                       ROOT.RooFit.Strategy(2),
+        #                       ROOT.RooFit.Save(),
+        #                       ROOT.RooFit.Minimizer('Minuit2', 'migrad'),
+        #                       ROOT.RooFit.PrintLevel(1),
+        # )
+        # qcdfit_ws.add(qcdfit)
+        # qcdfit_ws.writeToFile('qcdfit.root')
+        # print('fit status:',qcdfit.status())
+        # if qcdfit.status() != 0:
+        #     raise RuntimeError('Could not fit qcd')
+
+
+
+        # param_names = [p.name for p in tf_MCtempl.parameters.reshape(-1)]
+        # decoVector = rl.DecorrelatedNuisanceVector.fromRooFitResult(tf_MCtempl.name + '_deco', qcdfit, param_names)
+        # tf_MCtempl.parameters = decoVector.correlated_params.reshape(tf_MCtempl.parameters.shape)
+        # tf_MCtempl_params_final = tf_MCtempl(ptscaled, rhoscaled)
+        # qcd_model.readRooFitResult(qcdfit)
+
+        # import matplotlib.pyplot as plt
+        # import mplhep as hep
+        # from utils import pad2d
+
+        # TF_vals = tf_MCtempl(ptscaled, rhoscaled, nominal=True)
+        # # print(TF_vals)
+        # pmsd = pad2d(msdpts)
+        # pmsd[:, 0] = 50
+        # pmsd[:, -1] = 200
+        # # Pad pT bins
+        # ppt = pad2d(ptpts)
+        # ppt[0, :] = 500
+        # ppt[-1, :] = 1200 
+        # # Pad TF result
+        # pTF = pad2d(TF_vals)
+        # # print(pTF)
+        # pvb = pad2d(validbins).astype(bool)
+        # # plotTransF(pTF, pmsd, ppt, mask=pvb, MC=False)
+        
+        # fig, ax = plt.subplots()
+        # zmin, zmax = np.floor(np.min(pTF))/10,np.ceil(10*np.max(pTF))/10
+        # zmin, zmax = zmin + 0.001, zmax - 0.001
+
+        # clim = np.max([.3, np.min([abs(zmin - 1), abs(zmax - 1)])])
+        # levels = np.linspace(1-clim, 1+clim, 500)
+        
+        # contf = ax.contourf(pmsd,ppt,pTF,levels=levels,corner_mask=False,cmap='RdBu_r')
+        # # cax = hep.make_square_add_cbar(ax, pad=0.2, size=0.5)
+        # if abs(1-zmin) > .3 and abs(1-zmax) > .3:
+        #     c_extend = 'both'
+        # elif abs(1-zmin) > .3:
+        #     c_extend = 'min'
+        # elif abs(1-zmax) > .3:
+        #     c_extend = 'max'
+        # else:
+        #     c_extend = 'neither'
+        # # cbar = fig.colorbar(contf, cax=cax, extend=c_extend)
+        # cbar = fig.colorbar(contf)
+        # cbar.set_ticks([np.arange(1-clim, 1+clim, 0.1)])
+        # ax.set_xlim(50,200)
+        # ax.set_ylim(500,1200)
+        # ax.invert_yaxis()
+        # fig.savefig('test.pdf')
+
+
     
     #get name from config, or fall back to default
     if('ModelName' in configs):
