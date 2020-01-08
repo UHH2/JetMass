@@ -33,10 +33,11 @@ def jet_mass_producer(configs=None):
         -> includes histLocation,histDir,samples,NormUnc,signal,obs,regions    
     """
     #specify how many bins you want the softdropmass hists to be rebinned to. (-1: no rebinning)
-    rebin_msd = 26
-    n_msd_bins = rebin_msd if rebin_msd > 0 else 24
+    rebin_msd = 38
+    n_msd_bins = rebin_msd if rebin_msd > 0 else 75
     # msd_bins = np.linspace(50,170,n_msd_bins)
-    msd_bins = np.linspace(50,200,n_msd_bins)
+    msd_bins = np.linspace(50,198,n_msd_bins)
+    print(msd_bins)
 
     #channels for combined fit
     channels = configs['channels']
@@ -298,10 +299,10 @@ def jet_mass_producer(configs=None):
                 data_hist.SetName('Mass_central')
             else:
                 #necessary for 2016 JetHT UHH Ntuples because they are missing JetConstituents
-                if('W' in channel_name and config['obs'] == "Data"):
-                    hist_path = hist_dir.split('pt')[0]+'noConst_pt'+hist_dir.split('pt')[1]
-                else:
-                    hist_path = hist_dir
+                # if('W' in channel_name and config['obs'] == "Data"):
+                #     hist_path = hist_dir.split('pt')[0]+'noConst_pt'+hist_dir.split('pt')[1]
+                # else:
+                hist_path = hist_dir
                 data_hist=data_file.Get(hist_path+'/'+'Mass_central')
 
             if(rebin_msd > 0):
@@ -309,6 +310,7 @@ def jet_mass_producer(configs=None):
                 # data_hist = data_hist.Rebin(len(msd_bins)-1, data_hist.GetName() + "_" + channel_name, msd_bins)
 
             ch.setObservation(data_hist)
+            ch.mask = validbins[np.where(pt_bins==float(channel_name.split('Pt')[-1]))[0][0]]
 
     if(do_qcd_estimation):
         #QCD TF
@@ -349,7 +351,7 @@ if(__name__ == "__main__"):
 
     from runFit import runFits
     # if('pathCMSSW' in configs):
-    #     runFits([configs['ModelName']],configs['pathCMSSW'])
+    runFits([configs['ModelName']],configs['pathCMSSW'])
     # else:
-    runFits([configs['ModelName']])
+    # runFits([configs['ModelName']])
     

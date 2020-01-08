@@ -14,7 +14,7 @@
       "regions":["pass","fail"]
     },
     "WMassPt550":{
-      "histLocation":"/afs/desy.de/user/a/albrechs/xxl/af-cms/dazsle/JetMass/Histograms/W",
+      "histLocation":"/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/W",
       "histDir":"JetMass_N2DDT_pt550To600",
       "samples":["QCD","WUnmatched","WMatched"],
       "NormUnc":[0,1.025,1.025],
@@ -23,7 +23,7 @@
       "regions":["pass","fail"]
     },
     "WMassPt600":{
-      "histLocation":"/afs/desy.de/user/a/albrechs/xxl/af-cms/dazsle/JetMass/Histograms/W",
+      "histLocation":"/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/W",
       "histDir":"JetMass_N2DDT_pt600To675",
       "samples":["QCD","WUnmatched","WMatched"],
       "NormUnc":[0,1.025,1.025],
@@ -32,7 +32,7 @@
       "regions":["pass","fail"]
     },
     "WMassPt675":{
-      "histLocation":"/afs/desy.de/user/a/albrechs/xxl/af-cms/dazsle/JetMass/Histograms/W",
+      "histLocation":"/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/W",
       "histDir":"JetMass_N2DDT_pt675To800",
       "samples":["QCD","WUnmatched","WMatched"],
       "NormUnc":[0,1.025,1.025],
@@ -41,7 +41,7 @@
       "regions":["pass","fail"]
     },
     "WMassPt800":{
-      "histLocation":"/afs/desy.de/user/a/albrechs/xxl/af-cms/dazsle/JetMass/Histograms/W",
+      "histLocation":"/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/W",
       "histDir":"JetMass_N2DDT_pt800To1200",
       "samples":["QCD","WUnmatched","WMatched"],
       "NormUnc":[0,1.025,1.025],
