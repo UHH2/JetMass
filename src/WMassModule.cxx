@@ -240,9 +240,9 @@ namespace uhh2examples {
     
     if(N2DDT_Selection){
       if(is_mc){
-        h_N2ddt_pass->fill(event);
         h_N2ddt_Substr_pass->fill(event);
       }
+      h_N2ddt_pass->fill(event);
       if(pt > 450 && pt < 500)h_N2ddt_pt450To500_Sel_pass->fill(event);
       else if(pt >= 500 && pt < 550)h_N2ddt_pt500To550_Sel_pass->fill(event);
       else if(pt >= 550 && pt < 600)h_N2ddt_pt550To600_Sel_pass->fill(event);
@@ -252,9 +252,9 @@ namespace uhh2examples {
       else h_N2ddt_pt1200ToInf_Sel_pass->fill(event);
     }else{
       if(is_mc){
-        h_N2ddt_fail->fill(event);
         h_N2ddt_Substr_fail->fill(event);
       }
+      h_N2ddt_fail->fill(event);
       if(pt > 450 && pt < 500)h_N2ddt_pt450To500_Sel_fail->fill(event);
       else if(pt >= 500 && pt < 550)h_N2ddt_pt500To550_Sel_fail->fill(event);
       else if(pt >= 550 && pt < 600)h_N2ddt_pt550To600_Sel_fail->fill(event);
