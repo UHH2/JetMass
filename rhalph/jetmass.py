@@ -46,13 +46,13 @@ def jet_mass_producer(configs=None):
     print('channels:',channels.keys())
 
     #specify if QCD estimation (using Bernstein-polynomial as TF) should be used
-    do_qcd_estimation = 'QcdEstimation' in configs and configs['QcdEstimation']=='True'
+    do_qcd_estimation = ('QcdEstimation' in configs and configs['QcdEstimation']=='True') or len(w_channels)>0
     ################
     #QCD Estimation#
     ################
-    qcd_eff = get_qcd_efficiency(w_channels)
     # derive pt bins from channel names for the pt,rho grid for the Bernstein-Polynomial
     if(do_qcd_estimation):
+        qcd_eff = get_qcd_efficiency(w_channels)
         #get all lower edges from channel names
         pt_edges = [float(channel.replace('WMassPt','')) for channel in w_channels]
         #get last upper edge from name of last channel
