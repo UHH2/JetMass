@@ -1,0 +1,33 @@
+{
+  "ModelName":"TopModel_var4",
+  "gridHistFileName":"../Histograms/grid.root",
+  "channels":{
+    "TopMass200":{
+      "histLocation":"../Histograms/top",
+      "variable":"Mass",
+      "histDir":"JetMass_pt200",
+      "samples":["SingleTop","TTbar","WJets","other"],
+      "signal":"TTbar",
+      "obs":"Pseudo",
+      "varyPseudoLike":"JetMass_pt200_var4/Mass_central"
+    },
+    "TopMass300":{
+      "histLocation":"../Histograms/top",
+      "variable":"Mass",
+      "histDir":"JetMass_pt300",
+      "samples":["SingleTop","TTbar","WJets","other"],
+      "signal":"TTbar",
+      "obs":"Pseudo",
+      "varyPseudoLike":"JetMass_pt300_var4/Mass_central"
+    },
+    "TopMass400":{
+      "histLocation":"../Histograms/top",
+      "variable":"Mass",
+      "histDir":"JetMass_pt400",
+      "samples":["SingleTop","TTbar","WJets","other"],
+      "signal":"TTbar",
+      "obs":"Pseudo",
+      "varyPseudoLike":"JetMass_pt400_var4/Mass_central"
+    }
+  }
+}
