@@ -24,9 +24,6 @@ if [ ! -d "CMSSW_10_2_13" ]; then
   echo "to actually use rhalphalib & co. you should use a fresh shell"
 fi
 
-
-bash -c ls
-
 if uname -r | grep -q el6; then
   source /cvmfs/sft.cern.ch/lcg/views/LCG_95apython3/x86_64-slc6-gcc8-opt/setup.sh
 else
