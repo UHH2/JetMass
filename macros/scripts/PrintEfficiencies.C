@@ -1,7 +1,7 @@
 using namespace std;
 
 void PrintEfficiencies(){
-	std::vector<TString> Samples = {"QCD", "WUnmatched", "WMatched"};
+  std::vector<TString> Samples = {"QCD", "WUnmatched", "WMatched","Data"};
   TString Hist="Rho_central";
 
   vector<TString> Dirs={
