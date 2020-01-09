@@ -199,7 +199,8 @@ def jet_mass_producer(configs=None):
                 # data_hist = data_hist.Rebin(len(msd_bins)-1, data_hist.GetName() + "_" + channel_name, msd_bins)
 
             ch.setObservation(data_hist)
-            ch.mask = validbins[np.where(pt_bins==float(channel_name.split('Pt')[-1]))[0][0]]
+            if(do_qcd_estimation):
+                ch.mask = validbins[np.where(pt_bins==float(channel_name.split('Pt')[-1]))[0][0]]
 
     if(do_qcd_estimation):
         #QCD TF
