@@ -33,10 +33,13 @@ def jet_mass_producer(configs=None):
         -> includes histLocation,histDir,samples,NormUnc,signal,obs,regions    
     """
     #specify how many bins you want the softdropmass hists to be rebinned to. (-1: no rebinning)
-    rebin_msd = 13
+    # rebin_msd = 76 # 50+75*2 GeV [50,200]
+    rebin_msd = 13 # 50+12*12GeV [50,194]
+    # rebin_msd = 26 # 50+25*6 GeV [50,200]
+    # rebin_msd = 38 # 50+37*4 GeV [50,198]
     n_msd_bins = rebin_msd if rebin_msd > 0 else 75
     # msd_bins = np.linspace(50,170,n_msd_bins)
-    msd_bins = np.linspace(50,194,n_msd_bins)
+    msd_bins = np.linspace(50,int(150.//(n_msd_bins-1))*(n_msd_bins-1)+50,n_msd_bins)
     print(msd_bins)
 
     #channels for combined fit
@@ -205,6 +208,7 @@ def jet_mass_producer(configs=None):
     if(do_qcd_estimation):
         #QCD TF
         tf_params = rl.BernsteinPoly('tf_params', (2,2), ['pt','rho'], limits = (0,10))
+        print('Using QCD efficiency (N2-ddt) of %.2f%% to scale initial QCD in pass region'%(qcd_eff*100))
         tf_params = qcd_eff * tf_params(ptscaled,rhoscaled)
         
         for channel_name, config in channels.items():

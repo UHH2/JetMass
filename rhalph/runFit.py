@@ -2,21 +2,24 @@
 from __future__ import print_function
 import os,subprocess,sys
 
-def write_wrapper(dir,pathCMSSW):
-    absdir=os.path.abspath(dir)
+def write_wrapper(model_dir,pathCMSSW):
+    abs_dir=os.path.abspath(model_dir)
     #create wrapper script to setup environment, combine datacards and run the fit in combine
-    with open(dir+'/wrapper.sh','w') as wrapper:
+    model_name = model_dir.replace('/','')
+    with open(model_dir+'/wrapper.sh','w') as wrapper:
         wrapper.write("""
         #!/bin/bash
         source /cvmfs/cms.cern.ch/cmsset_default.sh
         cd """+pathCMSSW+"""/src/
         eval `scramv1 runtime -sh`
-        cd """+absdir+"""
+        cd """+abs_dir+"""
         source build.sh
-        combine -M FitDiagnostics """+absdir+"""/"""+dir.replace('/','')+"""_combined.txt --plots --saveShapes
+        combine -M FitDiagnostics """+abs_dir+"""/"""+model_name+"""_combined.txt --plots --saveShapes
+
+        PostFitShapesFromWorkspace -w """+abs_dir+"""/"""+model_name+"""_combined.root -o """+abs_dir+"""/fit_shapes.root --postfit --sampling -f """+abs_dir+"""/fitDiagnostics.root:fit_s
         """)
         wrapper.close()
-    os.system('chmod u+x '+dir+'/wrapper.sh')
+    os.system('chmod u+x '+model_dir+'/wrapper.sh')
 
 def runFits(models=['UHH_Model']):
     pathCMSSW = os.path.abspath('CMSSW_10_2_13')
