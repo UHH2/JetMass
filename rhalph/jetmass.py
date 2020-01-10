@@ -208,6 +208,7 @@ def jet_mass_producer(configs=None):
     if(do_qcd_estimation):
         #QCD TF
         tf_params = rl.BernsteinPoly('tf_params', (2,2), ['pt','rho'], limits = (0,10))
+        print('Using QCD efficiency (N2-ddt) of %.2f%% to scale initial QCD in pass region'%(qcd_eff*100))
         tf_params = qcd_eff * tf_params(ptscaled,rhoscaled)
         
         for channel_name, config in channels.items():
