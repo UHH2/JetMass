@@ -19,13 +19,14 @@ if [ ! -d "CMSSW_10_2_13" ]; then
   git fetch origin
   git checkout v8.0.1
   # scramv1 b clean; scramv1 b
+  cd ../../
   
   echo 'installing combineHarvester'
   git clone https://github.com/cms-analysis/CombineHarvester.git 
 
   scram b clean; scram b -j8
   
-  cd ../../../../
+  cd ../../
   echo "installed CMSSW_10_2_13 with HiggsAnalysis/CombinedLimit"
   echo "to actually use rhalphalib & co. you should use a fresh shell"
 fi
