@@ -1,12 +1,16 @@
-import sys
-if sys.version_info < (3,6):
-    raise BaseException("This script has been tested in python3.6 with special setup including coffea. If you want to try it with different python versions, feel free to disabel this exception at the top of this script!")
-
 import uproot
+if tuple(map(int,uproot.__version__.split('.'))) < (3,8):
+    raise BaseException(""""You'll need a newer version of uproot (currently %s). 
+Try 
+pip install --user --upgrade uproot 
+or (el6)
+source /cvmfs/sft.cern.ch/lcg/views/LCG_95apython3/x86_64-slc6-gcc8-opt/setup.sh 
+or (el7)
+source /cvmfs/sft.cern.ch/lcg/views/LCG_95apython3/x86_64-centos7-gcc8-opt/setup.sh"""%uproot.__version__)
+
 import ROOT
 import numpy as np
 import matplotlib.pyplot as plt
-# import coffea.hist as hist
 import scipy.ndimage.filters as filters
 
 
