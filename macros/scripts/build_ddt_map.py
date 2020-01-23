@@ -23,34 +23,6 @@ def numpy_to_TH2(np_arr,name,th3):
     array2hist(np_arr_clean,th2)
     return th2
 
-# def TH3_to_coffea(th3):
-#     '''
-#     converts uproot TH3 histogram into 3D coffea histogram with one category
-#     '''
-#     print('converting TH3 into coffea histogram')
-#     contents, edges = th3.numpy()
-#     edges_x,edges_y,edges_z = edges[0]
-#     center_x = edges_x[:-1]-(edges_x[:-1]-edges_x[1:])/2
-
-#     center_y = edges_y[:-1]-(edges_y[:-1]-edges_y[1:])/2
-#     center_z = edges_z[:-1]-(edges_z[:-1]-edges_z[1:])/2
-#     bins = np.meshgrid(center_y,center_z,center_x)
-#     bins_x = bins[2].flatten()
-#     bins_y = bins[0].flatten()
-#     bins_z = bins[1].flatten()
-#     contents_arr = contents.T.flatten()
-
-#     coffea_hist = hist.Hist(th3.name.__str__().replace("b'","").replace("'",""),
-#                   hist.Bin("rho", "rho", th3.xnumbins, th3.xlow, th3.xhigh),
-#                   hist.Bin("pt", "transverse momentum", th3.ynumbins, th3.ylow, th3.yhigh),
-#                   hist.Bin('discriminator', "discriminator", th3.znumbins, th3.zlow, th3.zhigh),
-#     )
-    
-    
-#     coffea_hist.fill(rho=bins_x, pt=bins_y, discriminator=bins_z, weight=contents_arr)
-#     print('Converting done!')
-#     return coffea_hist
-
 def plot_map(x_arr, y_arr, contents_arr, name = 'ddt_map', levels = None):
     fig = plt.figure(figsize=(6,6))
     ax = fig.add_subplot(111)
@@ -62,12 +34,8 @@ def plot_map(x_arr, y_arr, contents_arr, name = 'ddt_map', levels = None):
     plt.savefig(name+'.pdf')
     print('saved map as',name,'.[pdf,png]')
     
-    
-# def bineval(hqcd, a):
-    # return hqcd.identifiers('discriminator')[a].lo
-    
+
 def build_ddt_map(hqcd, qcd_eff, smooth = True):
-    # vals_var = hqcd.values()[()]
     vals_var, edges = hqcd.numpy()
     cum_sum  = np.cumsum(vals_var, axis = 2)
     max_val = cum_sum[:,:,-1]
@@ -83,11 +51,9 @@ def build_ddt_map(hqcd, qcd_eff, smooth = True):
     #when X% quantiles position has not been found set it to last bin of discriminator-hist
     res = np.where(res > norma.shape[2]-1, norma.shape[2]-1, res)
 
-    # bin_func = np.vectorize(bineval)
     def bineval(a):
         return edges[0][2][a]
     bin_func = np.vectorize(bineval)
-    # quantile_map = bin_func(hqcd, res)
     quantile_map = bin_func(res)
     if(not smooth):
         return quantile_map
@@ -136,14 +102,12 @@ if __name__ == "__main__":
             th3 = th3_infile[hist_name]
         else:
             th3 = th3_infile[hist_dir][hist_name]
-        # coffea_hist = TH3_to_coffea(th3)
 
         _,edges = th3.numpy()
         edges_x = edges[0][0][:-1]
         edges_y = edges[0][1][:-1]
         
         for wp in args.working_point:
-            # smooth_map = build_ddt_map(coffea_hist, float(wp), smooth = True)
             smooth_map = build_ddt_map(th3, float(wp), smooth = True)
             smooth_map_th2 = numpy_to_TH2(smooth_map,hist_name+'ddt_map_smooth_'+str(wp).replace('.','p'),th3)
             
