@@ -39,7 +39,7 @@ def plot_map(x_arr, y_arr, contents_arr, name = 'ddt_map', levels = None):
     print('saved map as',name,'.[pdf,png]')
     
 
-def build_ddt_map(hqcd, qcd_eff, smooth = True):
+def build_ddt_map(hqcd, qcd_eff, smooth = True, gaus_sigma=1.0):
     vals_var, edges = hqcd.numpy()
     cum_sum  = np.cumsum(vals_var, axis = 2)
     max_val = cum_sum[:,:,-1]
@@ -61,7 +61,7 @@ def build_ddt_map(hqcd, qcd_eff, smooth = True):
     quantile_map = bin_func(res)
     if(not smooth):
         return quantile_map
-    smooth_map = filters.gaussian_filter(quantile_map,1)
+    smooth_map = filters.gaussian_filter(quantile_map,gaus_sigma)
     return smooth_map
 
     
@@ -76,6 +76,9 @@ if __name__ == "__main__":
     parser.add_argument('--hist-dir', nargs='+', default=None, help = 'List of the directories, in which the respective histograms specified with -n/--hist-names can be found in the specified input ROOT-File')
 
     parser.add_argument('-r','--reject',choices=['high','low','l','h'], default='low', help='Specifies what kind of values of the discriminator reject the background. If low/l wp*100 percent quantile is derived. If high/h (1-wp)*100 percent quantile is derived.')
+    parser.add_argument('-s','--smooth', action='store_true', help='specify if you want to postprocess the maps with an gaussian filter' )
+    parser.add_argument('-g','--gaus_sigma', type=float, default=1.0, help='specify what sigma should be used by the smoothing gaus-kernel.')
+    parser.add_argument('-p','--makeplots',action='store_true', help='make some ugly plots')
     
     args = parser.parse_args()
     th3_infile = uproot.open(args.input)
@@ -98,7 +101,13 @@ if __name__ == "__main__":
         for hist_dir in hist_dirs:
             print(th3_infile[hist_dir].keys())
         exit(0)
-    
+
+    if(args.smooth):
+        smooth_suffix = ("_smooth_gaus%.2fsigma"%args.gaus_sigma).replace('.','p')
+        args.output = args.output.replace('.root','')+smooth_suffix +".root"
+    else:
+        smooth_suffix = ''
+        
     th2_outfile = ROOT.TFile(args.output,'RECREATE')
     th2_outfile.cd()
     for hist_dir,hist_name in hist_names:
@@ -112,9 +121,10 @@ if __name__ == "__main__":
         edges_y = edges[0][1][:-1]
         
         for wp in args.working_point:
-            smooth_map = build_ddt_map(th3, float(wp), smooth = True)
-            smooth_map_th2 = numpy_to_TH2(smooth_map,hist_name+'ddt_map_smooth_'+str(wp).replace('.','p'),th3)
-            
-            plot_map(edges_x, edges_y, smooth_map.T,'ddt_map_'+hist_name+'_'+str(wp).replace('.','p'))
+            smooth_map = build_ddt_map(th3, float(wp), smooth = args.smooth, gaus_sigma=args.gaus_sigma)
+            smooth_map_th2 = numpy_to_TH2(smooth_map,hist_name+'_'+str(wp).replace('.','p')+smooth_suffix+'_'+hist_dir,th3)
+            # if args.makeplots:
+            #     plot_map(edges_x, edges_y, smooth_map.T,'ddt_map_'+hist_name+'_'+str(wp).replace('.','p'))
+
             th2_outfile.Write()
     th2_outfile.Close()
