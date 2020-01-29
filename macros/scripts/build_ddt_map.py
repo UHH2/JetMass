@@ -27,6 +27,78 @@ def numpy_to_TH2(np_arr,name,th3):
     array2hist(np_arr_clean,th2)
     return th2
 
+def plot_map_root(file_path, map_name):
+    from ROOT import gStyle, gROOT, TFile, TCanvas
+    import os
+    out_dir = os.path.dirname(file_path)
+    out_file_path = out_dir+("/" if len(out_dir)>0 else "")+map_name;
+    gStyle.SetPadTickY(1)
+    gStyle.SetPadTickX(1)
+    gStyle.SetLegendBorderSize(0)
+    
+    gROOT.SetBatch(True)
+    gStyle.SetOptStat(0)
+    gStyle.SetOptFit(0)
+    gStyle.SetTitleOffset(0.86,"X")
+    gStyle.SetTitleOffset(1.6,"Y")
+    
+    gStyle.SetPadLeftMargin(0.14)
+    gStyle.SetPadBottomMargin(0.12)
+    gStyle.SetPadTopMargin(0.08)
+    gStyle.SetPadRightMargin(0.16)
+    
+    gStyle.SetMarkerSize(0.5)
+    gStyle.SetHistLineWidth(1)
+    gStyle.SetTitleSize(0.05, "XYZ")
+    gStyle.SetLabelSize(0.04, "XYZ")
+    gStyle.SetNdivisions(506, "XYZ")
+    gStyle.SetLegendBorderSize(0)
+    f = TFile(file_path)
+    hist = f.Get(map_name)
+  
+    hist.GetXaxis().SetTitle("#rho")
+    hist.GetYaxis().SetTitle("p_{T} [GeV]")
+    hist.GetZaxis().SetTitle("N2^{DDT} 5/% quantile")
+    
+    hist.GetXaxis().SetRangeUser(-6.0,-2.1)
+    hist.GetYaxis().SetRangeUser(200,1200)
+    hist.GetZaxis().SetRangeUser(0.12,0.3)
+
+    Font=43
+    TitleSize=24.0
+    TitleOffset=1.3
+    LabelSize=18.0
+    hist.GetYaxis().SetTitleFont(Font)
+    hist.GetYaxis().SetTitleSize(TitleSize)
+    hist.GetYaxis().SetTitleOffset(TitleOffset)
+    hist.GetYaxis().SetLabelFont(Font)
+    hist.GetYaxis().SetLabelSize(LabelSize)
+
+    hist.GetXaxis().SetTitleFont(Font)
+    hist.GetXaxis().SetTitleSize(TitleSize)
+    hist.GetXaxis().SetTitleOffset(TitleOffset)
+    hist.GetXaxis().SetLabelFont(Font)
+    hist.GetXaxis().SetLabelSize(LabelSize)
+    
+    hist.GetZaxis().SetTitleFont(Font)
+    hist.GetZaxis().SetTitleSize(TitleSize)
+    hist.GetZaxis().SetTitleOffset(TitleOffset)
+    hist.GetZaxis().SetLabelFont(Font)
+    hist.GetZaxis().SetLabelSize(LabelSize)
+    
+    hist.GetZaxis().SetNdivisions(510)
+    
+    hist.SetTitle(map_name.replace('_',' '))
+    hist.SetTitleFont(43)
+    hist.SetTitleSize(20.0)
+	
+    c1 = TCanvas("c1","c1",700,600)
+    c1.cd()
+    hist.Draw("colz")
+    c1.SaveAs(out_file_path+".pdf")
+    c1.SaveAs(out_file_path+".png")
+    del c1
+
 def plot_map(x_arr, y_arr, contents_arr, name = 'ddt_map', levels = None):
     fig = plt.figure(figsize=(6,6))
     ax = fig.add_subplot(111)
@@ -128,3 +200,8 @@ if __name__ == "__main__":
 
             th2_outfile.Write()
     th2_outfile.Close()
+    if args.makeplots:
+        hist_names = zip(hist_dirs,args.hist_names)
+        for hist_dir,hist_name in hist_names:
+            for wp in args.working_point:
+                plot_map_root(args.output,hist_name+'_'+str(wp).replace('.','p')+smooth_suffix+'_'+hist_dir)
