@@ -100,7 +100,6 @@ namespace uhh2examples {
     if(is_mc){
       MC_LumiWeight.reset(new MCLumiWeight(ctx));
       MC_PUWeight.reset(new MCPileupReweight(ctx, "central"));
-      pfparticles_jec_corrector.reset(new CorrectParticles());
     }
 
     std::string h2_ddt_FileName = ctx.get("ddtMapFile");
