@@ -15,19 +15,19 @@ H3DDTHist::H3DDTHist(Context & ctx, const string & dirname): Hists(ctx, dirname)
   use_PFMass = TString(dirname).Contains("PFMass");
   use_SD = ! TString(dirname).Contains("noSD");
 
-  int pt_nbins = 360;
+  int pt_nbins = 300;
   float pt_min = 0.0;
-  float pt_max = 2000.0;
+  float pt_max = 1500.0;
 
-  int mSD_nbins = 250;
-  float mSD_min = 0.0;
-  float mSD_max = 500;
+  // int mSD_nbins = 250;
+  // float mSD_min = 0.0;
+  // float mSD_max = 500;
 
-  int rho_nbins = 360;
-  float rho_min = -11.0;
+  int rho_nbins = 300;
+  float rho_min = -10.0;
   float rho_max = 0.0;
 
-  int disc_nbins = 150;
+  int disc_nbins = 110;
   float disc_min = -0.1;
   float disc_max = 1.0;
   
