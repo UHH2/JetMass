@@ -30,6 +30,7 @@
 #include "UHH2/JetMass/include/TopJetCorrections.h"
 #include "UHH2/JetMass/include/CorrectParticles.h"
 #include "UHH2/JetMass/include/ApplyPuppiToPF.h"
+#include "UHH2/common/include/MCLargeWeightKiller.h"
 
 
 #include <unistd.h>
