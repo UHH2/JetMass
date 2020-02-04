@@ -68,7 +68,6 @@ private:
   bool is_mc,matchW,is_WSample;
   bool isTopSel = false;
   bool isWSel = false;
-
   Double_t AK4_Clean_pT,AK4_Clean_eta,AK8_Clean_pT,AK8_Clean_eta;
 };
 
@@ -77,11 +76,11 @@ PreSelModule::PreSelModule(Context & ctx){
 
   // Set some boolians
   is_mc = ctx.get("dataset_type") == "MC";
-
+  
   std::string version = ctx.get("dataset_version");
   is_WSample = version.find("WJets") != std::string::npos;
   matchW = version.find("WMatched") != std::string::npos;
-
+  
   const std::string& channel = ctx.get("channel", "");
   if     (channel == "top") isTopSel = true;
   else if(channel == "W")   isWSel = true;
@@ -99,12 +98,9 @@ PreSelModule::PreSelModule(Context & ctx){
   topjetCorr.reset(new TopJetCorrections());
   topjetCorr->init(ctx);
 
-  // PF correctors
-  if(is_mc || !isWSel){
-    pfparticles_jec_corrector.reset(new CorrectParticles());
-    pf_applyPUPPI.reset(new ApplyPuppiToPF());
-  }
-
+  // Application of Puppi weights onto pfparticles
+  pf_applyPUPPI.reset(new ApplyPuppiToPF());
+ 
   // Jet cleaner
   AK4_Clean_pT = 30.0;
   AK4_Clean_eta = 2.5;
@@ -148,8 +144,7 @@ bool PreSelModule::process(Event & event) {
   // AK8 JEC
   topjetCorr->process(event);
 
-  if(is_mc || !isWSel) pfparticles_jec_corrector->process(event);
-  if(is_mc || !isWSel) pf_applyPUPPI->process(event);
+  pf_applyPUPPI->process(event);
 
   sort_by_pt<Jet>(*event.jets);
   sort_by_pt<TopJet>(*event.topjets);
