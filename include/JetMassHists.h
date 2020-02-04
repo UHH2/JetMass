@@ -23,12 +23,12 @@ private:
   void ConstructOtherIDs();
   bool inCategory(PFParticle p, TString cat);
   double CalculateMJet(vector<PFParticle>);
-  double CalculateRho(vector<PFParticle>);
   vector<double> CalculateMJetVariation(vector<PFParticle>, int, int, TString);
   bool isMC;
   bool use_SD;
   bool use_constituents;
   bool do_variations;
+  bool JEC_on_Mass;
   double variation;
   int Nbins_pt, Nbins_eta, Nbins_cat;
   TH1F *h_rho, *h_mass, *h_mass_jet, *h_rho_jet;

@@ -22,6 +22,7 @@
 #include "UHH2/common/include/EventHists.h"
 #include "UHH2/common/include/JetHists.h"
 #include "UHH2/common/include/MuonHists.h"
+#include "UHH2/JetMass/include/H3DDTHist.h"
 
 #include "UHH2/JetMass/include/SubstructureSelections.h"
 #include "UHH2/JetMass/include/MatchingSelections.h"
@@ -29,6 +30,7 @@
 #include "UHH2/JetMass/include/TopJetCorrections.h"
 #include "UHH2/JetMass/include/CorrectParticles.h"
 #include "UHH2/JetMass/include/ApplyPuppiToPF.h"
+#include "UHH2/common/include/MCLargeWeightKiller.h"
 
 
 #include <unistd.h>
@@ -40,17 +42,17 @@
 using namespace std;
 using namespace uhh2;
 
-Particle GetGeneratorW(Event & event);
 
-class PreSelModule: public AnalysisModule {
+class DDTMapModule: public AnalysisModule {
 public:
 
-  explicit PreSelModule(Context & ctx);
+  explicit DDTMapModule(Context & ctx);
   virtual bool process(Event & event) override;
 
 private:
 
   std::unique_ptr<CommonModules> common;
+  std::unique_ptr<MCLargeWeightKiller> mcSpikeKiller;
   std::unique_ptr<TopJetCorrections> topjetCorr;
 
   std::unique_ptr<JetCleaner> ak4cleaner, ak4cleaner15;
@@ -61,30 +63,33 @@ private:
   std::unique_ptr<Selection> N_MUON_sel, N_ELEC_sel, TwoD_sel;
   std::unique_ptr<MatchingSelection> MatchLeadingGenW_sel;
 
-  std::vector<std::unique_ptr<uhh2::Hists>> hists;
+  // std::unique_ptr<uhh2::Hists> maps_raw, maps_raw_pfmass;
+  std::unique_ptr<uhh2::Hists> maps_cleaner, maps_cleaner_pfmass;
+  std::unique_ptr<uhh2::Hists> maps_nak8_pt500, maps_nak8_pt500_pfmass;
 
   std::unique_ptr<AnalysisModule> pfparticles_jec_corrector,pf_applyPUPPI;
 
   bool is_mc,matchW,is_WSample;
   bool isTopSel = false;
   bool isWSel = false;
+
   Double_t AK4_Clean_pT,AK4_Clean_eta,AK8_Clean_pT,AK8_Clean_eta;
 };
 
 
-PreSelModule::PreSelModule(Context & ctx){
+DDTMapModule::DDTMapModule(Context & ctx){
 
   // Set some boolians
   is_mc = ctx.get("dataset_type") == "MC";
-  
+
   std::string version = ctx.get("dataset_version");
   is_WSample = version.find("WJets") != std::string::npos;
   matchW = version.find("WMatched") != std::string::npos;
-  
+
   const std::string& channel = ctx.get("channel", "");
   if     (channel == "top") isTopSel = true;
   else if(channel == "W")   isWSel = true;
-  else throw runtime_error("PreSelModule: Select 'top' or 'W' channel");
+  else throw runtime_error("DDTMapModule: Select 'top' or 'W' channel");
 
   // common modules
   MuonId muid = AndId<Muon>(MuonID(Muon::CutBasedIdTight), PtEtaCut(55., 2.4));
@@ -94,13 +99,27 @@ PreSelModule::PreSelModule(Context & ctx){
   common->set_electron_id(eleid);
   common->init(ctx);
 
+  mcSpikeKiller.reset(new MCLargeWeightKiller(ctx,
+                                              2, // maximum allowed ratio of leading reco jet pT / generator HT
+                                              2, // maximum allowed ratio of leading gen jet pT / generator HT
+                                              2, // maximum allowed ratio of leading reco jet pT / Q scale
+                                              2, // maximum allowed ratio of PU maximum pTHat / gen HT (ensures scale of PU < scale of hard interaction)
+                                              2, // maximum allowed ratio of leading reco jet pT / pTHat
+                                              2, // maximum allowed ratio of leading gen jet pT / pTHat
+                                              "jets", // name of jet collection to be used
+                                              "genjets" // name of genjet collection to be used
+                        ));
+
   // AK8 JEC/JER
   topjetCorr.reset(new TopJetCorrections());
   topjetCorr->init(ctx);
 
-  // Application of Puppi weights onto pfparticles
-  pf_applyPUPPI.reset(new ApplyPuppiToPF());
- 
+  // PF correctors
+  if(is_mc || !isWSel){
+    pfparticles_jec_corrector.reset(new CorrectParticles());
+    pf_applyPUPPI.reset(new ApplyPuppiToPF());
+  }
+
   // Jet cleaner
   AK4_Clean_pT = 30.0;
   AK4_Clean_eta = 2.5;
@@ -123,16 +142,18 @@ PreSelModule::PreSelModule(Context & ctx){
   MatchLeadingGenW_sel.reset(new MatchingSelection(ctx, MatchingSelection::oIsLeadingGenW));
 
   // HISTOGRAMS
-  hists.emplace_back(new ElectronHists(ctx, "ElectronHists"));
-  hists.emplace_back(new EventHists(ctx, "EventHists"));
-  hists.emplace_back(new MuonHists(ctx, "MuonHists"));
-  hists.emplace_back(new JetHists(ctx, "JetHists"));
-  hists.emplace_back(new TopJetHists(ctx, "TopJetHists"));
+  // maps_raw.reset(new H3DDTHist(ctx, "maps_raw"));
+  maps_cleaner.reset(new H3DDTHist(ctx, "maps_cleaner"));
+  maps_nak8_pt500.reset(new H3DDTHist(ctx, "maps_NAK8_Pt500"));
+
+  // maps_raw_pfmass.reset(new H3DDTHist(ctx, "maps_raw_PFMass"));
+  maps_cleaner_pfmass.reset(new H3DDTHist(ctx, "maps_cleaner_PFMass"));
+  maps_nak8_pt500_pfmass.reset(new H3DDTHist(ctx, "maps_NAK8_Pt500_PFMass"));
 }
 
-bool PreSelModule::process(Event & event) {
+bool DDTMapModule::process(Event & event) {
   if(EXTRAOUT){
-    cout << "PreSelModule: Starting to process event (runid, eventid) = (" << event.run << ", " << event.event << "); weight = " << event.weight << endl;
+    cout << "DDTMapModule: Starting to process event (runid, eventid) = (" << event.run << ", " << event.event << "); weight = " << event.weight << endl;
   }
   // MATCHING
 
@@ -141,13 +162,23 @@ bool PreSelModule::process(Event & event) {
   bool pass_common=common->process(event);
   if(!pass_common) return false;
 
+  //Spikekiller
+  if (is_mc){
+    if (!mcSpikeKiller->passes(event)) return false;
+  }
+
+  
   // AK8 JEC
   topjetCorr->process(event);
 
-  pf_applyPUPPI->process(event);
+  // if(is_mc || !isWSel) pfparticles_jec_corrector->process(event);
+  if(is_mc || !isWSel) pf_applyPUPPI->process(event);
 
   sort_by_pt<Jet>(*event.jets);
   sort_by_pt<TopJet>(*event.topjets);
+
+  // maps_raw->fill(event);
+  // maps_raw_pfmass->fill(event);
 
   // CLEANER
   ak4cleaner15->process(event);
@@ -180,10 +211,18 @@ bool PreSelModule::process(Event & event) {
 
   // RUN CLEANER AGAIN with pt > 30 (has to be after TwoD sel)
   ak4cleaner->process(event);
-
+  maps_cleaner->fill(event);
+  maps_cleaner_pfmass->fill(event);
+  
   // FILL HISTS
-  if(passTOP && isTopSel)  for(auto & h: hists) h->fill(event);
-  else if(passW && isWSel) for(auto & h: hists) h->fill(event);
+  if(passTOP && isTopSel){
+    maps_nak8_pt500->fill(event);
+    maps_nak8_pt500_pfmass->fill(event);
+  }
+  else if(passW && isWSel){
+    maps_nak8_pt500->fill(event);
+    maps_nak8_pt500_pfmass->fill(event);
+  }
 
   // DECIDE TO STORE EVENT
   if(!passTOP && !passW) return false;
@@ -191,5 +230,5 @@ bool PreSelModule::process(Event & event) {
 }
 
 // as we want to run the ExampleCycleNew directly with AnalysisModuleRunner,
-// make sure the PreSelModule is found by class name. This is ensured by this macro:
-UHH2_REGISTER_ANALYSIS_MODULE(PreSelModule)
+// make sure the DDTMapModule is found by class name. This is ensured by this macro:
+UHH2_REGISTER_ANALYSIS_MODULE(DDTMapModule)

@@ -18,7 +18,16 @@ public:
 
 private:
   bool isMC;
-  TH3D * N2_v_mSD_v_pT;
-  TH3D * N2_v_rho_v_pT;
-  TH2D * N2_v_rho;
+  bool use_PFMass;
+  bool use_SD;
+
+  TH3D * N2_v_pT_v_rho_oldBinning; 
+
+  TH3D *  N2_v_pT_v_rho;
+  TH3D *  N2_beta2_v_pT_v_rho;
+  TH3D *  DeepBoosted_WvsQCD_v_pT_v_rho;
+
+  /* TH3D *  N2_v_pT_v_mSD; */
+  /* TH3D *  N2_beta2_v_pT_v_mSD; */
+  /* TH3D *  DeepBoosted_WvsQCD_v_pT_v_mSD;  */
 };
