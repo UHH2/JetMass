@@ -41,8 +41,8 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, TString mode )
   if(mode.Contains("VAR")) do_variations = true;
   if(!use_constituents) do_variations = false;
 
-  no_JEC_on_Mass = false;
-  if(mode.Contains("NOJEC")) no_JEC_on_Mass=true;
+  JEC_on_Mass = false;
+  if(mode.Contains("JEC")) JEC_on_Mass=true;
   
   variation = 0.1;
 
@@ -153,9 +153,9 @@ void JetMassHists::fill(const Event & event){
   // fill again but get values from PF particles
   double mass, rho;
   if(use_constituents){
-    float JEC_factor_raw = no_JEC_on_Mass ? topjets->at(0).JEC_factor_raw() : 1.0;
-    mass = CalculateMJet(particles, JEC_factor_raw);
-    rho = CalculateRho(particles, JEC_factor_raw);
+    float JEC_factor = JEC_on_Mass ? 1./topjets->at(0).JEC_factor_raw() : 1.0;
+    mass = CalculateMJet(particles)*JEC_factor;
+    rho = 2*TMath::Log(mass/ptjet);
   }
   else{
     mass = mjet;
@@ -287,26 +287,13 @@ void JetMassHists::ConstructOtherIDs(){
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 // calculate jet mass from vector of PF particles
-double JetMassHists::CalculateMJet(vector<PFParticle> Particles, float JEC_factor_raw){
+double JetMassHists::CalculateMJet(vector<PFParticle> Particles){
   LorentzVector jet_v4;
   for(auto p:Particles){
     jet_v4 += p.v4();
   }
-  double mjet = jet_v4.M()*JEC_factor_raw;
+  double mjet = jet_v4.M();
   return mjet;
-}
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-// calculate jet rho from vector of PF particles
-double JetMassHists::CalculateRho(vector<PFParticle> Particles, float JEC_factor_raw){
-  LorentzVector jet_v4;
-  for(auto p:Particles){
-    jet_v4 += p.v4();
-  }
-  double mjet = jet_v4.M()*JEC_factor_raw;
-  double pt = jet_v4.Pt();
-  double rho = TMath::Log(mjet*mjet/(pt*pt));
-  return rho;
 }
 
 
