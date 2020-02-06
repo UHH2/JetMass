@@ -22,6 +22,7 @@
 #include "UHH2/JetMass/include/ApplyPuppiToPF.h"
 #include "UHH2/JetMass/include/H3DDTHist.h"
 #include "UHH2/JetMass/include/ECFHists.h"
+#include "UHH2/common/include/MCLargeWeightKiller.h"
 
 #include "TH3D.h"
 
@@ -60,6 +61,7 @@ namespace uhh2examples {
 
   private:
     std::unique_ptr<AnalysisModule> MC_LumiWeight,MC_PUWeight;
+    std::unique_ptr<MCLargeWeightKiller> mcSpikeKiller;
 
     std::unique_ptr<Hists> h_PreSel,h_PreSel_Substr;
     std::unique_ptr<Hists> h_spikeKiller_1p5,h_spikeKiller_1p6,h_spikeKiller_1p7,h_spikeKiller_1p8,h_spikeKiller_2p0,h_spikeKiller_2p5;
@@ -79,15 +81,15 @@ namespace uhh2examples {
     std::unique_ptr<Hists> h_N2ddt_pt800To1200_Sel_pass,h_N2ddt_pt800To1200_Sel_fail;
     std::unique_ptr<Hists> h_N2ddt_pt1200ToInf_Sel_pass,h_N2ddt_pt1200ToInf_Sel_fail;
 
-    std::unique_ptr<Hists> h_N2ddt_pass_noJecOnMass,h_N2ddt_fail_noJecOnMass;
+    std::unique_ptr<Hists> h_N2ddt_pass_JecOnMass,h_N2ddt_fail_JecOnMass;
     
-    std::unique_ptr<Hists> h_N2ddt_pt450To500_Sel_pass_noJecOnMass,h_N2ddt_pt450To500_Sel_fail_noJecOnMass;
-    std::unique_ptr<Hists> h_N2ddt_pt500To550_Sel_pass_noJecOnMass,h_N2ddt_pt500To550_Sel_fail_noJecOnMass;
-    std::unique_ptr<Hists> h_N2ddt_pt550To600_Sel_pass_noJecOnMass,h_N2ddt_pt550To600_Sel_fail_noJecOnMass;
-    std::unique_ptr<Hists> h_N2ddt_pt600To675_Sel_pass_noJecOnMass,h_N2ddt_pt600To675_Sel_fail_noJecOnMass;
-    std::unique_ptr<Hists> h_N2ddt_pt675To800_Sel_pass_noJecOnMass,h_N2ddt_pt675To800_Sel_fail_noJecOnMass;
-    std::unique_ptr<Hists> h_N2ddt_pt800To1200_Sel_pass_noJecOnMass,h_N2ddt_pt800To1200_Sel_fail_noJecOnMass;
-    std::unique_ptr<Hists> h_N2ddt_pt1200ToInf_Sel_pass_noJecOnMass,h_N2ddt_pt1200ToInf_Sel_fail_noJecOnMass;
+    std::unique_ptr<Hists> h_N2ddt_pt450To500_Sel_pass_JecOnMass,h_N2ddt_pt450To500_Sel_fail_JecOnMass;
+    std::unique_ptr<Hists> h_N2ddt_pt500To550_Sel_pass_JecOnMass,h_N2ddt_pt500To550_Sel_fail_JecOnMass;
+    std::unique_ptr<Hists> h_N2ddt_pt550To600_Sel_pass_JecOnMass,h_N2ddt_pt550To600_Sel_fail_JecOnMass;
+    std::unique_ptr<Hists> h_N2ddt_pt600To675_Sel_pass_JecOnMass,h_N2ddt_pt600To675_Sel_fail_JecOnMass;
+    std::unique_ptr<Hists> h_N2ddt_pt675To800_Sel_pass_JecOnMass,h_N2ddt_pt675To800_Sel_fail_JecOnMass;
+    std::unique_ptr<Hists> h_N2ddt_pt800To1200_Sel_pass_JecOnMass,h_N2ddt_pt800To1200_Sel_fail_JecOnMass;
+    std::unique_ptr<Hists> h_N2ddt_pt1200ToInf_Sel_pass_JecOnMass,h_N2ddt_pt1200ToInf_Sel_fail_JecOnMass;
 
     TH2F * ddtMap;
     bool is_mc;
@@ -100,6 +102,7 @@ namespace uhh2examples {
     if(is_mc){
       MC_LumiWeight.reset(new MCLumiWeight(ctx));
       MC_PUWeight.reset(new MCPileupReweight(ctx, "central"));
+      mcSpikeKiller.reset(new MCLargeWeightKiller(ctx,2,2,2,2,2,2,"jets","genjets"));
     }
 
     std::string h2_ddt_FileName = ctx.get("ddtMapFile");
@@ -107,24 +110,13 @@ namespace uhh2examples {
     TFile * mapFile = new TFile(h2_ddt_FileName.c_str());
     ddtMap = (TH2F*) mapFile->Get(h2_ddt_HistName.c_str());
 
-
-    // std::string h3_fileName = ctx.get("h3File");
-    // std::string h3_histName = ctx.get("h3Name");
-    // TFile * mapFile = new TFile(h3_fileName.c_str(),"READ");
-    // N2_v_mSD_v_pT = (TH3D*) mapFile->Get(h3_histName.c_str());
-
-    // TH2D* ddtMap_QCD_0p01=SubstructureHists::computeDDTMap(0.01, N2_v_mSD_v_pT);
-
-
-    n2ddtsel.reset(new N2ddtSelection(ddtMap,true));
+    n2ddtsel.reset(new N2ddtSelection(ddtMap,true,TString(h2_ddt_HistName).Contains("PFMass")));
     n2sel.reset(new N2Selection(0.2));
 
     if(is_mc)h_PreSel.reset(new JetMassHists(ctx,"JetMass_PreSel","SDVAR"));
     h_PreSel_Substr.reset(new SubstructureHists(ctx,"SubstructureHists_PreSel",ddtMap,true));
 
-    TString plotMode = "";
-    if(is_mc)plotMode = "SDVAR";
-    else plotMode = "SDNC";
+    TString plotMode = "SDVAR";
     std::cout << "Creating Hists with mode: " << plotMode << std::endl;
     
 
@@ -150,50 +142,35 @@ namespace uhh2examples {
     h_N2ddt_pt1200ToInf_Sel_pass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt1200ToInf_pass",plotMode));
     h_N2ddt_pt1200ToInf_Sel_fail.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt1200ToInf_fail",plotMode));
 	
-    h_N2ddt_pass_noJecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noJecOnMass_pass",plotMode+"NOJEC"));
-    h_N2ddt_fail_noJecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_noJecOnMass_fail",plotMode+"NOJEC"));
+    h_N2ddt_pass_JecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_JecOnMass_pass",plotMode+"NOJEC"));
+    h_N2ddt_fail_JecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_JecOnMass_fail",plotMode+"NOJEC"));
     
-    h_N2ddt_pt450To500_Sel_pass_noJecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt450To500_noJecOnMass_pass",plotMode+"NOJEC"));
-    h_N2ddt_pt450To500_Sel_fail_noJecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt450To500_noJecOnMass_fail",plotMode+"NOJEC"));
-    h_N2ddt_pt500To550_Sel_pass_noJecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt500To550_noJecOnMass_pass",plotMode+"NOJEC"));
-    h_N2ddt_pt500To550_Sel_fail_noJecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt500To550_noJecOnMass_fail",plotMode+"NOJEC"));
-    h_N2ddt_pt550To600_Sel_pass_noJecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt550To600_noJecOnMass_pass",plotMode+"NOJEC"));
-    h_N2ddt_pt550To600_Sel_fail_noJecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt550To600_noJecOnMass_fail",plotMode+"NOJEC"));
-    h_N2ddt_pt600To675_Sel_pass_noJecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt600To675_noJecOnMass_pass",plotMode+"NOJEC"));
-    h_N2ddt_pt600To675_Sel_fail_noJecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt600To675_noJecOnMass_fail",plotMode+"NOJEC"));
-    h_N2ddt_pt675To800_Sel_pass_noJecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt675To800_noJecOnMass_pass",plotMode+"NOJEC"));
-    h_N2ddt_pt675To800_Sel_fail_noJecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt675To800_noJecOnMass_fail",plotMode+"NOJEC"));
-    h_N2ddt_pt800To1200_Sel_pass_noJecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt800To1200_noJecOnMass_pass",plotMode+"NOJEC"));
-    h_N2ddt_pt800To1200_Sel_fail_noJecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt800To1200_noJecOnMass_fail",plotMode+"NOJEC"));
-    h_N2ddt_pt1200ToInf_Sel_pass_noJecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt1200ToInf_noJecOnMass_pass",plotMode+"NOJEC"));
-    h_N2ddt_pt1200ToInf_Sel_fail_noJecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt1200ToInf_noJecOnMass_fail",plotMode+"NOJEC"));
+    h_N2ddt_pt450To500_Sel_pass_JecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt450To500_JecOnMass_pass",plotMode+"NOJEC"));
+    h_N2ddt_pt450To500_Sel_fail_JecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt450To500_JecOnMass_fail",plotMode+"NOJEC"));
+    h_N2ddt_pt500To550_Sel_pass_JecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt500To550_JecOnMass_pass",plotMode+"NOJEC"));
+    h_N2ddt_pt500To550_Sel_fail_JecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt500To550_JecOnMass_fail",plotMode+"NOJEC"));
+    h_N2ddt_pt550To600_Sel_pass_JecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt550To600_JecOnMass_pass",plotMode+"NOJEC"));
+    h_N2ddt_pt550To600_Sel_fail_JecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt550To600_JecOnMass_fail",plotMode+"NOJEC"));
+    h_N2ddt_pt600To675_Sel_pass_JecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt600To675_JecOnMass_pass",plotMode+"NOJEC"));
+    h_N2ddt_pt600To675_Sel_fail_JecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt600To675_JecOnMass_fail",plotMode+"NOJEC"));
+    h_N2ddt_pt675To800_Sel_pass_JecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt675To800_JecOnMass_pass",plotMode+"NOJEC"));
+    h_N2ddt_pt675To800_Sel_fail_JecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt675To800_JecOnMass_fail",plotMode+"NOJEC"));
+    h_N2ddt_pt800To1200_Sel_pass_JecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt800To1200_JecOnMass_pass",plotMode+"NOJEC"));
+    h_N2ddt_pt800To1200_Sel_fail_JecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt800To1200_JecOnMass_fail",plotMode+"NOJEC"));
+    h_N2ddt_pt1200ToInf_Sel_pass_JecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt1200ToInf_JecOnMass_pass",plotMode+"NOJEC"));
+    h_N2ddt_pt1200ToInf_Sel_fail_JecOnMass.reset(new JetMassHists(ctx,"JetMass_N2DDT_pt1200ToInf_JecOnMass_fail",plotMode+"NOJEC"));
   }
 
   bool WMassModule::process(Event & event){
     if(is_mc){
       MC_LumiWeight->process(event);
       MC_PUWeight->process(event);
+      if(!mcSpikeKiller->passes(event)) return false;
     }
     if(is_mc)h_PreSel->fill(event);
     h_PreSel_Substr->fill(event);
     if(event.topjets->size() < 1 ) return false;
     double pt = event.topjets->at(0).pt();
-
-    double pTave=0.0;
-    double ratio=0.0;
-    if(is_mc){
-      if(event.jets->size()>0){
-        pTave=event.jets->at(0).pt();
-      }else	if(event.jets->size()>1){
-        pTave=(event.jets->at(0).pt()+event.jets->at(1).pt())/2.0;
-      }
-      double pThat=event.genInfo->qScale();
-      ratio=pThat/pTave;
-    }
-
-    double qScale_max=1.5;
-    if(is_mc && (ratio > qScale_max)) return false;
-
     
     bool N2DDT_Selection = n2ddtsel->passes(event);
 
@@ -224,23 +201,23 @@ namespace uhh2examples {
     }
     
     if(N2DDT_Selection){
-      h_N2ddt_pass_noJecOnMass->fill(event);
-      if(pt > 450 && pt < 500)h_N2ddt_pt450To500_Sel_pass_noJecOnMass->fill(event);
-      else if(pt >= 500 && pt < 550)h_N2ddt_pt500To550_Sel_pass_noJecOnMass->fill(event);
-      else if(pt >= 550 && pt < 600)h_N2ddt_pt550To600_Sel_pass_noJecOnMass->fill(event);
-      else if (pt >= 600 && pt < 675)h_N2ddt_pt600To675_Sel_pass_noJecOnMass->fill(event);
-      else if (pt >= 675 && pt < 800)h_N2ddt_pt675To800_Sel_pass_noJecOnMass->fill(event);
-      else if (pt >= 800 && pt < 1200)h_N2ddt_pt800To1200_Sel_pass_noJecOnMass->fill(event);
-      else h_N2ddt_pt1200ToInf_Sel_pass_noJecOnMass->fill(event);
+      h_N2ddt_pass_JecOnMass->fill(event);
+      if(pt > 450 && pt < 500)h_N2ddt_pt450To500_Sel_pass_JecOnMass->fill(event);
+      else if(pt >= 500 && pt < 550)h_N2ddt_pt500To550_Sel_pass_JecOnMass->fill(event);
+      else if(pt >= 550 && pt < 600)h_N2ddt_pt550To600_Sel_pass_JecOnMass->fill(event);
+      else if (pt >= 600 && pt < 675)h_N2ddt_pt600To675_Sel_pass_JecOnMass->fill(event);
+      else if (pt >= 675 && pt < 800)h_N2ddt_pt675To800_Sel_pass_JecOnMass->fill(event);
+      else if (pt >= 800 && pt < 1200)h_N2ddt_pt800To1200_Sel_pass_JecOnMass->fill(event);
+      else h_N2ddt_pt1200ToInf_Sel_pass_JecOnMass->fill(event);
     }else{
-      h_N2ddt_fail_noJecOnMass->fill(event);
-      if(pt > 450 && pt < 500)h_N2ddt_pt450To500_Sel_fail_noJecOnMass->fill(event);
-      else if(pt >= 500 && pt < 550)h_N2ddt_pt500To550_Sel_fail_noJecOnMass->fill(event);
-      else if(pt >= 550 && pt < 600)h_N2ddt_pt550To600_Sel_fail_noJecOnMass->fill(event);
-      else if (pt >= 600 && pt < 675)h_N2ddt_pt600To675_Sel_fail_noJecOnMass->fill(event);
-      else if (pt >= 675 && pt < 800)h_N2ddt_pt675To800_Sel_fail_noJecOnMass->fill(event);
-      else if (pt >= 800 && pt < 1200)h_N2ddt_pt800To1200_Sel_fail_noJecOnMass->fill(event);
-      else h_N2ddt_pt1200ToInf_Sel_fail_noJecOnMass->fill(event);
+      h_N2ddt_fail_JecOnMass->fill(event);
+      if(pt > 450 && pt < 500)h_N2ddt_pt450To500_Sel_fail_JecOnMass->fill(event);
+      else if(pt >= 500 && pt < 550)h_N2ddt_pt500To550_Sel_fail_JecOnMass->fill(event);
+      else if(pt >= 550 && pt < 600)h_N2ddt_pt550To600_Sel_fail_JecOnMass->fill(event);
+      else if (pt >= 600 && pt < 675)h_N2ddt_pt600To675_Sel_fail_JecOnMass->fill(event);
+      else if (pt >= 675 && pt < 800)h_N2ddt_pt675To800_Sel_fail_JecOnMass->fill(event);
+      else if (pt >= 800 && pt < 1200)h_N2ddt_pt800To1200_Sel_fail_JecOnMass->fill(event);
+      else h_N2ddt_pt1200ToInf_Sel_fail_JecOnMass->fill(event);
     }
 
     return true;
