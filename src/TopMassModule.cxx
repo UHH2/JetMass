@@ -219,10 +219,6 @@ bool TopMassModule::process(Event & event) {
   if(topjets->size() < 1) return false;
   if(topjets->at(0).pt() < 200) return false;
 
-  // CORRECT PARTICLES
-  pf_applyPUPPI->process(event);
-  pf_jec->process(event);
-
   h_ecf->fill(event);
   h_pf->fill(event);
   h_EnergyFractions->fill(event);
