@@ -5,37 +5,41 @@
 
 <!ENTITY OUTdir   "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/WMass/">
 
-<!ENTITY DATA_JetHTRun2017B  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/DATA_JetHT_2017B.xml">
-<!ENTITY DATA_JetHTRun2017C  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/DATA_JetHT_2017C.xml">
-<!ENTITY DATA_JetHTRun2017D  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/DATA_JetHT_2017D.xml">
-<!ENTITY DATA_JetHTRun2017E  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/DATA_JetHT_2017E.xml">
-<!ENTITY DATA_JetHTRun2017F  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/DATA_JetHT_2017F.xml">
+<!ENTITY DATA_JetHTRun2017B  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/DATA_JetHTRun2017v2B.xml">
+<!ENTITY DATA_JetHTRun2017C  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/DATA_JetHTRun2017v2C.xml">
+<!ENTITY DATA_JetHTRun2017D  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/DATA_JetHTRun2017v2D.xml">
+<!ENTITY DATA_JetHTRun2017E  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/DATA_JetHTRun2017v2E.xml">
+<!ENTITY DATA_JetHTRun2017F  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/DATA_JetHTRun2017v2F.xml">
 
 <!-- =============================================== QCD ===================================================================== -->
 
-<!ENTITY QCD_Pt_15to30 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/QCD/QCD_Pt_15to30_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_30to50 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/QCD/QCD_Pt_30to50_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_50to80 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/QCD/QCD_Pt_50to80_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_80to120 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/QCD/QCD_Pt_80to120_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_120to170 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/QCD/QCD_Pt_120to170_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_170to300 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/QCD/QCD_Pt_170to300_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_300to470 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/QCD/QCD_Pt_300to470_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_470to600 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/QCD/QCD_Pt_470to600_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_600to800 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/QCD/QCD_Pt_600to800_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_800to1000 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/QCD/QCD_Pt_800to1000_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_1000to1400 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/QCD/QCD_Pt_1000to1400_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_1400to1800 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/QCD/QCD_Pt_1400to1800_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_1800to2400 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/QCD/QCD_Pt_1800to2400_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_2400to3200 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/QCD/QCD_Pt_2400to3200_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_3200toInf SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/QCD/QCD_Pt_3200toInf_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
+<!ENTITY QCD_Pt_15to30 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_QCD_Pt_15to30_2017v2.xml">
+<!ENTITY QCD_Pt_30to50 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_QCD_Pt_30to50_2017v2.xml">
+<!ENTITY QCD_Pt_50to80 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_QCD_Pt_50to80_2017v2.xml">
+<!ENTITY QCD_Pt_80to120 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_QCD_Pt_80to120_2017v2.xml">
+<!ENTITY QCD_Pt_120to170 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_QCD_Pt_120to170_2017v2.xml">
+<!ENTITY QCD_Pt_170to300 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_QCD_Pt_170to300_2017v2.xml">
+<!ENTITY QCD_Pt_300to470 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_QCD_Pt_300to470_2017v2.xml">
+<!ENTITY QCD_Pt_470to600 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_QCD_Pt_470to600_2017v2.xml">
+<!ENTITY QCD_Pt_600to800 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_QCD_Pt_600to800_2017v2.xml">
+<!ENTITY QCD_Pt_800to1000 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_QCD_Pt_800to1000_2017v2.xml">
+<!ENTITY QCD_Pt_1000to1400 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_QCD_Pt_1000to1400_2017v2.xml">
+<!ENTITY QCD_Pt_1400to1800 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_QCD_Pt_1400to1800_2017v2.xml">
+<!ENTITY QCD_Pt_1800to2400 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_QCD_Pt_1800to2400_2017v2.xml">
+<!ENTITY QCD_Pt_2400to3200 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_QCD_Pt_2400to3200_2017v2.xml">
+<!ENTITY QCD_Pt_3200toInf SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_QCD_Pt_3200toInf_2017v2.xml">
 
 
 
 <!-- =============================================== W+jets =========================================================================== -->
 
-<!ENTITY WJetsToQQ_HT400to600 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/MC_WJetsToQQ_HT400to600_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
-<!ENTITY WJetsToQQ_HT600to800 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/MC_WJetsToQQ_HT600to800_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
-<!ENTITY WJetsToQQ_HT800toInf SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/2017/MC_WJetsToQQ_HT800toInf_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY WJetsToQQ_HT400to600_WMatched SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_WJetsToQQ_HT400to600_WMatched_2017v2.xml">
+<!ENTITY WJetsToQQ_HT600to800_WMatched SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_WJetsToQQ_HT600to800_WMatched_2017v2.xml">
+<!ENTITY WJetsToQQ_HT800toInf_WMatched SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_WJetsToQQ_HT800toInf_WMatched_2017v2.xml">
+
+<!ENTITY WJetsToQQ_HT400to600_WUnmatched SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_WJetsToQQ_HT400to600_WUnmatched_2017v2.xml">
+<!ENTITY WJetsToQQ_HT600to800_WUnmatched SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_WJetsToQQ_HT600to800_WUnmatched_2017v2.xml">
+<!ENTITY WJetsToQQ_HT800toInf_WUnmatched SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/config/PreSel/MC_WJetsToQQ_HT800toInf_WUnmatched_2017v2.xml">
 
 <!-- =============================================== QCD ===================================================================== -->
 
@@ -47,7 +51,7 @@
 
 <!--
 <ConfigParse NEventsBreak="50000" LastBreak="0" FileSplit="0" AutoResubmit="1"/>
-<ConfigSGE RAM="4" DISK="2" Mail="steffen.albrecht@desy.de" Notification="as" Workdir="workdir_WMass"/>
+<ConfigSGE RAM="4" DISK="2" Mail="steffen.albrecht@desy.de" Notification="as" Workdir="workdir_WMass_PFMass"/>
 -->
 
 <JobConfiguration JobName="WMassJob" OutputLevel="INFO">
@@ -57,26 +61,39 @@
 
 <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="41860">
 
-  <InputData Version="DATA_JetHTRun2017v2B" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False">
-    &DATA_JetHTRun2017B;
+    <!-- <!-\- TESTING!! -\-> -->
+  <InputData Version="DATA_JetHTRun2017v2B_test" Lumi="1" Type="DATA" NEventsMax="5000" Cacheable="False">
+    <In FileName="/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/WMassPreSel/workdir_WMassPreSel/uhh2.AnalysisModuleRunner.DATA.DATA_JetHTRun2017v2B_666.root" Lumi="0.0"/>
     <InputTree Name="AnalysisTree" />
   </InputData>
-  <InputData Version="DATA_JetHTRun2017v2C" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False">
-    &DATA_JetHTRun2017C;
-    <InputTree Name="AnalysisTree" />
+
+  <InputData Version="MC_QCD_Pt_800to1000_2017v2_test" Lumi="2973582.337" Type="MC" NEventsMax="5000" Cacheable="False">
+      <In FileName="/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/WMassPreSel/workdir_WMassPreSel/uhh2.AnalysisModuleRunner.MC.MC_QCD_Pt_800to1000_2017v2_137.root" Lumi="0.0"/>
+      <InputTree Name="AnalysisTree"/>
   </InputData>
-  <InputData Version="DATA_JetHTRun2017v2D" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False">
-    &DATA_JetHTRun2017D;
-    <InputTree Name="AnalysisTree" />
-  </InputData>
-  <InputData Version="DATA_JetHTRun2017v2E" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False">
-    &DATA_JetHTRun2017E;
-    <InputTree Name="AnalysisTree" />
-  </InputData>
-  <InputData Version="DATA_JetHTRun2017v2F" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False">
-    &DATA_JetHTRun2017F;
-    <InputTree Name="AnalysisTree" />
-  </InputData>
+  
+
+
+  <!-- <InputData Version="DATA_JetHTRun2017v2B" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &DATA_JetHTRun2017B; -->
+  <!--   <InputTree Name="AnalysisTree" /> -->
+  <!-- </InputData> -->
+  <!-- <InputData Version="DATA_JetHTRun2017v2C" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &DATA_JetHTRun2017C; -->
+  <!--   <InputTree Name="AnalysisTree" /> -->
+  <!-- </InputData> -->
+  <!-- <InputData Version="DATA_JetHTRun2017v2D" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &DATA_JetHTRun2017D; -->
+  <!--   <InputTree Name="AnalysisTree" /> -->
+  <!-- </InputData> -->
+  <!-- <InputData Version="DATA_JetHTRun2017v2E" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &DATA_JetHTRun2017E; -->
+  <!--   <InputTree Name="AnalysisTree" /> -->
+  <!-- </InputData> -->
+  <!-- <InputData Version="DATA_JetHTRun2017v2F" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &DATA_JetHTRun2017F; -->
+  <!--   <InputTree Name="AnalysisTree" /> -->
+  <!-- </InputData> -->
 
 
   
@@ -88,87 +105,81 @@
       ██████   ██████ ██████
       ▀▀
   -->
-  <!-- <!-\- TESTING!! -\-> -->
-  <!-- <InputData Version="MC_QCD_Pt_15to30_2017v2_test" Lumi="0.03152592029" Type="MC" NEventsMax="-1" Cacheable="False"> -->
-  <!-- <In FileName="/pnfs/desy.de/cms/tier2//store/group/uhh/uhh2ntuples/RunII_102X_v1/2017v2//QCD_Pt_15to30_TuneCP5_13TeV_pythia8/crab_QCD_Pt_15to30_TuneCP5_13TeV_pythia8_Fall17_ext1_v2/200110_085245/0000/Ntuple_9.root" Lumi="0.0"/> -->
+
+  <!-- <InputData Version="MC_QCD_Pt_15to30_2017v2" Lumi="0.03152592029" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &QCD_Pt_15to30; -->
   <!--   <InputTree Name="AnalysisTree"/> -->
   <!-- </InputData> -->
 
-  
-  <InputData Version="MC_QCD_Pt_15to30_2017v2" Lumi="0.03152592029" Type="MC" NEventsMax="-1" Cacheable="False">
-    &QCD_Pt_15to30;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_QCD_Pt_30to50_2017v2" Lumi="0.3320931712" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &QCD_Pt_30to50; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_QCD_Pt_30to50_2017v2" Lumi="0.3320931712" Type="MC" NEventsMax="-1" Cacheable="False">
-    &QCD_Pt_30to50;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_QCD_Pt_50to80_2017v2" Lumi="2.433724921" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &QCD_Pt_50to80; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_QCD_Pt_50to80_2017v2" Lumi="2.433724921" Type="MC" NEventsMax="-1" Cacheable="False">
-    &QCD_Pt_50to80;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_QCD_Pt_80to120_2017v2" Lumi="24.14222057" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &QCD_Pt_80to120; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_QCD_Pt_80to120_2017v2" Lumi="24.14222057" Type="MC" NEventsMax="-1" Cacheable="False">
-    &QCD_Pt_80to120;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_QCD_Pt_120to170_2017v2" Lumi="73.29884927" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &QCD_Pt_120to170; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_QCD_Pt_120to170_2017v2" Lumi="73.29884927" Type="MC" NEventsMax="-1" Cacheable="False">
-    &QCD_Pt_120to170;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_QCD_Pt_170to300_2017v2" Lumi="542.1802122" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &QCD_Pt_170to300; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_QCD_Pt_170to300_2017v2" Lumi="542.1802122" Type="MC" NEventsMax="-1" Cacheable="False">
-    &QCD_Pt_170to300;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_QCD_Pt_300to470_2017v2" Lumi="16285.567" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &QCD_Pt_300to470; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_QCD_Pt_300to470_2017v2" Lumi="16285.567" Type="MC" NEventsMax="-1" Cacheable="False">
-    &QCD_Pt_300to470;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_QCD_Pt_470to600_2017v2" Lumi="100494.6425" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &QCD_Pt_470to600; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_QCD_Pt_470to600_2017v2" Lumi="100494.6425" Type="MC" NEventsMax="-1" Cacheable="False">
-    &QCD_Pt_470to600;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_QCD_Pt_600to800_2017v2" Lumi="821399.1503" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &QCD_Pt_600to800; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_QCD_Pt_600to800_2017v2" Lumi="821399.1503" Type="MC" NEventsMax="-1" Cacheable="False">
-    &QCD_Pt_600to800;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_QCD_Pt_800to1000_2017v2" Lumi="2973582.337" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &QCD_Pt_800to1000; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_QCD_Pt_800to1000_2017v2" Lumi="2973582.337" Type="MC" NEventsMax="-1" Cacheable="False">
-    &QCD_Pt_800to1000;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_QCD_Pt_1000to1400_2017v2" Lumi="4747129.947" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &QCD_Pt_1000to1400; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_QCD_Pt_1000to1400_2017v2" Lumi="4747129.947" Type="MC" NEventsMax="-1" Cacheable="False">
-    &QCD_Pt_1000to1400;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_QCD_Pt_1400to1800_2017v2" Lumi="17461196.55" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &QCD_Pt_1400to1800; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_QCD_Pt_1400to1800_2017v2" Lumi="17461196.55" Type="MC" NEventsMax="-1" Cacheable="False">
-    &QCD_Pt_1400to1800;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_QCD_Pt_1800to2400_2017v2" Lumi="33512217.77" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &QCD_Pt_1800to2400; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_QCD_Pt_1800to2400_2017v2" Lumi="33512217.77" Type="MC" NEventsMax="-1" Cacheable="False">
-    &QCD_Pt_1800to2400;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_QCD_Pt_2400to3200_2017v2" Lumi="365161697.2" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &QCD_Pt_2400to3200; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_QCD_Pt_2400to3200_2017v2" Lumi="365161697.2" Type="MC" NEventsMax="-1" Cacheable="False">
-    &QCD_Pt_2400to3200;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
-
-  <InputData Version="MC_QCD_Pt_3200toInf_2017v2" Lumi="7030396767" Type="MC" NEventsMax="-1" Cacheable="False">
-    &QCD_Pt_3200toInf;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_QCD_Pt_3200toInf_2017v2" Lumi="7030396767" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &QCD_Pt_3200toInf; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
   <!--
       ██     ██      ██ ███████ ████████ ███████
@@ -180,35 +191,35 @@
 
 
   
-  <InputData Version="MC_WJetsToQQ_HT400to600_WUnmatched_2017v2" Lumi="30788.19791" Type="MC" NEventsMax="-1" Cacheable="False">
-    &WJetsToQQ_HT400to600;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_WJetsToQQ_HT400to600_WUnmatched_2017v2" Lumi="30788.19791" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &WJetsToQQ_HT400to600_WUnmatched; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_WJetsToQQ_HT600to800_WUnmatched_2017v2" Lumi="128706.8169" Type="MC" NEventsMax="-1" Cacheable="False">
-    &WJetsToQQ_HT600to800;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_WJetsToQQ_HT600to800_WUnmatched_2017v2" Lumi="128706.8169" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &WJetsToQQ_HT600to800_WUnmatched; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_WJetsToQQ_HT800toInf_WUnmatched_2017v2" Lumi="232283.7884" Type="MC" NEventsMax="-1" Cacheable="False">
-    &WJetsToQQ_HT800toInf;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_WJetsToQQ_HT800toInf_WUnmatched_2017v2" Lumi="232283.7884" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &WJetsToQQ_HT800toInf_WUnmatched; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-    <InputData Version="MC_WJetsToQQ_HT400to600_WMatched_2017v2" Lumi="30788.19791" Type="MC" NEventsMax="-1" Cacheable="False">
-    &WJetsToQQ_HT400to600;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!--   <InputData Version="MC_WJetsToQQ_HT400to600_WMatched_2017v2" Lumi="30788.19791" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &WJetsToQQ_HT400to600_WMatched; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_WJetsToQQ_HT600to800_WMatched_2017v2" Lumi="128706.8169" Type="MC" NEventsMax="-1" Cacheable="False">
-    &WJetsToQQ_HT600to800;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_WJetsToQQ_HT600to800_WMatched_2017v2" Lumi="128706.8169" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &WJetsToQQ_HT600to800_WMatched; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
-  <InputData Version="MC_WJetsToQQ_HT800toInf_WMatched_2017v2" Lumi="232283.7884" Type="MC" NEventsMax="-1" Cacheable="False">
-    &WJetsToQQ_HT800toInf;
-    <InputTree Name="AnalysisTree"/>
-  </InputData>
+  <!-- <InputData Version="MC_WJetsToQQ_HT800toInf_WMatched_2017v2" Lumi="232283.7884" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   &WJetsToQQ_HT800toInf_WMatched; -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
 
 
 
@@ -243,10 +254,14 @@
       <!-- <Item Name="ddtMapFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/GridOutput_v13.root" /> -->
       <!-- <Item Name="ddtMapName" Value="Rho2D"/> -->
 
-      <!-- myMap 5% mistagrate, smoothed by gaussian-kernel with sigma=1.0 -->
-      <Item Name="ddtMapFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/macros/scripts/maps/highHT/ddtmaps_smooth_smooth_gaus1p00sigma.root" />
-      <Item Name="ddtMapName" Value="N2_v_pT_v_rho_0p05_smooth_gaus1p00sigma_maps_cleaner"/>
+      <!-- <!-\- myMap 5% mistagrate, smoothed by gaussian-kernel with sigma=1.0  using regular JetMass-\-> -->
+      <!-- <Item Name="ddtMapFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/macros/scripts/maps/QCD_Pt_2017_smooth_gaus1p00sigma.root" /> -->
+      <!-- <Item Name="ddtMapName" Value="N2_v_pT_v_rho_0p05_smooth_gaus1p00sigma_maps_cleaner"/> -->
 
+      <!-- myMap 5% mistagrate, smoothed by gaussian-kernel with sigma=1.0  using PFParticlesMass-->
+      <Item Name="ddtMapFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/macros/scripts/maps/QCD_Pt_2017_PFMass_smooth_gaus1p00sigma.root" />
+      <Item Name="ddtMapName" Value="N2_v_pT_v_rho_0p05_smooth_gaus1p00sigma_maps_cleaner_PFMass"/>
+      
       <Item Name="pileup_directory_data" Value="common/data/2017/MyDataPileupHistogram.root" />
       <Item Name="pileup_directory" Value="common/data/2017/MyMCPileupHistogram.root" />
 

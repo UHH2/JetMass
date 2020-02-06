@@ -37,6 +37,11 @@
 <!ENTITY WJetsToQQ_HT600to800 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/MC_WJetsToQQ_HT600to800_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
 <!ENTITY WJetsToQQ_HT800toInf SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/MC_WJetsToQQ_HT800toInf_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
 
+<!ENTITY ZJetsToQQ_HT400to600 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/MC_ZJetsToQQ_HT400to600_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY ZJetsToQQ_HT600to800 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/MC_ZJetsToQQ_HT600to800_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY ZJetsToQQ_HT800toInf SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/MC_ZJetsToQQ_HT800toInf_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+
+
 
 ]>
 
@@ -52,26 +57,40 @@
 
 <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="41860">
 
-  <!-- <InputData Version="DATA_JetHTRun2017v2B" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False"> -->
-  <!--   &DATA_JetHTRun2017B; -->
+  <!-- <!-\- <!-\\- TESTING!! -\\-> -\-> -->
+  <!-- <InputData Version="DATA_JetHTRun2017v2B_test" Lumi="1" Type="DATA" NEventsMax="5000" Cacheable="False"> -->
+  <!--   <In FileName="/pnfs/desy.de/cms/tier2//store/group/uhh/uhh2ntuples/RunII_102X_v2/2017v2//JetHT/crab_JetHT_2017B_v1/200110_092921/0002/Ntuple_2816.root" Lumi="0.0"/> -->
   <!--   <InputTree Name="AnalysisTree" /> -->
   <!--   <OutputTree Name="AnalysisTree" /> -->
   <!-- </InputData> -->
-  <!-- <InputData Version="DATA_JetHTRun2017v2C" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False"> -->
-  <!--   &DATA_JetHTRun2017C; -->
-  <!--   <InputTree Name="AnalysisTree" /> -->
-  <!--   <OutputTree Name="AnalysisTree" /> -->
+
+  <!-- <InputData Version="MC_QCD_Pt_15to30_2017v2_test" Lumi="0.03152592029" Type="MC" NEventsMax="5000" Cacheable="False"> -->
+  <!-- <In FileName="/pnfs/desy.de/cms/tier2//store/group/uhh/uhh2ntuples/RunII_102X_v1/2017v2//QCD_Pt_15to30_TuneCP5_13TeV_pythia8/crab_QCD_Pt_15to30_TuneCP5_13TeV_pythia8_Fall17_ext1_v2/200110_085245/0000/Ntuple_9.root" Lumi="0.0"/> -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!--   <OutputTree Name="AnalysisTree"/> -->
   <!-- </InputData> -->
-  <!-- <InputData Version="DATA_JetHTRun2017v2D" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False"> -->
-  <!--   &DATA_JetHTRun2017D; -->
-  <!--   <InputTree Name="AnalysisTree" /> -->
-  <!--   <OutputTree Name="AnalysisTree" /> -->
-  <!-- </InputData> -->
-  <!-- <InputData Version="DATA_JetHTRun2017v2E" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False"> -->
-  <!--   &DATA_JetHTRun2017E; -->
-  <!--   <InputTree Name="AnalysisTree" /> -->
-  <!--   <OutputTree Name="AnalysisTree" /> -->
-  <!-- </InputData> -->
+
+  
+  <InputData Version="DATA_JetHTRun2017v2B" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False">
+    &DATA_JetHTRun2017B;
+    <InputTree Name="AnalysisTree" />
+    <OutputTree Name="AnalysisTree" />
+  </InputData>
+  <InputData Version="DATA_JetHTRun2017v2C" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False">
+    &DATA_JetHTRun2017C;
+    <InputTree Name="AnalysisTree" />
+    <OutputTree Name="AnalysisTree" />
+  </InputData>
+  <InputData Version="DATA_JetHTRun2017v2D" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False">
+    &DATA_JetHTRun2017D;
+    <InputTree Name="AnalysisTree" />
+    <OutputTree Name="AnalysisTree" />
+  </InputData>
+  <InputData Version="DATA_JetHTRun2017v2E" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False">
+    &DATA_JetHTRun2017E;
+    <InputTree Name="AnalysisTree" />
+    <OutputTree Name="AnalysisTree" />
+  </InputData>
   <InputData Version="DATA_JetHTRun2017v2F" Lumi="1" Type="DATA" NEventsMax="-1" Cacheable="False">
     &DATA_JetHTRun2017F;
     <InputTree Name="AnalysisTree" />
@@ -88,13 +107,7 @@
       ██████   ██████ ██████
       ▀▀
   -->
-  <!-- <!-\- TESTING!! -\-> -->
-  <!-- <InputData Version="MC_QCD_Pt_15to30_2017v2_test" Lumi="0.03152592029" Type="MC" NEventsMax="-1" Cacheable="False"> -->
-  <!-- <In FileName="/pnfs/desy.de/cms/tier2//store/group/uhh/uhh2ntuples/RunII_102X_v1/2017v2//QCD_Pt_15to30_TuneCP5_13TeV_pythia8/crab_QCD_Pt_15to30_TuneCP5_13TeV_pythia8_Fall17_ext1_v2/200110_085245/0000/Ntuple_9.root" Lumi="0.0"/> -->
-  <!--   <InputTree Name="AnalysisTree"/> -->
-  <!-- </InputData> -->
 
-  
   <InputData Version="MC_QCD_Pt_15to30_2017v2" Lumi="0.03152592029" Type="MC" NEventsMax="-1" Cacheable="False">
     &QCD_Pt_15to30;
     <InputTree Name="AnalysisTree"/>
@@ -155,7 +168,7 @@
     <OutputTree Name="AnalysisTree"/>
   </InputData>
 
-  <InputData Version="MC_QCD_Pt_1000to1400_2017v2" Lumi="4747129.947" Type="MC" NEventsMax="-1" Cacheable="False">
+  <InputData Version="MC_QCD_Pt_1000to1400_2017v2" Lumi="4724670.053" Type="MC" NEventsMax="-1" Cacheable="False">
     &QCD_Pt_1000to1400;
     <InputTree Name="AnalysisTree"/>
     <OutputTree Name="AnalysisTree"/>
@@ -195,55 +208,48 @@
 
 
   
-  <!-- <InputData Version="MC_WJetsToQQ_HT400to600_WUnmatched_2017v2" Lumi="30788.19791" Type="MC" NEventsMax="-1" Cacheable="False"> -->
-  <!--   &WJetsToQQ_HT400to600; -->
-  <!--   <InputTree Name="AnalysisTree"/> -->
-  <!--   <OutputTree Name="AnalysisTree"/> -->
-  <!-- </InputData> -->
+  <InputData Version="MC_WJetsToQQ_HT400to600_WUnmatched_2017v2" Lumi="30788.19791" Type="MC" NEventsMax="-1" Cacheable="False">
+    &WJetsToQQ_HT400to600;
+    <InputTree Name="AnalysisTree"/>
+    <OutputTree Name="AnalysisTree"/>
+  </InputData>
 
-  <!-- <InputData Version="MC_WJetsToQQ_HT600to800_WUnmatched_2017v2" Lumi="128706.8169" Type="MC" NEventsMax="-1" Cacheable="False"> -->
-  <!--   &WJetsToQQ_HT600to800; -->
-  <!--   <InputTree Name="AnalysisTree"/> -->
-  <!--   <OutputTree Name="AnalysisTree"/> -->
-  <!-- </InputData> -->
+  <InputData Version="MC_WJetsToQQ_HT600to800_WUnmatched_2017v2" Lumi="128706.8169" Type="MC" NEventsMax="-1" Cacheable="False">
+    &WJetsToQQ_HT600to800;
+    <InputTree Name="AnalysisTree"/>
+    <OutputTree Name="AnalysisTree"/>
+  </InputData>
 
-  <!-- <InputData Version="MC_WJetsToQQ_HT800toInf_WUnmatched_2017v2" Lumi="232283.7884" Type="MC" NEventsMax="-1" Cacheable="False"> -->
-  <!--   &WJetsToQQ_HT800toInf; -->
-  <!--   <InputTree Name="AnalysisTree"/> -->
-  <!--   <OutputTree Name="AnalysisTree"/> -->
-  <!-- </InputData> -->
+  <InputData Version="MC_WJetsToQQ_HT800toInf_WUnmatched_2017v2" Lumi="232283.7884" Type="MC" NEventsMax="-1" Cacheable="False">
+    &WJetsToQQ_HT800toInf;
+    <InputTree Name="AnalysisTree"/>
+    <OutputTree Name="AnalysisTree"/>
+  </InputData>
 
-  <!--   <InputData Version="MC_WJetsToQQ_HT400to600_WMatched_2017v2" Lumi="30788.19791" Type="MC" NEventsMax="-1" Cacheable="False"> -->
-  <!--   &WJetsToQQ_HT400to600; -->
-  <!--   <InputTree Name="AnalysisTree"/> -->
-  <!--   <OutputTree Name="AnalysisTree"/> -->
-  <!-- </InputData> -->
+    <InputData Version="MC_WJetsToQQ_HT400to600_WMatched_2017v2" Lumi="30788.19791" Type="MC" NEventsMax="-1" Cacheable="False">
+    &WJetsToQQ_HT400to600;
+    <InputTree Name="AnalysisTree"/>
+    <OutputTree Name="AnalysisTree"/>
+  </InputData>
 
-  <!-- <InputData Version="MC_WJetsToQQ_HT600to800_WMatched_2017v2" Lumi="128706.8169" Type="MC" NEventsMax="-1" Cacheable="False"> -->
-  <!--   &WJetsToQQ_HT600to800; -->
-  <!--   <InputTree Name="AnalysisTree"/> -->
-  <!--   <OutputTree Name="AnalysisTree"/> -->
-  <!-- </InputData> -->
+  <InputData Version="MC_WJetsToQQ_HT600to800_WMatched_2017v2" Lumi="128706.8169" Type="MC" NEventsMax="-1" Cacheable="False">
+    &WJetsToQQ_HT600to800;
+    <InputTree Name="AnalysisTree"/>
+    <OutputTree Name="AnalysisTree"/>
+  </InputData>
 
-  <!-- <InputData Version="MC_WJetsToQQ_HT800toInf_WMatched_2017v2" Lumi="232283.7884" Type="MC" NEventsMax="-1" Cacheable="False"> -->
-  <!--   &WJetsToQQ_HT800toInf; -->
-  <!--   <InputTree Name="AnalysisTree"/> -->
-    <!-- <OutputTree Name="AnalysisTree"/> -->
-  <!-- </InputData> -->
+  <InputData Version="MC_WJetsToQQ_HT800toInf_WMatched_2017v2" Lumi="232283.7884" Type="MC" NEventsMax="-1" Cacheable="False">
+    &WJetsToQQ_HT800toInf;
+    <InputTree Name="AnalysisTree"/>
+    <OutputTree Name="AnalysisTree"/>
+  </InputData>
 
-
-  <!--
-      ██████  ██    ██    ██ ███████ ████████ ███████
-      ██   ██  ██  ██     ██ ██         ██    ██
-      ██   ██   ████      ██ █████      ██    ███████
-      ██   ██    ██  ██   ██ ██         ██         ██
-      ██████     ██   █████  ███████    ██    ███████
-  -->
 
   <!-- ================================================================================================================================== -->
   <!-- ====================================================== User Config =============================================================== -->
   <!-- ================================================================================================================================== -->
 
+  
   <UserConfig>
     <Item Name="channel" Value="W"/>
 

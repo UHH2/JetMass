@@ -38,7 +38,7 @@
 ]>
 
 <!--
-<ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="4" AutoResubmit="1"/>
+<ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="20" AutoResubmit="1"/>
 <ConfigSGE RAM="5" DISK="5" Mail="steffen.albrecht@desy.de" Notification="as" Workdir="workdir_WMassDDTMaps"/>
 -->
 
