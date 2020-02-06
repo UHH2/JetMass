@@ -33,8 +33,7 @@ f_wunmatched = ROOT.TFile('../../Histograms/W/WUnmatched.root','read')
 for useMC in [True,False]:
     ptbins =[500,550,600,675,800,1200]
     for i in range(len(ptbins)-1):
-        hist_name='JetMass_MyN2ddt_pt%iTo%i'%(ptbins[i],ptbins[i+1])+'_%s/Mass_central'
-        # hist_name='JetMass_N2DDT_pt%iTo%i'%(ptbins[i],ptbins[i+1])+'_%s/Mass_central'
+        hist_name='JetMass_N2DDT_pt%iTo%i'%(ptbins[i],ptbins[i+1])+'_%s/Mass_central'
         if(useMC): 
             h_pass = f_qcd.Get(hist_name%'pass')
             h_fail = f_qcd.Get(hist_name%'fail')       
@@ -68,4 +67,8 @@ for useMC in [True,False]:
         h_pass.Draw('HSAME')
         
         legend.Draw('SAME')
+        # import os
+        # if(not os.path.isdir('../../Plots/'+map_name)):
+        #     os.mkdir('../../Plots/'+map_name)
+        # c.SaveAs('../../Plots/%s/qcd_shape_comp_%iTo%i%s.pdf'%(map_name,ptbins[i],ptbins[i+1],"" if useMC else "_fromData"))
         c.SaveAs('../../Plots/qcd_shape_comp_%iTo%i%s.pdf'%(ptbins[i],ptbins[i+1],"" if useMC else "_fromData"))

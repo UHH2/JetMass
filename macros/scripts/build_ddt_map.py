@@ -28,8 +28,18 @@ def numpy_to_TH2(np_arr,name,th3):
     return th2
 
 def plot_map_root(file_path, map_name):
-    from ROOT import gStyle, gROOT, TFile, TCanvas
+    from ROOT import gStyle, gROOT, TFile, TCanvas, TF1, TLatex
     import os
+    rho_min = -6.0
+    rho_max = -2.1
+    pt_min = 200
+    pt_max = 1200
+    disc_min = 0.12
+    disc_max = 0.3
+    left_margin = 0.14
+    right_margin = 0.16
+    top_margin = 0.08
+    bottom_margin = 0.12
     out_dir = os.path.dirname(file_path)
     out_file_path = out_dir+("/" if len(out_dir)>0 else "")+map_name;
     gStyle.SetPadTickY(1)
@@ -41,11 +51,10 @@ def plot_map_root(file_path, map_name):
     gStyle.SetOptFit(0)
     gStyle.SetTitleOffset(0.86,"X")
     gStyle.SetTitleOffset(1.6,"Y")
-    
-    gStyle.SetPadLeftMargin(0.14)
-    gStyle.SetPadBottomMargin(0.12)
-    gStyle.SetPadTopMargin(0.08)
-    gStyle.SetPadRightMargin(0.16)
+    gStyle.SetPadLeftMargin(left_margin)
+    gStyle.SetPadBottomMargin(bottom_margin)
+    gStyle.SetPadTopMargin(top_margin)
+    gStyle.SetPadRightMargin(right_margin)
     
     gStyle.SetMarkerSize(0.5)
     gStyle.SetHistLineWidth(1)
@@ -60,9 +69,9 @@ def plot_map_root(file_path, map_name):
     hist.GetYaxis().SetTitle("p_{T} [GeV]")
     hist.GetZaxis().SetTitle("N2^{DDT} 5/% quantile")
     
-    hist.GetXaxis().SetRangeUser(-6.0,-2.1)
-    hist.GetYaxis().SetRangeUser(200,1200)
-    hist.GetZaxis().SetRangeUser(0.12,0.3)
+    hist.GetXaxis().SetRangeUser(rho_min, rho_max)
+    hist.GetYaxis().SetRangeUser(pt_min, pt_max)
+    hist.GetZaxis().SetRangeUser(disc_min, disc_max)
 
     Font=43
     TitleSize=24.0
@@ -90,11 +99,53 @@ def plot_map_root(file_path, map_name):
     
     hist.SetTitle(map_name.replace('_',' '))
     hist.SetTitleFont(43)
-    hist.SetTitleSize(20.0)
+    hist.SetTitleSize(18.0)
 	
+    # isomasses = [20,55,80,120,200]
+    # isomasses = [20,65,80,125,200]
+    isomasses = range(40,200,20)
+    str_isomass = "%.2f*TMath::Exp(-x/2)"
+    tf1_isomasses = []
+    for i in range(len(isomasses)):
+        msd = isomasses[i]
+        new_isomass = TF1('isomass_%i'%int(msd),str_isomass%msd,rho_min,rho_max)
+        # new_isomass.SetLineColor(920+i)
+        new_isomass.SetLineColorAlpha(1,0.4)
+        tf1_isomasses.append(new_isomass)
+
+
     c1 = TCanvas("c1","c1",700,600)
     c1.cd()
     hist.Draw("colz")
+    latex_border = TLatex()
+    latex_border.SetNDC(1)
+    latex_border.SetTextColor(1)
+    latex_border.SetTextFont(43)
+    latex_border.SetTextSize(15.5)
+    latex_border.SetTextAngle(297)
+    latex = TLatex()
+    latex.SetNDC(1)
+    latex.SetTextColor(920)
+    latex.SetTextFont(43)
+    latex.SetTextSize(15)
+    # latex.SetTextAngle(297)
+    for i in range(len(isomasses)):
+        x_pitch = (1-left_margin-right_margin)/(rho_max-rho_min)
+        y_pitch = (1-bottom_margin-top_margin)/(pt_max-pt_min)
+        msd = isomasses[i]
+        pt=msd*np.exp(-rho_min/2)
+        pt = 1000 if pt > 1000 else pt
+        angle = ((180/np.pi)*np.arctan(2*x_pitch/(pt*y_pitch)))+272
+        print(angle)
+        latex.SetTextAngle(angle)
+        latex_border.SetTextAngle(angle)
+        tf1_isomass = tf1_isomasses[i]
+        tf1_isomass.Draw('SAME')
+        x_pos = left_margin+((2*np.log(msd/pt)-rho_min))*x_pitch
+        y_pos = pt*y_pitch
+        # print(x_pos)
+        latex_border.DrawLatex(x_pos,y_pos,'m_{SD} = %.1f GeV'%msd)
+        # latex.DrawLatex(x_pos,y_pos,'m_{SD} = %.1f GeV'%msd)
     c1.SaveAs(out_file_path+".pdf")
     c1.SaveAs(out_file_path+".png")
     del c1
@@ -150,11 +201,11 @@ if __name__ == "__main__":
     parser.add_argument('-r','--reject',choices=['high','low','l','h'], default='low', help='Specifies what kind of values of the discriminator reject the background. If low/l wp*100 percent quantile is derived. If high/h (1-wp)*100 percent quantile is derived.')
     parser.add_argument('-s','--smooth', action='store_true', help='specify if you want to postprocess the maps with an gaussian filter' )
     parser.add_argument('-g','--gaus_sigma', type=float, default=1.0, help='specify what sigma should be used by the smoothing gaus-kernel.')
+    parser.add_argument('--justplots',action='store_true', help='just make some ugly plots. -i acts here as inputfiles containing the finished 2D maps')
     parser.add_argument('-p','--makeplots',action='store_true', help='make some ugly plots')
     
     args = parser.parse_args()
-    th3_infile = uproot.open(args.input)
-   
+
     if(args.hist_dir is None):
         hist_dirs = [None for k in args.hist_names]
     elif(len(args.hist_dir) == len(args.hist_names)):
@@ -166,6 +217,21 @@ if __name__ == "__main__":
 
     hist_names = zip(hist_dirs,args.hist_names)
 
+    if(args.smooth):
+        smooth_suffix = ("_smooth_gaus%.2fsigma"%args.gaus_sigma).replace('.','p')
+        args.output = args.output.replace('.root','')+smooth_suffix +".root"
+    else:
+        smooth_suffix = ''
+
+    if args.justplots:
+        hist_names = zip(hist_dirs,args.hist_names)
+        for hist_dir,hist_name in hist_names:
+            for wp in args.working_point:
+                plot_map_root(args.input,hist_name+'_'+str(wp).replace('.','p')+smooth_suffix+'_'+hist_dir)
+        exit(0)
+    th3_infile = uproot.open(args.input)
+   
+
     if 'list' in args.hist_names:
         print('listing available hists:')
         if(hist_dirs[0] is None):
@@ -174,11 +240,6 @@ if __name__ == "__main__":
             print(th3_infile[hist_dir].keys())
         exit(0)
 
-    if(args.smooth):
-        smooth_suffix = ("_smooth_gaus%.2fsigma"%args.gaus_sigma).replace('.','p')
-        args.output = args.output.replace('.root','')+smooth_suffix +".root"
-    else:
-        smooth_suffix = ''
         
     th2_outfile = ROOT.TFile(args.output,'RECREATE')
     th2_outfile.cd()

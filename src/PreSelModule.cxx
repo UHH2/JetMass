@@ -29,6 +29,7 @@
 #include "UHH2/JetMass/include/TopJetCorrections.h"
 #include "UHH2/JetMass/include/CorrectParticles.h"
 #include "UHH2/JetMass/include/ApplyPuppiToPF.h"
+#include "UHH2/common/include/MCLargeWeightKiller.h"
 
 
 #include <unistd.h>
@@ -51,6 +52,7 @@ public:
 private:
 
   std::unique_ptr<CommonModules> common;
+  std::unique_ptr<MCLargeWeightKiller> mcSpikeKiller;
   std::unique_ptr<TopJetCorrections> topjetCorr;
 
   std::unique_ptr<JetCleaner> ak4cleaner, ak4cleaner15;
@@ -94,6 +96,20 @@ PreSelModule::PreSelModule(Context & ctx){
   common->set_electron_id(eleid);
   common->init(ctx);
 
+  if(is_mc){
+    mcSpikeKiller.reset(new MCLargeWeightKiller(ctx,
+                                                2, // maximum allowed ratio of leading reco jet pT / generator HT
+                                                2, // maximum allowed ratio of leading gen jet pT / generator HT
+                                                2, // maximum allowed ratio of leading reco jet pT / Q scale
+                                                2, // maximum allowed ratio of PU maximum pTHat / gen HT (ensures scale of PU < scale of hard interaction)
+                                                2, // maximum allowed ratio of leading reco jet pT / pTHat
+                                                2, // maximum allowed ratio of leading gen jet pT / pTHat
+                                                "jets", // name of jet collection to be used
+                                                "genjets" // name of genjet collection to be used
+                          ));
+  }
+
+  
   // AK8 JEC/JER
   topjetCorr.reset(new TopJetCorrections());
   topjetCorr->init(ctx);
@@ -141,6 +157,11 @@ bool PreSelModule::process(Event & event) {
   // COMMON MODULES
   bool pass_common=common->process(event);
   if(!pass_common) return false;
+
+  //remove MC Events with verz large unphysical weights
+  if (is_mc){
+    if (!mcSpikeKiller->passes(event)) return false;
+  }
 
   // AK8 JEC
   topjetCorr->process(event);

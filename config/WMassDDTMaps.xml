@@ -47,8 +47,8 @@
 <Package Name="SUHH2JetMass.par"/>
 
 
-<Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="35867">
-<!-- <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="41860"> -->
+<!-- <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="35867"> -->
+<Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="41860">
   
   <!--
       ██████   ██████ ██████
@@ -116,7 +116,7 @@
     <InputTree Name="AnalysisTree"/>
   </InputData>
 
-  <InputData Version="MC_QCD_Pt_1000to1400_2017v2" Lumi="4747129.947" Type="MC" NEventsMax="-1" Cacheable="False">
+  <InputData Version="MC_QCD_Pt_1000to1400_2017v2" Lumi="4724670.053" Type="MC" NEventsMax="-1" Cacheable="False">
     &QCD_Pt_1000to1400;
     <InputTree Name="AnalysisTree"/>
   </InputData>
