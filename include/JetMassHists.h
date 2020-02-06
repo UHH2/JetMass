@@ -31,7 +31,7 @@ private:
   bool JEC_on_Mass;
   double variation;
   int Nbins_pt, Nbins_eta, Nbins_cat;
-  TH1F *h_rho, *h_mass, *h_mass_jet, *h_rho_jet;
+  TH1F *h_rho, *h_mass, *h_mass_jet, *h_rho_jet, *h_mass_raw_subjets;
   vector<vector<vector<TH1F*>>> h_mass_UP;
   vector<vector<vector<TH1F*>>> h_mass_DOWN;
   vector<vector<vector<TH2F*>>> h_pt_v_mass_UP;

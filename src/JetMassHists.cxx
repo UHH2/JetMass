@@ -88,6 +88,7 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, TString mode )
   // book some hists without variations
   h_mass = book<TH1F>("Mass_central", xtitleMass, nMass, minMass, maxMass);
   h_mass_jet = book<TH1F>("Mass_central_jet", xtitleMass, nMass, minMass, maxMass);
+  h_mass_raw_subjets = book<TH1F>("Mass_central_raw_subjets", xtitleMass, nMass, minMass, maxMass);
   h_rho = book<TH1F>("Rho_central", xtitleRho, nRho, minRho, maxRho);
   h_rho_jet = book<TH1F>("Rho_central_jet", xtitleRho, nRho, minRho, maxRho);
   h_particle_pt = book<TH1F>("particle_pt", "p_T", 50, 0, 50);
@@ -127,10 +128,14 @@ void JetMassHists::fill(const Event & event){
   // get the PFParticles inside the first topjet
   // if mode is soft drop, get particles from subjets
   vector<PFParticle> particles;
+  LorentzVector sum_subjets_v4;  
+  float JEC_factor_raw = topjets->at(0).JEC_factor_raw();
   if(allparticles->size() != 0 && use_constituents){
     if(use_SD){
       vector<Jet> subjets = topjets->at(0).subjets();
       for(auto subjet: subjets){
+        LorentzVectorXYZE old_v4XYZE = toXYZ(subjet.v4());
+        sum_subjets_v4 += toPtEtaPhi(old_v4XYZE * JEC_factor_raw);
         for(const auto candInd : subjet.pfcand_indexs()){
           particles.push_back(allparticles->at(candInd));
         }
@@ -165,6 +170,7 @@ void JetMassHists::fill(const Event & event){
   h_rho->Fill(rho, weight);
   h_pt_v_mass->Fill(mass, ptjet, weight);
 
+  h_mass_raw_subjets->Fill(sum_subjets_v4.M(), weight);
 
   // fill some particle histograms
   if(use_constituents){
