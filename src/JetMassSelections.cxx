@@ -44,3 +44,42 @@ bool METCut::passes(const Event & event){
   float MET = event.met->pt();
   return (MET > minMet) && (MET < maxMet);
 }
+
+NMuonBTagSelection::NMuonBTagSelection(int min_nbtag, int max_nbtag, JetId btag, double ptmin, double etamax )
+{
+  m_min_nbtag=min_nbtag;
+  m_max_nbtag=max_nbtag;
+  m_btag=btag;
+  m_ptmin=ptmin;
+  m_etamax=etamax;
+}
+
+bool NMuonBTagSelection::passes(const Event & event)
+{
+  int nbtag=0;
+
+  //Assumes to have only one muon
+  std::vector<Jet>* jets = event.jets;
+  std::vector<Muon>* muons = event.muons;
+  for(unsigned int i=0; i<event.jets->size(); ++i) {
+    int jettagged=0;
+    Jet jet=jets->at(i);
+    if (m_btag(jet, event)) jettagged=1;
+
+    if(muons->size() != 1){
+      std::cout << "ATTENTION!!! muon size " << muons->size() << std::endl;
+    }
+
+    double deltaphi=deltaPhi(jet,muons->at(0));
+    double pi = 3.14159265359;
+    if(jettagged&&(deltaphi<(2*pi/3))&&(jet.pt()>m_ptmin)&&(fabs(jet.eta())<m_etamax)){
+
+      nbtag++;
+
+    }
+  }
+
+  if(nbtag<m_min_nbtag) return false;
+  if(nbtag>m_max_nbtag) return false;
+  return true;
+}

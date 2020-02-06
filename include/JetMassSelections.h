@@ -34,3 +34,18 @@ class METCut : public uhh2::Selection {
  private:
   float minMet, maxMet;
 };
+
+class NMuonBTagSelection: public uhh2::Selection {
+  public:
+
+    explicit NMuonBTagSelection(int min_nbtag, int max_nbtag=999, JetId btag=CSVBTag(CSVBTag::WP_LOOSE), double ptmin=0., double etamax=infinity );
+
+    virtual bool passes(const uhh2::Event &) override;
+
+  private:
+    int m_min_nbtag;
+    int m_max_nbtag;
+    JetId m_btag;
+    double m_ptmin;
+    double m_etamax;
+};
