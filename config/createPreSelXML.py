@@ -15,22 +15,27 @@ OutDir=inXML_path.replace(inXML_path.split('/')[-1],'PreSel/')
 if(not os.path.exists(OutDir)):
     os.mkdir(OutDir)
 inXML=open(inXML_path,'r+')
-dir=''
-for l in inXML:
-    if('OUTdir' in l or 'OutputDirectory' in l):
-        dir = l.split('"')[1]
-        break
+root_dir = ''
+workdir = ''
 datasets=[]
 for l in inXML:
-    if('workdir' in l):
-        dir+=l.split('"')[9]
+    if('ENTITY' in l and 'OUTdir' in l):
+        root_dir_var = l.split('"')[1]
+    if('OutputDirectory' in l and '<!-' not in l):
+        root_dir = l.split('"')[3]
+    if('workdir' in l and 'ConfigSGE' in l):
+        workdir = l.split('"')[9]
     if('<InputData Version=' in l and '<!--' not in l):
         datasets.append(l.split('"')[1])
+print('root_dir_var',root_dir_var)
+if(root_dir_var):
+    root_dir = root_dir_var
+root_dir+=workdir
+print('root_dir',root_dir)
 inXML.close()
-
 for dataset in datasets:
-    rule=dir+'/*'+dataset+'*'
-    print rule
+    rule=root_dir+'/*'+dataset+'*'
+    print(rule)
     files=glob.glob(rule)
     outXML=open(OutDir+dataset+'.xml','w')
     for file in files:
