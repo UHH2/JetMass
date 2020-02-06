@@ -60,7 +60,7 @@ private:
 
   std::unique_ptr<Selection> TRIGGER_sel, MET_sel;
   std::unique_ptr<Selection> N_AK8_300_sel, N_AK8_500_sel, RHO_sel;
-  std::unique_ptr<Selection> N_MUON_sel, N_ELEC_sel, TwoD_sel;
+  std::unique_ptr<Selection> N_MUON_sel, N_ELEC_sel, TwoD_sel, bjetCloseToLepton_sel;
   std::unique_ptr<MatchingSelection> MatchLeadingGenW_sel;
 
   std::vector<std::unique_ptr<uhh2::Hists>> hists;
@@ -78,11 +78,11 @@ PreSelModule::PreSelModule(Context & ctx){
 
   // Set some boolians
   is_mc = ctx.get("dataset_type") == "MC";
-  
+
   std::string version = ctx.get("dataset_version");
   is_WSample = version.find("WJets") != std::string::npos;
   matchW = version.find("WMatched") != std::string::npos;
-  
+
   const std::string& channel = ctx.get("channel", "");
   if     (channel == "top") isTopSel = true;
   else if(channel == "W")   isWSel = true;
@@ -116,7 +116,7 @@ PreSelModule::PreSelModule(Context & ctx){
 
   // Application of Puppi weights onto pfparticles
   pf_applyPUPPI.reset(new ApplyPuppiToPF());
- 
+
   // Jet cleaner
   AK4_Clean_pT = 30.0;
   AK4_Clean_eta = 2.5;
@@ -137,6 +137,7 @@ PreSelModule::PreSelModule(Context & ctx){
   if(isTopSel)    TRIGGER_sel.reset(new TriggerSelection("HLT_Mu50_v*"));
   else if(isWSel) TRIGGER_sel.reset(new AndSelection(ctx));
   MatchLeadingGenW_sel.reset(new MatchingSelection(ctx, MatchingSelection::oIsLeadingGenW));
+  bjetCloseToLepton_sel.reset(new NMuonBTagSelection(1, 999, DeepJetBTag(DeepJetBTag::WP_MEDIUM) ));
 
   // HISTOGRAMS
   hists.emplace_back(new ElectronHists(ctx, "ElectronHists"));
@@ -189,6 +190,8 @@ bool PreSelModule::process(Event & event) {
   if(!N_ELEC_sel->passes(event)) passTOP = false;
   if(!TwoD_sel->passes(event)) passTOP = false;
   if(!MET_sel->passes(event)) passTOP = false;
+  if(!bjetCloseToLepton_sel->passes(event)) passTOP = false;
+
 
   if(!N_AK8_500_sel->passes(event)) passW = false;
   if(!RHO_sel->passes(event)) passW = false;
