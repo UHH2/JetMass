@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE JobConfiguration PUBLIC "" "JobConfig.dtd" [
 
-<!ENTITY OUTdir   "/nfs/dust/cms/user/schwarzd/JetMass/Selection">
+<!ENTITY OUTdir   "/nfs/dust/cms/user/schwarzd/JetMass/PreSel">
 
 <!ENTITY TTbar_semilep SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/MC_TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8.xml">
 <!ENTITY TTbar_had SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/MC_TTToHadronic_TuneCP5_13TeV-powheg-pythia8.xml">
