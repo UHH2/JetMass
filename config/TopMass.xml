@@ -3,8 +3,8 @@
 
   <!ENTITY NEVT "-1">
 
- <!ENTITY INdir    "/nfs/dust/cms/user/schwarzd/JetMass/Selection">
- <!ENTITY OUTdir   "/nfs/dust/cms/user/schwarzd/JetMass/PostSel">
+ <!ENTITY INdir   "/nfs/dust/cms/user/schwarzd/JetMass/PreSel">
+ <!ENTITY OUTdir    "/nfs/dust/cms/user/schwarzd/JetMass/Selection">
 
  <!ENTITY TTbar_semilep "&INdir;/uhh2.AnalysisModuleRunner.MC.TTbar_semilep_2017v2.root">
  <!ENTITY TTbar_had     "&INdir;/uhh2.AnalysisModuleRunner.MC.TTbar_had_2017v2.root">
