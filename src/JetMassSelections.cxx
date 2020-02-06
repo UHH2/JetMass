@@ -67,7 +67,8 @@ bool NMuonBTagSelection::passes(const Event & event)
     if (m_btag(jet, event)) jettagged=1;
 
     if(muons->size() != 1){
-      std::cout << "ATTENTION!!! muon size " << muons->size() << std::endl;
+      // std::cout << "ATTENTION!!! muon size " << muons->size() << std::endl;
+      return false;
     }
 
     double deltaphi=deltaPhi(jet,muons->at(0));
