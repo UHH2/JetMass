@@ -133,8 +133,8 @@ void JetMassHists::fill(const Event & event){
     if(use_SD){
       vector<Jet> subjets = topjets->at(0).subjets();
       for(auto subjet: subjets){
-          float JEC_factor_raw = subjet.JEC_factor_raw();
-          LorentzVectorXYZE old_v4XYZE = toXYZ(subjet.v4());
+        float JEC_factor_raw = subjet.JEC_factor_raw();
+        LorentzVectorXYZE old_v4XYZE = toXYZ(subjet.v4());
         sum_subjets_v4 += toPtEtaPhi(old_v4XYZE * JEC_factor_raw);
         for(const auto candInd : subjet.pfcand_indexs()){
           particles.push_back(allparticles->at(candInd));
