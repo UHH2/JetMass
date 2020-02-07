@@ -29,7 +29,7 @@ double uhh2::computeDDTValue(TopJet ak8jet,TH2F* ddtMap,bool useRho, std::vector
   }
 
   if(useRho){
-    x = 2 * TMath::Log(ak8jet.softdropmass()/ ak8jet.pt());
+    x = 2 * TMath::Log(mSD/ ak8jet.pt());
   }else{
     x = mSD;
   }
