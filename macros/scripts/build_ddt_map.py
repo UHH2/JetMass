@@ -103,7 +103,8 @@ def plot_map_root(file_path, map_name):
 	
     # isomasses = [20,55,80,120,200]
     # isomasses = [20,65,80,125,200]
-    isomasses = range(40,200,20)
+    # isomasses = range(40,200,20)
+    isomasses = [40,80,120,200]
     str_isomass = "%.2f*TMath::Exp(-x/2)"
     tf1_isomasses = []
     for i in range(len(isomasses)):

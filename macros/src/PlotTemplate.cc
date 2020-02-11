@@ -81,8 +81,8 @@ int main(int argc, char* argv[]){
 
 void drawCategory(TString region="pass", TString ptBin=""){
   TString Selection = "N2DDT";
-  TString HistDir = "JetMass_"+Selection+ptBin+"_noJecOnMass"+region;
-  // TString HistDir = "JetMass_"+Selection+ptBin+region;
+  // TString HistDir = "JetMass_"+Selection+ptBin+"_noJecOnMass"+region;
+  TString HistDir = "JetMass_"+Selection+ptBin+region;
   TString HistName = "Mass_central";
 
   TLegend * legend = new TLegend(0.6,0.70,0.85,0.9);
@@ -164,7 +164,7 @@ void drawCategory(TString region="pass", TString ptBin=""){
   ratioHist->SetMarkerStyle(21);
   ratioHist->SetMarkerSize(0.7);
 
-  ratioHist->GetYaxis()->SetRangeUser(0.3,1.7);
+  ratioHist->GetYaxis()->SetRangeUser(0.45,1.55);
   ratioHist->GetYaxis()->SetTitle("Data/BG");
   ratioHist->GetYaxis()->CenterTitle();
   ratioHist->GetYaxis()->SetTitleFont(43);
@@ -237,7 +237,7 @@ void drawCategory(TString region="pass", TString ptBin=""){
   TLatex latex = TLatex();
   latex.SetNDC(kTRUE);
   latex.SetTextSize(20);
-  latex.DrawLatex(0.69,0.93,TString::Format("%.2f fb^{-1} (13 TeV)",35.92));
+  latex.DrawLatex(0.69,0.93,TString::Format("%.2f fb^{-1} (13 TeV)",41.86));
   latex.DrawLatex(0.25,0.93,TString::Format("%s N2^{DDT} Selection", region.Contains("p") ? "pass" : "fail" ));
 
   cout<< "ptBin: " << ptBin <<endl;
@@ -248,7 +248,7 @@ void drawCategory(TString region="pass", TString ptBin=""){
     TString pT_TString_upper=ptBin(TRegexp("To[0-9]+"));
     string pT_string_upper=(string) pT_TString_upper.ReplaceAll("To","");
     double pT_upper = stod(pT_string_upper);
-
+    latex.SetTextSize(25);
     TString ptBin_tex=TString::Format("%.0f GeV #leq p_{T} < %.0f GeV",pT_lower,pT_upper);
     latex.DrawLatex(0.20,0.80,ptBin_tex);
   }
