@@ -17,6 +17,8 @@ def write_wrapper(model_dir,pathCMSSW):
         combine -M FitDiagnostics """+abs_dir+"""/"""+model_name+"""_combined.txt --plots --saveShapes
 
         PostFitShapesFromWorkspace -w """+abs_dir+"""/"""+model_name+"""_combined.root -o """+abs_dir+"""/fit_shapes.root --postfit --sampling -f """+abs_dir+"""/fitDiagnostics.root:fit_s
+        mkdir -p plots/fromCombine
+        mv *.png plots/fromCombine
         """)
         wrapper.close()
     os.system('chmod u+x '+model_dir+'/wrapper.sh')
