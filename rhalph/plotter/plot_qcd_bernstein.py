@@ -24,7 +24,7 @@ def bernstein_poly(pt, rho, n_pt, n_rho, parameters):
             f += parameters[i_pt][i_rho] * bernstein(rho, i_rho, n_rho) * bernstein(pt, i_pt, n_pt)
     return f
             
-def extract_fit_pars(file_path):
+def extract_fit_pars(file_path,order):
     fit_diagnostics = ROOT.TFile(file_path)
     fitargs = fit_diagnostics.Get('fit_s').floatParsFinal()
     bernstein_pars=[]
@@ -33,20 +33,9 @@ def extract_fit_pars(file_path):
             bernstein_pars.append(fitargs.at(i).getVal())
     return np.array(bernstein_pars).reshape(order[0]+1,order[1]+1)
 
-# if __name__ == '__main__':
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("config", type=str, help="path to json with config")
-#     parser.add_argument("--order", type=int ,nargs='+', default=[3,3], help="tuple containing (pt_degree,rho_degree) for bernstein-polynom")
-#     args = parser.parse_args()
-    # order = (args.order[0],args.order[1])
-    # try:
-    #     config = json.load(open(args.config))
-    # except IndexError:
-    #     print("You must specify a configuration JSON!")
-    #     sys.exit(0)
-def plot_fit_result(config={'ModelName':'WMassModel'}, order=(3,3)):
+def plot_qcd_bernstein(config={'ModelName':'WMassModel'}, order=(3,3)):
     
-    bernstein_pars = extract_fit_pars(config['ModelName']+'/fitDiagnostics.root')
+    bernstein_pars = extract_fit_pars(config['ModelName']+'/fitDiagnostics.root',order)
     out_dir = config['ModelName']+'/plots/'
     msd_min = 50.
     msd_max = 200.
