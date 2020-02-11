@@ -25,11 +25,13 @@ gStyle.SetLegendBorderSize(0)
 
 useMC=True
 
+# dir_suffix = '/PFMassMap/'
+dir_suffix = ''
 
-f_qcd = ROOT.TFile('../../Histograms/W/QCD.root','read')
-f_data = ROOT.TFile('../../Histograms/W/Data.root','read')
-f_wmatched = ROOT.TFile('../../Histograms/W/WMatched.root','read')
-f_wunmatched = ROOT.TFile('../../Histograms/W/WUnmatched.root','read')
+f_qcd = ROOT.TFile('../../Histograms/W/'+dir_suffix+'QCD.root','read')
+f_data = ROOT.TFile('../../Histograms/W/'+dir_suffix+'Data.root','read')
+f_wmatched = ROOT.TFile('../../Histograms/W/'+dir_suffix+'WMatched.root','read')
+f_wunmatched = ROOT.TFile('../../Histograms/W/'+dir_suffix+'WUnmatched.root','read')
 for useMC in [True,False]:
     ptbins =[500,550,600,675,800,1200]
     for i in range(len(ptbins)-1):
@@ -58,17 +60,20 @@ for useMC in [True,False]:
         h_fail.SetLineWidth(2)
         h_fail.GetXaxis().SetTitle('m_{SD}')
         h_fail.GetYaxis().SetTitle('#DeltaN/N')
-        h_fail.GetYaxis().SetRangeUser(0,0.026)
+        h_fail.GetYaxis().SetRangeUser(0,0.03 )
         legend.AddEntry(h_pass,'QCD pass %s'%('' if useMC else '(Data-W)'),'l')
         legend.AddEntry(h_fail,'QCD fail %s'%('' if useMC else '(Data-W)'),'l')
         
-    
         h_fail.Draw('H')
         h_pass.Draw('HSAME')
+        latex = ROOT.TLatex()
+        latex.SetNDC(1)
+        latex.SetTextSize(20)
+        latex.DrawLatex(0.20,0.80,"%.0f GeV #leq p_{T} < %.0f GeV"%(ptbins[i],ptbins[i+1]))
         
         legend.Draw('SAME')
         # import os
         # if(not os.path.isdir('../../Plots/'+map_name)):
         #     os.mkdir('../../Plots/'+map_name)
         # c.SaveAs('../../Plots/%s/qcd_shape_comp_%iTo%i%s.pdf'%(map_name,ptbins[i],ptbins[i+1],"" if useMC else "_fromData"))
-        c.SaveAs('../../Plots/qcd_shape_comp_%iTo%i%s.pdf'%(ptbins[i],ptbins[i+1],"" if useMC else "_fromData"))
+        c.SaveAs('../../Plots/'+dir_suffix+'qcd_shape_comp_%iTo%i%s.pdf'%(ptbins[i],ptbins[i+1],"" if useMC else "_fromData"))
