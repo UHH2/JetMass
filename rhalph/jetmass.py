@@ -233,16 +233,24 @@ def jet_mass_producer(configs=None):
 
 
 if(__name__ == "__main__"):
-    import json,sys
-
+    import json,argparse
+    import plotter
+    parser = argparse.ArgumentParser()
+    parser.add_argument("config", type=str, help="path to json with config")
+    parser.add_argument('--justplots',action='store_true', help='just make plots.')
+    args = parser.parse_args()
+    
     try:
-        configs = json.load(open(sys.argv[1]))
+        configs = json.load(open(args.config))
     except IndexError:
         print("You must specify a configuration JSON!")
         sys.exit(0)
+    if(not args.justplots):
+        jet_mass_producer(configs)
 
-    jet_mass_producer(configs)
+        from runFit import runFits
+        runFits([configs['ModelName']])
 
-    from runFit import runFits
-    runFits([configs['ModelName']])
-    
+    plotter.plot_fit_result(configs)    
+    if('QcdEstimation' in configs and configs['QcdEstimation']=='True'):
+        plotter.plot_qcd_bernstein(configs)
