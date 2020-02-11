@@ -140,14 +140,14 @@ def setup_pads(c):
 
 
 
-if(__name__ == "__main__"):
+# if(__name__ == "__main__"):
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("config", type=str, help="path to json with config")
-    args = parser.parse_args()
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("config", type=str, help="path to json with config")
+#     args = parser.parse_args()
     
-    config = json.load(open(args.config))
-
+#     config = json.load(open(args.config))
+def plot_fit_result(config={'ModelName':'WMassModel'}):
     f_shapes = ROOT.TFile(config['ModelName']+"/fit_shapes.root","READ")
     ROOT.TH1.AddDirectory(0)
 

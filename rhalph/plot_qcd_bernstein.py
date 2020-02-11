@@ -33,18 +33,18 @@ def extract_fit_pars(file_path):
             bernstein_pars.append(fitargs.at(i).getVal())
     return np.array(bernstein_pars).reshape(order[0]+1,order[1]+1)
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("config", type=str, help="path to json with config")
-    parser.add_argument("--order", type=int ,nargs='+', default=[3,3], help="tuple containing (pt_degree,rho_degree) for bernstein-polynom")
-    args = parser.parse_args()
-    order = (args.order[0],args.order[1])
-
-    try:
-        config = json.load(open(args.config))
-    except IndexError:
-        print("You must specify a configuration JSON!")
-        sys.exit(0)
+# if __name__ == '__main__':
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("config", type=str, help="path to json with config")
+#     parser.add_argument("--order", type=int ,nargs='+', default=[3,3], help="tuple containing (pt_degree,rho_degree) for bernstein-polynom")
+#     args = parser.parse_args()
+    # order = (args.order[0],args.order[1])
+    # try:
+    #     config = json.load(open(args.config))
+    # except IndexError:
+    #     print("You must specify a configuration JSON!")
+    #     sys.exit(0)
+def plot_fit_result(config={'ModelName':'WMassModel'}, order=(3,3)):
     
     bernstein_pars = extract_fit_pars(config['ModelName']+'/fitDiagnostics.root')
     out_dir = config['ModelName']+'/plots/'
