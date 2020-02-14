@@ -57,6 +57,8 @@ private:
 
   std::unique_ptr<JetCleaner> ak4cleaner, ak4cleaner15;
   std::unique_ptr<TopJetCleaner> ak8cleaner;
+  std::unique_ptr<TopJetLeptonDeltaRCleaner> ak8cleaner_dRlep;
+
 
   std::unique_ptr<Selection> TRIGGER_sel, MET_sel;
   std::unique_ptr<Selection> N_AK8_300_sel, N_AK8_500_sel, RHO_sel;
@@ -91,9 +93,17 @@ PreSelModule::PreSelModule(Context & ctx){
   // common modules
   MuonId muid = AndId<Muon>(MuonID(Muon::CutBasedIdTight), PtEtaCut(55., 2.4));
   ElectronId eleid = AndId<Electron>(ElectronID_Fall17_medium_noIso, PtEtaCut(55., 2.4));
+  JetId jetid = AndId<Jet>(JetPFID(JetPFID::WP_TIGHT_CHS), PtEtaCut(30.0, 2.4));
+
   common.reset(new CommonModules());
   common->set_muon_id(muid);
   common->set_electron_id(eleid);
+  common->set_jet_id(jetid);
+  common->switch_jetlepcleaner(true);
+  common->switch_metcorrection(true);
+  common->switch_jetPtSorter();
+  common->set_HTjetid(jetid);
+  if(is_mc) common->disable_metfilters();
   common->init(ctx);
 
   if(is_mc){
@@ -109,7 +119,7 @@ PreSelModule::PreSelModule(Context & ctx){
                           ));
   }
 
-  
+
   // AK8 JEC/JER
   topjetCorr.reset(new TopJetCorrections());
   topjetCorr->init(ctx);
@@ -119,12 +129,13 @@ PreSelModule::PreSelModule(Context & ctx){
 
   // Jet cleaner
   AK4_Clean_pT = 30.0;
-  AK4_Clean_eta = 2.5;
-  AK8_Clean_pT = 200.0;
-  AK8_Clean_eta = 2.5;
-  ak4cleaner15.reset(new JetCleaner(ctx, 15.0, AK4_Clean_eta));
+  AK4_Clean_eta = 2.4;
+  AK8_Clean_pT = 170.0;
+  AK8_Clean_eta = 2.4;
+  // ak4cleaner15.reset(new JetCleaner(ctx, 15.0, AK4_Clean_eta));
   ak4cleaner.reset(new JetCleaner(ctx, AK4_Clean_pT, AK4_Clean_eta));
   ak8cleaner.reset(new TopJetCleaner(ctx,TopJetId(PtEtaCut(AK8_Clean_pT,AK8_Clean_eta))));
+  ak8cleaner_dRlep.reset(new TopJetLeptonDeltaRCleaner(0.8));
 
   // SELECTIONS
   N_AK8_300_sel.reset(new NTopJetSelection(1,-1,TopJetId(PtEtaCut(300.,100000.))));
@@ -132,7 +143,7 @@ PreSelModule::PreSelModule(Context & ctx){
   RHO_sel.reset(new RhoSelection(-6.0, -2.1));
   N_MUON_sel.reset(new NMuonSelection(1,1));
   N_ELEC_sel.reset(new NElectronSelection(0,0));
-  TwoD_sel.reset(new TwoDCut(0.4, 40));
+  TwoD_sel.reset(new TwoDCut(0.4, 25));
   MET_sel.reset(new METCut(50., 100000.));
   if(isTopSel)    TRIGGER_sel.reset(new TriggerSelection("HLT_Mu50_v*"));
   else if(isWSel) TRIGGER_sel.reset(new AndSelection(ctx));
@@ -158,9 +169,9 @@ bool PreSelModule::process(Event & event) {
   bool pass_common=common->process(event);
   if(!pass_common) return false;
 
-  //remove MC Events with verz large unphysical weights
-  if (is_mc){
-    if (!mcSpikeKiller->passes(event)) return false;
+  //remove MC Events with very large unphysical weights
+  if(is_mc && isWSel){
+    if(!mcSpikeKiller->passes(event)) return false;
   }
 
   // AK8 JEC
@@ -172,8 +183,10 @@ bool PreSelModule::process(Event & event) {
   sort_by_pt<TopJet>(*event.topjets);
 
   // CLEANER
-  ak4cleaner15->process(event);
+  // ak4cleaner15->process(event);
+  ak4cleaner->process(event);
   ak8cleaner->process(event);
+  ak8cleaner_dRlep->process(event);
 
   // TRIGGER
   if(!TRIGGER_sel->passes(event)) return false;
@@ -188,8 +201,8 @@ bool PreSelModule::process(Event & event) {
   if(!N_AK8_300_sel->passes(event)) passTOP = false;
   if(!N_MUON_sel->passes(event)) passTOP = false;
   if(!N_ELEC_sel->passes(event)) passTOP = false;
-  if(!TwoD_sel->passes(event)) passTOP = false;
   if(!MET_sel->passes(event)) passTOP = false;
+  if(!TwoD_sel->passes(event)) passTOP = false;
   if(!bjetCloseToLepton_sel->passes(event)) passTOP = false;
 
 
@@ -201,9 +214,6 @@ bool PreSelModule::process(Event & event) {
     if(matchW) passW = Wmatched;
     else passW = !Wmatched;
   }
-
-  // RUN CLEANER AGAIN with pt > 30 (has to be after TwoD sel)
-  ak4cleaner->process(event);
 
   // FILL HISTS
   if(passTOP && isTopSel)  for(auto & h: hists) h->fill(event);
