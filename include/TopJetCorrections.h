@@ -35,3 +35,12 @@ private:
     std::string tjec_tag_2018, tjec_ver_2018;
     std::string tjec_tjet_coll;
 };
+
+class TopJetLeptonDeltaRCleaner : public uhh2::AnalysisModule {
+ public:
+  explicit TopJetLeptonDeltaRCleaner(float mindr=0.8): minDR_(mindr) {}
+  virtual bool process(uhh2::Event&) override;
+
+ private:
+  float minDR_;
+};
