@@ -32,6 +32,7 @@ f_qcd = ROOT.TFile('../../Histograms/W/'+dir_suffix+'QCD.root','read')
 f_data = ROOT.TFile('../../Histograms/W/'+dir_suffix+'Data.root','read')
 f_wmatched = ROOT.TFile('../../Histograms/W/'+dir_suffix+'WMatched.root','read')
 f_wunmatched = ROOT.TFile('../../Histograms/W/'+dir_suffix+'WUnmatched.root','read')
+f_z = ROOT.TFile('../../Histograms/W/'+dir_suffix+'Z.root','read')
 for useMC in [True,False]:
     ptbins =[500,550,600,675,800,1200]
     for i in range(len(ptbins)-1):
@@ -42,8 +43,10 @@ for useMC in [True,False]:
         else:
             h_pass = f_data.Get(hist_name%'pass')
             h_pass.Add(f_wmatched.Get(hist_name%'pass'),-1)
+            h_pass.Add(f_z.Get(hist_name%'pass'),-1)
             h_pass.Add(f_wunmatched.Get(hist_name%'pass'),-1)
             h_fail = f_data.Get(hist_name%'fail')
+            h_fail.Add(f_z.Get(hist_name%'fail'),-1)
             h_fail.Add(f_wmatched.Get(hist_name%'fail'),-1)
             h_fail.Add(f_wunmatched.Get(hist_name%'fail'),-1)
             
@@ -61,8 +64,8 @@ for useMC in [True,False]:
         h_fail.GetXaxis().SetTitle('m_{SD}')
         h_fail.GetYaxis().SetTitle('#DeltaN/N')
         h_fail.GetYaxis().SetRangeUser(0,0.03 )
-        legend.AddEntry(h_pass,'QCD pass %s'%('' if useMC else '(Data-W)'),'l')
-        legend.AddEntry(h_fail,'QCD fail %s'%('' if useMC else '(Data-W)'),'l')
+        legend.AddEntry(h_pass,'QCD pass %s'%('' if useMC else '(Data-W-Z)'),'l')
+        legend.AddEntry(h_fail,'QCD fail %s'%('' if useMC else '(Data-W-Z)'),'l')
         
         h_fail.Draw('H')
         h_pass.Draw('HSAME')
