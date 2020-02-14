@@ -32,7 +32,10 @@ colors = {
     'qcd':867,
     'WUnmatched':803,
     'WMatched':797,
+    'Z':616
 }
+
+signal_scale = -1
 
 obs_draw_option = 'PE1'
 fit_draw_option = 'H'
@@ -77,14 +80,12 @@ def setup_hist(hist):
         hist.GetXaxis().SetLabelFont(43)
         hist.GetXaxis().SetLabelSize(xLabelSize)
 
-    print(hist.GetMaximum())
     if(YRangeUser):
         hist.GetYaxis().SetRangeUser(y_range[0],y_range[1])
     if(XRangeUser):
         hist.GetXaxis().SetRangeUser(x_range[0],x_range[1])
                 
 def setup_ratio_hist(ratioHist):
-  ratioHist.GetYaxis().SetRangeUser(0.3,1.7)
   ratioHist.GetYaxis().CenterTitle()
   ratioHist.GetYaxis().SetTitleFont(43)
   ratioHist.GetYaxis().SetTitleSize(yTitleSize)
@@ -147,7 +148,7 @@ def plot_fit_result(config={'ModelName':'WMassModel'}):
 
     for channel_str, channel in config['channels'].items():
         print('plotting', channel_str)
-        signals = [channel['signal']]
+        signals = channel['signal']
         backgrounds = [bg for bg in channel['samples'] if bg not in signals]
         backgrounds = list(map(lambda bg: 'qcd' if 'QCD' in bg else bg ,backgrounds))
 
@@ -167,14 +168,22 @@ def plot_fit_result(config={'ModelName':'WMassModel'}):
                 total_sb = h_obs.Clone()
                 total_sb.Reset()
 
+                shapes_signal = [f_shapes.Get(hist_dir+'/'+signal) for signal in signals]
+                minimum_signal_maximum=1e10
+                # for s_sig in shapes_signal:
+                #     minimum_signal_maximum = s_sig.GetMaximum() if s_sig.GetMaximum() > minimum_signal_maximum else minimum_signal_maximum
+
+                #     print('max:',s_sig.GetMaximum())
+                shapes_background = [f_shapes.Get(hist_dir+'/'+background) for background in backgrounds]
+
                 h_obs.SetLineColor(1)
                 h_obs.SetMarkerStyle(8)
-                setup_hist(h_obs)
                 h_obs.SetTitle(plot_title)
                 h_obs.Draw(obs_draw_option)
+                h_obs.GetYaxis().SetRangeUser(0,1.1*h_obs.GetMaximum())
+                setup_hist(h_obs)
+                h_obs.Draw(obs_draw_option+'SAME')
                 legend.AddEntry(h_obs,channel['obs'],'p')
-                shapes_signal = [f_shapes.Get(hist_dir+'/'+signal) for signal in signals]
-                shapes_background = [f_shapes.Get(hist_dir+'/'+background) for background in backgrounds]
 
                 
                 for ibackground in range(len(backgrounds)):
@@ -190,8 +199,10 @@ def plot_fit_result(config={'ModelName':'WMassModel'}):
                     shapes_signal[isignal].SetLineColor(colors[signals[isignal]])
                     shapes_signal[isignal].SetLineWidth(2)
                     total_sb.Add(shapes_signal[isignal])
-                    # shapes_signal[isignal].Draw(fit_draw_option+'SAME')
-                    # legend.AddEntry(shapes_signal[isignal],signals[isignal],'l')
+                    if(signal_scale>0):
+                        shapes_signal[isignal].Scale(signal_scale)
+                    shapes_signal[isignal].Draw(fit_draw_option+'SAME')
+                    legend.AddEntry(shapes_signal[isignal],signals[isignal]+('*%.1f'%signal_scale if signal_scale>0 else ''),'l')
                 total_sb.SetLineColor(32)
                 total_sb.SetLineWidth(2)
                 total_sb.Draw(fit_draw_option+'SAME')
@@ -199,7 +210,7 @@ def plot_fit_result(config={'ModelName':'WMassModel'}):
                 h_obs.Draw(obs_draw_option+'SAME')
                 legend.Draw('SAME')
 
-                normal_ratio = True
+                normal_ratio = False
                 ratiopad.cd()
                 if(normal_ratio):
                     ratio_hist = h_obs.Clone()
@@ -210,6 +221,7 @@ def plot_fit_result(config={'ModelName':'WMassModel'}):
                     ratio_hist.SetLineWidth(2)
                     ratio_hist.SetMarkerStyle(1)
                     setup_ratio_hist(ratio_hist)
+                    ratio_hist.GetYaxis().SetRangeUser(0.3,1.7)
 
                     ratio_hist_1 = h_obs.Clone()
                     ratio_hist_1.GetYaxis().SetTitle("#frac{obs.}{total b}")
@@ -222,28 +234,44 @@ def plot_fit_result(config={'ModelName':'WMassModel'}):
                     ratio_hist_1.Draw('EPSAME')
 
                 else:
+                    #constructing data-BG/sigma
                     ratio_hist = h_obs.Clone()
-                    ratio_hist.GetYaxis().SetTitle("#frac{X - total B}{#sigma_{X-total B}}")
+                    ratio_hist.GetYaxis().SetTitle("#frac{X - total B}{#sigma_{Data}}")
                     ratio_hist.Add(total_b,-1.)
 
                     obs_sigma = ratio_hist.Clone()
-                    for i in range(obs_sigma.GetNbinsX()):
+                    for i in range(obs_sigma.GetNbinsX()+1):
                         obs_sigma.SetBinContent(i,ratio_hist.GetBinError(i))
-
+                        obs_sigma.SetBinError(i,1)
                     ratio_hist.Divide(obs_sigma)
                     
+                    #constructing fit-BG/sigma
                     ratio_fit = total_sb.Clone()
                     ratio_fit.Add(total_b,-1)
 
                     fit_sigma = ratio_fit.Clone()
                     for i in range(fit_sigma.GetNbinsX()):
                         fit_sigma.SetBinContent(i,ratio_fit.GetBinError(i))
+                    ratio_fit.Divide(obs_sigma)
 
-                    ratio_fit.Divide(fit_sigma)
+                    signal_ratios = []
+                    for signal_shape in shapes_signal:
+                        signal_sigma = signal_shape.Clone()
+                        for i in range(signal_shape.GetNbinsX()):
+                            signal_sigma.SetBinContent(i,signal_shape.GetBinError(i))
+                            signal_sigma.SetBinError(i,1)
+
+                        new_signal_ratio = signal_shape.Clone()
+                        new_signal_ratio.Divide(obs_sigma)
+                        signal_ratios.append(new_signal_ratio)
+
                     ratio_hist.GetXaxis().SetTitleSize(xTitleSize)
                     setup_ratio_hist(ratio_hist)
+                    # ratioHist.GetYaxis().SetRangeUser(-1,1.7)
                     ratio_hist.Draw('EP')
-                    ratio_fit.Draw('EPSAME')
+                    ratio_fit.Draw('HistSAME')
+                    for signal_ratio in signal_ratios:
+                        signal_ratio.Draw('HistSAME')
                 ratioXMin = ratio_hist.GetXaxis().GetXmin()
                 ratioXMax = ratio_hist.GetXaxis().GetXmax()
 
@@ -252,10 +280,10 @@ def plot_fit_result(config={'ModelName':'WMassModel'}):
                 minus10percent = ROOT.TLine(ratioXMin,0.9,ratioXMax,0.9)
                 plus10percent.SetLineStyle(ROOT.kDashed)
                 minus10percent.SetLineStyle(ROOT.kDashed)
-               
-                zeropercent.Draw()
-                plus10percent.Draw()
-                minus10percent.Draw()
+                if(normal_ratio):
+                    zeropercent.Draw()
+                    plus10percent.Draw()
+                    minus10percent.Draw()
 
                 plotpad.cd()
                 latex = ROOT.TLatex()
