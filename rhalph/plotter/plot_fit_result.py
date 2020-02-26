@@ -30,9 +30,14 @@ leftMargin = 0.14
 
 colors = {
     'qcd':867,
-    'WUnmatched':803,
-    'WMatched':797,
-    'Z':616
+    'WUnmatched':419,
+    'WMatched':413,
+    'ZUnmatched':797,
+    'ZMatched':800,
+    'SingleTop':800,
+    'TTbar':810,
+    'WJets':413,
+    'other':867
 }
 
 signal_scale = -1
@@ -151,8 +156,8 @@ def plot_fit_result(config={'ModelName':'WMassModel'}):
         signals = channel['signal']
         backgrounds = [bg for bg in channel['samples'] if bg not in signals]
         backgrounds = list(map(lambda bg: 'qcd' if 'QCD' in bg else bg ,backgrounds))
-
-        for region in channel['regions']:
+        regions = channel['regions'] if 'regions' in channel else [""]
+        for region in regions:
             for suffix in ['prefit','postfit']:
                 plot_title = '%s %s %s'%(channel_str,region,suffix)
                 c = ROOT.TCanvas(plot_title,plot_title,600,600)
@@ -289,8 +294,9 @@ def plot_fit_result(config={'ModelName':'WMassModel'}):
                 latex = ROOT.TLatex()
                 latex.SetNDC(1)
                 latex.SetTextSize(24)
-                pt_bin = tuple(channel['histDir'].split('pt')[-1].split('To'))
-                latex.DrawLatex(0.20,0.95,"%s-region  - %s GeV #leq p_{T} < %s GeV"%(region,*pt_bin))
+                if('w' in channel_str.lower()):
+                    pt_bin = tuple(channel['histDir'].split('pt')[-1].split('To'))
+                    latex.DrawLatex(0.20,0.95,"%s-region  - %s GeV #leq p_{T} < %s GeV"%(region,*pt_bin))
 
 
                 c.RedrawAxis()
