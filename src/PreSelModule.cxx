@@ -167,7 +167,7 @@ PreSelModule::PreSelModule(Context & ctx){
   hists.emplace_back(new JetHists(ctx, "JetHists"));
   hists.emplace_back(new TopJetHists(ctx, "TopJetHists"));
 
-  if(is_WSample || is_ZSample){
+  if(isWSel && (is_WSample || is_ZSample) ){
     std::string NLOWeightsFilename = ctx.get("NLOweightsDir")+(is_WSample ? "/WJets" : "/ZJets") + "Corr.root";
     NLOWeightsFile.reset(TFile::Open(locate_file(NLOWeightsFilename).c_str()));
     h_kfactor.reset((TH1F*) NLOWeightsFile->Get("kfactor"));
