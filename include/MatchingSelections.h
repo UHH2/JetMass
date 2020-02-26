@@ -10,7 +10,7 @@ namespace uhh2{
 
 class MatchingSelection: public uhh2::Selection {
 public:
-  enum matchingOpt{oIsAnyGenW,oIsLeadingGenW};
+  enum matchingOpt{oIsAnyGenW,oIsLeadingGenW,oIsMergedGenW,oIsAnyGenZ,oIsLeadingGenZ,oIsMergedGenZ};
   
   explicit MatchingSelection(uhh2::Context & ctx, matchingOpt opt);
   

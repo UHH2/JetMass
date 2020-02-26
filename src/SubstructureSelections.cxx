@@ -39,7 +39,7 @@ double uhh2::computeDDTValue(TopJet ak8jet,TH2F* ddtMap,bool useRho, std::vector
   }else if(x_bin <= 0){
     x_bin = 1;
   }
-  return ak8jet.ecfN2_beta1() - ddtMap->GetBinContent(x_bin,pt_bin);
+  return ddtMap->GetBinContent(x_bin,pt_bin);
 }
 
 double uhh2::computeTau21DDT(TopJet ak8jet, double slope){
@@ -75,8 +75,8 @@ bool N2ddtSelection::passes(const uhh2::Event &event){
       }
     } 
   }
-  double n2_ddt = computeDDTValue(ak8jet,ddtMap,useRho,particles);
-  return n2_ddt < 0;
+  double n2_ddt =  ak8jet.ecfN2_beta1() - computeDDTValue(ak8jet,ddtMap,useRho,particles);
+  return n2_ddt <= 0;
 }
 
 Tau21DDTSelection::Tau21DDTSelection(double cutValue_,double slope_):cutValue(cutValue_),slope(slope_){}
@@ -96,4 +96,26 @@ bool RhoSelection::passes(const uhh2::Event &event){
   if(event.topjets->size()<1) return false;
   double rho=2*TMath::Log(event.topjets->at(0).softdropmass()/event.topjets->at(0).pt());
   return ( rho < -2.1 ) && ( rho > -6.0);
+}
+
+
+DeepBoosted_WvsQCD_ddtSelection::DeepBoosted_WvsQCD_ddtSelection(TH2F* ddtMap_,bool useRho_,bool usePFMass_):ddtMap(ddtMap_),useRho(useRho_),usePFMass(usePFMass_){
+  std::cout << "DeepBoosted_WvsQCD_ddt Selection uses " << (usePFMass ? "PFMass":"regular JetMass") << std::endl;
+}
+
+bool DeepBoosted_WvsQCD_ddtSelection::passes(const uhh2::Event &event){
+  assert(event.topjets);
+  if(event.topjets->size() < 1) return false;
+  auto ak8jet = event.topjets->at(0);
+  std::vector<PFParticle> particles=  {};
+  if(usePFMass){
+    std::vector<PFParticle> * pfparticles = event.pfparticles;
+    for(auto subjet: ak8jet.subjets()){
+      for(const auto candInd: subjet.pfcand_indexs()){
+        particles.push_back(pfparticles->at(candInd));
+      }
+    } 
+  }
+  double ddt_value = ak8jet.btag_DeepBoosted_WvsQCD() - computeDDTValue(ak8jet,ddtMap,useRho,particles);
+  return ddt_value >= 0;
 }

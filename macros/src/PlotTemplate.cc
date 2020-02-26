@@ -32,15 +32,16 @@ TString InPath=TString(getenv("CMSSW_BASE"))+"/src/UHH2/JetMass/Histograms/W/";
 vector<TFile*> BKG_Files={
   new TFile(InPath+"QCD.root","READ"),
   new TFile(InPath+"WMatched.root","READ"),
-  new TFile(InPath+"WUnmatched.root","READ")
+  new TFile(InPath+"WUnmatched.root","READ"),
+  new TFile(InPath+"ZMatched.root","READ"),
+  new TFile(InPath+"ZUnmatched.root","READ")
 };
 vector<TFile*> SIG_Files={};
 vector<TFile*> DAT_Files={new TFile(InPath+"Data.root","READ")};
 
-vector<int> BKG_Colors={867,kOrange-3,kOrange+3};
+vector<int> BKG_Colors={867,413,419,800,797};
 vector<int> SIG_Colors={};
-
-vector<TString> BKG_Legend={"QCD","W+jets to qq (merged)","W+jets to qq (unmerged)"};
+vector<TString> BKG_Legend={"QCD","W+jets to qq (merged)","W+jets to qq (unmerged)","Z+jets to qq (merged)","Z+jets to qq (unmerged)"};
 vector<TString> SIG_Legend={};
 TString DAT_Legend="Data JetHT 2016";
 
@@ -81,6 +82,7 @@ int main(int argc, char* argv[]){
 
 void drawCategory(TString region="pass", TString ptBin=""){
   TString Selection = "N2DDT";
+  // TString Selection = "DAK8DDT";
   // TString HistDir = "JetMass_"+Selection+ptBin+"_noJecOnMass"+region;
   TString HistDir = "JetMass_"+Selection+ptBin+region;
   TString HistName = "Mass_central";
@@ -165,7 +167,7 @@ void drawCategory(TString region="pass", TString ptBin=""){
   ratioHist->SetMarkerSize(0.7);
 
   ratioHist->GetYaxis()->SetRangeUser(0.45,1.55);
-  ratioHist->GetYaxis()->SetTitle("Data/BG");
+  ratioHist->GetYaxis()->SetTitle("Data/MC");
   ratioHist->GetYaxis()->CenterTitle();
   ratioHist->GetYaxis()->SetTitleFont(43);
   ratioHist->GetYaxis()->SetTitleSize(yTitleSize);

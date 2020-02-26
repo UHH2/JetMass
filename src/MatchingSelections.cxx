@@ -10,23 +10,35 @@ namespace uhh2{
   }
 
   bool MatchingSelection::passes_matching(const uhh2::Event &event, const TopJet &probe_jet) {
-    if(opt == oIsAnyGenW || opt == oIsLeadingGenW){
-      //finding all W in genparticles  
-      assert(event.genparticles);
-      std::vector<GenParticle> GenWs={};
-      for(unsigned int i = 0 ; i < event.genparticles->size() ; i++){
-          GenParticle thisGen = event.genparticles->at(i); 
-          if(abs(thisGen.pdgId()) == 24 ) GenWs.push_back(thisGen);
-          //if matching with ANY W is wanted lets do it here
-          if(opt == oIsAnyGenW && deltaR(thisGen,probe_jet) < 0.8)return true;
-      }
-      //sort all found W by its pT
-      sort_by_pt<GenParticle>(GenWs);
-      //if there is any W match the leading
-      if(GenWs.size()>0){
-        if(opt == oIsLeadingGenW && deltaR(GenWs[0],probe_jet) < 0.8) return true;
+    int pdgId = (opt == oIsAnyGenW || opt == oIsLeadingGenW || opt == oIsMergedGenW) ? 24 : 23;
+
+    //finding all W in genparticles  
+    assert(event.genparticles);
+    std::vector<GenParticle> GenVs={};
+    for(unsigned int i = 0 ; i < event.genparticles->size() ; i++){
+        GenParticle thisGen = event.genparticles->at(i); 
+        if(abs(thisGen.pdgId()) == pdgId ) GenVs.push_back(thisGen);
+        //if matching with ANY V is wanted lets do it here
+        if((opt == oIsAnyGenW || opt == oIsAnyGenZ) && deltaR(thisGen,probe_jet) < 0.8)return true;
+    }
+    //sort all found V by its pT
+    sort_by_pt<GenParticle>(GenVs);
+    if(GenVs.size()>0){
+      //if there is any V match the leading
+      if((opt == oIsLeadingGenW || opt == oIsLeadingGenZ) && deltaR(GenVs[0],probe_jet) < 0.8) return true;
+      //or check if any V results from two merged quarks
+      if(opt == oIsMergedGenW || opt == oIsMergedGenZ){
+        for(auto GenV: GenVs){
+          GenParticle V_d1 = event.genparticles->at(GenV.daughter1());
+          GenParticle V_d2 = event.genparticles->at(GenV.daughter2());
+          int V_d1_pdgId = abs(V_d1.pdgId());
+          int V_d2_pdgId = abs(V_d2.pdgId());
+          if( (V_d1_pdgId >=1 && V_d1_pdgId <=6) && (V_d2_pdgId >=1 && V_d2_pdgId <=6) ){
+           if(deltaR(probe_jet,V_d1) < 0.8 && deltaR(probe_jet,V_d2) < 0.8) return true;
+          }
+        }
       }
     }
-    return false;
+      return false;
   }
 }
