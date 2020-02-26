@@ -15,9 +15,9 @@ H3DDTHist::H3DDTHist(Context & ctx, const string & dirname): Hists(ctx, dirname)
   use_PFMass = TString(dirname).Contains("PFMass");
   use_SD = ! TString(dirname).Contains("noSD");
 
-  int pt_nbins = 300;
+  int pt_nbins = 500;
   float pt_min = 0.0;
-  float pt_max = 1500.0;
+  float pt_max = 5000.0;
 
   // int mSD_nbins = 250;
   // float mSD_min = 0.0;
@@ -31,10 +31,10 @@ H3DDTHist::H3DDTHist(Context & ctx, const string & dirname): Hists(ctx, dirname)
   float disc_min = -0.1;
   float disc_max = 1.0;
   
-  N2_v_pT_v_rho_oldBinning=book<TH3D>("N2_v_pT_v_rho_oldBinning","x=#rho,y=p_{T},z=N_2",rho_nbins,-10,0,300,0,2000,300,-1.5,1); 
+  // N2_v_pT_v_rho_oldBinning=book<TH3D>("N2_v_pT_v_rho_oldBinning","x=#rho,y=p_{T},z=N_2",rho_nbins,-10,0,300,0,2000,300,-1.5,1); 
 
   N2_v_pT_v_rho=book<TH3D>("N2_v_pT_v_rho","x=#rho,y=p_{T},z=N_{2}^{#beta=1}",rho_nbins,rho_min,rho_max,pt_nbins, pt_min, pt_max,disc_nbins,disc_min, disc_max);
-  N2_beta2_v_pT_v_rho=book<TH3D>("N2_beta2_v_pT_v_rho","x=#rho,y=p_{T},z=N_{2}^{#beta=2}",rho_nbins,rho_min,rho_max,pt_nbins, pt_min, pt_max,disc_nbins,disc_min, disc_max);
+  // N2_beta2_v_pT_v_rho=book<TH3D>("N2_beta2_v_pT_v_rho","x=#rho,y=p_{T},z=N_{2}^{#beta=2}",rho_nbins,rho_min,rho_max,pt_nbins, pt_min, pt_max,disc_nbins,disc_min, disc_max);
   DeepBoosted_WvsQCD_v_pT_v_rho=book<TH3D>("DeepBoosted_WvsQCD_v_pT_v_rho","x=#rho,y=p_{T},z=N_2",rho_nbins,rho_min,rho_max,pt_nbins, pt_min, pt_max,disc_nbins,disc_min, disc_max);  
 
   // N2_v_pT_v_mSD=book<TH3D>("N2_v_pT_v_mSD","x=m_{SD},y=p_{T},z=N_{2}^{#beta=1}",mSD_nbins,mSD_min, mSD_max,pt_nbins, pt_min, pt_max,disc_nbins,disc_min, disc_max);
@@ -72,10 +72,10 @@ void H3DDTHist::fill(const Event & event){
   }
   double rho= 2* TMath::Log(mSD/jet.pt());
 
-  N2_v_pT_v_rho_oldBinning->Fill(rho,jet.pt(),jet.ecfN2_beta1(),weight);
+  // N2_v_pT_v_rho_oldBinning->Fill(rho,jet.pt(),jet.ecfN2_beta1(),weight);
 
   N2_v_pT_v_rho->Fill(rho,jet.pt(),jet.ecfN2_beta1(),weight);
-  N2_beta2_v_pT_v_rho->Fill(rho,jet.pt(),jet.ecfN2_beta2(),weight);
+  // N2_beta2_v_pT_v_rho->Fill(rho,jet.pt(),jet.ecfN2_beta2(),weight);
   DeepBoosted_WvsQCD_v_pT_v_rho->Fill(rho,jet.pt(),jet.btag_DeepBoosted_WvsQCD(),weight); 
 
   // N2_v_pT_v_mSD->Fill(mSD,jet.pt(),jet.ecfN2_beta1(),weight);

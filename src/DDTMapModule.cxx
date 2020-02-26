@@ -73,12 +73,12 @@ DDTMapModule::DDTMapModule(Context & ctx){
   common->init(ctx);
 
   mcSpikeKiller.reset(new MCLargeWeightKiller(ctx,
-                                              2, // maximum allowed ratio of leading reco jet pT / generator HT
-                                              2, // maximum allowed ratio of leading gen jet pT / generator HT
-                                              2, // maximum allowed ratio of leading reco jet pT / Q scale
-                                              2, // maximum allowed ratio of PU maximum pTHat / gen HT (ensures scale of PU < scale of hard interaction)
-                                              2, // maximum allowed ratio of leading reco jet pT / pTHat
-                                              2, // maximum allowed ratio of leading gen jet pT / pTHat
+                                              infinity, // maximum allowed ratio of leading reco jet pT / generator HT
+                                              infinity, // maximum allowed ratio of leading gen jet pT / generator HT
+                                              infinity, // maximum allowed ratio of leading reco jet pT / Q scale
+                                              2.5, // maximum allowed ratio of PU maximum pTHat / gen HT (ensures scale of PU < scale of hard interaction)
+                                              3, // maximum allowed ratio of leading reco jet pT / pTHat
+                                              3, // maximum allowed ratio of leading gen jet pT / pTHat
                                               "jets", // name of jet collection to be used
                                               "genjets" // name of genjet collection to be used
                         ));

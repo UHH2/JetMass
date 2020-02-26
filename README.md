@@ -1,5 +1,6 @@
 # JetMass
 Create histograms for jet mass calibration
+- when processing V+Jets samples with PreSelModule (in WSelection), make sure to clone [UHHNtupleConverter](https://github.com/Diboson3D/UHHNtupleConverter) to get the root-Files containing the k-factors
 
 ![](https://media.giphy.com/media/TT7JW4Qm7uaNW/giphy.gif)
 ![](https://media.giphy.com/media/kMSyCATSq9SEw/giphy.gif)

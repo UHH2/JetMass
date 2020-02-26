@@ -13,22 +13,32 @@ namespace uhh2 {
   double computeTau21DDT(TopJet ak8jet, double slope);
 
   class N2ddtSelection: public uhh2::Selection {
-  	public:
+  public:
     N2ddtSelection(TH2F* ddtMap,bool useRho=false,bool usePFMass=false);
-  		virtual bool passes(const uhh2::Event &event) override;
-  	private:
-      TH2F* ddtMap;
-      bool useRho;
-      bool usePFMass;
-  	};
-    
+    virtual bool passes(const uhh2::Event &event) override;
+  private:
+    TH2F* ddtMap;
+    bool useRho;
+    bool usePFMass;
+  };
+
+  class DeepBoosted_WvsQCD_ddtSelection: public uhh2::Selection {
+  public:
+    DeepBoosted_WvsQCD_ddtSelection(TH2F* ddtMap,bool useRho=false,bool usePFMass=false);
+    virtual bool passes(const uhh2::Event &event) override;
+  private:
+    TH2F* ddtMap;
+    bool useRho;
+    bool usePFMass;
+  };
+  
   class N2Selection: public uhh2::Selection {
-  	public:
-  		N2Selection(double n2_cutValue,double n2_minValue=0.0);
-  		virtual bool passes(const uhh2::Event &event) override;
-  	private:
-  		double n2_cutValue,n2_minValue;
-  	};
+  public:
+    N2Selection(double n2_cutValue,double n2_minValue=0.0);
+    virtual bool passes(const uhh2::Event &event) override;
+  private:
+    double n2_cutValue,n2_minValue;
+  };
 
   class Tau21DDTSelection: public uhh2::Selection {
   public:
