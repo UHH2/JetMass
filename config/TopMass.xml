@@ -24,6 +24,7 @@
  <!ENTITY WJets_HT1200to2500 "&INdir;/uhh2.AnalysisModuleRunner.MC.WJets_HT1200to2500_2017v2.root">
  <!ENTITY WJets_HT2500toInf  "&INdir;/uhh2.AnalysisModuleRunner.MC.WJets_HT2500toInf_2017v2.root">
 
+ <!ENTITY QCD_PT120to170  "&INdir;/uhh2.AnalysisModuleRunner.MC.QCD_PT120to170_2017v2.root">
  <!ENTITY QCD_PT170to300  "&INdir;/uhh2.AnalysisModuleRunner.MC.QCD_PT170to300_2017v2.root">
  <!ENTITY QCD_PT300to470  "&INdir;/uhh2.AnalysisModuleRunner.MC.QCD_PT300to470_2017v2.root">
  <!ENTITY QCD_PT470to600  "&INdir;/uhh2.AnalysisModuleRunner.MC.QCD_PT470to600_2017v2.root">
@@ -47,8 +48,8 @@
  ]>
 
  <!--
- <ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="25" />
- <ConfigSGE RAM ="2" DISK ="2" Mail="dennis.schwarz@desy.de" Notification="as" Workdir="workdir_TopPre"/>
+ <ConfigParse NEventsBreak="100000" LastBreak="0" FileSplit="0" />
+ <ConfigSGE RAM ="2" DISK ="2" Mail="dennis.schwarz@desy.de" Notification="as" Workdir="workdir_Top"/>
  -->
 
  <!-- OutputLevel controls which messages are printed; set to VERBOSE or DEBUG for more verbosity, to WARNING or ERROR for less -->
@@ -173,6 +174,12 @@
    ▀▀
 -->
 
+    <InputData Version="QCD_PT120to170_2017v2" Lumi="892.6900519" Type="MC" NEventsMax="-1" Cacheable="False">
+      <In FileName="&QCD_PT120to170;" Lumi="0.0"/>
+      <InputTree Name="AnalysisTree"/>
+      <OutputTree Name="AnalysisTree"/>
+    </InputData>
+
    <InputData Version="QCD_PT170to300_2017v2" Lumi="5853.217916" Type="MC" NEventsMax="-1" Cacheable="False">
      <In FileName="&QCD_PT170to300;" Lumi="0.0"/>
      <InputTree Name="AnalysisTree"/>
@@ -217,11 +224,11 @@
    ██████     ██
 -->
 
-   <InputData Version="DYJets_HT100to200_2017v2" Lumi="69226.78638" Type="MC" NEventsMax="-1" Cacheable="False">
-     <In FileName="&DYJets_HT100to200;" Lumi="0.0"/>
-     <InputTree Name="AnalysisTree"/>
-     <OutputTree Name="AnalysisTree"/>
-   </InputData>
+  <InputData Version="DYJets_HT100to200_2017v2" Lumi="69226.78638" Type="MC" NEventsMax="-1" Cacheable="False">
+    <In FileName="&DYJets_HT100to200;" Lumi="0.0"/>
+    <InputTree Name="AnalysisTree"/>
+    <OutputTree Name="AnalysisTree"/>
+  </InputData>
 
    <InputData Version="DYJets_HT200to400_2017v2" Lumi="219614.0918" Type="MC" NEventsMax="-1" Cacheable="False">
      <In FileName="&DYJets_HT200to400;" Lumi="0.0"/>
@@ -267,13 +274,11 @@
     ███ ███   █████  ███████    ██    ███████
 -->
 
-
-
-   <InputData Version="WJets_HT100to200_2017v2" Lumi="24497.36654" Type="MC" NEventsMax="-1" Cacheable="False">
-     <In FileName="&WJets_HT100to200;" Lumi="0.0"/>
-     <InputTree Name="AnalysisTree"/>
-     <OutputTree Name="AnalysisTree"/>
-   </InputData>
+  <InputData Version="WJets_HT100to200_2017v2" Lumi="24497.36654" Type="MC" NEventsMax="-1" Cacheable="False">
+    <In FileName="&WJets_HT100to200;" Lumi="0.0"/>
+    <InputTree Name="AnalysisTree"/>
+    <OutputTree Name="AnalysisTree"/>
+  </InputData>
 
    <InputData Version="WJets_HT200to400_2017v2" Lumi="45872.06211" Type="MC" NEventsMax="-1" Cacheable="False">
      <In FileName="&WJets_HT200to400;" Lumi="0.0"/>
@@ -329,14 +334,14 @@
      <Item Name="METName"                 Value="slimmedMETs"/>
 
 
-     <Item Name="MCBtagEfficiencies" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/BTagMCEfficiency/BTagMCEfficiencyHists.root" />
-     <Item Name="BTagCalibration" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/CSVv2_Moriond17_B_H.csv" />
+     <Item Name="MCBtagEfficiencies" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/BTagMCEfficiency/BTagMCEfficiencyHists_2017.root" />
+     <Item Name="BTagCalibration" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2017/DeepFlavour_94XSF_WP_V3_B_F.csv" />
 
      <Item Name="use_sframe_weight" Value="false"/>
      <Item Name="dometfilters" Value="true" />
      <Item Name="dopvfilter" Value="true" />
      <Item Name="doSpikeKiller" Value="false" />
-     <Item Name="lumi_file" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.root"/>
+     <Item Name="lumi_file" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2017/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.root"/>
 
      <Item Name="GridFile" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/grid.root" />
      <Item Name="Grid_highptUP" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/grid_highptUP.root" />
@@ -344,10 +349,11 @@
      <Item Name="Grid_netrualHDOWN_gammaDOWN" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/grid_neutralHDOWN_gammaDOWN.root" />
      <Item Name="Grid_chargedHUP_oneBin" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/grid_chargedHUP_oneBin.root" />
 
-     <Item Name="pileup_directory_data" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MyDataPileupHistogram.root" />
-     <Item Name="pileup_directory" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MyMCPileupHistogram.root" />
-     <Item Name="pileup_directory_data_up" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MyDataPileupHistogram_72383.root" />
-     <Item Name="pileup_directory_data_down" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MyDataPileupHistogram_66017.root" />
+     <Item Name="pileup_directory_data" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2017/MyDataPileupHistogram2017.root"/>
+     <Item Name="pileup_directory_25ns" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2017/MyMCPileupHistogram.root"/>
+     <Item Name="pileup_directory_data_up" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2017/MyDataPileupHistogram2017_72383.root"/>
+     <Item Name="pileup_directory_data_down" Value="/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2017/MyDataPileupHistogram2017_66017.root"/>
+
 
      <Item Name="AnalysisModule" Value="TopMassModule"/>
     </UserConfig>
