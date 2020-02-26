@@ -88,6 +88,7 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, TString mode )
   // book some hists without variations
   h_mass = book<TH1F>("Mass_central", xtitleMass, nMass, minMass, maxMass);
   h_mass_jet = book<TH1F>("Mass_central_jet", xtitleMass, nMass, minMass, maxMass);
+  h_pt_jet = book<TH1F>("Pt_central_jet", "p_{T} jet", nPt, minPt, maxPt);
   h_mass_raw_subjets = book<TH1F>("Mass_central_raw_subjets", xtitleMass, nMass, minMass, maxMass);
   h_rho = book<TH1F>("Rho_central", xtitleRho, nRho, minRho, maxRho);
   h_rho_jet = book<TH1F>("Rho_central_jet", xtitleRho, nRho, minRho, maxRho);
@@ -154,6 +155,7 @@ void JetMassHists::fill(const Event & event){
   double ptjet = topjets->at(0).v4().Pt();
   double rhojet = 2*TMath::Log(mjet/ptjet);
   h_mass_jet->Fill(mjet, weight);
+  h_pt_jet->Fill(ptjet,weight);
   h_rho_jet->Fill(rhojet, weight);
   // fill again but get values from PF particles
   double mass, rho;
