@@ -91,7 +91,10 @@ namespace uhh2examples {
     std::unique_ptr<Hists> h_DAK8ddt_pt1200ToInf_Sel_pass,h_DAK8ddt_pt1200ToInf_Sel_fail;
 
     TH2F * n2_ddtMap, *dak8_ddtMap;
-    
+
+    uhh2::Event::Handle<float> vjets_k_factor;
+    bool is_WSample,is_ZSample;    
+    bool is_mc,apply_kfactors;
 
     // TH3D * N2_v_mSD_v_pT;
   };
@@ -168,12 +171,23 @@ namespace uhh2examples {
     h_DAK8ddt_pt1200ToInf_Sel_pass.reset(new JetMassHists(ctx,"JetMass_DAK8DDT_pt1200ToInf_pass",plotMode));
     h_DAK8ddt_pt1200ToInf_Sel_fail.reset(new JetMassHists(ctx,"JetMass_DAK8DDT_pt1200ToInf_fail",plotMode));
 	
+    // vjets_k_factor = ctx.get_handle<float>("kfactor");
+    if(is_mc && apply_kfactors){
+      vjets_k_factor = ctx.declare_event_input<float>("kfactor");
+    }
   }
 
   bool WMassModule::process(Event & event){
     if(is_mc){
       MC_LumiWeight->process(event);
       MC_PUWeight->process(event);
+      float kfactor=1.;
+      if(apply_kfactors){
+        if(event.is_valid(vjets_k_factor)){
+          kfactor = event.get(vjets_k_factor);
+          event.weight *= kfactor;
+        }
+      }
       if(!mcSpikeKiller->passes(event)) return false;
     }
     if(is_mc)h_PreSel->fill(event);
