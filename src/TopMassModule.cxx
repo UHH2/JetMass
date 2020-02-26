@@ -104,9 +104,9 @@ TopMassModule::TopMassModule(Context & ctx){
   // Scale Factors
   lumiweight.reset(new MCLumiWeight(ctx));
   PUreweight.reset(new MCPileupReweight(ctx, "central"));
-  sf_btag.reset(new MCBTagScaleFactor(ctx, BTag::DEEPCSV, BTag::WP_MEDIUM, "jets", "central"));
-  muo_tight_noniso_SF.reset(new MCMuonScaleFactor(ctx,"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MuonID_EfficienciesAndSF_average_RunBtoH.root","NUM_TightID_DEN_genTracks_eta_pt",1, "tightID", false, "central"));
-  muo_trigger_SF.reset(new MCMuonScaleFactor(ctx,"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2016/MuonTrigger_EfficienciesAndSF_average_RunBtoH.root","IsoMu50_OR_IsoTkMu50_PtEtaBins",1, "muonTrigger", false, "central"));
+  sf_btag.reset(new MCBTagScaleFactor(ctx, BTag::DEEPJET, BTag::WP_MEDIUM, "jets", "central"));
+  muo_tight_noniso_SF.reset(new MCMuonScaleFactor(ctx,"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2017/MuonID_94X_RunBCDEF_SF_ID.root","NUM_TightID_DEN_genTracks_pt_abseta",0., "tightID", true, "central"));
+  muo_trigger_SF.reset(new MCMuonScaleFactor(ctx,"/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/data/2017/MuonTrigger_EfficienciesAndSF_RunBtoF_Nov17Nov2017.root","Mu50_PtEtaBins",0., "muonTrigger", false, "central"));
 
   // Histograms
   h_ecf.reset(new ECFHists(ctx, "ECFHists"));
@@ -196,7 +196,7 @@ bool TopMassModule::process(Event & event) {
     sf_btag->process(event);
     muo_tight_noniso_SF->process(event);
     muo_trigger_SF->process(event);
-    topreweight->process(event);
+    // topreweight->process(event);
   }
 
   h_ecf->fill(event);
