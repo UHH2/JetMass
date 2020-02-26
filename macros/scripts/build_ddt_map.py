@@ -72,9 +72,9 @@ def plot_map_root(file_path, map_name):
     hist.GetXaxis().SetTitle("#rho")
     hist.GetYaxis().SetTitle("p_{T} [GeV]")
     if('n2' in map_name.lower()):
-        hist.GetZaxis().SetTitle("N2^{DDT} 5% quantile")
+        hist.GetZaxis().SetTitle("N2^{DDT} X% quantile")
     else:
-        hist.GetZaxis().SetTitle("DeepBoosted WvsQCD 5% quantile")
+        hist.GetZaxis().SetTitle("DeepBoosted WvsQCD X% quantile")
         disc_max=1
     hist.GetXaxis().SetRangeUser(rho_min, rho_max)
     hist.GetYaxis().SetRangeUser(pt_min, pt_max)
