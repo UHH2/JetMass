@@ -30,6 +30,7 @@
 #include "UHH2/JetMass/include/CorrectParticles.h"
 #include "UHH2/JetMass/include/ApplyPuppiToPF.h"
 #include "UHH2/common/include/MCLargeWeightKiller.h"
+#include "UHH2/JetMass/include/WriteOutput.h"
 
 
 #include <unistd.h>
@@ -61,26 +62,22 @@ private:
   std::unique_ptr<TopJetCleaner> ak8cleaner;
   std::unique_ptr<TopJetLeptonDeltaRCleaner> ak8cleaner_dRlep;
 
-
   std::unique_ptr<Selection> TRIGGER_sel, MET_sel;
   std::unique_ptr<Selection> N_AK8_300_sel, N_AK8_500_sel, RHO_sel;
   std::unique_ptr<Selection> N_MUON_sel, N_ELEC_sel, TwoD_sel, bjetCloseToLepton_sel;
-  std::unique_ptr<MatchingSelection> MatchV_sel;
 
   std::vector<std::unique_ptr<uhh2::Hists>> hists;
 
   std::unique_ptr<AnalysisModule> pfparticles_jec_corrector,pf_applyPUPPI;
+
+  std::unique_ptr<AnalysisModule> writer;
+
 
   bool is_mc, matchV, is_WSample, is_ZSample;
   bool isTopSel = false;
   bool isWSel = false;
   Double_t AK4_Clean_pT,AK4_Clean_eta,AK8_Clean_pT,AK8_Clean_eta;
 
-  //Taken from Irenes NLOWeightsModule https://github.com/Diboson3D/UHHNtupleConverter/blob/master/include/NLOweightsModule.h
-  std::unique_ptr<TFile> NLOWeightsFile;
-  std::unique_ptr<TH1F> h_kfactor;
-  std::unique_ptr<TH1F> h_ewcorr; //nominal weight
-  uhh2::Event::Handle<float>  m_o_kfactor;
 };
 
 
@@ -88,11 +85,6 @@ PreSelModule::PreSelModule(Context & ctx){
 
   // Set some boolians
   is_mc = ctx.get("dataset_type") == "MC";
-
-  std::string version = ctx.get("dataset_version");
-  is_WSample = version.find("WJets") != std::string::npos;
-  is_ZSample = version.find("ZJets") != std::string::npos;
-  matchV = (version.find("WMatched") != std::string::npos || version.find("ZMatched") != std::string::npos) && (is_WSample || is_ZSample);
 
   const std::string& channel = ctx.get("channel", "");
   if     (channel == "top") isTopSel = true;
@@ -156,8 +148,6 @@ PreSelModule::PreSelModule(Context & ctx){
   MET_sel.reset(new METCut(50., 100000.));
   if(isTopSel)    TRIGGER_sel.reset(new TriggerSelection("HLT_Mu50_v*"));
   else if(isWSel) TRIGGER_sel.reset(new AndSelection(ctx));
-  MatchV_sel.reset(new MatchingSelection(ctx, is_WSample ? MatchingSelection::oIsMergedGenW : MatchingSelection::oIsMergedGenZ ));
-
   bjetCloseToLepton_sel.reset(new NMuonBTagSelection(1, 999, DeepJetBTag(DeepJetBTag::WP_MEDIUM) ));
 
   // HISTOGRAMS
@@ -167,13 +157,9 @@ PreSelModule::PreSelModule(Context & ctx){
   hists.emplace_back(new JetHists(ctx, "JetHists"));
   hists.emplace_back(new TopJetHists(ctx, "TopJetHists"));
 
-  if(isWSel && (is_WSample || is_ZSample) ){
-    std::string NLOWeightsFilename = ctx.get("NLOweightsDir")+(is_WSample ? "/WJets" : "/ZJets") + "Corr.root";
-    NLOWeightsFile.reset(TFile::Open(locate_file(NLOWeightsFilename).c_str()));
-    h_kfactor.reset((TH1F*) NLOWeightsFile->Get("kfactor"));
-    h_ewcorr.reset((TH1F*) NLOWeightsFile->Get("ewcorr"));
-    m_o_kfactor = ctx.declare_event_output<float>("kfactor");
-  }
+  ctx.undeclare_all_event_output();
+
+  writer.reset(new WriteOutput(ctx));
 }
 
 bool PreSelModule::process(Event & event) {
@@ -227,31 +213,6 @@ bool PreSelModule::process(Event & event) {
   if(!N_AK8_500_sel->passes(event)) passW = false;
   if(!RHO_sel->passes(event)) passW = false;
 
-  if(isWSel && (is_WSample || is_ZSample) && passW){
-    bool Vmatched = MatchV_sel->passes_matching(event,event.topjets->at(0));
-    if(matchV) passW = Vmatched;
-    else passW = !Vmatched;
-    
-    //get k-factors and save to tree
-    const GenJet * closest_genjet_1 = closestParticle(event.topjets->at(0), *event.genjets);
-    const GenJet * closest_genjet_2 = event.topjets->size() > 1 ? closestParticle(event.topjets->at(1), *event.genjets) : closest_genjet_1;      
-    float gen_pt_1 = closest_genjet_1 ? closest_genjet_1->pt() : -9999;
-    float gen_pt_2 = closest_genjet_2 ? closest_genjet_2->pt() : -9999;
-    float probe_jet_pt = Vmatched ? gen_pt_1 : gen_pt_2;
-
-    if( probe_jet_pt > 3000 ) probe_jet_pt = 2800;
-    if( probe_jet_pt < 200 ) probe_jet_pt = 205;
-    float binw_k = h_kfactor->GetXaxis()->FindBin(probe_jet_pt);
-    float w_k = h_kfactor->GetBinContent(binw_k);
-
-    if( probe_jet_pt > 1205 ) probe_jet_pt = 1205;
-    if( probe_jet_pt < 160 ) probe_jet_pt = 165;
-    float binw_ew = h_ewcorr->GetXaxis()->FindBin(probe_jet_pt);
-    float w_ew = h_ewcorr->GetBinContent(binw_ew);
-
-    float kfactor = w_k * w_ew;
-    event.set(m_o_kfactor, kfactor);
-  }
 
   // FILL HISTS
   if(passTOP && isTopSel)  for(auto & h: hists) h->fill(event);
@@ -259,7 +220,10 @@ bool PreSelModule::process(Event & event) {
 
   // DECIDE TO STORE EVENT
   if(!passTOP && !passW) return false;
-  else return true;
+  else{
+    writer->process(event);
+    return true;
+  }
 }
 
 // as we want to run the ExampleCycleNew directly with AnalysisModuleRunner,
