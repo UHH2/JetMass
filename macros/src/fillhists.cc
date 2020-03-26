@@ -3,14 +3,17 @@
 using namespace std;
 
 void fill_hists_top(TString dir, TString process);
-void fill_hists_W(TString dir, TString process);
+void fill_hists_W(TString dir, TString process, int job_index_, int n_jobs_);
 bool passN2ddt(double n2, double pt, double mass);
+double derive_kfactor(double pt);
 
 void read_grid(TString gfilename);
 
 TFile* outputFile;
 vector<TString> handlenames;
 TH2F* ddtmap;
+TH1F *h_kfactor, *h_ewcorr;
+std::string NLOWeightsDir = "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/UHHNtupleConverter/NLOweights";
 
 
 
@@ -24,6 +27,14 @@ int main(int argc, char* argv[]){
     else if(strcmp(argv[1], "W") == 0) fill_top=false;
   }
 
+
+  int job_index = 1;
+  int n_jobs = 1;
+  if(argc > 2){
+    job_index = atoi(argv[2]);
+    n_jobs = atoi(argv[3]);
+  }
+  
   read_grid("../Histograms/grid.root");
 
   // read in ddtmap here
@@ -32,13 +43,19 @@ int main(int argc, char* argv[]){
   TFile * mapFile = new TFile(ddtMapFile);
   ddtmap = (TH2F*)mapFile->Get(ddtMapName);
   
-  TString outname = "Histograms.root";
+  TString outname;
+  if(n_jobs > 1){
+    outname.Form("workdir/Histograms_%i.root",job_index);
+    cout << outname << endl;
+  }else{
+    outname = "Histograms.root";
+  }
   outputFile = new TFile(outname,"recreate");
 
   TString histdir_W = "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/WMassTrees/merged/";
   TString histdir_top = "../Histograms/top/";
 
-  vector<TString> processes_W = {"Data", "W", "QCD", "Pseudo"};
+  vector<TString> processes_W = {"Data", "WMatched", "WUnmatched", "ZMatched", "ZUnmatched", "QCD", "Pseudo"};
   vector<TString> processes_top = {"Data", "TTbar", "SingleTop", "WJets", "other", "Pseudo"};
 
   vector<TFile*> files_W, files_top;
@@ -47,7 +64,7 @@ int main(int argc, char* argv[]){
     for(auto process: processes_top) fill_hists_top(histdir_top, process);
   }
   if(fill_W){
-    for(auto process: processes_W) fill_hists_W(histdir_W, process);
+    for(auto process: processes_W) fill_hists_W(histdir_W, process , job_index , n_jobs);
   }
 
 
@@ -150,9 +167,21 @@ void fill_hists_top(TString dir, TString process){
 //------------------------------------------------------
 //------------------------------------------------------
 
-void fill_hists_W(TString dir, TString process){
+void fill_hists_W(TString dir, TString process, int job_index = 1 , int n_jobs = 1){
+  // read root-file with k-factors for VJets samples
+  if(process.Contains("W") || process.Contains("Z")){
+    std::string NLOWeightsFilename = NLOWeightsDir + (std::string)(process.Contains("W") ? "/WJets" : "/ZJets") + "Corr.root";
+    TFile * NLOWeightsFile = new TFile(NLOWeightsFilename.c_str());
+    if(h_kfactor) h_kfactor->Reset();
+    h_kfactor = (TH1F*) NLOWeightsFile->Get("kfactor");
+    if(h_ewcorr) h_ewcorr->Reset();
+    h_ewcorr = (TH1F*) NLOWeightsFile->Get("ewcorr");
+  }
+  
+  TString process_file_name = TString(process);
+  process_file_name.ReplaceAll("Matched","").ReplaceAll("Unmatched","");
   cout << "filling hists for " << process << " (W) ..." << endl;
-  TFile *file = new TFile(dir+process+".root");
+  TFile *file = new TFile(dir+process_file_name+".root");
   TTree *tree = (TTree *) file->Get("AnalysisTree");
 
   // creat a dummy hist for mjet
@@ -177,7 +206,8 @@ void fill_hists_W(TString dir, TString process){
   }
 
   // declare variables
-  double weight, mjet, pt, n2;
+  double weight, mjet, pt, n2,genjet_V_pt;
+  bool matchedV;
   vector<vector<double>*> mjet_variations;
   mjet_variations.resize(handlenames.size());
 
@@ -187,6 +217,8 @@ void fill_hists_W(TString dir, TString process){
   tree->SetBranchAddress("mjet",&mjet);
   tree->SetBranchAddress("pt",&pt);
   tree->SetBranchAddress("N2",&n2);
+  tree->SetBranchAddress("matchedV",&matchedV);
+  tree->SetBranchAddress("genjetpt",&genjet_V_pt);
 
   if(process != "Data"){
     for(unsigned int i=0; i<handlenames.size(); i++){
@@ -214,21 +246,34 @@ void fill_hists_W(TString dir, TString process){
   tree->SetBranchStatus("*",1);
 
   // loop over tree
-  for(Int_t ievent=0; ievent < tree->GetEntriesFast(); ievent++) {
+  int n_events_tree = tree->GetEntriesFast();
+  int events_per_job = (int)(n_events_tree / n_jobs);
+  int start_event = n_jobs == 1 ? 0 : job_index * events_per_job;
+  int end_event = n_jobs == 1 ? n_events_tree : start_event + events_per_job;
+  end_event = end_event > n_events_tree ? n_events_tree : end_event;
+  
+  for(Int_t ievent=start_event; ievent < end_event; ievent++) {
     if(tree->GetEntry(ievent)<=0) break;
-    if(ievent % 10000 == 0) cout << "\r processing Event ("<< ievent << "/" << tree->GetEntriesFast() << ")"<< flush;
+    if(n_jobs==1 && ievent % 10000 == 0) cout << "\r processing Event ("<< ievent << "/" << end_event << ")"<< flush;
     // loop over pt bins
     for(int ptbin=0; ptbin<ptbins.size()-1; ptbin++){
       if(ptbins[ptbin] == -1 || (pt > ptbins[ptbin] && pt < ptbins[ptbin+1]) ){
+        bool pass_N2ddt = passN2ddt(n2, pt, mjet);
+        if(process.Contains("Matched") && (! matchedV)) continue;
+        if(process.Contains("Unmatched") && (matchedV)) continue;
+        if(process.Contains("W") || process.Contains("Z")){
+          double kfactor = derive_kfactor(genjet_V_pt);
+          weight *= kfactor;
+        }
         // fill nominal hists
-        if(passN2ddt(n2, pt, mjet)) h_mjet_nominal_pass[ptbin]->Fill(mjet, weight);
+        if(pass_N2ddt) h_mjet_nominal_pass[ptbin]->Fill(mjet, weight);
         else                        h_mjet_nominal_fail[ptbin]->Fill(mjet, weight);
 
         // mjet variations
         if(process != "Data"){
           for(int i=0; i<h_mjet_vars_pass[ptbin].size(); i++){
             for(int j=0; j<h_mjet_vars_pass[ptbin][i].size(); j++){
-              if(passN2ddt(n2, pt, mjet)) h_mjet_vars_pass[ptbin][i][j]->Fill(mjet_variations[i]->at(j), weight);
+              if(pass_N2ddt) h_mjet_vars_pass[ptbin][i][j]->Fill(mjet_variations[i]->at(j), weight);
               else                        h_mjet_vars_fail[ptbin][i][j]->Fill(mjet_variations[i]->at(j), weight);
             }
           }
@@ -236,6 +281,7 @@ void fill_hists_W(TString dir, TString process){
       }
     }
   }
+  cout << endl;
 
   // write hists
   outputFile->cd();
@@ -313,6 +359,24 @@ bool passN2ddt(double n2, double pt, double mass){
   return pass;
 }
 
-// double derive_kfactor(double pt){
+double derive_kfactor(double gen_pt){
 
-// }
+  double kfactor_pt = gen_pt;
+  double ewk_pt = gen_pt;
+  
+  if( kfactor_pt > 3000 ) kfactor_pt = 2800;
+  if( kfactor_pt < 200 ) kfactor_pt = 205;
+
+  float kfactor_bin = h_kfactor->GetXaxis()->FindBin(ewk_pt);
+
+  float w= h_kfactor->GetBinContent(kfactor_bin);
+
+  if( ewk_pt > 1205 ) ewk_pt = 1205;
+  if( ewk_pt < 160 ) ewk_pt = 165;
+
+  float ewk_bin = h_ewcorr->GetXaxis()->FindBin(ewk_pt);
+
+  float w_ew= h_ewcorr->GetBinContent(ewk_bin);
+
+  return w * w_ew; 
+}
