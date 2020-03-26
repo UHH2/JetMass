@@ -3,7 +3,7 @@
 using namespace std;
 
 void fill_hists_top(TString dir, TString process);
-void fill_hists_W(TString dir, TString process);
+void fill_hists_W(TString dir, TString process, int job_index_, int n_jobs_);
 bool passN2ddt(double n2, double pt, double mass);
 double derive_kfactor(double pt);
 
@@ -27,6 +27,14 @@ int main(int argc, char* argv[]){
     else if(strcmp(argv[1], "W") == 0) fill_top=false;
   }
 
+
+  int job_index = 1;
+  int n_jobs = 1;
+  if(argc > 2){
+    job_index = atoi(argv[2]);
+    n_jobs = atoi(argv[3]);
+  }
+  
   read_grid("../Histograms/grid.root");
 
   // read in ddtmap here
@@ -35,7 +43,13 @@ int main(int argc, char* argv[]){
   TFile * mapFile = new TFile(ddtMapFile);
   ddtmap = (TH2F*)mapFile->Get(ddtMapName);
   
-  TString outname = "Histograms.root";
+  TString outname;
+  if(n_jobs > 1){
+    outname.Form("workdir/Histograms_%i.root",job_index);
+    cout << outname << endl;
+  }else{
+    outname = "Histograms.root";
+  }
   outputFile = new TFile(outname,"recreate");
 
   TString histdir_W = "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/WMassTrees/merged/";
@@ -50,7 +64,7 @@ int main(int argc, char* argv[]){
     for(auto process: processes_top) fill_hists_top(histdir_top, process);
   }
   if(fill_W){
-    for(auto process: processes_W) fill_hists_W(histdir_W, process);
+    for(auto process: processes_W) fill_hists_W(histdir_W, process , job_index , n_jobs);
   }
 
 
@@ -153,7 +167,7 @@ void fill_hists_top(TString dir, TString process){
 //------------------------------------------------------
 //------------------------------------------------------
 
-void fill_hists_W(TString dir, TString process){
+void fill_hists_W(TString dir, TString process, int job_index = 1 , int n_jobs = 1){
   // read root-file with k-factors for VJets samples
   if(process.Contains("W") || process.Contains("Z")){
     std::string NLOWeightsFilename = NLOWeightsDir + (std::string)(process.Contains("W") ? "/WJets" : "/ZJets") + "Corr.root";
@@ -164,9 +178,10 @@ void fill_hists_W(TString dir, TString process){
     h_ewcorr = (TH1F*) NLOWeightsFile->Get("ewcorr");
   }
   
-  process.ReplaceAll("Matched","").ReplaceAll("Unmatched","");
+  TString process_file_name = TString(process);
+  process_file_name.ReplaceAll("Matched","").ReplaceAll("Unmatched","");
   cout << "filling hists for " << process << " (W) ..." << endl;
-  TFile *file = new TFile(dir+process+".root");
+  TFile *file = new TFile(dir+process_file_name+".root");
   TTree *tree = (TTree *) file->Get("AnalysisTree");
 
   // creat a dummy hist for mjet
@@ -231,9 +246,15 @@ void fill_hists_W(TString dir, TString process){
   tree->SetBranchStatus("*",1);
 
   // loop over tree
-  for(Int_t ievent=0; ievent < tree->GetEntriesFast(); ievent++) {
+  int n_events_tree = tree->GetEntriesFast();
+  int events_per_job = (int)(n_events_tree / n_jobs);
+  int start_event = n_jobs == 1 ? 0 : job_index * events_per_job;
+  int end_event = n_jobs == 1 ? n_events_tree : start_event + events_per_job;
+  end_event = end_event > n_events_tree ? n_events_tree : end_event;
+  
+  for(Int_t ievent=start_event; ievent < end_event; ievent++) {
     if(tree->GetEntry(ievent)<=0) break;
-    if(ievent % 10000 == 0) cout << "\r processing Event ("<< ievent << "/" << tree->GetEntriesFast() << ")"<< flush;
+    if(n_jobs==1 && ievent % 10000 == 0) cout << "\r processing Event ("<< ievent << "/" << end_event << ")"<< flush;
     // loop over pt bins
     for(int ptbin=0; ptbin<ptbins.size()-1; ptbin++){
       if(ptbins[ptbin] == -1 || (pt > ptbins[ptbin] && pt < ptbins[ptbin+1]) ){
