@@ -54,7 +54,7 @@
 
 <!--
 <ConfigParse NEventsBreak="50000" LastBreak="0" FileSplit="0" AutoResubmit="1"/>
-<ConfigSGE RAM="4" DISK="2" Mail="steffen.albrecht@desy.de" Notification="as" Workdir="workdir_WMass"/>
+<ConfigSGE RAM="2" DISK="2" Mail="steffen.albrecht@desy.de" Notification="as" Workdir="workdir_WMass"/>
 -->
 
 <JobConfiguration JobName="WMassJob" OutputLevel="INFO">
@@ -124,23 +124,22 @@
           MMb
            `bood'
   -->
-
-  <InputData Version="MC_QCD_Pt_15to30_2017v2" Lumi="0.03152592029" Type="MC" NEventsMax="-1" Cacheable="False">
+  <InputData Version="MC_QCD_Pt_15to30_2017v2_buggyPU" Lumi="0.03152592029" Type="MC" NEventsMax="-1" Cacheable="False">
     &QCD_Pt_15to30;
     <InputTree Name="AnalysisTree"/>
   </InputData>
 
-  <InputData Version="MC_QCD_Pt_30to50_2017v2" Lumi="0.3320931712" Type="MC" NEventsMax="-1" Cacheable="False">
+  <InputData Version="MC_QCD_Pt_30to50_2017v2_buggyPU" Lumi="0.3320931712" Type="MC" NEventsMax="-1" Cacheable="False">
     &QCD_Pt_30to50;
     <InputTree Name="AnalysisTree"/>
   </InputData>
 
-  <InputData Version="MC_QCD_Pt_50to80_2017v2" Lumi="2.433724921" Type="MC" NEventsMax="-1" Cacheable="False">
+  <InputData Version="MC_QCD_Pt_50to80_2017v2_buggyPU" Lumi="2.433724921" Type="MC" NEventsMax="-1" Cacheable="False">
     &QCD_Pt_50to80;
     <InputTree Name="AnalysisTree"/>
   </InputData>
 
-  <InputData Version="MC_QCD_Pt_80to120_2017v2" Lumi="24.14222057" Type="MC" NEventsMax="-1" Cacheable="False">
+  <InputData Version="MC_QCD_Pt_80to120_2017v2_buggyPU" Lumi="24.14222057" Type="MC" NEventsMax="-1" Cacheable="False">
     &QCD_Pt_80to120;
     <InputTree Name="AnalysisTree"/>
   </InputData>
@@ -150,12 +149,12 @@
     <InputTree Name="AnalysisTree"/>
   </InputData>
 
-  <InputData Version="MC_QCD_Pt_170to300_2017v2" Lumi="542.1802122" Type="MC" NEventsMax="-1" Cacheable="False">
+  <InputData Version="MC_QCD_Pt_170to300_2017v2_buggyPU" Lumi="542.1802122" Type="MC" NEventsMax="-1" Cacheable="False">
     &QCD_Pt_170to300;
     <InputTree Name="AnalysisTree"/>
   </InputData>
 
-  <InputData Version="MC_QCD_Pt_300to470_2017v2" Lumi="16285.567" Type="MC" NEventsMax="-1" Cacheable="False">
+  <InputData Version="MC_QCD_Pt_300to470_2017v2_buggyPU" Lumi="16285.567" Type="MC" NEventsMax="-1" Cacheable="False">
     &QCD_Pt_300to470;
     <InputTree Name="AnalysisTree"/>
   </InputData>
@@ -165,7 +164,7 @@
     <InputTree Name="AnalysisTree"/>
   </InputData>
 
-  <InputData Version="MC_QCD_Pt_600to800_2017v2" Lumi="821399.1503" Type="MC" NEventsMax="-1" Cacheable="False">
+  <InputData Version="MC_QCD_Pt_600to800_2017v2_buggyPU" Lumi="821399.1503" Type="MC" NEventsMax="-1" Cacheable="False">
     &QCD_Pt_600to800;
     <InputTree Name="AnalysisTree"/>
   </InputData>
@@ -175,27 +174,27 @@
     <InputTree Name="AnalysisTree"/>
   </InputData>
 
-  <InputData Version="MC_QCD_Pt_1000to1400_2017v2" Lumi="4747129.947" Type="MC" NEventsMax="-1" Cacheable="False">
+  <InputData Version="MC_QCD_Pt_1000to1400_2017v2_buggyPU" Lumi="4724670.053" Type="MC" NEventsMax="-1" Cacheable="False">
     &QCD_Pt_1000to1400;
     <InputTree Name="AnalysisTree"/>
   </InputData>
 
-  <InputData Version="MC_QCD_Pt_1400to1800_2017v2" Lumi="17461196.55" Type="MC" NEventsMax="-1" Cacheable="False">
+  <InputData Version="MC_QCD_Pt_1400to1800_2017v2_buggyPU" Lumi="17461196.55" Type="MC" NEventsMax="-1" Cacheable="False">
     &QCD_Pt_1400to1800;
     <InputTree Name="AnalysisTree"/>
   </InputData>
 
-  <InputData Version="MC_QCD_Pt_1800to2400_2017v2" Lumi="33512217.77" Type="MC" NEventsMax="-1" Cacheable="False">
+  <InputData Version="MC_QCD_Pt_1800to2400_2017v2_buggyPU" Lumi="33512217.77" Type="MC" NEventsMax="-1" Cacheable="False">
     &QCD_Pt_1800to2400;
     <InputTree Name="AnalysisTree"/>
   </InputData>
 
-  <InputData Version="MC_QCD_Pt_2400to3200_2017v2" Lumi="365161697.2" Type="MC" NEventsMax="-1" Cacheable="False">
+  <InputData Version="MC_QCD_Pt_2400to3200_2017v2_buggyPU" Lumi="365161697.2" Type="MC" NEventsMax="-1" Cacheable="False">
     &QCD_Pt_2400to3200;
     <InputTree Name="AnalysisTree"/>
   </InputData>
 
-  <InputData Version="MC_QCD_Pt_3200toInf_2017v2" Lumi="7030396767" Type="MC" NEventsMax="-1" Cacheable="False">
+  <InputData Version="MC_QCD_Pt_3200toInf_2017v2_buggyPU" Lumi="7030396767" Type="MC" NEventsMax="-1" Cacheable="False">
     &QCD_Pt_3200toInf;
     <InputTree Name="AnalysisTree"/>
   </InputData>
@@ -322,10 +321,37 @@
 
 
       <!-- myMap 5% mistagrate, smoothed by gaussian-kernel with sigma=1.0  using regular JetMass-->
-      <Item Name="ddtMapFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/macros/scripts/maps/QCD_2017_smooth_gaus1p00sigma.root" />
-      <Item Name="N2ddtMapName" Value="N2_v_pT_v_rho_0p05_smooth_gaus1p00sigma_maps_cleaner"/>
-      <Item Name="DAK8ddtMapName" Value="DeepBoosted_WvsQCD_v_pT_v_rho_0p95_smooth_gaus1p00sigma_maps_cleaner"/>
+      <!-- <Item Name="ddtMapFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/macros/scripts/maps/QCD_2017.root" /> -->
+      <!-- <Item Name="N2ddtMapName" Value="N2_v_pT_v_rho_0p05_maps_cleaner"/> -->
+      <!-- <Item Name="DAK8ddtMapName" Value="DeepBoosted_WvsQCD_v_pT_v_rho_0p85_maps_cleaner"/> -->
 
+      <!-- myMap 5% mistagrate, smoothed by gaussian-kernel with sigma=1.0  using regular JetMass-->
+      <!-- <Item Name="ddtMapFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/macros/scripts/maps/QCD_2017_smooth_gaus1p00sigma.root" /> -->
+      <!-- <Item Name="N2ddtMapName" Value="N2_v_pT_v_rho_0p05_smooth_gaus1p00sigma_maps_cleaner"/> -->
+      <!-- <!-\- <Item Name="DAK8ddtMapName" Value="DeepBoosted_WvsQCD_v_pT_v_rho_0p95_smooth_gaus1p00sigma_maps_cleaner"/> -\-> -->
+      <!-- <Item Name="DAK8ddtMapName" Value="DeepBoosted_WvsQCD_v_pT_v_rho_0p9_smooth_gaus1p00sigma_maps_cleaner"/> -->
+
+      <!-- myMap 5% mistagrate, smoothed by gaussian-kernel with sigma=2.0  using regular JetMass-->
+      <!-- <Item Name="ddtMapFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/macros/scripts/maps/QCD_2017_smooth_gaus2p00sigma.root" /> -->
+      <!-- <Item Name="N2ddtMapName" Value="N2_v_pT_v_rho_0p05_smooth_gaus2p00sigma_maps_cleaner"/> -->
+      <!-- <Item Name="DAK8ddtMapName" Value="DeepBoosted_WvsQCD_v_pT_v_rho_0p9_smooth_gaus2p00sigma_maps_cleaner"/> -->
+
+      <!-- <!-\- myMap X% mistagrate, smoothed by gaussian-kernel with sigma=4.0  using regular JetMass -\-> -->
+      <!-- <Item Name="ddtMapFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/macros/scripts/maps/QCD_2017_smooth_gaus4p00sigma.root" /> -->
+      <!-- <Item Name="N2ddtMapName" Value="N2_v_pT_v_rho_0p05_smooth_gaus4p00sigma_maps_cleaner"/> -->
+      <!-- <Item Name="DAK8ddtMapName" Value="DeepBoosted_WvsQCD_v_pT_v_rho_0p85_smooth_gaus4p00sigma_maps_cleaner"/> -->
+
+      <!-- <!-\- myMap X% mistagrate, smoothed by gaussian-kernel with sigma=4.0  using regular JetMass -\-> -->
+      <!-- <Item Name="ddtMapFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/macros/scripts/maps/QCD_2017_smooth_gaus4p00sigma.root" /> -->
+      <!-- <Item Name="N2ddtMapName" Value="N2_v_pT_v_rho_0p05_smooth_gaus4p00sigma_maps_cleaner"/> -->
+      <!-- <Item Name="DAK8ddtMapName" Value="DeepBoosted_WvsQCD_v_pT_v_rho_0p85_smooth_gaus4p00sigma_maps_cleaner"/> -->
+
+      <!-- testing buggyPU mitigation X% mistagrate, smoothed by gaussian-kernel with sigma=4.0  using regular JetMass -->
+      <Item Name="ddtMapFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/macros/scripts/maps/fixedPU/QCD_2017_smooth_gaus4p00sigma.root" />
+      <Item Name="N2ddtMapName" Value="N2_v_pT_v_rho_0p05_smooth_gaus4p00sigma_maps_cleaner"/>
+      <Item Name="DAK8ddtMapName" Value="DeepBoosted_WvsQCD_v_pT_v_rho_0p85_smooth_gaus4p00sigma_maps_cleaner"/>
+
+      
       <!-- myMap 5% mistagrate, smoothed by gaussian-kernel with sigma=1.0  using PFParticlesMass-->
 <!--       <Item Name="ddtMapFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/macros/scripts/maps/QCD_Pt_2017_0p05_smooth_gaus1p00sigma.root" />
       <Item Name="ddtMapName" Value="N2_v_pT_v_rho_0p05_smooth_gaus1p00sigma_maps_cleaner_PFMass"/>
