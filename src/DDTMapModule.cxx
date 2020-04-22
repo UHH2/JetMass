@@ -58,6 +58,8 @@ private:
   bool is_mc;
 
   Double_t AK4_Clean_pT,AK4_Clean_eta,AK8_Clean_pT,AK8_Clean_eta;
+  bool is_buggyPU;
+
 };
 
 
@@ -67,7 +69,21 @@ DDTMapModule::DDTMapModule(Context & ctx){
   is_mc = ctx.get("dataset_type") == "MC";
 
   std::string version = ctx.get("dataset_version");
+  
+  is_buggyPU = ctx.get("dataset_version").find("buggyPU") != std::string::npos;
 
+  
+  if(is_buggyPU){
+    TString pu_file_path = (TString) ctx.get("dataset_version");
+    pu_file_path = pu_file_path.ReplaceAll("MC","");
+    pu_file_path = pu_file_path.ReplaceAll("_buggyPU","");
+    pu_file_path = pu_file_path.ReplaceAll("_test","");
+    pu_file_path = "common/data/2017/Pileup_QCD_PtBinned/MyMCPileupHistogram"+pu_file_path+".root";
+    ctx.set("pileup_directory",(std::string) pu_file_path);
+  }
+  std::cout << "reweighting mc pileup using " << ctx.get("pileup_directory")<<" as mc profile dir" <<std::endl;
+
+  
   // common modules
   common.reset(new CommonModules());
   common->init(ctx);
