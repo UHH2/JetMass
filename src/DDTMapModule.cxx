@@ -73,12 +73,12 @@ DDTMapModule::DDTMapModule(Context & ctx){
   common->init(ctx);
 
   mcSpikeKiller.reset(new MCLargeWeightKiller(ctx,
-                                              infinity, // maximum allowed ratio of leading reco jet pT / generator HT
-                                              infinity, // maximum allowed ratio of leading gen jet pT / generator HT
-                                              infinity, // maximum allowed ratio of leading reco jet pT / Q scale
-                                              2.5, // maximum allowed ratio of PU maximum pTHat / gen HT (ensures scale of PU < scale of hard interaction)
-                                              3, // maximum allowed ratio of leading reco jet pT / pTHat
-                                              3, // maximum allowed ratio of leading gen jet pT / pTHat
+                                              2, // maximum allowed ratio of leading reco jet pT / generator HT
+                                              2, // maximum allowed ratio of leading gen jet pT / generator HT
+                                              2, // maximum allowed ratio of leading reco jet pT / Q scale
+                                              2, // maximum allowed ratio of PU maximum pTHat / gen HT (ensures scale of PU < scale of hard interaction)
+                                              2, // maximum allowed ratio of leading reco jet pT / pTHat
+                                              2, // maximum allowed ratio of leading gen jet pT / pTHat
                                               "jets", // name of jet collection to be used
                                               "genjets" // name of genjet collection to be used
                         ));
@@ -118,13 +118,20 @@ bool DDTMapModule::process(Event & event) {
   assert(event.pfparticles);
   assert(event.genparticles);
 
+
+// Throw away events with NVTX in buggy area for buggy samples
+  if(is_buggyPU){
+    float n_true = event.genInfo->pileup_TrueNumInteractions();
+    if(n_true < 10. || n_true > 72.) return false;
+  }  
+
   
   // COMMON MODULES
   bool pass_common=common->process(event);
   if(!pass_common) return false;
   //Spikekiller
   if (is_mc){
-    if (!mcSpikeKiller->passes(event)) return false;
+    if(!mcSpikeKiller->passes(event)) return false;
   }
 
   
