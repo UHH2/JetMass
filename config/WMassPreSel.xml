@@ -43,6 +43,9 @@
 <!ENTITY ZJetsToQQ_HT800toInf SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/MC_ZJetsToQQ_HT800toInf_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
 
 
+<!ENTITY TTToHadronic SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v1/2017/MC_TTToHadronic_TuneCP5_13TeV-powheg-pythia8.xml">
+<!ENTITY TTToSemiLeptonic SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v1/2017/MC_TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8.xml">
+
 
 ]>
 
@@ -96,7 +99,21 @@
   <!--   <InputTree Name="AnalysisTree"/> -->
   <!--   <OutputTree Name="AnalysisTree"/> -->
   <!-- </InputData> -->
-  
+
+  <!-- <InputData Version="MC_TTToHadronic_2017v2_test" Lumi="70591.52368" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   <In FileName="/pnfs/desy.de/cms/tier2/store/user/pgunnell/RunII_102X_v1/TTToHadronic_TuneCP5_13TeV-powheg-pythia8/crab_TTToHadronic_TuneCP5_13TeV-powheg-pythia8/190424_081549/0002/Ntuple_2223.root" Lumi="0.0"/> -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!--   <OutputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
+
+  <!-- <InputData Version="MC_TTToSemileptonic_2017v2_test" Lumi="70591.52368" Type="MC" NEventsMax="-1" Cacheable="False"> -->
+  <!--   <In FileName="/pnfs/desy.de/cms/tier2/store/user/pgunnell/RunII_102X_v1/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/crab_TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/190505_200110/0004/Ntuple_4484.root" Lumi="0.0"/> -->
+  <!--   <InputTree Name="AnalysisTree"/> -->
+  <!--   <OutputTree Name="AnalysisTree"/> -->
+  <!-- </InputData> -->
+
+
+
   <!--
     `7MM"""Yb.            mm
       MM    `Yb.          MM
@@ -313,7 +330,30 @@
     <InputTree Name="AnalysisTree"/>
     <OutputTree Name="AnalysisTree"/>
   </InputData>
+
+  <!--
+                             ,,
+  MMP""MM""YMM MMP""MM""YMM *MM
+  P'   MM   `7 P'   MM   `7  MM
+       MM           MM       MM,dMMb.   ,6"Yb.  `7Mb,od8
+       MM           MM       MM    `Mb 8)   MM    MM' "'
+       MM           MM       MM     M8  ,pm9MM    MM
+       MM           MM       MM.   ,M9 8M   MM    MM
+     .JMML.       .JMML.     P^YbmdP'  `Moo9^Yo..JMML.
+  -->
   
+  <InputData Version="MC_TTToHadronic_2017v2" Lumi="109490.4712" Type="MC" NEventsMax="-1" Cacheable="False">
+    &TTToHadronic;
+    <InputTree Name="AnalysisTree"/>
+    <OutputTree Name="AnalysisTree"/>
+  </InputData>
+
+    <InputData Version="MC_TTToSemiLeptonic_2017v2" Lumi="35279949.78" Type="MC" NEventsMax="-1" Cacheable="False">
+    &TTToSemiLeptonic;
+    <InputTree Name="AnalysisTree"/>
+    <OutputTree Name="AnalysisTree"/>
+  </InputData>
+
   <!-- ================================================================================================================================== -->
   <!-- ====================================================== User Config =============================================================== -->
   <!-- ================================================================================================================================== -->
