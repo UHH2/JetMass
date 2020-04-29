@@ -1,5 +1,7 @@
 import ROOT
+import os
 from ROOT import gROOT,gStyle
+import numpy as np
 gROOT.SetBatch(True)
 gStyle.SetOptStat(0)
 gStyle.SetOptFit(0)
@@ -24,6 +26,14 @@ gStyle.SetNdivisions(506, "XYZ")
 gStyle.SetLegendBorderSize(0)
 
 ratio_plot = True
+
+min_MSD = 0
+max_MSD = 496
+# n_MSD = 62
+n_MSD = -1
+new_binning = np.linspace(min_MSD,max_MSD,n_MSD+1) if n_MSD > 0 else None
+rebin_MSD = n_MSD > 0
+
 
 leftMargin = 0.14
 logY=False
@@ -119,28 +129,40 @@ def setup_pads(c):
         c.SetLogx()
     return plotpad,ratiopad
 
-def plot_var(variable,useMC):
-    var_str = {'msd':['Mass_central','m_{SD}'],'pt':['Pt_central_jet','p_{T}'],'rho':['Rho_central','#rho']}
+def plot_var(hist_file,dir_suffix,variable,useMC):
+
+
+    f_hists = ROOT.TFile(hist_file,'read')
+
+    # var_str = {'msd':['Mass_central','m_{SD}'],'pt':['Pt_central_jet','p_{T}'],'rho':['Rho_central','#rho']}
+    # var_str = {'msd':['Mass_central_jet','m_{SD}'],'pt':['Pt_central_jet','p_{T}'],'rho':['Rho_central','#rho']}
+    var_str = {'msd':['mjet','m_{SD}'],'pt':['Pt_central_jet','p_{T}'],'rho':['Rho_central','#rho']}
     ptbins =[500,550,600,675,800,1200,99999]
     for i in range(len(ptbins)-1):
         tagger = 'N2DDT'
         # tagger = 'DAK8DDT'
-        pt_bin_str = ('pt%iTo%i'%(ptbins[i],ptbins[i+1])).replace('99999','Inf')
-        hist_name='JetMass_%s_'%tagger+pt_bin_str+'_%s/'+var_str[variable][0]
+        pt_bin_str = ('%ito%i'%(ptbins[i],ptbins[i+1])).replace('99999','Inf')
+        hist_name='W_%s__'+var_str[variable][0]+'_'+pt_bin_str+'_%s'
         if(useMC): 
-            h_pass = f_qcd.Get(hist_name%'pass')
-            h_fail = f_qcd.Get(hist_name%'fail')       
+            h_pass = f_hists.Get(hist_name%('QCD','pass'))
+            h_fail = f_hists.Get(hist_name%('QCD','fail'))       
         else:
-            h_pass = f_data.Get(hist_name%'pass')
-            h_pass.Add(f_wmatched.Get(hist_name%'pass'),-1)
-            h_pass.Add(f_zmatched.Get(hist_name%'pass'),-1)
-            h_pass.Add(f_wunmatched.Get(hist_name%'pass'),-1)
-            h_pass.Add(f_zunmatched.Get(hist_name%'pass'),-1)
-            h_fail = f_data.Get(hist_name%'fail')
-            h_fail.Add(f_wmatched.Get(hist_name%'fail'),-1)
-            h_fail.Add(f_wunmatched.Get(hist_name%'fail'),-1)
-            h_fail.Add(f_zmatched.Get(hist_name%'fail'),-1)
-            h_fail.Add(f_zunmatched.Get(hist_name%'fail'),-1)
+            h_pass = f_hists.Get(hist_name%('Data','pass'))
+            h_pass.Add(f_hists.Get(hist_name%('WMatched','pass')),-1)
+            h_pass.Add(f_hists.Get(hist_name%('ZMatched','pass')),-1)
+            h_pass.Add(f_hists.Get(hist_name%('WUnmatched','pass')),-1)
+            h_pass.Add(f_hists.Get(hist_name%('ZUnmatched','pass')),-1)
+            h_pass.Add(f_hists.Get(hist_name%('TTbar','pass')),-1)
+            h_fail = f_hists.Get(hist_name%('Data','fail'))
+            h_fail.Add(f_hists.Get(hist_name%('WMatched','fail')),-1)
+            h_fail.Add(f_hists.Get(hist_name%('ZMatched','fail')),-1)
+            h_fail.Add(f_hists.Get(hist_name%('WUnmatched','fail')),-1)
+            h_fail.Add(f_hists.Get(hist_name%('ZUnmatched','fail')),-1)
+            h_fail.Add(f_hists.Get(hist_name%('TTbar','fail')),-1)
+
+        if(rebin_MSD):
+            h_pass = h_pass.Rebin(n_MSD,"",new_binning)
+            h_fail = h_fail.Rebin(n_MSD,"",new_binning)
             
         norm_pass = h_pass.Integral()
         norm_fail = h_fail.Integral()
@@ -162,15 +184,16 @@ def plot_var(variable,useMC):
         h_fail.GetYaxis().SetTitle('#DeltaN/N')
         y_range_max = max(0.03,1.1*h_pass.GetMaximum())
         h_fail.GetYaxis().SetRangeUser(0,y_range_max)
-        legend.AddEntry(h_pass,'QCD pass %s'%('' if useMC else '(Data-W-Z)'),'l')
-        legend.AddEntry(h_fail,'QCD fail %s'%('' if useMC else '(Data-W-Z)'),'l')
+        legend.AddEntry(h_pass,'%s pass'%('QCD' if useMC else '(Data-W-Z-TTbar)'),'l')
+        legend.AddEntry(h_fail,'%s fail'%('QCD' if useMC else '(Data-W-Z-TTbar)'),'l')
         
         h_fail.Draw('H')
         h_pass.Draw('HSAME')
         latex = ROOT.TLatex()
         latex.SetNDC(1)
         latex.SetTextSize(20)
-        latex.DrawLatex(0.20,0.80,"%.0f GeV #leq p_{T} < %.0f GeV"%(ptbins[i],ptbins[i+1]))
+        latex_str = ("%.0f GeV #leq p_{T} < %.0f GeV"%(ptbins[i],ptbins[i+1])).replace('99999','Inf')
+        latex.DrawLatex(0.20,0.80,latex_str)
         
         legend.Draw('SAME')
 
@@ -196,19 +219,18 @@ def plot_var(variable,useMC):
         plus10percent.Draw()
         minus10percent.Draw()
 
+        if not os.path.isdir('../../Plots/'+dir_suffix):
+            os.makedirs('../../Plots/'+dir_suffix)
+
+        c.SaveAs('../../Plots/'+dir_suffix+'/%s_shape_comp_%s%s.pdf'%(variable,pt_bin_str,"" if useMC else "_fromData"))
+
+def plot_dir(hist_file,dir_name):
+
+    for useMC in [True,False]:
+        # for variable in ["msd","pt",'rho']:
+        for variable in ["msd"]:
+            plot_var(hist_file,dir_name,variable,useMC)
         
-        c.SaveAs('../../Plots/'+dir_suffix+'%s_shape_comp_%s%s.pdf'%(variable,pt_bin_str,"" if useMC else "_fromData"))
+if(__name__ == '__main__'):
 
-# dir_suffix = '/PFMassMap/'
-dir_suffix = ''
-
-f_qcd = ROOT.TFile('../../Histograms/W/'+dir_suffix+'QCD.root','read')
-f_data = ROOT.TFile('../../Histograms/W/'+dir_suffix+'Data.root','read')
-f_wmatched = ROOT.TFile('../../Histograms/W/'+dir_suffix+'WMatched.root','read')
-f_wunmatched = ROOT.TFile('../../Histograms/W/'+dir_suffix+'WUnmatched.root','read')
-f_zmatched = ROOT.TFile('../../Histograms/W/'+dir_suffix+'ZMatched.root','read')
-f_zunmatched = ROOT.TFile('../../Histograms/W/'+dir_suffix+'ZUnmatched.root','read')
-
-for useMC in [True,False]:
-    for variable in ["msd","pt",'rho']:
-        plot_var(variable,useMC)
+    plot_dir('../Histograms.root','pass_fail_shapes')
