@@ -202,16 +202,18 @@ def jet_mass_producer(configs=None):
                 # data_hist = data_hist.Rebin(len(msd_bins)-1, data_hist.GetName() + "_" + channel_name, msd_bins)
 
             ch.setObservation(data_hist)
-            if(do_qcd_estimation):
+            if(do_qcd_estimation and 'w' in channel_name.lower()):
                 ch.mask = validbins[np.where(pt_bins==float(channel_name.split('Pt')[-1]))[0][0]]
 
-    if(do_qcd_estimation):
+    if(do_qcd_estimation and 'w' in channel_name.lower()):
         #QCD TF
-        tf_params = rl.BernsteinPoly('tf_params', (2,2), ['pt','rho'], limits = (0,10))
+        tf_params = rl.BernsteinPoly('tf_params', (3,3), ['pt','rho'], limits = (0,10))
         print('Using QCD efficiency (N2-ddt) of %.2f%% to scale initial QCD in pass region'%(qcd_eff*100))
         tf_params = qcd_eff * tf_params(ptscaled,rhoscaled)
         
         for channel_name, config in channels.items():
+            if('w' not in channel_name.lower()):
+                continue
             print(channel_name,'qcd estimation')
             fail_ch = model[channel_name + 'fail']
             pass_ch = model[channel_name + 'pass']
