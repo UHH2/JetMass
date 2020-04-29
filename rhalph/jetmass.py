@@ -151,7 +151,7 @@ def jet_mass_producer(configs=None):
                     continue
 
                 #specify if sample is signal or background type
-                sample_type = rl.Sample.SIGNAL if sample_name == config['signal'] else rl.Sample.BACKGROUND
+                sample_type = rl.Sample.SIGNAL if sample_name in config['signal'] else rl.Sample.BACKGROUND
                 sample_file = ROOT.TFile(hist_location + '/' + sample_name + '.root','READ')
                 sample_hist = sample_file.Get(hist_dir + '/' + variable + '_central')
 
