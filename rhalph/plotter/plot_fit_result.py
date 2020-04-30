@@ -36,6 +36,8 @@ colors = {
     'ZMatched':800,
     'SingleTop':800,
     'TTbar':810,
+    'TTbar_Hadronic':810,
+    'TTbar_SemiLeptonic':804,
     'WJets':413,
     'other':867
 }
@@ -143,7 +145,7 @@ def setup_pads(c):
         c.SetLogx()
     return plotpad,ratiopad
 
-def plot_fit_result(config={'ModelName':'WMassModel'}):
+def plot_fit_result(config={'ModelName':'WMassModel'},logY=False):
     f_shapes = ROOT.TFile(config['ModelName']+"/fit_shapes.root","READ")
     ROOT.TH1.AddDirectory(0)
 
@@ -181,20 +183,31 @@ def plot_fit_result(config={'ModelName':'WMassModel'}):
                 #     print('max:',s_sig.GetMaximum())
                 shapes_background = [f_shapes.Get(hist_dir+'/'+background) for background in backgrounds]
 
+                minima = [hist.GetMinimum() for hist in shapes_signal]+[hist.GetMinimum() for hist in shapes_background]
+                while 0.0 in minima:
+                    minima.remove(0.0)
+                Y_minimum = min(minima)
+
                 h_obs.SetLineColor(1)
                 h_obs.SetMarkerStyle(8)
                 h_obs.SetTitle(plot_title)
                 h_obs.Draw(obs_draw_option)
-                h_obs.GetYaxis().SetRangeUser(0,1.1*h_obs.GetMaximum())
+                h_obs.GetYaxis().SetRangeUser(Y_minimum*0.9 if logY else 0,(10.0 if logY else 1.1)*h_obs.GetMaximum())
                 setup_hist(h_obs)
                 h_obs.Draw(obs_draw_option+'SAME')
+                if(logY):
+                    plotpad.SetLogy()
                 legend.AddEntry(h_obs,channel['obs'],'p')
 
                 
                 for ibackground in range(len(backgrounds)):
                     shapes_background[ibackground].SetLineColor(colors[backgrounds[ibackground]])
+                    shapes_background[ibackground].SetLineWidth(2)                    
                     total_b.Add(shapes_background[ibackground],1)
                     total_sb.Add(shapes_background[ibackground],1)
+                    shapes_background[ibackground].SetLineStyle(2)                    
+                    shapes_background[ibackground].Draw(fit_draw_option+'SAME')
+                    legend.AddEntry(shapes_background[ibackground],backgrounds[ibackground],'l')
                 total_b.SetLineColor(46)
                 total_b.SetLineWidth(2)
                 total_b.Draw(fit_draw_option + 'SAME')
@@ -295,9 +308,9 @@ def plot_fit_result(config={'ModelName':'WMassModel'}):
                 latex.SetNDC(1)
                 latex.SetTextSize(24)
                 if('w' in channel_str.lower()):
-                    pt_bin = tuple(channel['histDir'].split('pt')[-1].split('To'))
+                    pt_bin = tuple(channel['pt_bin'].split('to'))
                     latex.DrawLatex(0.20,0.95,"%s-region  - %s GeV #leq p_{T} < %s GeV"%(region,*pt_bin))
 
 
                 c.RedrawAxis()
-                c.SaveAs(out_dir+'/'+hist_dir+'.pdf')
+                c.SaveAs(out_dir+'/'+hist_dir+('_logY' if logY else '')+'.pdf')

@@ -48,7 +48,7 @@ private:
   std::unique_ptr<JetCleaner> ak4cleaner, ak4cleaner15;
   std::unique_ptr<TopJetCleaner> ak8cleaner;
 
-  std::unique_ptr<Selection> N_AK8_500_sel, RHO_sel;
+  // std::unique_ptr<Selection> N_AK8_500_sel, RHO_sel;
 
   std::unique_ptr<uhh2::Hists> maps_cleaner, maps_cleaner_pfmass;
   std::unique_ptr<uhh2::Hists> maps_nak8_pt500, maps_nak8_pt500_pfmass;
@@ -58,6 +58,8 @@ private:
   bool is_mc;
 
   Double_t AK4_Clean_pT,AK4_Clean_eta,AK8_Clean_pT,AK8_Clean_eta;
+  bool is_buggyPU;
+
 };
 
 
@@ -67,18 +69,32 @@ DDTMapModule::DDTMapModule(Context & ctx){
   is_mc = ctx.get("dataset_type") == "MC";
 
   std::string version = ctx.get("dataset_version");
+  
+  is_buggyPU = ctx.get("dataset_version").find("buggyPU") != std::string::npos;
 
+  
+  if(is_buggyPU){
+    TString pu_file_path = (TString) ctx.get("dataset_version");
+    pu_file_path = pu_file_path.ReplaceAll("MC","");
+    pu_file_path = pu_file_path.ReplaceAll("_buggyPU","");
+    pu_file_path = pu_file_path.ReplaceAll("_test","");
+    pu_file_path = "common/data/2017/Pileup_QCD_PtBinned/MyMCPileupHistogram"+pu_file_path+".root";
+    ctx.set("pileup_directory",(std::string) pu_file_path);
+  }
+  std::cout << "reweighting mc pileup using " << ctx.get("pileup_directory")<<" as mc profile dir" <<std::endl;
+
+  
   // common modules
   common.reset(new CommonModules());
   common->init(ctx);
 
   mcSpikeKiller.reset(new MCLargeWeightKiller(ctx,
-                                              infinity, // maximum allowed ratio of leading reco jet pT / generator HT
-                                              infinity, // maximum allowed ratio of leading gen jet pT / generator HT
-                                              infinity, // maximum allowed ratio of leading reco jet pT / Q scale
-                                              2.5, // maximum allowed ratio of PU maximum pTHat / gen HT (ensures scale of PU < scale of hard interaction)
-                                              3, // maximum allowed ratio of leading reco jet pT / pTHat
-                                              3, // maximum allowed ratio of leading gen jet pT / pTHat
+                                              2, // maximum allowed ratio of leading reco jet pT / generator HT
+                                              2, // maximum allowed ratio of leading gen jet pT / generator HT
+                                              2, // maximum allowed ratio of leading reco jet pT / Q scale
+                                              2, // maximum allowed ratio of PU maximum pTHat / gen HT (ensures scale of PU < scale of hard interaction)
+                                              2, // maximum allowed ratio of leading reco jet pT / pTHat
+                                              2, // maximum allowed ratio of leading gen jet pT / pTHat
                                               "jets", // name of jet collection to be used
                                               "genjets" // name of genjet collection to be used
                         ));
@@ -92,23 +108,22 @@ DDTMapModule::DDTMapModule(Context & ctx){
 
   // Jet cleaner
   AK4_Clean_pT = 30.0;
-  AK4_Clean_eta = 2.5;
-  AK8_Clean_pT = 200.0;
-  AK8_Clean_eta = 2.5;
-  ak4cleaner15.reset(new JetCleaner(ctx, 15.0, AK4_Clean_eta));
-  ak4cleaner.reset(new JetCleaner(ctx, AK4_Clean_pT, AK4_Clean_eta));
+  AK4_Clean_eta = 2.4;
+  AK8_Clean_pT = 170.0;
+  AK8_Clean_eta = 2.4;
   ak8cleaner.reset(new TopJetCleaner(ctx,TopJetId(PtEtaCut(AK8_Clean_pT,AK8_Clean_eta))));
 
   // SELECTIONS
-  N_AK8_500_sel.reset(new NTopJetSelection(1,-1,TopJetId(PtEtaCut(500.,100000.))));
-  RHO_sel.reset(new RhoSelection(-6.0, -2.1));
+  // N_AK8_500_sel.reset(new NTopJetSelection(1,-1,TopJetId(PtEtaCut(500.,100000.))));
+  // RHO_sel.reset(new RhoSelection(-6.0, -2.1));
 
   // HISTOGRAMS
   maps_cleaner.reset(new H3DDTHist(ctx, "maps_cleaner"));
-  maps_nak8_pt500.reset(new H3DDTHist(ctx, "maps_NAK8_Pt500"));
+  // maps_nak8_pt500.reset(new H3DDTHist(ctx, "maps_NAK8_Pt500"));
 
   maps_cleaner_pfmass.reset(new H3DDTHist(ctx, "maps_cleaner_PFMass"));
-  maps_nak8_pt500_pfmass.reset(new H3DDTHist(ctx, "maps_NAK8_Pt500_PFMass"));
+  // maps_nak8_pt500_pfmass.reset(new H3DDTHist(ctx, "maps_NAK8_Pt500_PFMass"));
+
 }
 
 bool DDTMapModule::process(Event & event) {
@@ -119,13 +134,20 @@ bool DDTMapModule::process(Event & event) {
   assert(event.pfparticles);
   assert(event.genparticles);
 
+
+// Throw away events with NVTX in buggy area for buggy samples
+  if(is_buggyPU){
+    float n_true = event.genInfo->pileup_TrueNumInteractions();
+    if(n_true < 10. || n_true > 72.) return false;
+  }  
+
   
   // COMMON MODULES
   bool pass_common=common->process(event);
   if(!pass_common) return false;
   //Spikekiller
   if (is_mc){
-    if (!mcSpikeKiller->passes(event)) return false;
+    if(!mcSpikeKiller->passes(event)) return false;
   }
 
   
@@ -134,31 +156,26 @@ bool DDTMapModule::process(Event & event) {
 
   pf_applyPUPPI->process(event);
 
-  sort_by_pt<Jet>(*event.jets);
   sort_by_pt<TopJet>(*event.topjets);
 
   // CLEANER
-  ak4cleaner15->process(event);
   ak8cleaner->process(event);
 
   // SELECTIONS
-  bool passSelections = true;
+  // bool passSelections = true;
 
-  if(!N_AK8_500_sel->passes(event)) passSelections = false;
-  if(!RHO_sel->passes(event)) passSelections = false;
+  // if(!N_AK8_500_sel->passes(event)) passSelections = false;
+  // if(!RHO_sel->passes(event)) passSelections = false;
 
-
-  // RUN CLEANER AGAIN with pt > 30 (has to be after TwoD sel)
-  ak4cleaner->process(event);
   
   // FILL HISTS
   maps_cleaner->fill(event);
   maps_cleaner_pfmass->fill(event);
 
-  if(passSelections){
-    maps_nak8_pt500->fill(event);
-    maps_nak8_pt500_pfmass->fill(event);
-  }
+  // if(passSelections){
+  //   maps_nak8_pt500->fill(event);
+  //   maps_nak8_pt500_pfmass->fill(event);
+  // }
 
   return true;
 }

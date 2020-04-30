@@ -9,6 +9,7 @@ import glob
 import os
 
 Ndone = None # keep track of finished jobs by each worker
+nice = False
 
 def main():
     if len(sys.argv) < 3:
@@ -94,7 +95,10 @@ def submit_job(job_list):
     #print len(job_list)
     for xml in job_list:
         # subprocess.call(['sframe_main',xml],stdout=subprocess.PIPE)
-        subprocess.call(['sframe_main',xml], stdout=open("/dev/null","w"), stderr=subprocess.STDOUT)
+        if nice:
+            subprocess.call(['nice','-n','3','sframe_main',xml], stdout=open("/dev/null","w"), stderr=subprocess.STDOUT)
+        else:
+            subprocess.call(['sframe_main',xml], stdout=open("/dev/null","w"), stderr=subprocess.STDOUT)
         global Ndone
         with Ndone.get_lock():
             Ndone.value += 1

@@ -27,8 +27,8 @@ H3DDTHist::H3DDTHist(Context & ctx, const string & dirname): Hists(ctx, dirname)
   float rho_min = -10.0;
   float rho_max = 0.0;
 
-  int disc_nbins = 110;
-  float disc_min = -0.1;
+  int disc_nbins = 300;
+  float disc_min = -1.0;
   float disc_max = 1.0;
   
   // N2_v_pT_v_rho_oldBinning=book<TH3D>("N2_v_pT_v_rho_oldBinning","x=#rho,y=p_{T},z=N_2",rho_nbins,-10,0,300,0,2000,300,-1.5,1); 
