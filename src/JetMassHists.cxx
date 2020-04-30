@@ -43,7 +43,7 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, TString mode )
 
   JEC_on_Mass = false;
   if(mode.Contains("JEC")) JEC_on_Mass=true;
-  
+
   variation = 0.1;
 
   // get binnings and size of variation
@@ -129,7 +129,7 @@ void JetMassHists::fill(const Event & event){
   // get the PFParticles inside the first topjet
   // if mode is soft drop, get particles from subjets
   vector<PFParticle> particles;
-  LorentzVector sum_subjets_v4;  
+  LorentzVector sum_subjets_v4;
   if(allparticles->size() != 0 && use_constituents){
     if(use_SD){
       vector<Jet> subjets = topjets->at(0).subjets();
@@ -269,7 +269,7 @@ bool JetMassHists::inCategory(PFParticle p, TString cat){
   for(unsigned int i=0; i<all_cat.size(); i++){
     if(cat == all_cat[i] && abs(id) == i) inCat = true;
   }
-  if(cat = "other"){
+  if(cat == "other"){
     for(auto oID: otherIDs) if(id == oID) inCat = true;
   }
   return inCat;
