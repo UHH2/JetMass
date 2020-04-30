@@ -2,47 +2,43 @@
   "ModelName":"WMassModel",
   "gridHistFileName":"../Histograms/grid.root",
   "QcdEstimation":"True",
+  "histLocation":"../macros/Histograms.root",
   "channels":{
     "WMassPt500":{
-      "histLocation":"../Histograms/W",
-      "histDir":"JetMass_N2DDT_pt500To550",
-      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched"],
+      "pt_bin":"500to550",
+      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic"],
       "NormUnc":[0,1.025,1.025],
       "signal":["WMatched","ZMatched"],
       "obs":"Data",
       "regions":["pass","fail"]
     },
     "WMassPt550":{
-      "histLocation":"../Histograms/W",
-      "histDir":"JetMass_N2DDT_pt550To600",
-      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched"],
+      "pt_bin":"550to600",
+      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic"],
       "NormUnc":[0,1.025,1.025],
       "signal":["WMatched","ZMatched"],
       "obs":"Data",
       "regions":["pass","fail"]
     },
     "WMassPt600":{
-      "histLocation":"../Histograms/W",
-      "histDir":"JetMass_N2DDT_pt600To675",
-      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched"],
+      "pt_bin":"600to675",
+      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic"],
       "NormUnc":[0,1.025,1.025],
       "signal":["WMatched","ZMatched"],
       "obs":"Data",
       "regions":["pass","fail"]
     },
     "WMassPt675":{
-      "histLocation":"../Histograms/W",
-      "histDir":"JetMass_N2DDT_pt675To800",
-      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched"],
+      "pt_bin":"675to800",
+      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic"],
       "NormUnc":[0,1.025,1.025],
       "signal":["WMatched","ZMatched"],
       "obs":"Data",
       "regions":["pass","fail"]
     },
     "WMassPt800":{
-      "histLocation":"../Histograms/W",
-      "histDir":"JetMass_N2DDT_pt800To1200",
-      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched"],
+      "pt_bin":"800to1200",
+      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic"],
       "NormUnc":[0,1.025,1.025],
       "signal":["WMatched","ZMatched"],
       "obs":"Data",

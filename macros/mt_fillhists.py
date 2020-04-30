@@ -27,7 +27,11 @@ class JobManager(object):
         
 
     def submit_job(self,job_index):
-        subprocess.call(["./fillhists",self.selection,str(job_index),str(self.worker)], stdout=open("/dev/null","w"), stderr=subprocess.STDOUT)
+        nice = True
+        if(nice):
+            subprocess.call(['nice','-n','3',"./fillhists",self.selection,str(job_index),str(self.worker)], stdout=open("/dev/null","w"), stderr=subprocess.STDOUT)
+        else:
+            subprocess.call(["./fillhists",self.selection,str(job_index),str(self.worker)], stdout=open("/dev/null","w"), stderr=subprocess.STDOUT)
         global n_finished
         with n_finished.get_lock():
             n_finished.value += 1
