@@ -8,10 +8,7 @@ fi
 if [ ! -d "CMSSW_10_2_13" ]; then
   echo 'There is no CMSSW_10_2_13 installation in this directory'
   echo 'setting up CMSSW_10_2_13 and combine'
-  export SCRAM_ARCH=slc6_amd64_gcc700
-  if [[ "$(uname -r)" == *el7* ]]; then
-    export SCRAM_ARCH=slc7_amd64_gcc700
-  fi
+  export SCRAM_ARCH=slc7_amd64_gcc700
   cmsrel CMSSW_10_2_13
   cd CMSSW_10_2_13/src
 
