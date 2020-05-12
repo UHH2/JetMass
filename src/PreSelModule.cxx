@@ -67,7 +67,6 @@ private:
 
   std::vector<std::unique_ptr<uhh2::Hists>> hists;
 
-  std::unique_ptr<AnalysisModule> pfparticles_jec_corrector;
 
   std::unique_ptr<AnalysisModule> writer;
 
