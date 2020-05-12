@@ -28,7 +28,6 @@
 #include "UHH2/JetMass/include/JetMassSelections.h"
 #include "UHH2/JetMass/include/TopJetCorrections.h"
 #include "UHH2/JetMass/include/CorrectParticles.h"
-#include "UHH2/JetMass/include/ApplyPuppiToPF.h"
 #include "UHH2/common/include/MCLargeWeightKiller.h"
 #include "UHH2/JetMass/include/WriteOutput.h"
 
@@ -68,7 +67,6 @@ private:
 
   std::vector<std::unique_ptr<uhh2::Hists>> hists;
 
-  std::unique_ptr<AnalysisModule> pfparticles_jec_corrector,pf_applyPUPPI;
 
   std::unique_ptr<AnalysisModule> writer;
 
@@ -138,9 +136,6 @@ PreSelModule::PreSelModule(Context & ctx){
   topjetCorr.reset(new TopJetCorrections());
   topjetCorr->init(ctx);
 
-  // Application of Puppi weights onto pfparticles
-  pf_applyPUPPI.reset(new ApplyPuppiToPF());
-
   // Jet cleaner
   AK4_Clean_pT = 30.0;
   AK4_Clean_eta = 2.4;
@@ -198,8 +193,6 @@ bool PreSelModule::process(Event & event) {
 
   // AK8 JEC
   topjetCorr->process(event);
-
-  pf_applyPUPPI->process(event);
 
   sort_by_pt<Jet>(*event.jets);
   sort_by_pt<TopJet>(*event.topjets);
