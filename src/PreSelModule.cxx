@@ -67,7 +67,6 @@ private:
 
   std::vector<std::unique_ptr<uhh2::Hists>> hists;
 
-
   std::unique_ptr<AnalysisModule> writer;
 
 
@@ -106,7 +105,7 @@ PreSelModule::PreSelModule(Context & ctx){
     ctx.set("pileup_directory",(std::string) pu_file_path);
   }
   std::cout << "reweighting mc pileup using " << ctx.get("pileup_directory")<<" as mc profile dir" <<std::endl;
-  
+
   common.reset(new CommonModules());
   common->set_muon_id(muid);
   common->set_electron_id(eleid);
@@ -180,7 +179,7 @@ bool PreSelModule::process(Event & event) {
   if(is_mc && is_buggyPU){
     float n_true = event.genInfo->pileup_TrueNumInteractions();
     if(n_true < 10. || n_true > 72.) return false;
-  }  
+  }
 
   // COMMON MODULES
   bool pass_common=common->process(event);

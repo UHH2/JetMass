@@ -8,6 +8,7 @@ using namespace std;
 WriteOutput::WriteOutput(uhh2::Context & ctx){
   h_pt = ctx.declare_event_output<double>("pt");
   h_N2 = ctx.declare_event_output<double>("N2");
+  h_tau32 = ctx.declare_event_output<double>("tau32");
   h_DeepBoost = ctx.declare_event_output<double>("DeepBoostWQCD");
   h_mjet = ctx.declare_event_output<double>("mjet");
   h_weight = ctx.declare_event_output<double>("weight");
@@ -82,6 +83,8 @@ bool WriteOutput::process(uhh2::Event & event){
   double N2 = topjets->at(0).ecfN2_beta1();
   double mjet = CalculateMJet(particles);
   double deepboost = topjets->at(0).btag_DeepBoosted_WvsQCD();
+  double tau32 = 0;
+  if(topjets->at(0).tau2() > 0) tau32 = topjets->at(0).tau3()/topjets->at(0).tau2();
 
   // set variations for MC
   if(isMC){
@@ -115,6 +118,7 @@ bool WriteOutput::process(uhh2::Event & event){
   event.set(h_pt, pt);
   event.set(h_mjet, mjet);
   event.set(h_N2, N2);
+  event.set(h_tau32, tau32);
   event.set(h_DeepBoost, deepboost);
   event.set(h_weight, event.weight);
   event.set(h_matchedV, Vmatched);
