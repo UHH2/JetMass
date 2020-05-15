@@ -68,7 +68,7 @@ private:
 
   std::vector<std::unique_ptr<uhh2::Hists>> hists;
 
-  std::unique_ptr<AnalysisModule> pfparticles_jec_corrector,pf_applyPUPPI;
+  std::unique_ptr<AnalysisModule> pfparticles_jec_corrector;
 
   std::unique_ptr<AnalysisModule> writer;
 
@@ -108,7 +108,7 @@ PreSelModule::PreSelModule(Context & ctx){
     ctx.set("pileup_directory",(std::string) pu_file_path);
   }
   std::cout << "reweighting mc pileup using " << ctx.get("pileup_directory")<<" as mc profile dir" <<std::endl;
-  
+
   common.reset(new CommonModules());
   common->set_muon_id(muid);
   common->set_electron_id(eleid);
@@ -137,9 +137,6 @@ PreSelModule::PreSelModule(Context & ctx){
   // AK8 JEC/JER
   topjetCorr.reset(new TopJetCorrections());
   topjetCorr->init(ctx);
-
-  // Application of Puppi weights onto pfparticles
-  pf_applyPUPPI.reset(new ApplyPuppiToPF());
 
   // Jet cleaner
   AK4_Clean_pT = 30.0;
@@ -185,7 +182,7 @@ bool PreSelModule::process(Event & event) {
   if(is_mc && is_buggyPU){
     float n_true = event.genInfo->pileup_TrueNumInteractions();
     if(n_true < 10. || n_true > 72.) return false;
-  }  
+  }
 
   // COMMON MODULES
   bool pass_common=common->process(event);
@@ -198,8 +195,6 @@ bool PreSelModule::process(Event & event) {
 
   // AK8 JEC
   topjetCorr->process(event);
-
-  pf_applyPUPPI->process(event);
 
   sort_by_pt<Jet>(*event.jets);
   sort_by_pt<TopJet>(*event.topjets);
