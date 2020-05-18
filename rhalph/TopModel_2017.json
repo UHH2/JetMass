@@ -8,13 +8,15 @@
       "pt_bin":"300to400",
       "samples":["SingleTop","TTbar","WJets","other"],
       "signal":["TTbar"],
-      "obs":"Data"
+      "obs":"Data",
+      "regions":["pass","fail"]
     },
     "topMassPt400":{
       "pt_bin":"400toInf",
       "samples":["SingleTop","TTbar","WJets","other"],
       "signal":["TTbar"],
-      "obs":"Data"
+      "obs":"Data",
+      "regions":["pass","fail"]
     }
   }
 }
