@@ -28,7 +28,6 @@
 #include "UHH2/JetMass/include/JetMassSelections.h"
 #include "UHH2/JetMass/include/TopJetCorrections.h"
 #include "UHH2/JetMass/include/CorrectParticles.h"
-#include "UHH2/JetMass/include/ApplyPuppiToPF.h"
 #include "UHH2/common/include/MCLargeWeightKiller.h"
 #include "UHH2/JetMass/include/WriteOutput.h"
 
@@ -67,8 +66,6 @@ private:
   std::unique_ptr<Selection> N_MUON_sel, N_ELEC_sel, TwoD_sel, bjetCloseToLepton_sel;
 
   std::vector<std::unique_ptr<uhh2::Hists>> hists;
-
-  std::unique_ptr<AnalysisModule> pfparticles_jec_corrector;
 
   std::unique_ptr<AnalysisModule> writer;
 
