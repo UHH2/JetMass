@@ -1,0 +1,22 @@
+{
+  "ModelName":"topMass",
+  "gridHistFileName":"../Histograms/grid.root",
+  "QcdEstimation":"False",
+  "histLocation":"../macros/Histograms.root",
+  "channels":{
+    "topMassPt300":{
+      "pt_bin":"300to400",
+      "samples":["SingleTop","TTbar","WJets","other"],
+      "signal":["TTbar"],
+      "obs":"Data",
+      "regions":["pass","fail"]
+    },
+    "topMassPt400":{
+      "pt_bin":"400toInf",
+      "samples":["SingleTop","TTbar","WJets","other"],
+      "signal":["TTbar"],
+      "obs":"Data",
+      "regions":["pass","fail"]
+    }
+  }
+}

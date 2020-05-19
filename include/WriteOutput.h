@@ -32,8 +32,9 @@ private:
   uhh2::Event::Handle<double>h_DeepBoost;
   uhh2::Event::Handle<double>h_pt;
   uhh2::Event::Handle<double>h_N2;
+  uhh2::Event::Handle<double>h_tau32;
   uhh2::Event::Handle<double>h_weight;
-  uhh2::Event::Handle<double>h_genjetpt;  
+  uhh2::Event::Handle<double>h_genjetpt;
   uhh2::Event::Handle<bool>h_matchedV;
   std::vector<std::vector<std::vector< uhh2::Event::Handle<std::vector<double>> >>> h_jetmass_variations;
   TH2F* grid;
