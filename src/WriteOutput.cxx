@@ -14,6 +14,7 @@ WriteOutput::WriteOutput(uhh2::Context & ctx){
   h_weight = ctx.declare_event_output<double>("weight");
   h_matchedV = ctx.declare_event_output<bool>("matchedV");
   h_genjetpt = ctx.declare_event_output<double>("genjetpt");
+  h_jecfactor = ctx.declare_event_output<double>("jecfactor");
 
   // read from xml file
   auto dataset_type = ctx.get("dataset_type");
@@ -82,6 +83,8 @@ bool WriteOutput::process(uhh2::Event & event){
   double pt = topjets->at(0).v4().Pt();
   double N2 = topjets->at(0).ecfN2_beta1();
   double mjet = CalculateMJet(particles);
+  double jecfactor = 1.0/topjets->at(0).JEC_factor_raw();
+
   double deepboost = topjets->at(0).btag_DeepBoosted_WvsQCD();
   double tau32 = 0;
   if(topjets->at(0).tau2() > 0) tau32 = topjets->at(0).tau3()/topjets->at(0).tau2();
@@ -123,6 +126,7 @@ bool WriteOutput::process(uhh2::Event & event){
   event.set(h_weight, event.weight);
   event.set(h_matchedV, Vmatched);
   event.set(h_genjetpt, genjetpt);
+  event.set(h_jecfactor, jecfactor);
 
 
   return true;
