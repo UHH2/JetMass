@@ -115,7 +115,7 @@ void fill_hists_top(TString dir, TString process){
   tree->SetBranchAddress("mjet",&mjet);
   tree->SetBranchAddress("pt",&pt);
   tree->SetBranchAddress("tau32",&tau32);
-  tree->SetBranchAddress("jetfactor",&jecfactor);
+  tree->SetBranchAddress("jecfactor",&jecfactor);
 
   if(process != "Data"){
     for(unsigned int i=0; i<handlenames.size(); i++){
