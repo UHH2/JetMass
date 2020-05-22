@@ -105,7 +105,7 @@ void fill_hists_top(TString dir, TString process){
 
   // declare variables
   double taucut = 0.5;
-  double weight, mjet, pt, tau32;
+  double weight, mjet, pt, tau32, jecfactor;
   vector<vector<double>*> mjet_variations;
   mjet_variations.resize(handlenames.size());
 
@@ -115,6 +115,7 @@ void fill_hists_top(TString dir, TString process){
   tree->SetBranchAddress("mjet",&mjet);
   tree->SetBranchAddress("pt",&pt);
   tree->SetBranchAddress("tau32",&tau32);
+  tree->SetBranchAddress("jecfactor",&jecfactor);
 
   if(process != "Data"){
     for(unsigned int i=0; i<handlenames.size(); i++){
@@ -148,14 +149,14 @@ void fill_hists_top(TString dir, TString process){
     for(int ptbin=0; ptbin<ptbins.size()-1; ptbin++){
       if(ptbins[ptbin] == -1 || (pt > ptbins[ptbin] && pt < ptbins[ptbin+1]) ){
         // fill nominal hists
-        if(tau32<taucut) h_mjet_nominal_pass[ptbin]->Fill(mjet, weight);
-        else             h_mjet_nominal_fail[ptbin]->Fill(mjet, weight);
+        if(tau32<taucut) h_mjet_nominal_pass[ptbin]->Fill(mjet*jecfactor, weight);
+        else             h_mjet_nominal_fail[ptbin]->Fill(mjet*jecfactor, weight);
         // mjet variations
         if(process != "Data"){
           for(int i=0; i<h_mjet_vars_pass[ptbin].size(); i++){
             for(int j=0; j<h_mjet_vars_pass[ptbin][i].size(); j++){
-              if(tau32<taucut) h_mjet_vars_pass[ptbin][i][j]->Fill(mjet_variations[i]->at(j), weight);
-              else             h_mjet_vars_fail[ptbin][i][j]->Fill(mjet_variations[i]->at(j), weight);
+              if(tau32<taucut) h_mjet_vars_pass[ptbin][i][j]->Fill(mjet_variations[i]->at(j)*jecfactor, weight);
+              else             h_mjet_vars_fail[ptbin][i][j]->Fill(mjet_variations[i]->at(j)*jecfactor, weight);
             }
           }
         }
@@ -223,7 +224,7 @@ void fill_hists_W(TString dir, TString process, int job_index = 1 , int n_jobs =
   }
 
   // declare variables
-  double weight, mjet, pt, n2,genjet_V_pt;
+  double weight, mjet, pt, n2, genjet_V_pt, jecfactor;
   bool matchedV;
   vector<vector<double>*> mjet_variations;
   mjet_variations.resize(handlenames.size());
@@ -236,6 +237,7 @@ void fill_hists_W(TString dir, TString process, int job_index = 1 , int n_jobs =
   tree->SetBranchAddress("N2",&n2);
   tree->SetBranchAddress("matchedV",&matchedV);
   tree->SetBranchAddress("genjetpt",&genjet_V_pt);
+  tree->SetBranchAddress("jecfactor",&jecfactor);
 
   if(process != "Data"){
     for(unsigned int i=0; i<handlenames.size(); i++){
@@ -283,15 +285,15 @@ void fill_hists_W(TString dir, TString process, int job_index = 1 , int n_jobs =
           weight *= kfactor;
         }
         // fill nominal hists
-        if(pass_N2ddt) h_mjet_nominal_pass[ptbin]->Fill(mjet, weight);
-        else                        h_mjet_nominal_fail[ptbin]->Fill(mjet, weight);
+        if(pass_N2ddt) h_mjet_nominal_pass[ptbin]->Fill(mjet*jecfactor, weight);
+        else                        h_mjet_nominal_fail[ptbin]->Fill(mjet*jecfactor, weight);
 
         // mjet variations
         if(process != "Data"){
           for(int i=0; i<h_mjet_vars_pass[ptbin].size(); i++){
             for(int j=0; j<h_mjet_vars_pass[ptbin][i].size(); j++){
-              if(pass_N2ddt) h_mjet_vars_pass[ptbin][i][j]->Fill(mjet_variations[i]->at(j), weight);
-              else                        h_mjet_vars_fail[ptbin][i][j]->Fill(mjet_variations[i]->at(j), weight);
+              if(pass_N2ddt) h_mjet_vars_pass[ptbin][i][j]->Fill(mjet_variations[i]->at(j)*jecfactor, weight);
+              else                        h_mjet_vars_fail[ptbin][i][j]->Fill(mjet_variations[i]->at(j)*jecfactor, weight);
             }
           }
         }
