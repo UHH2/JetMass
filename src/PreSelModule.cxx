@@ -62,9 +62,10 @@ private:
   std::unique_ptr<TopJetLeptonDeltaRCleaner> ak8cleaner_dRlep;
 
   std::unique_ptr<Selection> TRIGGER_sel, MET_sel;
-  std::unique_ptr<Selection> N_AK8_300_sel, N_AK8_500_sel, RHO_sel;
+  std::unique_ptr<Selection> N_AK8_300_sel, N_AK8_500_sel;
   std::unique_ptr<Selection> N_MUON_sel, N_ELEC_sel, TwoD_sel, bjetCloseToLepton_sel;
-
+  std::unique_ptr<AndSelection> LEP_VETO_sel;
+  
   std::vector<std::unique_ptr<uhh2::Hists>> hists;
 
   std::unique_ptr<AnalysisModule> writer;
@@ -148,7 +149,6 @@ PreSelModule::PreSelModule(Context & ctx){
   // SELECTIONS
   N_AK8_300_sel.reset(new NTopJetSelection(1,-1,TopJetId(PtEtaCut(300.,100000.))));
   N_AK8_500_sel.reset(new NTopJetSelection(1,-1,TopJetId(PtEtaCut(500.,100000.))));
-  RHO_sel.reset(new RhoSelection(-6.0, -2.1));
   N_MUON_sel.reset(new NMuonSelection(1,1));
   N_ELEC_sel.reset(new NElectronSelection(0,0));
   TwoD_sel.reset(new TwoDCut(0.4, 25));
@@ -157,6 +157,10 @@ PreSelModule::PreSelModule(Context & ctx){
   else if(isWSel) TRIGGER_sel.reset(new AndSelection(ctx));
   bjetCloseToLepton_sel.reset(new NMuonBTagSelection(1, 999, DeepJetBTag(DeepJetBTag::WP_MEDIUM) ));
 
+  LEP_VETO_sel.reset(new AndSelection(ctx,"lepton-veto"));
+  LEP_VETO_sel->add<NElectronSelection>("ele-veto",0,0);
+  LEP_VETO_sel->add<NMuonSelection>("muon-veto",0,0);
+  
   // HISTOGRAMS
   hists.emplace_back(new ElectronHists(ctx, "ElectronHists"));
   hists.emplace_back(new EventHists(ctx, "EventHists"));
@@ -212,16 +216,20 @@ bool PreSelModule::process(Event & event) {
   if(isTopSel) passW = false;
   else if(isWSel) passTOP = false;
 
+  if(isTopSel){
   if(!N_AK8_300_sel->passes(event)) passTOP = false;
   if(!N_MUON_sel->passes(event)) passTOP = false;
   if(!N_ELEC_sel->passes(event)) passTOP = false;
   if(!MET_sel->passes(event)) passTOP = false;
   if(!TwoD_sel->passes(event)) passTOP = false;
   if(!bjetCloseToLepton_sel->passes(event)) passTOP = false;
+  }
 
 
+  if(isWSel){
+  if(!LEP_VETO_sel->passes(event)) passW = false;
   if(!N_AK8_500_sel->passes(event)) passW = false;
-  if(!RHO_sel->passes(event)) passW = false;
+  }
 
 
   // FILL HISTS
