@@ -1,5 +1,6 @@
 #include "UHH2/JetMass/include/JetMassSelections.h"
 #include "UHH2/core/include/Event.h"
+#include "UHH2/common/include/TTbarReconstruction.h"
 
 #include <stdexcept>
 
@@ -83,4 +84,27 @@ bool NMuonBTagSelection::passes(const Event & event)
   if(nbtag<m_min_nbtag) return false;
   if(nbtag>m_max_nbtag) return false;
   return true;
+}
+
+HTCut::HTCut(uhh2::Context & ctx, float min_ht_,float max_ht_):min_ht(min_ht_),max_ht(max_ht_){
+  h_ht = ctx.get_handle<double>("HT");
+}
+
+bool HTCut::passes(const Event & event){
+  float ht = -2.;
+  if(event.is_valid(h_ht)){
+     ht = event.get(h_ht);     
+  }
+  return (ht > min_ht) && (ht < max_ht);
+}
+
+WToMuNuSelection::WToMuNuSelection(float min_pt_,float max_pt_):min_pt(min_pt_),max_pt(max_pt_){}
+
+bool WToMuNuSelection::passes(const Event & event){
+  assert(event.muons);
+  assert(event.met);
+  if(event.muons->size() < 1) return false;
+  LorentzVector neutrino = NeutrinoReconstruction(event.muons->at(0).v4(), event.met->v4())[0];
+  float pt = (event.muons->at(0).v4() + neutrino).pt();
+  return (pt > min_pt) && (pt < max_pt);
 }

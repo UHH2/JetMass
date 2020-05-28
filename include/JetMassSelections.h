@@ -49,3 +49,26 @@ class NMuonBTagSelection: public uhh2::Selection {
     double m_ptmin;
     double m_etamax;
 };
+
+class HTCut: public uhh2::Selection {
+ public:
+
+  explicit HTCut(uhh2::Context & ctx, float min_ht_=-1,float max_ht_=infinity);
+
+  virtual bool passes(const uhh2::Event &) override;
+
+ private:
+  float min_ht, max_ht;
+  uhh2::Event::Handle<double> h_ht;
+};
+
+class WToMuNuSelection: public uhh2::Selection {
+ public:
+
+  explicit WToMuNuSelection(float min_pt_=-1,float max_pt_=infinity);
+
+  virtual bool passes(const uhh2::Event &) override;
+
+ private:
+  float min_pt, max_pt;
+};

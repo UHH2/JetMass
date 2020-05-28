@@ -33,6 +33,7 @@ private:
   uhh2::Event::Handle<double>h_pt;
   uhh2::Event::Handle<double>h_N2;
   uhh2::Event::Handle<double>h_tau32;
+  uhh2::Event::Handle<double>h_tau21;
   uhh2::Event::Handle<double>h_weight;
   uhh2::Event::Handle<double>h_genjetpt;
   uhh2::Event::Handle<double>h_jecfactor;

@@ -62,8 +62,9 @@ private:
   std::unique_ptr<TopJetLeptonDeltaRCleaner> ak8cleaner_dRlep;
 
   std::unique_ptr<Selection> TRIGGER_sel, MET_sel;
-  std::unique_ptr<Selection> N_AK8_300_sel, N_AK8_500_sel;
+  std::unique_ptr<Selection> N_AK8_200_sel, N_AK8_300_sel, N_AK8_500_sel;
   std::unique_ptr<Selection> N_MUON_sel, N_ELEC_sel, TwoD_sel, bjetCloseToLepton_sel;
+  std::unique_ptr<Selection> HT_sel,Wpt_sel, N_AK4_2_sel, N_btag_sel;  
   std::unique_ptr<AndSelection> LEP_VETO_sel;
   
   std::vector<std::unique_ptr<uhh2::Hists>> hists;
@@ -73,6 +74,7 @@ private:
 
   bool is_mc, is_QCD, matchV, is_WSample, is_ZSample, is_buggyPU;
   bool isTopSel = false;
+  bool isWfromTopSel = false;
   bool isWSel = false;
   Double_t AK4_Clean_pT,AK4_Clean_eta,AK8_Clean_pT,AK8_Clean_eta;
 
@@ -88,6 +90,7 @@ PreSelModule::PreSelModule(Context & ctx){
   std::cout << "This sample has "<< (is_buggyPU ? "buggyPU" : "normalPU") << std::endl;
   const std::string& channel = ctx.get("channel", "");
   if     (channel == "top") isTopSel = true;
+  else if(channel == "WfromTop") isWfromTopSel = true;
   else if(channel == "W")   isWSel = true;
   else throw runtime_error("PreSelModule: Select 'top' or 'W' channel");
 
@@ -147,19 +150,25 @@ PreSelModule::PreSelModule(Context & ctx){
   ak8cleaner_dRlep.reset(new TopJetLeptonDeltaRCleaner(0.8));
 
   // SELECTIONS
+  N_AK4_2_sel.reset(new NJetSelection(2));
+  N_btag_sel.reset(new NJetSelection(1,-1, (JetId) DeepJetBTag(DeepJetBTag::WP_MEDIUM) ));
+  N_AK8_200_sel.reset(new NTopJetSelection(1,-1,TopJetId(PtEtaCut(200.,100000.))));
   N_AK8_300_sel.reset(new NTopJetSelection(1,-1,TopJetId(PtEtaCut(300.,100000.))));
   N_AK8_500_sel.reset(new NTopJetSelection(1,-1,TopJetId(PtEtaCut(500.,100000.))));
   N_MUON_sel.reset(new NMuonSelection(1,1));
   N_ELEC_sel.reset(new NElectronSelection(0,0));
   TwoD_sel.reset(new TwoDCut(0.4, 25));
   MET_sel.reset(new METCut(50., 100000.));
-  if(isTopSel)    TRIGGER_sel.reset(new TriggerSelection("HLT_Mu50_v*"));
+  if(isTopSel || isWfromTopSel)    TRIGGER_sel.reset(new TriggerSelection("HLT_Mu50_v*"));
   else if(isWSel) TRIGGER_sel.reset(new AndSelection(ctx));
   bjetCloseToLepton_sel.reset(new NMuonBTagSelection(1, 999, DeepJetBTag(DeepJetBTag::WP_MEDIUM) ));
 
   LEP_VETO_sel.reset(new AndSelection(ctx,"lepton-veto"));
   LEP_VETO_sel->add<NElectronSelection>("ele-veto",0,0);
   LEP_VETO_sel->add<NMuonSelection>("muon-veto",0,0);
+
+  HT_sel.reset(new HTCut(ctx, 250.));
+  Wpt_sel.reset(new WToMuNuSelection(250.));
   
   // HISTOGRAMS
   hists.emplace_back(new ElectronHists(ctx, "ElectronHists"));
@@ -206,16 +215,29 @@ bool PreSelModule::process(Event & event) {
   ak8cleaner->process(event);
   ak8cleaner_dRlep->process(event);
 
+  //PFHists
+  if(event.topjets->size()>0){
+    float AK8_pt = event.topjets->at(0).pt();
+    if(AK8_pt>200 && AK8_pt<500)h_pfhists_200to500->fill(event);
+    if(AK8_pt>500 && AK8_pt<1000)h_pfhists_500to1000->fill(event);
+    if(AK8_pt>1000 && AK8_pt<2000)h_pfhists_1000to2000->fill(event);
+    if(AK8_pt>2000 && AK8_pt<3000)h_pfhists_2000to3000->fill(event);
+    if(AK8_pt>3000 && AK8_pt<4000)h_pfhists_3000to4000->fill(event);
+    if(AK8_pt>4000 && AK8_pt<5000)h_pfhists_4000to5000->fill(event);
+  }
+  
   // TRIGGER
   if(!TRIGGER_sel->passes(event)) return false;
 
   // SELECTIONS
   bool passTOP = true;
+  bool passWfromTop = true;
   bool passW = true;
 
-  if(isTopSel) passW = false;
-  else if(isWSel) passTOP = false;
-
+  if(isTopSel || isWfromTopSel) passW = false;
+  if(isWSel || isWfromTopSel) passTOP = false;
+  if(isWSel || isTopSel) passWfromTop = false;
+    
   if(isTopSel){
   if(!N_AK8_300_sel->passes(event)) passTOP = false;
   if(!N_MUON_sel->passes(event)) passTOP = false;
@@ -225,6 +247,16 @@ bool PreSelModule::process(Event & event) {
   if(!bjetCloseToLepton_sel->passes(event)) passTOP = false;
   }
 
+  if(passWfromTop && !HT_sel->passes(event)) passWfromTop = false;
+  if(passWfromTop && !N_AK8_200_sel->passes(event)) passWfromTop = false;
+  if(passWfromTop && !N_MUON_sel->passes(event)) passWfromTop = false;
+  if(passWfromTop && !N_ELEC_sel->passes(event)) passWfromTop = false;
+  if(passWfromTop && !MET_sel->passes(event)) passWfromTop = false;
+  if(passWfromTop && !Wpt_sel->passes(event)) passWfromTop = false;
+  if(passWfromTop && !TwoD_sel->passes(event)) passWfromTop = false;
+  if(passWfromTop && !N_AK4_2_sel->passes(event)) passWfromTop = false;
+  if(passWfromTop && !N_btag_sel->passes(event)) passWfromTop = false;
+  if(passWfromTop && deltaPhi(event.topjets->at(0),event.muons->at(0)) < 2) passWfromTop = false;
 
   if(isWSel){
   if(!LEP_VETO_sel->passes(event)) passW = false;
@@ -234,10 +266,11 @@ bool PreSelModule::process(Event & event) {
 
   // FILL HISTS
   if(passTOP && isTopSel)  for(auto & h: hists) h->fill(event);
+  else if(passWfromTop && isWfromTopSel) for(auto & h: hists) h->fill(event);
   else if(passW && isWSel) for(auto & h: hists) h->fill(event);
 
   // DECIDE TO STORE EVENT
-  if(!passTOP && !passW) return false;
+  if(!passTOP && !passW && !passWfromTop) return false;
   else{
     writer->process(event);
     return true;
