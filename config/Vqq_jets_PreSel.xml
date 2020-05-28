@@ -402,7 +402,7 @@
     <Item Name="doSpikeKiller" Value="true" />
     <Item Name="lumi_file" Value="common/data/2017/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.root"/>
 
-    <Item Name="GridFile" Value="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/Histograms/grid.root" />
+    <Item Name="GridFile" Value="JetMass/Histograms/grid.root" />
 
     <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/>
 
