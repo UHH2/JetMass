@@ -48,12 +48,7 @@ private:
   std::unique_ptr<JetCleaner> ak4cleaner, ak4cleaner15;
   std::unique_ptr<TopJetCleaner> ak8cleaner;
 
-  // std::unique_ptr<Selection> N_AK8_500_sel, RHO_sel;
-
   std::unique_ptr<uhh2::Hists> maps_cleaner, maps_cleaner_pfmass;
-  std::unique_ptr<uhh2::Hists> maps_nak8_pt500, maps_nak8_pt500_pfmass;
-
-  std::unique_ptr<AnalysisModule> pf_applyPUPPI;
 
   bool is_mc;
 
@@ -103,8 +98,6 @@ DDTMapModule::DDTMapModule(Context & ctx){
   topjetCorr.reset(new TopJetCorrections());
   topjetCorr->init(ctx);
 
-  // PF correctors
-  pf_applyPUPPI.reset(new ApplyPuppiToPF());
 
   // Jet cleaner
   AK4_Clean_pT = 30.0;
@@ -113,16 +106,10 @@ DDTMapModule::DDTMapModule(Context & ctx){
   AK8_Clean_eta = 2.4;
   ak8cleaner.reset(new TopJetCleaner(ctx,TopJetId(PtEtaCut(AK8_Clean_pT,AK8_Clean_eta))));
 
-  // SELECTIONS
-  // N_AK8_500_sel.reset(new NTopJetSelection(1,-1,TopJetId(PtEtaCut(500.,100000.))));
-  // RHO_sel.reset(new RhoSelection(-6.0, -2.1));
-
   // HISTOGRAMS
   maps_cleaner.reset(new H3DDTHist(ctx, "maps_cleaner"));
-  // maps_nak8_pt500.reset(new H3DDTHist(ctx, "maps_NAK8_Pt500"));
 
   maps_cleaner_pfmass.reset(new H3DDTHist(ctx, "maps_cleaner_PFMass"));
-  // maps_nak8_pt500_pfmass.reset(new H3DDTHist(ctx, "maps_NAK8_Pt500_PFMass"));
 
 }
 
@@ -154,28 +141,14 @@ bool DDTMapModule::process(Event & event) {
   // AK8 JEC
   topjetCorr->process(event);
 
-  pf_applyPUPPI->process(event);
-
   sort_by_pt<TopJet>(*event.topjets);
 
   // CLEANER
   ak8cleaner->process(event);
-
-  // SELECTIONS
-  // bool passSelections = true;
-
-  // if(!N_AK8_500_sel->passes(event)) passSelections = false;
-  // if(!RHO_sel->passes(event)) passSelections = false;
-
   
   // FILL HISTS
   maps_cleaner->fill(event);
   maps_cleaner_pfmass->fill(event);
-
-  // if(passSelections){
-  //   maps_nak8_pt500->fill(event);
-  //   maps_nak8_pt500_pfmass->fill(event);
-  // }
 
   return true;
 }

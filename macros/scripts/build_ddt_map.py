@@ -27,7 +27,7 @@ def numpy_to_TH2(np_arr,name,th3):
     array2hist(np_arr_clean,th2)
     return th2
 
-def plot_map_root(file_path, map_name):
+def plot_map_root(file_path, map_name, wp):
     from ROOT import gStyle, gROOT, TFile, TCanvas, TF1, TLatex
     import os
     # rho_min = -6.0
@@ -65,6 +65,7 @@ def plot_map_root(file_path, map_name):
     gStyle.SetTitleSize(0.05, "XYZ")
     gStyle.SetLabelSize(0.04, "XYZ")
     gStyle.SetNdivisions(506, "XYZ")
+    gStyle.SetNumberContours(25)
     gStyle.SetLegendBorderSize(0)
     f = TFile(file_path)
     hist = f.Get(map_name)
@@ -72,9 +73,9 @@ def plot_map_root(file_path, map_name):
     hist.GetXaxis().SetTitle("#rho")
     hist.GetYaxis().SetTitle("p_{T} [GeV]")
     if('n2' in map_name.lower()):
-        hist.GetZaxis().SetTitle("N2^{DDT} X% quantile")
+        hist.GetZaxis().SetTitle("N2^{DDT} %.1f"%(wp*100)+"% quantile")
     else:
-        hist.GetZaxis().SetTitle("DeepBoosted WvsQCD X% quantile")
+        hist.GetZaxis().SetTitle("DeepBoosted WvsQCD %.1f"%(wp*100)+"% quantile")
         disc_max=1
     hist.GetXaxis().SetRangeUser(rho_min, rho_max)
     hist.GetYaxis().SetRangeUser(pt_min, pt_max)
@@ -126,36 +127,26 @@ def plot_map_root(file_path, map_name):
     c1 = TCanvas("c1","c1",700,600)
     c1.cd()
     hist.Draw("colz")
-    latex_border = TLatex()
-    latex_border.SetNDC(1)
-    latex_border.SetTextColor(1)
-    latex_border.SetTextFont(43)
-    latex_border.SetTextSize(15.5)
-    latex_border.SetTextAngle(297)
     latex = TLatex()
     latex.SetNDC(1)
-    latex.SetTextColor(920)
+    latex.SetTextColor(1)
     latex.SetTextFont(43)
-    latex.SetTextSize(15)
-    # latex.SetTextAngle(297)
+    latex.SetTextSize(15.5)
+    latex.SetTextAngle(297)
     for i in range(len(isomasses)):
         x_pitch = (1-left_margin-right_margin)/(rho_max-rho_min)
         y_pitch = (1-bottom_margin-top_margin)/(pt_max-pt_min)
         msd = isomasses[i]
         pt=msd*np.exp(-rho_min/2)
-        pt = 1000 if pt > rho_max else pt
+        pt = 0.5*(pt_max-pt_min)+pt_min if pt > pt_max else pt
         angle = ((180/np.pi)*np.arctan(2*x_pitch/(pt*y_pitch)))+272
         latex.SetTextAngle(angle)
-        latex_border.SetTextAngle(angle)
         tf1_isomass = tf1_isomasses[i]
         tf1_isomass.Draw('SAME')
-        x_pos = left_margin+((2*np.log(msd/pt)-rho_min))*x_pitch
-        y_pos = pt*y_pitch
-        latex_border.DrawLatex(x_pos,y_pos,'m_{SD} = %.1f GeV'%msd)
-        # latex.DrawLatex(x_pos,y_pos,'m_{SD} = %.1f GeV'%msd)
+        x_pos = left_margin+((2*np.log(msd/pt)-rho_min))*x_pitch+0.01
+        y_pos = bottom_margin+(pt-pt_min)*y_pitch +0.01
+        latex.DrawLatex(x_pos,y_pos,'m_{SD} = %.1f GeV'%msd)
     c1.SaveAs(out_file_path+".pdf")
-    c1.SaveAs(out_file_path+".png")
-    c1.SaveAs(out_file_path+".C")
     del c1
 
 def plot_map(x_arr, y_arr, contents_arr, name = 'ddt_map', levels = None):
@@ -175,9 +166,6 @@ def build_ddt_map(hqcd, qcd_eff, smooth = True, gaus_sigma=1.0):
     cum_sum  = np.cumsum(vals_var, axis = 2)
     max_val = cum_sum[:,:,-1]
     norma = cum_sum / np.maximum(1e-10,max_val[:,:,np.newaxis])
-
-    # if('high' in args.reject or 'h' in args.reject):
-    #     qcd_eff = 1 - qcd_eff
 
     res = np.apply_along_axis(lambda norma: norma.searchsorted(qcd_eff), axis = 2, arr = norma)
     mask_zero = np.apply_along_axis(lambda norma: norma.searchsorted(1e-10), axis = 2, arr = norma)
@@ -206,7 +194,6 @@ if __name__ == "__main__":
     
     parser.add_argument('--hist-dir', nargs='+', default=None, help = 'List of the directories, in which the respective histograms specified with -n/--hist-names can be found in the specified input ROOT-File')
 
-    parser.add_argument('-r','--reject',nargs='+',choices=['high','low','l','h'], default=['low'], help='Specifies what kind of values of the discriminator reject the background. If low/l wp*100 percent quantile is derived. If high/h (1-wp)*100 percent quantile is derived.')
     parser.add_argument('-s','--smooth', action='store_true', help='specify if you want to postprocess the maps with an gaussian filter' )
     parser.add_argument('-g','--gaus_sigma', type=float, default=1.0, help='specify what sigma should be used by the smoothing gaus-kernel.')
     parser.add_argument('--justplots',action='store_true', help='just make some ugly plots. -i acts here as inputfiles containing the finished 2D maps')
@@ -261,25 +248,15 @@ if __name__ == "__main__":
         edges_x = edges[0][0][:-1]
         edges_y = edges[0][1][:-1]
 
-        if len(args.working_point) == len(args.reject):
-            rejection_directions = args.reject
-        else:
-            rejection_directions = [args.reject[0]]*len(args.working_point)
-        for wp,reject in zip(args.working_point,rejection_directions):
-            if "h" in reject.lower():
-                wp = 1-wp
-            print("misstag rate (rejection:",reject,"):",wp)
+        for wp in args.working_point:
+            print("misstag rate:",wp)
             smooth_map = build_ddt_map(th3, float(wp), smooth = args.smooth, gaus_sigma=args.gaus_sigma)
             smooth_map_th2 = numpy_to_TH2(smooth_map,hist_name+'_'+str(wp).replace('.','p')+smooth_suffix+'_'+hist_dir,th3)
-            # if args.makeplots:
-            #     plot_map(edges_x, edges_y, smooth_map.T,'ddt_map_'+hist_name+'_'+str(wp).replace('.','p'))
 
             th2_outfile.Write()
     th2_outfile.Close()
     if args.makeplots:
         hist_names = zip(hist_dirs,args.hist_names)
         for hist_dir,hist_name in hist_names:
-            for wp,reject in zip(args.working_point,rejection_directions):
-                if "h" in reject.lower():
-                    wp = 1-wp
-                plot_map_root(args.output,hist_name+'_'+str(wp).replace('.','p')+smooth_suffix+'_'+hist_dir)
+            for wp in args.working_point:
+                plot_map_root(args.output,hist_name+'_'+str(wp).replace('.','p')+smooth_suffix+'_'+hist_dir,wp)

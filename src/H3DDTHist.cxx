@@ -62,7 +62,12 @@ void H3DDTHist::fill(const Event & event){
       }
     }
     LorentzVector jet_sd_v4;
-    for(auto p: particles){
+    for(auto part: particles){
+      LorentzVectorXYZE old_v4XYZ = toXYZ(part.v4());
+      double puppiWeight = part.puppiWeight();
+      PFParticle p = part;
+      p.set_v4(toPtEtaPhi(old_v4XYZ * puppiWeight));
+
       jet_sd_v4 += p.v4();
     }
     mSD = jet_sd_v4.M();
