@@ -1,5 +1,6 @@
 #include "UHH2/JetMass/include/JetMassHists.h"
 #include "UHH2/core/include/Event.h"
+#include "UHH2/common/include/Utils.h"
 
 #include "TH1F.h"
 #include "TH2F.h"
@@ -20,7 +21,7 @@ JetMassHists::JetMassHists(Context & ctx, const string & dirname, TString mode )
 
   // read configuration from root file
   TString gfilename = ctx.get("GridFile");
-  TFile* gfile = new TFile(gfilename);
+  TFile* gfile = new TFile(locate_file((std::string)gfilename).c_str());
   grid = (TH2F*) gfile->Get("grid");
   TH1F* h_cat = (TH1F*) gfile->Get("categories");
   for(int bin=1; bin<=h_cat->GetXaxis()->GetNbins(); bin++) categories.push_back(h_cat->GetXaxis()->GetBinLabel(bin));

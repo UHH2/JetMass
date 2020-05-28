@@ -1,5 +1,6 @@
 #include "UHH2/JetMass/include/PFHists.h"
 #include "UHH2/core/include/Event.h"
+#include "UHH2/common/include/Utils.h"
 
 #include "TH1F.h"
 #include "TH2F.h"
@@ -11,7 +12,7 @@ using namespace uhh2;
 PFHists::PFHists(Context & ctx, const string & dirname): Hists(ctx, dirname){
 
   TString gfilename = ctx.get("GridFile");
-  TFile* gfile = new TFile(gfilename);
+  TFile* gfile = new TFile(locate_file((std::string)gfilename).c_str());
   TH2F* grid = (TH2F*) gfile->Get("grid");
   vector<double> binsX = ExtractBinning(grid, "x");
   vector<double> binsY = ExtractBinning(grid, "y");
