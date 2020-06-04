@@ -6,7 +6,7 @@
   "channels":{
     "WMassPt500":{
       "pt_bin":"500to550",
-      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic"],
+      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic","ST_tW_top","ST_tW_antitop"],
       "NormUnc":[0,1.025,1.025],
       "signal":["WMatched","ZMatched"],
       "obs":"Data",
@@ -14,7 +14,7 @@
     },
     "WMassPt550":{
       "pt_bin":"550to600",
-      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic"],
+      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic","ST_tW_top","ST_tW_antitop"],
       "NormUnc":[0,1.025,1.025],
       "signal":["WMatched","ZMatched"],
       "obs":"Data",
@@ -22,7 +22,7 @@
     },
     "WMassPt600":{
       "pt_bin":"600to675",
-      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic"],
+      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic","ST_tW_top","ST_tW_antitop"],
       "NormUnc":[0,1.025,1.025],
       "signal":["WMatched","ZMatched"],
       "obs":"Data",
@@ -30,7 +30,7 @@
     },
     "WMassPt675":{
       "pt_bin":"675to800",
-      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic"],
+      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic","ST_tW_top","ST_tW_antitop"],
       "NormUnc":[0,1.025,1.025],
       "signal":["WMatched","ZMatched"],
       "obs":"Data",
@@ -38,7 +38,7 @@
     },
     "WMassPt800":{
       "pt_bin":"800to1200",
-      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic"],
+      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic","ST_tW_top","ST_tW_antitop"],
       "NormUnc":[0,1.025,1.025],
       "signal":["WMatched","ZMatched"],
       "obs":"Data",
