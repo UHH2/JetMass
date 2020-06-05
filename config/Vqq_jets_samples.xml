@@ -87,27 +87,3 @@
 <InputData Version="MC_TTToSemiLeptonic_2017v2"          Lumi="35279949.78"  Type="MC"   NEventsMax="-1" Cacheable="False"> &TTToSemiLeptonic;       <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
 <InputData Version="MC_ST_tW_top_2017v2"                 Lumi="7382334.321"  Type="MC"   NEventsMax="-1" Cacheable="False"> &ST_tW_top;              <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
 <InputData Version="MC_ST_tW_antitop_2017v2"             Lumi="7582465.388"  Type="MC"   NEventsMax="-1" Cacheable="False"> &ST_tW_antitop;          <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
-
-
-<UserConfig>
-  <Item Name="channel" Value="W"/>
-  <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
-  <Item Name="GenParticleCollection"   Value="GenParticles"/>
-  <Item Name="ElectronCollection"      Value="slimmedElectronsUSER"/>
-  <Item Name="MuonCollection"          Value="slimmedMuonsUSER"/>
-  <Item Name="JetCollection"           Value="jetsAk4CHS"/>
-  <Item Name="GenJetCollection"        Value="slimmedGenJets"/>
-  <Item Name="TopJetCollection"        Value="jetsAk8PuppiSubstructure_SoftDropPuppi"/>
-  <Item Name="GenTopJetCollection"     Value="genjetsAk8SubstructureSoftDrop" />
-  <Item Name="PFParticleCollection"    Value="PFParticles"/>
-  <Item Name="METName"                 Value="slimmedMETs"/>
-  <Item Name="use_sframe_weight" Value="false"/>
-  <Item Name="dometfilters" Value="true" />
-  <Item Name="dopvfilter" Value="true" />
-  <Item Name="doSpikeKiller" Value="true" />
-  <Item Name="lumi_file" Value="common/data/2017/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.root"/>
-  <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/>
-  <Item Name="pileup_directory_data" Value="common/data/2017/MyDataPileupHistogram.root" />
-  <Item Name="pileup_directory" Value="common/data/2017/MyMCPileupHistogram.root" />
-  <Item Name="AnalysisModule" Value="PreSelModule"/>
-</UserConfig>
