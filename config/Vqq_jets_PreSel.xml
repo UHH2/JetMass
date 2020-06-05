@@ -3,7 +3,7 @@
 
 <!ENTITY NEVT "-1">
 
-<!ENTITY OUTdir   "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/WMassTrees/">
+<!ENTITY OUTdir   "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/WJetsTrees/">
 
 <!ENTITY DATA_JetHTRun2017B  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/DATA_JetHT_2017B.xml">
 <!ENTITY DATA_JetHTRun2017C  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/DATA_JetHT_2017C.xml">
