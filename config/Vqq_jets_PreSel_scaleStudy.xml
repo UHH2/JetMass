@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE JobConfiguration PUBLIC "" "VqqJetsJobConfig.dtd" [
 <!ENTITY NEVT "-1">
-<!ENTITY OUTdir   "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/WJetsTrees/">
+<!ENTITY OUTdir   "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/WJetsTrees/scaleStudy/">
 <!ENTITY SAMPLES SYSTEM "Vqq_jets_samples.xml">
 ]>
 
