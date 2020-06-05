@@ -29,15 +29,16 @@ def jet_mass_producer(configs=None):
     
     #channels for combined fit
     channels = configs['channels']
-    w_channels = {k:v for k,v in channels.items() if "WMass" in k}
-
+    qcd_estimation_channels = {k:v for k,v in channels.items() if "QcdEstimation" in v and v["QcdEstimation"]=="True"}
+    
     print('channels:',channels.keys())
-
+    
     #getting path of dir with root file from config
     hist_file = ROOT.TFile(configs['histLocation'])
+
+    do_qcd_estimation =  len(qcd_estimation_channels)>0
     
     #specify if QCD estimation (using Bernstein-polynomial as TF) should be used
-    do_qcd_estimation = ('QcdEstimation' in configs and configs['QcdEstimation']=='True') or len(w_channels)>0
     ################
     #QCD Estimation#
     ################
@@ -46,7 +47,7 @@ def jet_mass_producer(configs=None):
         # qcd_eff = get_qcd_efficiency(configs['histLocation'], w_channels)
         qcd_model = rl.Model('qcd_helper')
         qcd_pass, qcd_fail = 0.,0.
-        for channel_name, config in channels.items():
+        for channel_name, config in qcd_estimation_channels.items():
             fail_ch = rl.Channel(channel_name + 'fail')
             pass_ch = rl.Channel(channel_name + 'pass')
             qcd_model.addChannel(fail_ch)
@@ -60,9 +61,9 @@ def jet_mass_producer(configs=None):
         qcd_eff = qcd_pass / qcd_fail
 
         #get all lower edges from channel names
-        pt_edges = [float(channel.replace('WMassPt','')) for channel in w_channels]
+        pt_edges = [float(channel.split('Pt')[-1]) for channel in qcd_estimation_channels]
         #get last upper edge from name of last channel
-        pt_edges.append(float(channels['WMassPt%i'%pt_edges[-1]]['pt_bin'].split('to')[-1]))
+        pt_edges.append(float(channels[list(qcd_estimation_channels.keys())[-1].split('Pt')[0]+'Pt%i'%pt_edges[-1]]['pt_bin'].split('to')[-1]))
         pt_bins = np.array(pt_edges)
         # pt_bins = np.array([500, 550, 600, 675, 800, 1200])
         n_pt = len(pt_bins) - 1
@@ -136,7 +137,7 @@ def jet_mass_producer(configs=None):
 
         for region in regions:
             region_suffix = '_'+region if len(region)>0 else ''            
-            hist_dir = channel_name.split('Mass')[0]+'_%s__'+variable+'_%s'+config['pt_bin'] + region_suffix
+            hist_dir = config['selection']+'_%s__'+variable+'_%s'+config['pt_bin'] + region_suffix
             print('hist_dir:',hist_dir)
             #setting up channel for fit (name must be unique and can't include any '_')
             region_name = channel_name + region
@@ -146,7 +147,7 @@ def jet_mass_producer(configs=None):
 
             for sample_name in samples:
                 #do not include QCD template here, but rather use qcd estimation below
-                if('qcd' in sample_name.lower()):
+                if(('QcdEstimation' in config and config['QcdEstimation']=='True') and  'qcd' in sample_name.lower()):
                     continue
 
                 #specify if sample is signal or background type
@@ -156,7 +157,6 @@ def jet_mass_producer(configs=None):
 
                 #rebin hist
                 if(rebin_msd > 0):
-                    # sample_hist = sample_hist.Rebin(len(msd_bins)-1, sample_hist.GetName() + "_" + channel_name, msd_bins)
                     sample_hist = sample_hist.Rebin(len(msd_bins)-1, 'msd', msd_bins)
                 
                 #setup actual rhalphalib sample
@@ -196,20 +196,23 @@ def jet_mass_producer(configs=None):
 
             if(rebin_msd > 0):
                 data_hist = data_hist.Rebin(len(msd_bins)-1, 'msd', msd_bins)
-                # data_hist = data_hist.Rebin(len(msd_bins)-1, data_hist.GetName() + "_" + channel_name, msd_bins)
             data_hist.SetName('msd')
             ch.setObservation(data_hist)
-            if(do_qcd_estimation and 'w' in channel_name.lower()):
-                ch.mask = validbins[np.where(pt_bins==float(channel_name.split('Pt')[-1]))[0][0]]
-
-    if(do_qcd_estimation and 'w' in channel_name.lower()):
+            if('QcdEstimation' in config and config['QcdEstimation']=='True'):
+                mask = validbins[np.where(pt_bins==float(channel_name.split('Pt')[-1]))[0][0]]
+                dropped_events = np.sum(ch.getObservation().astype(float)[~mask])
+                percentage = dropped_events/np.sum(ch.getObservation().astype(float))
+                print('dropping due to mask: %.2f events (out of %.2f -> %.2f%%)'%(dropped_events,np.sum(ch.getObservation().astype(float)),percentage*100))
+                ch.mask = mask
+                
+    if(do_qcd_estimation):
         #QCD TF
         tf_params = rl.BernsteinPoly('tf_params', (2,2), ['pt','rho'], limits = (0,10))
         print('Using QCD efficiency (N2-ddt) of %.2f%% to scale initial QCD in pass region'%(qcd_eff*100))
         tf_params = qcd_eff * tf_params(ptscaled,rhoscaled)
         
         for channel_name, config in channels.items():
-            if('w' not in channel_name.lower()):
+            if('QcdEstimation' not in config or config['QcdEstimation']=="False"):
                 continue
             print(channel_name,'qcd estimation')
             fail_ch = model[channel_name + 'fail']
@@ -237,6 +240,7 @@ if(__name__ == "__main__"):
     parser = argparse.ArgumentParser()
     parser.add_argument("config", type=str, help="path to json with config")
     parser.add_argument('--justplots',action='store_true', help='just make plots.')
+    parser.add_argument('--build', action='store_true', help='just build workspace for combine')
     args = parser.parse_args()
     
     try:
@@ -246,10 +250,14 @@ if(__name__ == "__main__"):
         sys.exit(0)
     if(not args.justplots):
         jet_mass_producer(configs)
-
+        if(args.build):
+            exit(0) 
         from runFit import runFits
         runFits([configs['ModelName']])
 
-    plotter.plot_fit_result(configs)    
-    if('QcdEstimation' in configs and configs['QcdEstimation']=='True'):
-        plotter.plot_qcd_bernstein(configs)
+    plotter.plot_fit_result(configs)
+    plotter.plot_fit_result(configs,logY=True)
+
+    qcd_estimation_channels = {k:v for k,v in configs['channels'].items() if "QcdEstimation" in v and v["QcdEstimation"]=="True"}
+    if(len(qcd_estimation_channels)>0):
+        plotter.plot_qcd_bernstein(configs,(2,2))
