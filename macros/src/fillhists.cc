@@ -197,10 +197,10 @@ void fill_hists_W(TString dir, TString process, int job_index = 1 , int n_jobs =
   }
 
   TString process_file_name = TString(process);
-  process_file_name.ReplaceAll("Matched","").ReplaceAll("Unmatched","");
+  process_file_name.ReplaceAll("Matched","").ReplaceAll("Unmatched","").ReplaceAll("Data","DATA");
   cout << "filling hists for " << process << " (W) ..." << endl;
-  TFile *file = new TFile(dir+process_file_name+".root");
-  TTree *tree = (TTree *) file->Get("AnalysisTree");
+  TChain *tree = new TChain("AnalysisTree");
+  tree->Add(dir + "*" + process_file_name + "*.root");
 
   // creat a dummy hist for mjet
   TString dummyname = "W_"+process+"__mjet";
@@ -265,7 +265,7 @@ void fill_hists_W(TString dir, TString process, int job_index = 1 , int n_jobs =
   tree->SetBranchStatus("*",1);
 
   // loop over tree
-  int n_events_tree = tree->GetEntriesFast();
+  int n_events_tree = tree->GetEntries();
   int events_per_job = (int)(n_events_tree / n_jobs);
   int start_event = n_jobs == 1 ? 0 : job_index * events_per_job;
   int end_event = n_jobs == 1 ? n_events_tree : start_event + events_per_job;
@@ -278,9 +278,13 @@ void fill_hists_W(TString dir, TString process, int job_index = 1 , int n_jobs =
     for(int ptbin=0; ptbin<ptbins.size()-1; ptbin++){
       if(ptbins[ptbin] == -1 || (pt > ptbins[ptbin] && pt < ptbins[ptbin+1]) ){
         bool pass_N2ddt = passN2ddt(n2, pt, mjet);
+
+        double rho = 2 * TMath::Log(jecfactor*mjet/pt);
+        if(rho < -6.0 || rho > -2.1) continue;
+
         if(process.Contains("Matched") && (! matchedV)) continue;
         if(process.Contains("Unmatched") && (matchedV)) continue;
-        if(process.Contains("W") || process.Contains("Z")){
+        if((process.Contains("W") || process.Contains("Z")) && !process.Contains("tW")){
           double kfactor = derive_kfactor(genjet_V_pt);
           weight *= kfactor;
         }
