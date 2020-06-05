@@ -19,6 +19,7 @@
 #include <vector>
 #include <iostream>
 #include <TTree.h>
+#include <TChain.h>
 #include <TVectorD.h>
 #include <TMatrix.h>
 #include <vector>
