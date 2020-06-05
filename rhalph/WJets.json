@@ -1,5 +1,5 @@
 {
-  "ModelName":"WMassModel_test",
+  "ModelName":"WJetsModel",
   "gridHistFileName":"../Histograms/grid.root",
   "QcdEstimation":"True",
   "histLocation":"../macros/Histograms.root",
