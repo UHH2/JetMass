@@ -30,14 +30,36 @@ leftMargin = 0.14
 
 colors = {
     'qcd':867,
+    'QCD':867,
+    'WJets':413,
+    'WJetsUnmatched':419,
+    'WJetsMatched':413,
+    'ZJets':800,
+    'DYJets':800,
+    'ZJetsUnmatched':797,
+    'ZJetsMatched':800,
     'WUnmatched':419,
     'WMatched':413,
     'ZUnmatched':797,
     'ZMatched':800,
     'SingleTop':800,
+    'ST_tWch':41,
+    'ST_tch':43,
+    'ST_tWch_top':41,
+    'ST_tWch_antitop':42,
+    'ST_tW_top':41,
+    'ST_tW_antitop':42,
+    'ST_tch_top':43,
+    'ST_tch_antitop':44,
+    'ST_sch':40,    
     'TTbar':810,
     'TTbar_Hadronic':810,
     'TTbar_SemiLeptonic':804,
+    'TTToHadronic':810,
+    'TTToSemiLeptonic':804,
+    'TTbar_had':810,
+    'TTbar_semilep':804,
+    'TTbar_dilep':803,
     'WJets':413,
     'other':867
 }
@@ -149,7 +171,7 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False):
     f_shapes = ROOT.TFile(config['ModelName']+"/fit_shapes.root","READ")
     ROOT.TH1.AddDirectory(0)
 
-    out_dir = config['ModelName']+'/plots'
+    out_dir = config['ModelName']+'/plots'+('/logY/' if logY else '')
     if(not os.path.exists(out_dir)):
         os.makedirs(out_dir)
 
@@ -157,14 +179,14 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False):
         print('plotting', channel_str)
         signals = channel['signal']
         backgrounds = [bg for bg in channel['samples'] if bg not in signals]
-        backgrounds = list(map(lambda bg: 'qcd' if 'QCD' in bg else bg ,backgrounds))
+        backgrounds = list(map(lambda bg: 'qcd' if ('QCD' in bg and "QcdEstimation" in channel and channel["QcdEstimation"]=="True") else bg ,backgrounds))
         regions = channel['regions'] if 'regions' in channel else [""]
         for region in regions:
             for suffix in ['prefit','postfit']:
                 plot_title = '%s %s %s'%(channel_str,region,suffix)
                 c = ROOT.TCanvas(plot_title,plot_title,600,600)
                 legend = ROOT.TLegend(0.60,0.65,0.9,0.9)
-
+                legend.SetFillStyle(0)
                 plotpad,ratiopad = setup_pads(c)              
                 plotpad.cd()
 
@@ -186,6 +208,8 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False):
                 minima = [hist.GetMinimum() for hist in shapes_signal]+[hist.GetMinimum() for hist in shapes_background]
                 while 0.0 in minima:
                     minima.remove(0.0)
+                if(len(minima)==0):
+                    minima.append(1.0)
                 Y_minimum = min(minima)
 
                 h_obs.SetLineColor(1)
@@ -228,16 +252,17 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False):
                 h_obs.Draw(obs_draw_option+'SAME')
                 legend.Draw('SAME')
 
-                normal_ratio = False
+                normal_ratio = True
                 ratiopad.cd()
                 if(normal_ratio):
                     ratio_hist = h_obs.Clone()
                     ratio_hist.GetYaxis().SetTitle("#frac{obs.}{fit}")
                     ratio_hist.GetYaxis().SetRangeUser(0.5,1.5)
                     ratio_hist.Divide(total_sb)
-                    ratio_hist.SetLineColor(32)
+                    ratio_hist.SetLineColor(1)
                     ratio_hist.SetLineWidth(2)
-                    ratio_hist.SetMarkerStyle(1)
+                    ratio_hist.SetMarkerColor(1)
+                    ratio_hist.SetMarkerStyle(33)
                     setup_ratio_hist(ratio_hist)
                     ratio_hist.GetYaxis().SetRangeUser(0.3,1.7)
 
@@ -248,8 +273,8 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False):
                     ratio_hist_1.SetLineWidth(2)
                     ratio_hist_1.SetMarkerStyle(1)
 
-                    ratio_hist.Draw('EP')
-                    ratio_hist_1.Draw('EPSAME')
+                    ratio_hist.Draw('EP1')
+                    # ratio_hist_1.Draw('EPSAME')
 
                 else:
                     #constructing data-BG/sigma
@@ -313,4 +338,5 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False):
 
 
                 c.RedrawAxis()
+                # c.SaveAs(out_dir+'/'+hist_dir+('_logY' if logY else '')+'.pdf')
                 c.SaveAs(out_dir+'/'+hist_dir+('_logY' if logY else '')+'.pdf')
