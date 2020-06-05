@@ -1,46 +1,87 @@
 {
   "ModelName":"WMassModel",
   "gridHistFileName":"../Histograms/grid.root",
-  "QcdEstimation":"True",
   "histLocation":"../macros/Histograms.root",
   "channels":{
-    "WMassPt500":{
+    "WJetsPt500":{
+      "QcdEstimation":"True",
+      "selection":"W",
       "pt_bin":"500to550",
-      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic","ST_tW_top","ST_tW_antitop"],
+      "samples":["QCD","WJetsUnmatched","WJetsMatched","ZJetsUnmatched","ZJetsMatched","TTToHadronic","TTToSemiLeptonic","ST_tW_top","ST_tW_antitop"],
       "NormUnc":[0,1.025,1.025],
-      "signal":["WMatched","ZMatched"],
+      "signal":["WJetsMatched","ZJetsMatched"],
       "obs":"Data",
       "regions":["pass","fail"]
     },
-    "WMassPt550":{
+    "WJetsPt550":{
+      "QcdEstimation":"True",
+      "selection":"W",
       "pt_bin":"550to600",
-      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic","ST_tW_top","ST_tW_antitop"],
+      "samples":["QCD","WJetsUnmatched","WJetsMatched","ZJetsUnmatched","ZJetsMatched","TTToHadronic","TTToSemiLeptonic","ST_tW_top","ST_tW_antitop"],
       "NormUnc":[0,1.025,1.025],
-      "signal":["WMatched","ZMatched"],
+      "signal":["WJetsMatched","ZJetsMatched"],
       "obs":"Data",
       "regions":["pass","fail"]
     },
-    "WMassPt600":{
+    "WJetsPt600":{
+        "QcdEstimation":"True",
+      "selection":"W",
       "pt_bin":"600to675",
-      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic","ST_tW_top","ST_tW_antitop"],
+      "samples":["QCD","WJetsUnmatched","WJetsMatched","ZJetsUnmatched","ZJetsMatched","TTToHadronic","TTToSemiLeptonic","ST_tW_top","ST_tW_antitop"],
       "NormUnc":[0,1.025,1.025],
-      "signal":["WMatched","ZMatched"],
+      "signal":["WJetsMatched","ZJetsMatched"],
       "obs":"Data",
       "regions":["pass","fail"]
     },
-    "WMassPt675":{
+    "WJetsPt675":{
+      "QcdEstimation":"True",
+      "selection":"W",
       "pt_bin":"675to800",
-      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic","ST_tW_top","ST_tW_antitop"],
+      "samples":["QCD","WJetsUnmatched","WJetsMatched","ZJetsUnmatched","ZJetsMatched","TTToHadronic","TTToSemiLeptonic","ST_tW_top","ST_tW_antitop"],
       "NormUnc":[0,1.025,1.025],
-      "signal":["WMatched","ZMatched"],
+      "signal":["WJetsMatched","ZJetsMatched"],
       "obs":"Data",
       "regions":["pass","fail"]
     },
-    "WMassPt800":{
+    "WJetsPt800":{
+      "QcdEstimation":"True",
+      "selection":"W",
       "pt_bin":"800to1200",
-      "samples":["QCD","WUnmatched","WMatched","ZUnmatched","ZMatched","TTbar_Hadronic","TTbar_SemiLeptonic","ST_tW_top","ST_tW_antitop"],
+      "samples":["QCD","WJetsUnmatched","WJetsMatched","ZJetsUnmatched","ZJetsMatched","TTToHadronic","TTToSemiLeptonic","ST_tW_top","ST_tW_antitop"],
       "NormUnc":[0,1.025,1.025],
-      "signal":["WMatched","ZMatched"],
+      "signal":["WJetsMatched","ZJetsMatched"],
+      "obs":"Data",
+      "regions":["pass","fail"]
+    },
+    "WfromTopPt200":{
+      "selection":"WfromTop",
+      "pt_bin":"200to300",
+      "samples":["QCD", "ST_sch", "ST_tch","ST_tWch", "DYJets", "WJets", "TTbar_had","TTbar_dilep", "TTbar_semilep"],
+      "signal":["TTbar_semilep","ST_tWch"],
+      "obs":"Data",
+      "regions":["pass","fail"]
+    },
+    "WfromTopPt300":{
+      "selection":"WfromTop",
+      "pt_bin":"300to400",
+      "samples":["QCD", "ST_sch", "ST_tch","ST_tWch", "DYJets", "WJets", "TTbar_had","TTbar_dilep", "TTbar_semilep"],
+      "signal":["TTbar_semilep","ST_tWch"],
+      "obs":"Data",
+      "regions":["pass","fail"]
+    },
+    "WfromTopPt400":{
+      "selection":"WfromTop",
+      "pt_bin":"400to500",
+      "samples":["QCD", "ST_sch", "ST_tch","ST_tWch", "DYJets", "WJets", "TTbar_had","TTbar_dilep", "TTbar_semilep"],
+      "signal":["TTbar_semilep","ST_tWch"],
+      "obs":"Data",
+      "regions":["pass","fail"]
+    },
+    "WfromTopPt500":{
+      "selection":"WfromTop",
+      "pt_bin":"500toInf",
+      "samples":["QCD", "ST_sch", "ST_tch","ST_tWch", "DYJets", "WJets", "TTbar_had","TTbar_dilep", "TTbar_semilep"],
+      "signal":["TTbar_semilep","ST_tWch"],
       "obs":"Data",
       "regions":["pass","fail"]
     }
