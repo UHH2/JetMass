@@ -109,41 +109,41 @@
         Value                 CDATA            #REQUIRED
 >
         
-<!ENTITY DATA_JetHTRun2017B  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/DATA_JetHT_2017B.xml">
-<!ENTITY DATA_JetHTRun2017C  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/DATA_JetHT_2017C.xml">
-<!ENTITY DATA_JetHTRun2017D  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/DATA_JetHT_2017D.xml">
-<!ENTITY DATA_JetHTRun2017E  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/DATA_JetHT_2017E.xml">
-<!ENTITY DATA_JetHTRun2017F  SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/DATA_JetHT_2017F.xml">
+<!ENTITY DATA_JetHTRun2017B  SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/DATA_JetHT_2017B.xml">
+<!ENTITY DATA_JetHTRun2017C  SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/DATA_JetHT_2017C.xml">
+<!ENTITY DATA_JetHTRun2017D  SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/DATA_JetHT_2017D.xml">
+<!ENTITY DATA_JetHTRun2017E  SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/DATA_JetHT_2017E.xml">
+<!ENTITY DATA_JetHTRun2017F  SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/DATA_JetHT_2017F.xml">
 
-<!ENTITY QCD_Pt_170to300 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_170to300_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_170to300_ext1 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_170to300_TuneCP5_13TeV_pythia8_Fall17_ext1_v2.xml">
-<!ENTITY QCD_Pt_300to470 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_300to470_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_300to470_ext1 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_300to470_TuneCP5_13TeV_pythia8_Fall17_ext1.xml">
-<!ENTITY QCD_Pt_470to600 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_470to600_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_470to600_ext1 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_470to600_TuneCP5_13TeV_pythia8_Fall17_ext1.xml">
-<!ENTITY QCD_Pt_600to800 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_600to800_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_600to800_ext1 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_600to800_TuneCP5_13TeV_pythia8_Fall17_ext1_v2.xml">
-<!ENTITY QCD_Pt_800to1000 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_800to1000_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_800to1000_ext1 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_800to1000_TuneCP5_13TeV_pythia8_Fall17_ext1_v2.xml">
-<!ENTITY QCD_Pt_1000to1400 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_1000to1400_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_1000to1400_ext1 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_1000to1400_TuneCP5_13TeV_pythia8_Fall17_ext1_v2.xml">
-<!ENTITY QCD_Pt_1400to1800 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_1400to1800_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_1400to1800_ext1 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_1400to1800_TuneCP5_13TeV_pythia8_Fall17_ext1.xml">
-<!ENTITY QCD_Pt_1800to2400 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_1800to2400_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_2400to3200 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_2400to3200_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_3200toInf SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_3200toInf_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_3200toInf_ext1 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/QCD/QCD_Pt_3200toInf_TuneCP5_13TeV_pythia8_Fall17_ext1_v1.xml">
+<!ENTITY QCD_Pt_170to300 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_170to300_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
+<!ENTITY QCD_Pt_170to300_ext1 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_170to300_TuneCP5_13TeV_pythia8_Fall17_ext1_v2.xml">
+<!ENTITY QCD_Pt_300to470 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_300to470_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
+<!ENTITY QCD_Pt_300to470_ext1 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_300to470_TuneCP5_13TeV_pythia8_Fall17_ext1.xml">
+<!ENTITY QCD_Pt_470to600 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_470to600_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
+<!ENTITY QCD_Pt_470to600_ext1 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_470to600_TuneCP5_13TeV_pythia8_Fall17_ext1.xml">
+<!ENTITY QCD_Pt_600to800 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_600to800_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
+<!ENTITY QCD_Pt_600to800_ext1 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_600to800_TuneCP5_13TeV_pythia8_Fall17_ext1_v2.xml">
+<!ENTITY QCD_Pt_800to1000 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_800to1000_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
+<!ENTITY QCD_Pt_800to1000_ext1 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_800to1000_TuneCP5_13TeV_pythia8_Fall17_ext1_v2.xml">
+<!ENTITY QCD_Pt_1000to1400 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_1000to1400_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
+<!ENTITY QCD_Pt_1000to1400_ext1 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_1000to1400_TuneCP5_13TeV_pythia8_Fall17_ext1_v2.xml">
+<!ENTITY QCD_Pt_1400to1800 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_1400to1800_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
+<!ENTITY QCD_Pt_1400to1800_ext1 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_1400to1800_TuneCP5_13TeV_pythia8_Fall17_ext1.xml">
+<!ENTITY QCD_Pt_1800to2400 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_1800to2400_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
+<!ENTITY QCD_Pt_2400to3200 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_2400to3200_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
+<!ENTITY QCD_Pt_3200toInf SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_3200toInf_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
+<!ENTITY QCD_Pt_3200toInf_ext1 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_3200toInf_TuneCP5_13TeV_pythia8_Fall17_ext1_v1.xml">
 
-<!ENTITY WJetsToQQ_HT400to600 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/MC_WJetsToQQ_HT400to600_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
-<!ENTITY WJetsToQQ_HT600to800 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/MC_WJetsToQQ_HT600to800_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
-<!ENTITY WJetsToQQ_HT800toInf SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/MC_WJetsToQQ_HT800toInf_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY WJetsToQQ_HT400to600 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/MC_WJetsToQQ_HT400to600_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY WJetsToQQ_HT600to800 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/MC_WJetsToQQ_HT600to800_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY WJetsToQQ_HT800toInf SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/MC_WJetsToQQ_HT800toInf_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
 
-<!ENTITY ZJetsToQQ_HT400to600 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/MC_ZJetsToQQ_HT400to600_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
-<!ENTITY ZJetsToQQ_HT600to800 SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/MC_ZJetsToQQ_HT600to800_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
-<!ENTITY ZJetsToQQ_HT800toInf SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v2/2017/MC_ZJetsToQQ_HT800toInf_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY ZJetsToQQ_HT400to600 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/MC_ZJetsToQQ_HT400to600_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY ZJetsToQQ_HT600to800 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/MC_ZJetsToQQ_HT600to800_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY ZJetsToQQ_HT800toInf SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/MC_ZJetsToQQ_HT800toInf_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
 
-<!ENTITY TTToHadronic SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v1/2017/MC_TTToHadronic_TuneCP5_13TeV-powheg-pythia8.xml">
-<!ENTITY TTToSemiLeptonic SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v1/2017/MC_TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8.xml">
+<!ENTITY TTToHadronic SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v1/2017/MC_TTToHadronic_TuneCP5_13TeV-powheg-pythia8.xml">
+<!ENTITY TTToSemiLeptonic SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v1/2017/MC_TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8.xml">
 
-<!ENTITY ST_tW_top SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v1/2017/ST_tW_top_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8.xml">
-<!ENTITY ST_tW_antitop SYSTEM "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/common/UHH2-datasets/RunII_102X_v1/2017/ST_tW_antitop_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8.xml">
+<!ENTITY ST_tW_top SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v1/2017/ST_tW_top_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8.xml">
+<!ENTITY ST_tW_antitop SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v1/2017/ST_tW_antitop_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8.xml">
