@@ -6,8 +6,8 @@
 ]>
 
 <!--
-<ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="20"/>
-<ConfigSGE RAM="4" DISK="4" Mail="steffen.albrecht@desy.de" Notification="as" Workdir="workdir_WMassPreSel"/>
+<ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="1"/>
+<ConfigSGE RAM="4" DISK="4" Mail="steffen.albrecht@desy.de" Notification="as" Workdir="workdir_Vqq_jets_PreSel"/>
 -->
 
 <JobConfiguration JobName="WMassPreSelJob" OutputLevel="INFO">
