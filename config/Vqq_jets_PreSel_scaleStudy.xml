@@ -152,10 +152,10 @@
     </UserConfig>
   </Cycle>
 
-  <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/PF_flavours_2etabin/" PostFix="" TargetLumi="41860">
+  <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/PF_flavours_2etabins/" PostFix="" TargetLumi="41860">
     &SAMPLES;
     <UserConfig>
-      <Item Name="GridFile" Value="JetMass/Histograms/grid_PF_flavours_2etabin.root" />
+      <Item Name="GridFile" Value="JetMass/Histograms/grid_PF_flavours_2etabins.root" />
       <Item Name="channel" Value="W"/>
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
       <Item Name="GenParticleCollection"   Value="GenParticles"/>
