@@ -1,7 +1,8 @@
 {
-  "ModelName":"WJetsModel",
-  "gridHistFileName":"../Histograms/grid.root",
-  "histLocation":"../macros/Histograms.root",
+  "ModelName":"WJetsOneScale",
+  "Pseudo":[],
+  "gridHistFileName":"../Histograms/grid_oneScale.root",
+  "histLocation":"../macros/scaleStudy/Histograms_oneScale.root",
   "channels":{
     "WJetsPt500":{
       "QcdEstimation":"True",
@@ -10,6 +11,7 @@
       "samples":["QCD","WJetsUnmatched","WJetsMatched","ZJetsUnmatched","ZJetsMatched","TTToHadronic","TTToSemiLeptonic","ST_tW_top","ST_tW_antitop"],
       "NormUnc":{"WJets":1.00089,"ZJets":1.00072},
       "signal":["WJetsMatched","ZJetsMatched"],
+      "obs":"Data",
       "regions":["pass","fail"]
     },
     "WJetsPt550":{
@@ -19,6 +21,7 @@
       "samples":["QCD","WJetsUnmatched","WJetsMatched","ZJetsUnmatched","ZJetsMatched","TTToHadronic","TTToSemiLeptonic","ST_tW_top","ST_tW_antitop"],
       "NormUnc":{"WJets":1.00089,"ZJets":1.00072},
       "signal":["WJetsMatched","ZJetsMatched"],
+      "obs":"Data",
       "regions":["pass","fail"]
     },
     "WJetsPt600":{
@@ -28,6 +31,7 @@
       "samples":["QCD","WJetsUnmatched","WJetsMatched","ZJetsUnmatched","ZJetsMatched","TTToHadronic","TTToSemiLeptonic","ST_tW_top","ST_tW_antitop"],
       "NormUnc":{"WJets":1.00089,"ZJets":1.00072},
       "signal":["WJetsMatched","ZJetsMatched"],
+      "obs":"Data",
       "regions":["pass","fail"]
     },
     "WJetsPt675":{
@@ -37,6 +41,7 @@
       "samples":["QCD","WJetsUnmatched","WJetsMatched","ZJetsUnmatched","ZJetsMatched","TTToHadronic","TTToSemiLeptonic","ST_tW_top","ST_tW_antitop"],
       "NormUnc":{"WJets":1.00089,"ZJets":1.00072},
       "signal":["WJetsMatched","ZJetsMatched"],
+      "obs":"Data",
       "regions":["pass","fail"]
     },
     "WJetsPt800":{
@@ -46,6 +51,7 @@
       "samples":["QCD","WJetsUnmatched","WJetsMatched","ZJetsUnmatched","ZJetsMatched","TTToHadronic","TTToSemiLeptonic","ST_tW_top","ST_tW_antitop"],
       "NormUnc":{"WJets":1.00089,"ZJets":1.00072},
       "signal":["WJetsMatched","ZJetsMatched"],
+      "obs":"Data",
       "regions":["pass","fail"]
     }
   }
