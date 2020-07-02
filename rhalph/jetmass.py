@@ -7,13 +7,36 @@ from ROOT import gROOT
 rl.util.install_roofit_helpers()
 rl.ParametericSample.PreferRooParametricHist = False
 
+def build_pseudo(samples,hist_file,hist_dir,vary_pseudo_like):
+    if(len(vary_pseudo_like)>1):
+        print('building pseudo data from ',samples,' (varied like',vary_pseudo_like,')')
+        first_hist_dir = (hist_dir+'__%s')%(samples[0],*tuple(vary_pseudo_like))
+        print(first_hist_dir)
+        print(hist_file)
+        pseudo_data_hist = hist_file.Get(first_hist_dir)
+        for sample in samples[1:]:
+            this_hist_dir = (hist_dir+'__%s')%(sample,*tuple(vary_pseudo_like))
+            print(this_hist_dir)
+            pseudo_data_hist.Add(hist_file.Get(this_hist_dir))
+        return pseudo_data_hist
+    else:
+        print('building pseudo data from ',samples,' (unvaried)')
+        first_hist_dir = hist_dir%(samples[0],"")
+        pseudo_data_hist = hist_file.Get(first_hist_dir)
+        for sample in samples[1:]:
+            this_hist_dir = hist_dir%(sample,"")
+            print(this_hist_dir)
+            pseudo_data_hist.Add(hist_file.Get(this_hist_dir))
+        return pseudo_data_hist
+    
 
+    
 def jet_mass_producer(configs=None):
     """
     configs: configuration dict including:
-    ModelName,gridHistFileName,QcdEstimation,channels
+    ModelName,gridHistFileName,channels,histLocation
       -> channels: dict with dict for each channels:
-        -> includes histLocation,histDir,samples,NormUnc,signal,obs,regions    
+        -> includes histDir,samples,NormUnc,signal,regions,QcdEstimation
     """
     rebin_msd = True
     # min_msd, max_msd = (50,210)
@@ -54,6 +77,9 @@ def jet_mass_producer(configs=None):
             qcd_model.addChannel(pass_ch)
             fail_hist = hist_file.Get('W_QCD__mjet_'+config['pt_bin']+'_fail')
             pass_hist = hist_file.Get('W_QCD__mjet_'+config['pt_bin']+'_pass')
+            if(rebin_msd > 0):
+                fail_hist = fail_hist.Rebin(len(msd_bins)-1, 'msd', msd_bins)
+                pass_hist = pass_hist.Rebin(len(msd_bins)-1, 'msd', msd_bins)
             fail_ch.setObservation(fail_hist)
             pass_ch.setObservation(pass_hist)
             qcd_fail += fail_ch.getObservation().sum()
@@ -120,6 +146,19 @@ def jet_mass_producer(configs=None):
     print('CMS_lumi', 'lnN')
     lumi = rl.NuisanceParameter('CMS_lumi', 'lnN')
     lumi_effect = 1.027 
+
+    norm_nuisances = {}
+    for channel_name in channels.keys():
+        for i, sample in enumerate(channels[channel_name]['samples']):
+            norm_uncertainties = channels[channel_name]['NormUnc']
+            for name,norm_unc in norm_uncertainties.items():
+                nuisance_par = [rl.NuisanceParameter(name+'_normUnc','lnN'),norm_unc]
+                for k,v in norm_nuisances.items():
+                    if name in v[0].name:
+                        nuisance_par = v
+                if norm_unc>0 and name in sample and  sample not in norm_nuisances:
+                    norm_nuisances.update({sample:nuisance_par})
+                
     
     for channel_name, config in channels.items():
         print('setting up channel:',channel_name)
@@ -171,27 +210,19 @@ def jet_mass_producer(configs=None):
                     if(rebin_msd > 0):
                         hist_up = hist_up.Rebin(len(msd_bins)-1, 'msd', msd_bins)
                         hist_down = hist_down.Rebin(len(msd_bins)-1, 'msd', msd_bins)
-                        # hist_up = hist_up.Rebin(len(msd_bins)-1, hist_up.GetName() + "_" + channel_name, msd_bins)
-                        # hist_down = hist_down.Rebin(len(msd_bins)-1, hist_down.GetName() + "_" + channel_name, msd_bins)
 
                     
                     sample.setParamEffect(grid_nuisance, hist_up, hist_down)
                 sample.setParamEffect(lumi, lumi_effect)
-
+                if sample_name in norm_nuisances.keys():
+                    sample.setParamEffect(norm_nuisances[sample_name][0],norm_nuisances[sample_name][1])
+                    
                 ch.addSample(sample)
 
 
-            if 'varyPseudoLike' in config and config['obs'] == "Pseudo": #TODO: fix this for new HistFileFormat
-                hist_path = config['varyPseudoLike']
-                if '/' not in hist_path:
-                    hist_path = hist_dir+'/'+hist_path
-                data_hist = data_file.Get(hist_path)
-                data_hist.SetName('Mass_central')
+            if 'Pseudo' in configs:
+                data_hist = build_pseudo(samples,hist_file,hist_dir,configs['Pseudo']) 
             else:
-                #necessary for 2016 JetHT UHH Ntuples because they are missing JetConstituents
-                # if('W' in channel_name and config['obs'] == "Data"):
-                #     hist_path = hist_dir.split('pt')[0]+'noConst_pt'+hist_dir.split('pt')[1]
-                # else:
                 data_hist=hist_file.Get(hist_dir%("Data",""))
 
             if(rebin_msd > 0):
@@ -207,7 +238,7 @@ def jet_mass_producer(configs=None):
                 
     if(do_qcd_estimation):
         #QCD TF
-        tf_params = rl.BernsteinPoly('tf_params', (2,2), ['pt','rho'], limits = (0,10))
+        tf_params = rl.BernsteinPoly('tf_params', (2,2), ['pt','rho'], limits = (-10,10))
         print('Using QCD efficiency (N2-ddt) of %.2f%% to scale initial QCD in pass region'%(qcd_eff*100))
         tf_params = qcd_eff * tf_params(ptscaled,rhoscaled)
         
@@ -257,6 +288,7 @@ if(__name__ == "__main__"):
 
     plotter.plot_fit_result(configs)
     plotter.plot_fit_result(configs,logY=True)
+    plotter.plot_mass_scale_nuisances(configs)
 
     qcd_estimation_channels = {k:v for k,v in configs['channels'].items() if "QcdEstimation" in v and v["QcdEstimation"]=="True"}
     if(len(qcd_estimation_channels)>0):
