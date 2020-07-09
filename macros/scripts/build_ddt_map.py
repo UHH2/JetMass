@@ -23,7 +23,8 @@ def numpy_to_TH2(np_arr,name,th3):
     # The x bins here are hard coded just to make them comparable to annas old plots.
     # th2 = ROOT.TH2D(name,name,90,th3.xlow,-1,th3.ynumbins,th3.ylow,th3.yhigh)
     # array2hist(np_arr_clean[:-10,:],th2)
-    th2 = ROOT.TH2D(name,name,th3.xnumbins,th3.xlow,th3.xhigh,th3.ynumbins,th3.ylow,th3.yhigh)
+    
+    th2 = ROOT.TH2D(name,name,th3.xnumbins,np.append(th3.bins[0][:-1,0],th3.bins[0][-1]),th3.ynumbins,np.append(th3.bins[1][:-1,0],th3.bins[1][-1]))
     array2hist(np_arr_clean,th2)
     return th2
 

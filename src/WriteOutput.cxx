@@ -180,6 +180,7 @@ vector<double> WriteOutput::CalculateMJetVariation(vector<PFParticle>particles, 
 }
 
 bool WriteOutput::inCategory(PFParticle p, TString cat){
+  if(cat == "all") return true;
   bool inCat = false;
   int id = p.particleID();
   for(unsigned int i=0; i<all_cat.size(); i++){
