@@ -53,7 +53,7 @@
   <Library Name="libSUHH2JetMass"/>
   <Package Name="SUHH2JetMass.par"/>
 
-  <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/oneScale/" PostFix="" TargetLumi="41860">
+  <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/oneScale/" PostFix="" TargetLumi="41530">
     &SAMPLES;
     <UserConfig>
       <Item Name="GridFile" Value="JetMass/Histograms/grid_oneScale.root" />
@@ -80,7 +80,7 @@
     </UserConfig>
   </Cycle>
 
-  <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/PF_flavours/" PostFix="" TargetLumi="41860">
+  <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/PF_flavours/" PostFix="" TargetLumi="41530">
     &SAMPLES;
     <UserConfig>
       <Item Name="GridFile" Value="JetMass/Histograms/grid_PF_flavours.root" />
@@ -108,7 +108,7 @@
   </Cycle>
 
 
-  <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/2ptbins/" PostFix="" TargetLumi="41860">
+  <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/2ptbins/" PostFix="" TargetLumi="41530">
     &SAMPLES;
     <UserConfig>
       <Item Name="GridFile" Value="JetMass/Histograms/grid_2ptbins.root" />
@@ -136,7 +136,7 @@
   </Cycle>
 
 
-  <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/2etabins/" PostFix="" TargetLumi="41860">
+  <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/2etabins/" PostFix="" TargetLumi="41530">
     &SAMPLES;
     <UserConfig>
       <Item Name="GridFile" Value="JetMass/Histograms/grid_2etabins.root" />
@@ -164,58 +164,58 @@
   </Cycle>
 
 
-  <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/PF_flavours_2ptbins/" PostFix="" TargetLumi="41860">
-    &SAMPLES;
-    <UserConfig>
-      <Item Name="GridFile" Value="JetMass/Histograms/grid_PF_flavours_2ptbins.root" />
-      <Item Name="channel" Value="W"/>
-      <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
-      <Item Name="GenParticleCollection"   Value="GenParticles"/>
-      <Item Name="ElectronCollection"      Value="slimmedElectronsUSER"/>
-      <Item Name="MuonCollection"          Value="slimmedMuonsUSER"/>
-      <Item Name="JetCollection"           Value="jetsAk4CHS"/>
-      <Item Name="GenJetCollection"        Value="slimmedGenJets"/>
-      <Item Name="TopJetCollection"        Value="jetsAk8PuppiSubstructure_SoftDropPuppi"/>
-      <Item Name="GenTopJetCollection"     Value="genjetsAk8SubstructureSoftDrop" />
-      <Item Name="PFParticleCollection"    Value="PFParticles"/>
-      <Item Name="METName"                 Value="slimmedMETs"/>
-      <Item Name="use_sframe_weight" Value="false"/>
-      <Item Name="dometfilters" Value="true" />
-      <Item Name="dopvfilter" Value="true" />
-      <Item Name="doSpikeKiller" Value="true" />
-      <Item Name="lumi_file" Value="common/data/2017/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.root"/>
-      <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/>
-      <Item Name="pileup_directory_data" Value="common/data/2017/MyDataPileupHistogram.root" />
-      <Item Name="pileup_directory" Value="common/data/2017/MyMCPileupHistogram.root" />
-      <Item Name="AnalysisModule" Value="PreSelModule"/>
-    </UserConfig>
-  </Cycle>
+  <!-- <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/PF_flavours_2ptbins/" PostFix="" TargetLumi="41530"> -->
+  <!--   &SAMPLES; -->
+  <!--   <UserConfig> -->
+  <!--     <Item Name="GridFile" Value="JetMass/Histograms/grid_PF_flavours_2ptbins.root" /> -->
+  <!--     <Item Name="channel" Value="W"/> -->
+  <!--     <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/> -->
+  <!--     <Item Name="GenParticleCollection"   Value="GenParticles"/> -->
+  <!--     <Item Name="ElectronCollection"      Value="slimmedElectronsUSER"/> -->
+  <!--     <Item Name="MuonCollection"          Value="slimmedMuonsUSER"/> -->
+  <!--     <Item Name="JetCollection"           Value="jetsAk4CHS"/> -->
+  <!--     <Item Name="GenJetCollection"        Value="slimmedGenJets"/> -->
+  <!--     <Item Name="TopJetCollection"        Value="jetsAk8PuppiSubstructure_SoftDropPuppi"/> -->
+  <!--     <Item Name="GenTopJetCollection"     Value="genjetsAk8SubstructureSoftDrop" /> -->
+  <!--     <Item Name="PFParticleCollection"    Value="PFParticles"/> -->
+  <!--     <Item Name="METName"                 Value="slimmedMETs"/> -->
+  <!--     <Item Name="use_sframe_weight" Value="false"/> -->
+  <!--     <Item Name="dometfilters" Value="true" /> -->
+  <!--     <Item Name="dopvfilter" Value="true" /> -->
+  <!--     <Item Name="doSpikeKiller" Value="true" /> -->
+  <!--     <Item Name="lumi_file" Value="common/data/2017/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.root"/> -->
+  <!--     <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/> -->
+  <!--     <Item Name="pileup_directory_data" Value="common/data/2017/MyDataPileupHistogram.root" /> -->
+  <!--     <Item Name="pileup_directory" Value="common/data/2017/MyMCPileupHistogram.root" /> -->
+  <!--     <Item Name="AnalysisModule" Value="PreSelModule"/> -->
+  <!--   </UserConfig> -->
+  <!-- </Cycle> -->
 
-  <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/PF_flavours_2etabins/" PostFix="" TargetLumi="41860">
-    &SAMPLES;
-    <UserConfig>
-      <Item Name="GridFile" Value="JetMass/Histograms/grid_PF_flavours_2etabins.root" />
-      <Item Name="channel" Value="W"/>
-      <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
-      <Item Name="GenParticleCollection"   Value="GenParticles"/>
-      <Item Name="ElectronCollection"      Value="slimmedElectronsUSER"/>
-      <Item Name="MuonCollection"          Value="slimmedMuonsUSER"/>
-      <Item Name="JetCollection"           Value="jetsAk4CHS"/>
-      <Item Name="GenJetCollection"        Value="slimmedGenJets"/>
-      <Item Name="TopJetCollection"        Value="jetsAk8PuppiSubstructure_SoftDropPuppi"/>
-      <Item Name="GenTopJetCollection"     Value="genjetsAk8SubstructureSoftDrop" />
-      <Item Name="PFParticleCollection"    Value="PFParticles"/>
-      <Item Name="METName"                 Value="slimmedMETs"/>
-      <Item Name="use_sframe_weight" Value="false"/>
-      <Item Name="dometfilters" Value="true" />
-      <Item Name="dopvfilter" Value="true" />
-      <Item Name="doSpikeKiller" Value="true" />
-      <Item Name="lumi_file" Value="common/data/2017/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.root"/>
-      <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/>
-      <Item Name="pileup_directory_data" Value="common/data/2017/MyDataPileupHistogram.root" />
-      <Item Name="pileup_directory" Value="common/data/2017/MyMCPileupHistogram.root" />
-      <Item Name="AnalysisModule" Value="PreSelModule"/>
-    </UserConfig>
-  </Cycle>
+  <!-- <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/PF_flavours_2etabins/" PostFix="" TargetLumi="41530"> -->
+  <!--   &SAMPLES; -->
+  <!--   <UserConfig> -->
+  <!--     <Item Name="GridFile" Value="JetMass/Histograms/grid_PF_flavours_2etabins.root" /> -->
+  <!--     <Item Name="channel" Value="W"/> -->
+  <!--     <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/> -->
+  <!--     <Item Name="GenParticleCollection"   Value="GenParticles"/> -->
+  <!--     <Item Name="ElectronCollection"      Value="slimmedElectronsUSER"/> -->
+  <!--     <Item Name="MuonCollection"          Value="slimmedMuonsUSER"/> -->
+  <!--     <Item Name="JetCollection"           Value="jetsAk4CHS"/> -->
+  <!--     <Item Name="GenJetCollection"        Value="slimmedGenJets"/> -->
+  <!--     <Item Name="TopJetCollection"        Value="jetsAk8PuppiSubstructure_SoftDropPuppi"/> -->
+  <!--     <Item Name="GenTopJetCollection"     Value="genjetsAk8SubstructureSoftDrop" /> -->
+  <!--     <Item Name="PFParticleCollection"    Value="PFParticles"/> -->
+  <!--     <Item Name="METName"                 Value="slimmedMETs"/> -->
+  <!--     <Item Name="use_sframe_weight" Value="false"/> -->
+  <!--     <Item Name="dometfilters" Value="true" /> -->
+  <!--     <Item Name="dopvfilter" Value="true" /> -->
+  <!--     <Item Name="doSpikeKiller" Value="true" /> -->
+  <!--     <Item Name="lumi_file" Value="common/data/2017/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.root"/> -->
+  <!--     <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/> -->
+  <!--     <Item Name="pileup_directory_data" Value="common/data/2017/MyDataPileupHistogram.root" /> -->
+  <!--     <Item Name="pileup_directory" Value="common/data/2017/MyMCPileupHistogram.root" /> -->
+  <!--     <Item Name="AnalysisModule" Value="PreSelModule"/> -->
+  <!--   </UserConfig> -->
+  <!-- </Cycle> -->
 
 </JobConfiguration>
