@@ -76,6 +76,7 @@ private:
   bool isTopSel = false;
   bool isWfromTopSel = false;
   bool isWSel = false;
+  bool do_genStudies = false;
   Double_t AK4_Clean_pT,AK4_Clean_eta,AK8_Clean_pT,AK8_Clean_eta;
 
 };
@@ -94,6 +95,8 @@ PreSelModule::PreSelModule(Context & ctx){
   else if(channel == "W")   isWSel = true;
   else throw runtime_error("PreSelModule: Select 'top' or 'W' channel");
 
+  do_genStudies = string2bool(ctx.get("doGenStudies", "true"));
+  
   // common modules
   MuonId muid = AndId<Muon>(MuonID(Muon::CutBasedIdTight), PtEtaCut(55., 2.4));
   ElectronId eleid = AndId<Electron>(ElectronID_Fall17_medium_noIso, PtEtaCut(55., 2.4));
@@ -261,6 +264,20 @@ bool PreSelModule::process(Event & event) {
   if(isWSel){
   if(!LEP_VETO_sel->passes(event)) passW = false;
   if(!N_AK8_500_sel->passes(event)) passW = false;
+  }
+
+  // make sure there is a closest gentopjet to topjet is closer than dR<0.6  
+  if(is_mc && do_genStudies && (passTOP || passWfromTop || passW)){
+    auto dR = numeric_limits<double>::infinity();
+    if(event.gentopjets->size()>0){
+      const GenTopJet * closest_gentopjet = closestParticle(event.topjets->at(0), *event.gentopjets);
+      dR = deltaR(event.topjets->at(0),*closest_gentopjet);
+    }
+    if(dR>0.6){
+      passTOP = false;
+      passWfromTop = false;
+      passW = false;
+    }
   }
 
 

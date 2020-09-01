@@ -17,6 +17,9 @@ WriteOutput::WriteOutput(uhh2::Context & ctx){
   h_mjet = ctx.declare_event_output<double>("mjet");
   h_mjet_SD = ctx.declare_event_output<double>("mjet_SD");
   h_msubjets = ctx.declare_event_output<double>("msubjets");
+  h_mgensubjets = ctx.declare_event_output<double>("mgensubjets");
+  h_mgenparticles = ctx.declare_event_output<double>("mgenparticles");
+  h_genpt = ctx.declare_event_output<double>("genpt");  
   h_weight = ctx.declare_event_output<double>("weight");
   h_matchedV = ctx.declare_event_output<bool>("matchedV");
   h_genjetpt = ctx.declare_event_output<double>("genjetpt");
@@ -36,6 +39,8 @@ WriteOutput::WriteOutput(uhh2::Context & ctx){
   // isWfromTopSel = channel == "WfromTop";
   isWSel = channel == "W";
 
+  do_genStudies = string2bool(ctx.get("doGenStudies", "true"));
+  
   // read configuration from root file
   TString gfilename = ctx.get("GridFile");
   TFile* gfile = new TFile(locate_file((std::string)gfilename).c_str());
@@ -131,12 +136,33 @@ bool WriteOutput::process(uhh2::Event & event){
     genjetpt = Vmatched ? gen_pt_1 : gen_pt_2;
   }
 
-  // write output in handles
+  float genpt,m_genparticles,m_gensubjets;
+
+  if(isMC && do_genStudies){    
+    if(event.gentopjets->size()<1)return false;
+    const GenTopJet * matched_gentopjet = closestParticle(event.topjets->at(0), *event.gentopjets);    
+    vector<GenJet> gensubjets = matched_gentopjet->subjets();
+    LorentzVector softdrop_genjet;
+    for(auto gensubjet: gensubjets){
+      softdrop_genjet += gensubjet.v4();
+    }
+    m_gensubjets = softdrop_genjet.M();    
+    genpt =  matched_gentopjet->pt();
+  }else{
+    genpt = -1.;
+    m_gensubjets = -1.;
+    m_genparticles = -1.;
+  }
+  
   event.set(h_pt, pt);
   event.set(h_mjet, mjet);
   
   event.set(h_msubjets, softdrop_jet_raw.M());
   event.set(h_mjet_SD,mjet_SD);
+
+  event.set(h_mgensubjets, m_gensubjets);
+  event.set(h_mgenparticles, m_genparticles);
+  event.set(h_genpt, genpt);
 
   event.set(h_N2, N2);
   event.set(h_tau32, tau32);

@@ -30,9 +30,12 @@ private:
   void ConstructOtherIDs();
   bool inCategory(PFParticle p, TString cat);
 
+  uhh2::Event::Handle<double>h_msubjets; // mass of summed v4 of subjets
+  uhh2::Event::Handle<double>h_mgensubjets; // mass of summed v4 of subjets
+  uhh2::Event::Handle<double>h_mgenparticles; // mass of summed v4 of genparticle Candidate from subjets
+  uhh2::Event::Handle<double>h_genpt;
   uhh2::Event::Handle<double>h_mjet;
   uhh2::Event::Handle<double>h_mjet_SD;
-  uhh2::Event::Handle<double>h_msubjets; // mass of summed v4 of subjets
   uhh2::Event::Handle<double>h_DeepBoost;
   uhh2::Event::Handle<double>h_pt;
   uhh2::Event::Handle<double>h_N2;
@@ -52,7 +55,7 @@ private:
   double variation = 0.1;
   std::unique_ptr<MatchingSelection> MatchV_sel;
   std::unique_ptr<StandaloneTopJetCorrector> softdrop_jec;
-  bool isMC, is_WSample, is_ZSample, isTopSel, isWSel;
+  bool isMC, do_genStudies, is_WSample, is_ZSample, isTopSel, isWSel;
 
   /*
   Particle IDs
