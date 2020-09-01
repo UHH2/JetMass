@@ -6,16 +6,22 @@ using namespace uhh2;
 using namespace std;
 
 WriteOutput::WriteOutput(uhh2::Context & ctx){
+
+  softdrop_jec.reset(new StandaloneTopJetCorrector(ctx));
+
   h_pt = ctx.declare_event_output<double>("pt");
   h_N2 = ctx.declare_event_output<double>("N2");
   h_tau32 = ctx.declare_event_output<double>("tau32");
   h_tau21 = ctx.declare_event_output<double>("tau21");
   h_DeepBoost = ctx.declare_event_output<double>("DeepBoostWQCD");
   h_mjet = ctx.declare_event_output<double>("mjet");
+  h_mjet_SD = ctx.declare_event_output<double>("mjet_SD");
+  h_msubjets = ctx.declare_event_output<double>("msubjets");
   h_weight = ctx.declare_event_output<double>("weight");
   h_matchedV = ctx.declare_event_output<bool>("matchedV");
   h_genjetpt = ctx.declare_event_output<double>("genjetpt");
   h_jecfactor = ctx.declare_event_output<double>("jecfactor");
+  h_jecfactor_SD = ctx.declare_event_output<double>("jecfactor_SD");
 
   // read from xml file
   auto dataset_type = ctx.get("dataset_type");
@@ -75,8 +81,10 @@ bool WriteOutput::process(uhh2::Event & event){
 
   vector<PFParticle> particles;
 
+  LorentzVector softdrop_jet_raw;
   // find all pf particles inside the subjets
   for(auto subjet: subjets){
+    softdrop_jet_raw += subjet.v4()*subjet.JEC_factor_raw();
     for(const auto candInd : subjet.pfcand_indexs()){
       particles.push_back(allparticles->at(candInd));
     }
@@ -86,6 +94,8 @@ bool WriteOutput::process(uhh2::Event & event){
   double N2 = topjets->at(0).ecfN2_beta1();
   double mjet = CalculateMJet(particles);
   double jecfactor = 1.0/topjets->at(0).JEC_factor_raw();
+  double jecfactor_SD = softdrop_jec->getJecFactor(event,softdrop_jet_raw);
+  double mjet_SD = topjets->at(0).softdropmass();
 
   double deepboost = topjets->at(0).btag_DeepBoosted_WvsQCD();
   double tau32 = 0;
@@ -124,6 +134,10 @@ bool WriteOutput::process(uhh2::Event & event){
   // write output in handles
   event.set(h_pt, pt);
   event.set(h_mjet, mjet);
+  
+  event.set(h_msubjets, softdrop_jet_raw.M());
+  event.set(h_mjet_SD,mjet_SD);
+
   event.set(h_N2, N2);
   event.set(h_tau32, tau32);
   event.set(h_tau21, tau21);
@@ -132,7 +146,7 @@ bool WriteOutput::process(uhh2::Event & event){
   event.set(h_matchedV, Vmatched);
   event.set(h_genjetpt, genjetpt);
   event.set(h_jecfactor, jecfactor);
-
+  event.set(h_jecfactor_SD, jecfactor_SD);
 
   return true;
 }
