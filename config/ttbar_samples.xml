@@ -1,0 +1,58 @@
+
+    <!-- <!-\- testing -\-> -->
+
+<!--     <InputData Version="SingleMu_B_2017v2_test" Lumi="1" Type="DATA" NEventsMax="20000" Cacheable="False" NEventsSkip="10000"> -->
+<!--       <!-\- <In FileName="/pnfs/desy.de/cms/tier2/store/user/akaravdi/RunII_102X_v1_ProductionMay19_2017_leadingjetConstits_LZMA9/SingleMuon/crab_SingleMuon_v1_Run2017B/190529_124507/0000/Ntuple_1.root" Lumi="0.0"/> -\-> -->
+<!--       <In FileName="/pnfs/desy.de/cms/tier2/store/user/akaravdi/RunII_102X_v1_ProductionMay19_2017_leadingjetConstits_LZMA9/SingleMuon/crab_SingleMuon_v1_Run2017B/190529_124507/0000/Ntuple_2.root" Lumi="0.0"/> -->
+<!--       <InputTree Name="AnalysisTree"/> -->
+<!--       <OutputTree Name="AnalysisTree"/> -->
+<!--     </InputData> -->
+    
+<!--     <InputData Version="TTbar_semilep_2017v2-test" Lumi="35279949.78" Type="MC" NEventsMax="1000" Cacheable="False"> -->
+<!-- <!-\- <In FileName="/pnfs/desy.de/cms/tier2/store/user/pgunnell/RunII_102X_v1/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/crab_TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/190505_200110/0000/Ntuple_1.root" Lumi="0.0"/> -\-> -->
+<!-- <In FileName="/pnfs/desy.de/cms/tier2/store/user/pgunnell/RunII_102X_v1/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/crab_TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/190505_200110/0000/Ntuple_10.root" Lumi="0.0"/> -->
+<!-- <!-\- <!-\\- <In FileName="/pnfs/desy.de/cms/tier2/store/user/pgunnell/RunII_102X_v1/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/crab_TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/190505_200110/0000/Ntuple_101.root" Lumi="0.0"/> -\\-> -\-> -->
+<!-- <!-\- <!-\\- <In FileName="/pnfs/desy.de/cms/tier2/store/user/pgunnell/RunII_102X_v1/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/crab_TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/190505_200110/0000/Ntuple_102.root" Lumi="0.0"/> -\\-> -\-> -->
+<!--       <InputTree Name="AnalysisTree"/> -->
+<!--       <OutputTree Name="AnalysisTree"/> -->
+<!--     </InputData> -->
+
+
+<InputData Version="SingleMu_B_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_B;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="SingleMu_C_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_C;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="SingleMu_D_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_D;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="SingleMu_E_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_E;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="SingleMu_F_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_F;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="TTbar_semilep_2017v2"       Lumi="35279949.78" Type="MC" NEventsMax="-1" Cacheable="False">&TTbar_semilep;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="TTbar_dilep_2017v2"         Lumi="7428080.259" Type="MC" NEventsMax="-1" Cacheable="False">&TTbar_dilep;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="TTbar_had_2017v2"           Lumi="109490.4712" Type="MC" NEventsMax="-1" Cacheable="False">&TTbar_had;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="ST_tch_top_2017v2"          Lumi="5192499.578" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tch_top;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="ST_tch_antitop_2017v2"      Lumi="3386024.049" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tch_antitop;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="ST_tWch_antitop_2017v2"     Lumi="10052727.74" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tWch_antitop;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="ST_tWch_top_2017v2"         Lumi="8837195.004" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tWch_top;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="ST_sch_2017v2"              Lumi="2955966.181" Type="MC" NEventsMax="-1" Cacheable="False">&ST_sch;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="QCD_PT20to30_2017v2"        Lumi="10.95535913" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_PT20to30;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="QCD_PT30to50_2017v2"        Lumi="21.41854512" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_PT30to50;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="QCD_PT50to80_2017v2"        Lumi="63.38724552" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_PT50to80;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="QCD_PT80to120_2017v2"       Lumi="248.4389353" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_PT80to120;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="QCD_PT120to170_2017v2"      Lumi="892.6900519" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_PT120to170;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="QCD_PT170to300_2017v2"      Lumi="5853.217916" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_PT170to300;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="QCD_PT300to470_2017v2"      Lumi="28419.7047"  Type="MC" NEventsMax="-1" Cacheable="False">&QCD_PT300to470;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="QCD_PT470to600_2017v2"      Lumi="412478.7446" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_PT470to600;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="QCD_PT600to800_2017v2"      Lumi="956436.3725" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_PT600to800;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="QCD_PT800to1000_2017v2"     Lumi="4936430.727" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_PT800to1000;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="QCD_PT1000toInf_2017v2"     Lumi="10695312.91" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_PT1000toInf;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="DYJets_HT100to200_2017v2"   Lumi="69226.78638" Type="MC" NEventsMax="-1" Cacheable="False">&DYJets_HT100to200;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="DYJets_HT200to400_2017v2"   Lumi="219614.0918" Type="MC" NEventsMax="-1" Cacheable="False">&DYJets_HT200to400;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="DYJets_HT400to600_2017v2"   Lumi="1476963.275" Type="MC" NEventsMax="-1" Cacheable="False">&DYJets_HT400to600;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="DYJets_HT600to800_2017v2"   Lumi="4907740.26"  Type="MC" NEventsMax="-1" Cacheable="False">&DYJets_HT600to800;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="DYJets_HT800to1200_2017v2"  Lumi="3804595.493" Type="MC" NEventsMax="-1" Cacheable="False">&DYJets_HT800to1200;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="DYJets_HT1200to2500_2017v2" Lumi="3218169.014" Type="MC" NEventsMax="-1" Cacheable="False">&DYJets_HT1200to2500;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="DYJets_HT2500toInf_2017v2"  Lumi="114568655.4" Type="MC" NEventsMax="-1" Cacheable="False">&DYJets_HT2500toInf;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="WJets_HT100to200_2017v2"    Lumi="24497.36654" Type="MC" NEventsMax="-1" Cacheable="False">&WJets_HT100to200;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="WJets_HT200to400_2017v2"    Lumi="45872.06211" Type="MC" NEventsMax="-1" Cacheable="False">&WJets_HT200to400;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="WJets_HT400to600_2017v2"    Lumi="246755.2208" Type="MC" NEventsMax="-1" Cacheable="False">&WJets_HT400to600;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="WJets_HT600to800_2017v2"    Lumi="1662735.67"  Type="MC" NEventsMax="-1" Cacheable="False">&WJets_HT600to800;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="WJets_HT800to1200_2017v2"   Lumi="2182790.874" Type="MC" NEventsMax="-1" Cacheable="False">&WJets_HT800to1200;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="WJets_HT1200to2500_2017v2"  Lumi="39031433.57" Type="MC" NEventsMax="-1" Cacheable="False">&WJets_HT1200to2500;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+<InputData Version="WJets_HT2500toInf_2017v2"   Lumi="2656452174"  Type="MC" NEventsMax="-1" Cacheable="False">&WJets_HT2500toInf;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>

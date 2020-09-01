@@ -59,6 +59,7 @@
     <UserConfig>
       <Item Name="GridFile" Value="JetMass/Histograms/grid.root" />
       <Item Name="channel" Value="W"/>
+      <Item Name="doGenStudies" Value="false"/>
 
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
       <Item Name="GenParticleCollection"   Value="GenParticles"/>
