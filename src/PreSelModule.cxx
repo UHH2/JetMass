@@ -65,6 +65,7 @@ private:
   std::unique_ptr<Selection> N_AK8_200_sel, N_AK8_300_sel, N_AK8_500_sel;
   std::unique_ptr<Selection> N_MUON_sel, N_ELEC_sel, TwoD_sel, bjetCloseToLepton_sel;
   std::unique_ptr<Selection> HT_sel,Wpt_sel, N_AK4_2_sel, N_btag_sel;  
+  std::unique_ptr<Selection> HT_1000_sel;
   std::unique_ptr<AndSelection> LEP_VETO_sel;
   
   std::vector<std::unique_ptr<uhh2::Hists>> hists;
@@ -171,6 +172,7 @@ PreSelModule::PreSelModule(Context & ctx){
   LEP_VETO_sel->add<NMuonSelection>("muon-veto",0,0);
 
   HT_sel.reset(new HTCut(ctx, 250.));
+  HT_1000_sel.reset(new HTCut(ctx, 1000.));
   Wpt_sel.reset(new WToMuNuSelection(250.));
   
   // HISTOGRAMS
@@ -242,7 +244,8 @@ bool PreSelModule::process(Event & event) {
   if(isWSel || isTopSel) passWfromTop = false;
     
   if(isTopSel){
-  if(!N_AK8_300_sel->passes(event)) passTOP = false;
+  if(!N_AK8_200_sel->passes(event)) passTOP = false;
+  // if(!N_AK8_300_sel->passes(event)) passTOP = false;
   if(!N_MUON_sel->passes(event)) passTOP = false;
   if(!N_ELEC_sel->passes(event)) passTOP = false;
   if(!MET_sel->passes(event)) passTOP = false;
@@ -264,6 +267,7 @@ bool PreSelModule::process(Event & event) {
   if(isWSel){
   if(!LEP_VETO_sel->passes(event)) passW = false;
   if(!N_AK8_500_sel->passes(event)) passW = false;
+  if(!HT_1000_sel->passes(event)) passW = false;
   }
 
   // make sure there is a closest gentopjet to topjet is closer than dR<0.6  
