@@ -2,6 +2,8 @@ import ROOT
 from ROOT import gROOT,gStyle
 import argparse, os, json
 import numpy as np
+
+
 gROOT.SetBatch(True)
 gStyle.SetOptStat(0)
 gStyle.SetOptFit(0)
@@ -266,26 +268,6 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_roo
 
                 #     print('max:',s_sig.GetMaximum())
                 shapes_background = [f_shapes.Get(hist_dir+'/'+background) for background in backgrounds]
-
-                minima = [hist.GetMinimum() for hist in shapes_signal]+[hist.GetMinimum() for hist in shapes_background]
-                while 0.0 in minima:
-                    minima.remove(0.0)
-                if(len(minima)==0):
-                    minima.append(1.0)
-                Y_minimum = min(minima)
-
-                h_obs.SetLineColor(1)
-                h_obs.SetMarkerStyle(8)
-                h_obs.SetTitle(plot_title)
-                h_obs.Draw(obs_draw_option)
-                h_obs.GetYaxis().SetRangeUser(Y_minimum*0.9 if logY else 0,(10.0 if logY else 1.1)*h_obs.GetMaximum())
-                setup_hist(h_obs)
-                h_obs.Draw(obs_draw_option+'SAME')
-                if(logY):
-                    plotpad.SetLogy()
-                legend.AddEntry(h_obs,channel['obs'],'p')
-
-                
                 for ibackground in range(len(backgrounds)):
                     shapes_background[ibackground].SetLineColor(colors[backgrounds[ibackground]])
                     total_b.Add(shapes_background[ibackground],1)
@@ -299,6 +281,26 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_roo
                     if(signal_scale>0):
                         shapes_signal[isignal].Scale(signal_scale)
                 total_sb.SetLineColor(32)
+
+                minima = [hist.GetMinimum() for hist in shapes_signal]+[hist.GetMinimum() for hist in shapes_background]
+                while 0.0 in minima:
+                    minima.remove(0.0)
+                if(len(minima)==0):
+                    minima.append(1.0)
+                Y_minimum = min(minima)
+                Y_maximum = max(h_obs.GetMaximum(),total_b.GetMaximum(),total_sb.GetMaximum())
+                h_obs.SetLineColor(1)
+                h_obs.SetMarkerStyle(8)
+                h_obs.SetTitle(plot_title)
+                h_obs.Draw(obs_draw_option)
+                h_obs.GetYaxis().SetRangeUser(Y_minimum*0.9 if logY else 0,(10.0 if logY else 1.1)*Y_maximum)
+                setup_hist(h_obs)
+                h_obs.Draw(obs_draw_option+'SAME')
+                if(logY):
+                    plotpad.SetLogy()
+                legend.AddEntry(h_obs,channel['obs'],'p')
+
+                
 
                 
                 if(stacked_plot):
@@ -353,7 +355,7 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_roo
                     ratio_hist.SetLineColor(1)
                     ratio_hist.SetLineWidth(2)
                     ratio_hist.SetMarkerColor(1)
-                    ratio_hist.SetMarkerStyle(33)
+                    ratio_hist.SetMarkerStyle(8)
                     setup_ratio_hist(ratio_hist)
                     ratio_hist.GetYaxis().SetRangeUser(0.3,1.7)
 
@@ -364,9 +366,22 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_roo
                     ratio_hist_1.SetLineWidth(2)
                     ratio_hist_1.SetMarkerStyle(1)
 
-                    ratio_hist.Draw('EP1')
+                    ratio_hist.Draw('PE1X0')
                     # ratio_hist_1.Draw('EPSAME')
+                    
+                    ratio_stat_err = total_b.Clone()
+                    ratio_stat_err.Divide(total_b)
+                    ratio_stat_err.SetFillStyle(3204)
+                    ratio_stat_err.SetFillColor(922)
+                    ratio_stat_err.SetLineColor(922)
+                    ratio_stat_err.SetMarkerSize(0)
+                    
+                    ratio_stat_err.SetLineStyle(ROOT.kDashed)
+                    
+                    ratio_stat_err.Draw('E2SAME')
+                    ratio_hist.Draw('PE1X0SAME')
 
+                    
                 else:
                     #constructing data-BG/sigma
                     ratio_hist = h_obs.Clone()
@@ -439,8 +454,11 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_roo
                     bin_text = "%s-region  - %s GeV #leq p_{T} < %s GeV"
                     text_length_factor = 1./len(bin_text%("pass","XXXX","XXXX"))
                     latex.SetTextSize(bin_text_size*text_length_factor)
-                    latex.DrawLatex(legend_bbox[0],legend_bbox[1]-bin_text_size*text_length_factor,bin_text%(region,*pt_bin))
-                draw_lumi(plotpad)
+                    latex.DrawLatex(legend_bbox[0],legend_bbox[1]-bin_text_size*text_length_factor,bin_text%(region,pt_bin[0],pt_bin[1]))
+                if('lumi' in config):
+                    draw_lumi(plotpad,config['lumi'])
+                else:
+                    draw_lumi(plotpad)
 
                 c.RedrawAxis()
                 c.SaveAs(out_dir+'/'+hist_dir+('_logY' if logY else '')+'.pdf')
