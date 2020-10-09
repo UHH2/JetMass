@@ -14,6 +14,7 @@ colors = {
     'WJets':413,
     'other':867
 }
+cms_text = "CMS"
 extra_text = "Preliminary Simulation"
 extra_text_rel_X = 0.12
 font_size_modifier = 1.0
@@ -21,10 +22,11 @@ text_padding = 0.1
 
 additional_text_size = 0.3
 additional_text_ypos = 1.0
-def draw_lumi(plotpad, lumi = 41.8,do_extra_text=True,out_of_frame = True,cms_text=False,private_work=False,parent_pad = None):
+extra_right_margin = 0.0
+def draw_lumi(plotpad, lumi = 41.8,do_extra_text=True,out_of_frame = True,do_cms_text=False,private_work=False,parent_pad = None):
     global additional_text_size
     global additional_text_ypos
-
+    global cms_text
     lumi_text = "%.1f fb^{-1} (13 TeV)"%float(lumi)
 
     latex = ROOT.TLatex()
@@ -50,15 +52,16 @@ def draw_lumi(plotpad, lumi = 41.8,do_extra_text=True,out_of_frame = True,cms_te
     latex.SetTextFont(42)
     latex.SetTextAlign(31)
     latex.SetTextSize(lumi_text_size*top_margin)
-    latex.DrawLatex(1-right_margin,y_pos,lumi_text)
+    if(lumi>0.0):
+        latex.DrawLatex(1-right_margin-extra_right_margin,y_pos,lumi_text)
 
-    if(not private_work and not cms_text):
+    if(not private_work and not do_cms_text):
         return
     # CMS Text
     latex.SetTextFont(42 if private_work else 61)
     latex.SetTextAlign(11)
     latex.SetTextSize(cms_text_size*top_margin)
-    cms_text = "private work" if private_work else "CMS"
+    
     if(out_of_frame):
         latex.DrawLatex(left_margin,y_pos,cms_text)
     else:
@@ -112,6 +115,7 @@ def cms_style():
     cmsStyle.SetLabelFont(42,"y")
     cmsStyle.SetTitleOffset(1.15,"x")
     cmsStyle.SetTitleOffset(1.15,"y")
+    cmsStyle.SetTitleOffset(1.15,"z")
     cmsStyle.SetLabelFont(42,"z")
     cmsStyle.SetLabelSize(0.04,"x")
     cmsStyle.SetTitleSize(0.05,"x")
@@ -148,7 +152,8 @@ xLabelSize=18.
 yLabelSize=18.
 xTitleSize=22.
 yTitleSize=22.
-xTitleOffset=2.8
+xTitleOffset_ratio=2.8
+xTitleOffset=1.0
 yTitleOffset=1.5
 
 logX=False
@@ -178,6 +183,13 @@ def setup_hist(hist):
         hist.GetXaxis().SetLabelSize(xLabelSize)
         hist.GetXaxis().SetNdivisions(506)
 
+        hist.GetZaxis().SetTitleFont(43)
+        hist.GetZaxis().SetTitleSize(xTitleSize)
+        hist.GetZaxis().SetTitleOffset(1.2*xTitleOffset)
+        hist.GetZaxis().SetLabelFont(43)
+        hist.GetZaxis().SetLabelSize(xLabelSize)
+        hist.GetZaxis().SetNdivisions(506)
+
     # if(YRangeUser):
     #     hist.GetYaxis().SetRangeUser(y_range[0],y_range[1])
     # if(XRangeUser):
@@ -195,7 +207,7 @@ def setup_ratio_hist(ratioHist):
   # ratioHist.GetXaxis().SetTitle("m_{SD} [GeV]")
   ratioHist.GetXaxis().SetTitleFont(43)
   ratioHist.GetXaxis().SetTitleSize(xTitleSize)
-  ratioHist.GetXaxis().SetTitleOffset(xTitleOffset)
+  ratioHist.GetXaxis().SetTitleOffset(xTitleOffset_ratio)
   ratioHist.GetXaxis().SetLabelFont(43)
   ratioHist.GetXaxis().SetLabelSize(xLabelSize)
   ratioHist.GetXaxis().SetTickLength(0.08)
