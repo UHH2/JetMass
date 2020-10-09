@@ -1,0 +1,39 @@
+{
+  "ModelName":"TopPFFlavoursData",
+  "gridHistFileName":"../Histograms/grid_PF_flavours.root",
+  "histLocation":"../macros/Histograms.root",
+  "Pseudo":[],
+  "binning":{
+    "W":[50,200,10],
+    "top":[50,300,5]    
+  },
+  "channels":{
+    "TopPt300":{
+      "selection":"top",
+      "pt_bin":"300to400",
+      "samples":["QCD", "ST_sch", "ST_tch","ST_tWch", "DYJets", "WJets", "TTbar_had","TTbar_dilep", "TTbar_semilep_mergedTop", "TTbar_semilep_mergedW", "TTbar_semilep_mergedQB",  "TTbar_semilep_notMerged"],
+      "NormUnc":{"QCD":2.0, "DYJets":2.0, "ST":1.23, "WJets":1.19, "TTbar":1.05},
+      "signal":["TTbar_semilep_mergedTop", "TTbar_semilep_mergedW"],
+      "obs":"Data",
+      "regions":["pass","passW","fail"]
+    },
+    "TopPt400":{
+      "selection":"top",
+      "pt_bin":"400to500",
+      "samples":["QCD", "ST_sch", "ST_tch","ST_tWch", "DYJets", "WJets", "TTbar_had","TTbar_dilep", "TTbar_semilep_mergedTop", "TTbar_semilep_mergedW", "TTbar_semilep_mergedQB",  "TTbar_semilep_notMerged"],
+      "NormUnc":{"QCD":2.0, "DYJets":2.0, "ST":1.23, "WJets":1.19, "TTbar":1.05},
+      "signal":["TTbar_semilep_mergedTop", "TTbar_semilep_mergedW"],
+      "obs":"Data",
+      "regions":["pass","passW","fail"]
+    },
+    "TopPt500":{
+      "selection":"top",
+      "pt_bin":"500toInf",
+      "samples":["QCD", "ST_sch", "ST_tch","ST_tWch", "DYJets", "WJets", "TTbar_had","TTbar_dilep", "TTbar_semilep_mergedTop", "TTbar_semilep_mergedW", "TTbar_semilep_mergedQB",  "TTbar_semilep_notMerged"],
+      "NormUnc":{"QCD":2.0, "DYJets":2.0, "ST":1.23, "WJets":1.19, "TTbar":1.05},
+      "signal":["TTbar_semilep_mergedTop", "TTbar_semilep_mergedW"],
+      "obs":"Data",
+      "regions":["pass","passW","fail"]
+    }
+  }
+}
