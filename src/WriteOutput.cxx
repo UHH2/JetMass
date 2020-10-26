@@ -1,22 +1,43 @@
 #include "UHH2/core/include/Event.h"
 #include "UHH2/JetMass/include/WriteOutput.h"
+#include "UHH2/common/include/TTbarReconstruction.h"
 
 
 using namespace uhh2;
 using namespace std;
 
 WriteOutput::WriteOutput(uhh2::Context & ctx){
+
+  softdrop_jec.reset(new StandaloneTopJetCorrector(ctx));
+
   h_pt = ctx.declare_event_output<double>("pt");
   h_N2 = ctx.declare_event_output<double>("N2");
   h_tau32 = ctx.declare_event_output<double>("tau32");
   h_tau21 = ctx.declare_event_output<double>("tau21");
   h_DeepBoost = ctx.declare_event_output<double>("DeepBoostWQCD");
   h_mjet = ctx.declare_event_output<double>("mjet");
+  h_mjet_SD = ctx.declare_event_output<double>("mjet_SD");
+  h_msubjets = ctx.declare_event_output<double>("msubjets");
+  h_mgensubjets = ctx.declare_event_output<double>("mgensubjets");
+  h_mgenparticles = ctx.declare_event_output<double>("mgenparticles");
+  h_genpt = ctx.declare_event_output<double>("genpt");  
   h_weight = ctx.declare_event_output<double>("weight");
-  h_matchedV = ctx.declare_event_output<bool>("matchedV");
   h_genjetpt = ctx.declare_event_output<double>("genjetpt");
   h_jecfactor = ctx.declare_event_output<double>("jecfactor");
+  h_jecfactor_SD = ctx.declare_event_output<double>("jecfactor_SD");
 
+  h_IsMergedTop = ctx.declare_event_output<bool>("IsMergedTop");
+  h_IsMergedQB = ctx.declare_event_output<bool>("IsMergedQB");
+  h_IsMergedWZ = ctx.declare_event_output<bool>("IsMergedWZ");
+  h_IsNotMerged = ctx.declare_event_output<bool>("IsNotMerged");
+
+  // discriminant variables for old WfromTop selection
+  h_ht = ctx.get_handle<double>("HT");
+  h_lepW_pt=ctx.declare_event_output<double>("lepW_pt");
+  h_nak4=ctx.declare_event_output<int>("nak4");
+  h_nbtag = ctx.declare_event_output<int>("nbtag");
+  h_deltaPhiAk8Mu=ctx.declare_event_output<double>("deltaPhiAk8Mu");
+  
   // read from xml file
   auto dataset_type = ctx.get("dataset_type");
   isMC = dataset_type == "MC";
@@ -30,6 +51,8 @@ WriteOutput::WriteOutput(uhh2::Context & ctx){
   // isWfromTopSel = channel == "WfromTop";
   isWSel = channel == "W";
 
+  do_genStudies = string2bool(ctx.get("doGenStudies", "true"));
+  
   // read configuration from root file
   TString gfilename = ctx.get("GridFile");
   TFile* gfile = new TFile(locate_file((std::string)gfilename).c_str());
@@ -62,7 +85,7 @@ WriteOutput::WriteOutput(uhh2::Context & ctx){
   }
 
 
-  MatchV_sel.reset(new MatchingSelection(ctx, is_WSample ? MatchingSelection::oIsMergedGenW : MatchingSelection::oIsMergedGenZ ));
+  matching_selection.reset(new MatchingSelection(ctx));
 
 }
 
@@ -70,13 +93,17 @@ bool WriteOutput::process(uhh2::Event & event){
 
   vector<TopJet>* topjets = event.topjets;
   if(topjets->size() < 1) return false;
+  matching_selection->init(event);
+  
   vector<Jet> subjets = topjets->at(0).subjets();
   vector<PFParticle>* allparticles = event.pfparticles;
 
   vector<PFParticle> particles;
 
+  LorentzVector softdrop_jet_raw;
   // find all pf particles inside the subjets
   for(auto subjet: subjets){
+    softdrop_jet_raw += subjet.v4()*subjet.JEC_factor_raw();
     for(const auto candInd : subjet.pfcand_indexs()){
       particles.push_back(allparticles->at(candInd));
     }
@@ -86,6 +113,8 @@ bool WriteOutput::process(uhh2::Event & event){
   double N2 = topjets->at(0).ecfN2_beta1();
   double mjet = CalculateMJet(particles);
   double jecfactor = 1.0/topjets->at(0).JEC_factor_raw();
+  double jecfactor_SD = softdrop_jec->getJecFactor(event,softdrop_jet_raw);
+  double mjet_SD = topjets->at(0).softdropmass();
 
   double deepboost = topjets->at(0).btag_DeepBoosted_WvsQCD();
   double tau32 = 0;
@@ -107,33 +136,83 @@ bool WriteOutput::process(uhh2::Event & event){
     }
   }
 
+  bool IsMergedTop = matching_selection->passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedTop);
+  bool IsMergedQB  = matching_selection->passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedQB);
+  bool IsMergedWZ  = matching_selection->passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedV);
+  bool IsNotMerged = matching_selection->passes_matching(event.topjets->at(0),MatchingSelection::oIsNotMerged);
+  
   // V matching
-  bool Vmatched = false;
   double genjetpt = -1;
   if(isWSel && (is_WSample || is_ZSample)){
-    Vmatched = MatchV_sel->passes_matching(event,event.topjets->at(0));
-
     //get genjet pt for k factors
     const GenJet * closest_genjet_1 = closestParticle(event.topjets->at(0), *event.genjets);
     const GenJet * closest_genjet_2 = event.topjets->size() > 1 ? closestParticle(event.topjets->at(1), *event.genjets) : closest_genjet_1;
     float gen_pt_1 = closest_genjet_1 ? closest_genjet_1->pt() : -9999;
     float gen_pt_2 = closest_genjet_2 ? closest_genjet_2->pt() : -9999;
-    genjetpt = Vmatched ? gen_pt_1 : gen_pt_2;
+    genjetpt = IsMergedWZ ? gen_pt_1 : gen_pt_2;
   }
 
-  // write output in handles
+  float genpt,m_genparticles,m_gensubjets;
+
+  if(isMC && do_genStudies){    
+    if(event.gentopjets->size()<1)return false;
+    const GenTopJet * matched_gentopjet = closestParticle(event.topjets->at(0), *event.gentopjets);    
+    vector<GenJet> gensubjets = matched_gentopjet->subjets();
+    LorentzVector softdrop_genjet;
+    for(auto gensubjet: gensubjets){
+      softdrop_genjet += gensubjet.v4();
+    }
+    m_gensubjets = softdrop_genjet.M();    
+    genpt =  matched_gentopjet->pt();
+  }else{
+    genpt = -1.;
+    m_gensubjets = -1.;
+    m_genparticles = -1.;
+  }
+  
   event.set(h_pt, pt);
   event.set(h_mjet, mjet);
+  
+  event.set(h_msubjets, softdrop_jet_raw.M());
+  event.set(h_mjet_SD,mjet_SD);
+
+  event.set(h_mgensubjets, m_gensubjets);
+  event.set(h_mgenparticles, m_genparticles);
+  event.set(h_genpt, genpt);
+
   event.set(h_N2, N2);
   event.set(h_tau32, tau32);
   event.set(h_tau21, tau21);
   event.set(h_DeepBoost, deepboost);
   event.set(h_weight, event.weight);
-  event.set(h_matchedV, Vmatched);
   event.set(h_genjetpt, genjetpt);
   event.set(h_jecfactor, jecfactor);
+  event.set(h_jecfactor_SD, jecfactor_SD);
 
+  event.set(h_IsMergedTop, IsMergedTop);
+  event.set(h_IsMergedQB, IsMergedQB); 
+  event.set(h_IsMergedWZ, IsMergedWZ);   
+  event.set(h_IsNotMerged, IsNotMerged);  
 
+  // discriminant variables for old WfromTop selection
+  JetId DeepJetBTagID = DeepJetBTag(DeepJetBTag::WP_MEDIUM);
+  int n_btag = 0;
+  int n_ak4 = 0;
+  for(const auto & ak4 : *event.jets){
+    if(DeepJetBTagID(ak4,event)) ++n_btag;
+    ++n_ak4;
+  }
+  event.set(h_nbtag,n_btag);  
+  event.set(h_nak4,n_ak4);  
+  if(event.muons->size() > 0 && event.met){
+    LorentzVector neutrino = NeutrinoReconstruction(event.muons->at(0).v4(), event.met->v4())[0];
+    float lepW_pt = (event.muons->at(0).v4() + neutrino).pt();
+    event.set(h_lepW_pt,lepW_pt);
+    event.set(h_deltaPhiAk8Mu,deltaPhi(event.topjets->at(0),event.muons->at(0)));
+  }else{
+    event.set(h_lepW_pt,-1.0);
+    event.set(h_deltaPhiAk8Mu,-1);
+  }
   return true;
 }
 

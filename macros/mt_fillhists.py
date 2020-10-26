@@ -22,6 +22,7 @@ class JobManager(object):
 
         self.worker = options.workers
         self.selection = options.selection
+        self.macro = options.macro
 
         self.finished = [False]*self.worker
         
@@ -29,9 +30,9 @@ class JobManager(object):
     def submit_job(self,job_index):
         nice = True
         if(nice):
-            subprocess.call(['nice','-n','3',"./fillhists",self.selection,str(job_index),str(self.worker)], stdout=open("/dev/null","w"), stderr=subprocess.STDOUT)
+            subprocess.call(['nice','-n','3',"./"+self.macro,self.selection,str(job_index),str(self.worker)], stdout=open("/dev/null","w"), stderr=subprocess.STDOUT)
         else:
-            subprocess.call(["./fillhists",self.selection,str(job_index),str(self.worker)], stdout=open("/dev/null","w"), stderr=subprocess.STDOUT)
+            subprocess.call(["./"+self.macro,self.selection,str(job_index),str(self.worker)], stdout=open("/dev/null","w"), stderr=subprocess.STDOUT)
         global n_finished
         with n_finished.get_lock():
             n_finished.value += 1
@@ -79,10 +80,11 @@ class JobManager(object):
 
 if(__name__ == "__main__"):
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--selection',default = 'W',help='W/WfromTop/top selection')
+    parser.add_argument('-s', '--selection',choices=["top","W","WfromTop","Wboth","all"],default = 'W',help='W/WfromTop/top/all selection(s)')
     parser.add_argument('-n', '--workers', default = 4, type = int, help='number of workers')
     parser.add_argument('-m', '--merge', action='store_true', help='Merge hist root files' )
     parser.add_argument('--submit',action='store_true', help='submit workers')
+    parser.add_argument('--macro',default='fillhists',help='specify which (compiled) macro to execute. (this also affects the name of workdir)')
     args = parser.parse_args()
 
     greeting = "== Fill Hists MT =="
@@ -93,7 +95,7 @@ if(__name__ == "__main__"):
     print("Selection:",args.selection)
     print("N Workers:",args.workers)
     
-    manager = JobManager(args,"workdir")
+    manager = JobManager(args,"workdir_atlas_comparison" if 'atlas_comparison' in args.macro else "workdir")
     if(args.submit):
         manager.start()
     if(manager.check_files()):

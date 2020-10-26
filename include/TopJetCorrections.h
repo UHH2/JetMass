@@ -9,6 +9,9 @@
 #include "UHH2/common/include/JetCorrections.h"
 #include "UHH2/common/include/CleaningModules.h"
 #include "UHH2/common/include/YearRunSwitchers.h"
+#include "UHH2/JetMETObjects/interface/JetCorrectorParameters.h"
+#include "UHH2/JetMETObjects/interface/FactorizedJetCorrector.h"
+
 
 class TopJetCorrections: public uhh2::AnalysisModule {
 public:
@@ -16,6 +19,14 @@ public:
 
     virtual bool process(uhh2::Event & event) override;
     void init(uhh2::Context & ctx);
+
+  //these are defined as static members here so the StandalineTopJetCorrector can access them as well.
+  inline static const std::string tjec_tag_2016 = "Summer16_07Aug2017";
+  inline static const std::string tjec_ver_2016 = "11";
+  inline static const std::string tjec_tag_2017 = "Fall17_17Nov2017";
+  inline static const std::string tjec_ver_2017 = "32";
+  inline static const std::string tjec_tag_2018 = "Autumn18";
+  inline static const std::string tjec_ver_2018 = "7";
 
 private:
     void fail_if_init() const;
@@ -30,10 +41,7 @@ private:
     Year year;
 
     // Parameters for JEC & JLC sets
-    std::string tjec_tag_2016, tjec_ver_2016;
-    std::string tjec_tag_2017, tjec_ver_2017;
-    std::string tjec_tag_2018, tjec_ver_2018;
-    std::string tjec_tjet_coll;
+  std::string tjec_tjet_coll;
 };
 
 class TopJetLeptonDeltaRCleaner : public uhh2::AnalysisModule {
@@ -43,4 +51,15 @@ class TopJetLeptonDeltaRCleaner : public uhh2::AnalysisModule {
 
  private:
   float minDR_;
+};
+
+class StandaloneTopJetCorrector{
+public:
+  StandaloneTopJetCorrector(uhh2::Context& ctx);
+  float getJecFactor(const uhh2::Event & event, LorentzVector topjet);
+  
+private:
+  bool is_mc;
+  std::string short_year;
+  std::map<std::string,std::unique_ptr<FactorizedJetCorrector>> jet_corrector;   
 };

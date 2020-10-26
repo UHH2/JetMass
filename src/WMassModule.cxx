@@ -95,6 +95,7 @@ namespace uhh2examples {
     uhh2::Event::Handle<float> vjets_k_factor;
     bool is_WSample,is_ZSample;    
     bool is_mc,apply_kfactors;
+    bool is_buggyPU;
 
     // TH3D * N2_v_mSD_v_pT;
   };
@@ -103,11 +104,13 @@ namespace uhh2examples {
     is_mc = ctx.get("dataset_type") == "MC";
     is_WSample = ctx.get("dataset_version").find("WJets") != std::string::npos;
     is_ZSample = ctx.get("dataset_version").find("ZJets") != std::string::npos;
-    
+    is_buggyPU = ctx.get("dataset_version").find("buggyPU") != std::string::npos;
+
     if(is_mc){
       MC_LumiWeight.reset(new MCLumiWeight(ctx));
       MC_PUWeight.reset(new MCPileupReweight(ctx, "central"));
-      mcSpikeKiller.reset(new MCLargeWeightKiller(ctx,infinity,infinity,infinity,2.5,3,3,"jets","genjets"));
+      // mcSpikeKiller.reset(new MCLargeWeightKiller(ctx,infinity,infinity,infinity,2.5,3,3,"jets","genjets"));
+      mcSpikeKiller.reset(new MCLargeWeightKiller(ctx,2,2,2,2,2,2,"jets","genjets"));
     }
 
     apply_kfactors = string2bool(ctx.get("apply_kfactor", "true")) && (is_WSample ||is_ZSample);
@@ -178,6 +181,11 @@ namespace uhh2examples {
   }
 
   bool WMassModule::process(Event & event){
+    if(is_buggyPU){
+      float n_true = event.genInfo->pileup_TrueNumInteractions();
+      if(n_true < 10. || n_true > 72.) return false;
+    }
+      
     if(is_mc){
       MC_LumiWeight->process(event);
       MC_PUWeight->process(event);

@@ -4,41 +4,75 @@
 using namespace std;
 // using namespace uhh2;
 namespace uhh2{
-  MatchingSelection::MatchingSelection(uhh2::Context & ctx, matchingOpt opt_):opt(opt_){
-    string version = ctx.get("dataset_version", "");
-    std::cout << "MatchingSelection: Using Selection with option: " << opt << std::endl;
+  MatchingSelection::MatchingSelection(uhh2::Context & ctx){
+    TString version = ctx.get("dataset_version", "");
+    version.ToLower();
+    is_VJets = (version.Contains("wjets") || version.Contains("zjets") );
+    is_TTbar = (version.Contains("ttbar") || version.Contains("ttjets") || version.Contains("ttto")) && version.Contains("semilep");
+    is_valid = true;
   }
 
-  bool MatchingSelection::passes_matching(const uhh2::Event &event, const TopJet &probe_jet) {
-    int pdgId = (opt == oIsAnyGenW || opt == oIsLeadingGenW || opt == oIsMergedGenW) ? 24 : 23;
-
-    //finding all W in genparticles  
-    assert(event.genparticles);
-    std::vector<GenParticle> GenVs={};
-    for(unsigned int i = 0 ; i < event.genparticles->size() ; i++){
-        GenParticle thisGen = event.genparticles->at(i); 
-        if(abs(thisGen.pdgId()) == pdgId ) GenVs.push_back(thisGen);
-        //if matching with ANY V is wanted lets do it here
-        if((opt == oIsAnyGenW || opt == oIsAnyGenZ) && deltaR(thisGen,probe_jet) < 0.8)return true;
+  void MatchingSelection::init(const uhh2::Event &event){
+    if(event.isRealData){
+      is_valid = false;
+      return;
     }
-    //sort all found V by its pT
-    sort_by_pt<GenParticle>(GenVs);
-    if(GenVs.size()>0){
-      //if there is any V match the leading
-      if((opt == oIsLeadingGenW || opt == oIsLeadingGenZ) && deltaR(GenVs[0],probe_jet) < 0.8) return true;
-      //or check if any V results from two merged quarks
-      if(opt == oIsMergedGenW || opt == oIsMergedGenZ){
-        for(auto GenV: GenVs){
-          GenParticle V_d1 = event.genparticles->at(GenV.daughter1());
-          GenParticle V_d2 = event.genparticles->at(GenV.daughter2());
-          int V_d1_pdgId = abs(V_d1.pdgId());
-          int V_d2_pdgId = abs(V_d2.pdgId());
-          if( (V_d1_pdgId >=1 && V_d1_pdgId <=6) && (V_d2_pdgId >=1 && V_d2_pdgId <=6) ){
-           if(deltaR(probe_jet,V_d1) < 0.8 && deltaR(probe_jet,V_d2) < 0.8) return true;
-          }
+
+    if(!is_VJets && !is_TTbar){
+      cout << "This is not a TTbar or V+Jets sample. Matching is not implemented. Skipping MatchingSelection" << endl;
+      is_valid = false;
+      return;
+    }
+
+    assert(event.genparticles);
+    if(is_VJets){
+      unsigned int n_V = 0;
+      for(unsigned int i=0; i<event.genparticles->size(); ++i) {
+        const GenParticle & genp = event.genparticles->at(i);
+        if(abs(genp.pdgId()) == 23 || abs(genp.pdgId()) == 24){
+          ++n_V;
+          genV = genp;
+          genQ1 = *genp.daughter(event.genparticles,1);
+          genQ2 = *genp.daughter(event.genparticles,2);
         }
       }
+      if(n_V > 1){
+        cout << "MatchinSelection (V+jets): There are more than 1 W/Z Boson among generator-particles! (event:"<<event.event << ")" << endl;
+        is_valid = false;
+      }
+    }else{
+      TTbarGen ttgen(*event.genparticles);
+      if(ttgen.IsSemiLeptonicDecay()){
+        genTop = ttgen.TopHad();
+        genB = ttgen.BHad();
+        genV = ttgen.WHad();
+        genQ1 = ttgen.Q1();
+        genQ2 = ttgen.Q2();
+      }else{
+        is_valid = false;
+      }
     }
-      return false;
+  }
+
+  bool MatchingSelection::passes_matching(const TopJet &probe_jet, matchingOpt opt, float radius) {
+    if(!is_VJets && !is_TTbar) return false;
+
+    if(!is_valid){
+      if(opt == oIsNotMerged) return true;
+      else return false;
+    }
+
+    bool b_in_Jet = is_TTbar ? deltaR(probe_jet, genB) < radius : false;
+    bool q1_in_Jet = deltaR(probe_jet, genQ1) < radius;
+    bool q2_in_Jet = deltaR(probe_jet, genQ2) < radius;
+
+    if(b_in_Jet && q1_in_Jet && q2_in_Jet ){
+      if( (opt == oIsMergedTop)) return true;
+    }else if( ((b_in_Jet && !q1_in_Jet && q2_in_Jet) || (b_in_Jet && q1_in_Jet && !q2_in_Jet)) ){
+      if( ((opt == oIsMergedQB) || (opt == oIsSemiMergedTop)) ) return true;
+    }else if( (!b_in_Jet && q1_in_Jet && q2_in_Jet) ){
+      if( ((opt == oIsMergedV) || (opt == oIsMergedW) || (opt == oIsMergedZ) || (opt == oIsSemiMergedTop)) ) return true;
+    }else if(opt == oIsNotMerged) return true;
+    return false;
   }
 }

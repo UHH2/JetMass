@@ -65,6 +65,7 @@ private:
   std::unique_ptr<Selection> N_AK8_200_sel, N_AK8_300_sel, N_AK8_500_sel;
   std::unique_ptr<Selection> N_MUON_sel, N_ELEC_sel, TwoD_sel, bjetCloseToLepton_sel;
   std::unique_ptr<Selection> HT_sel,Wpt_sel, N_AK4_2_sel, N_btag_sel;  
+  std::unique_ptr<Selection> HT_1000_sel;
   std::unique_ptr<AndSelection> LEP_VETO_sel;
   
   std::vector<std::unique_ptr<uhh2::Hists>> hists;
@@ -76,6 +77,7 @@ private:
   bool isTopSel = false;
   bool isWfromTopSel = false;
   bool isWSel = false;
+  bool do_genStudies = false;
   Double_t AK4_Clean_pT,AK4_Clean_eta,AK8_Clean_pT,AK8_Clean_eta;
 
 };
@@ -94,6 +96,8 @@ PreSelModule::PreSelModule(Context & ctx){
   else if(channel == "W")   isWSel = true;
   else throw runtime_error("PreSelModule: Select 'top' or 'W' channel");
 
+  do_genStudies = string2bool(ctx.get("doGenStudies", "true"));
+  
   // common modules
   MuonId muid = AndId<Muon>(MuonID(Muon::CutBasedIdTight), PtEtaCut(55., 2.4));
   ElectronId eleid = AndId<Electron>(ElectronID_Fall17_medium_noIso, PtEtaCut(55., 2.4));
@@ -168,6 +172,7 @@ PreSelModule::PreSelModule(Context & ctx){
   LEP_VETO_sel->add<NMuonSelection>("muon-veto",0,0);
 
   HT_sel.reset(new HTCut(ctx, 250.));
+  HT_1000_sel.reset(new HTCut(ctx, 1000.));
   Wpt_sel.reset(new WToMuNuSelection(250.));
   
   // HISTOGRAMS
@@ -239,7 +244,8 @@ bool PreSelModule::process(Event & event) {
   if(isWSel || isTopSel) passWfromTop = false;
     
   if(isTopSel){
-  if(!N_AK8_300_sel->passes(event)) passTOP = false;
+  if(!N_AK8_200_sel->passes(event)) passTOP = false;
+  // if(!N_AK8_300_sel->passes(event)) passTOP = false;
   if(!N_MUON_sel->passes(event)) passTOP = false;
   if(!N_ELEC_sel->passes(event)) passTOP = false;
   if(!MET_sel->passes(event)) passTOP = false;
@@ -261,6 +267,21 @@ bool PreSelModule::process(Event & event) {
   if(isWSel){
   if(!LEP_VETO_sel->passes(event)) passW = false;
   if(!N_AK8_500_sel->passes(event)) passW = false;
+  if(!HT_1000_sel->passes(event)) passW = false;
+  }
+
+  // make sure there is a closest gentopjet to topjet is closer than dR<0.6  
+  if(is_mc && do_genStudies && (passTOP || passWfromTop || passW)){
+    auto dR = numeric_limits<double>::infinity();
+    if(event.gentopjets->size()>0){
+      const GenTopJet * closest_gentopjet = closestParticle(event.topjets->at(0), *event.gentopjets);
+      dR = deltaR(event.topjets->at(0),*closest_gentopjet);
+    }
+    if(dR>0.6){
+      passTOP = false;
+      passWfromTop = false;
+      passW = false;
+    }
   }
 
 

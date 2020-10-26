@@ -1,63 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE JobConfiguration PUBLIC "" "JobConfig.dtd" [
-<!ENTITY DATA_JetHTRun2017B  SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/DATA_JetHT_2017B.xml">
-<!ENTITY DATA_JetHTRun2017C  SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/DATA_JetHT_2017C.xml">
-<!ENTITY DATA_JetHTRun2017D  SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/DATA_JetHT_2017D.xml">
-<!ENTITY DATA_JetHTRun2017E  SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/DATA_JetHT_2017E.xml">
-<!ENTITY DATA_JetHTRun2017F  SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/DATA_JetHT_2017F.xml">
 
-<!ENTITY QCD_Pt_170to300 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_170to300_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_170to300_ext1 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_170to300_TuneCP5_13TeV_pythia8_Fall17_ext1_v2.xml">
-<!ENTITY QCD_Pt_300to470 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_300to470_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_300to470_ext1 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_300to470_TuneCP5_13TeV_pythia8_Fall17_ext1.xml">
-<!ENTITY QCD_Pt_470to600 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_470to600_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_470to600_ext1 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_470to600_TuneCP5_13TeV_pythia8_Fall17_ext1.xml">
-<!ENTITY QCD_Pt_600to800 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_600to800_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_600to800_ext1 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_600to800_TuneCP5_13TeV_pythia8_Fall17_ext1_v2.xml">
-<!ENTITY QCD_Pt_800to1000 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_800to1000_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_800to1000_ext1 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_800to1000_TuneCP5_13TeV_pythia8_Fall17_ext1_v2.xml">
-<!ENTITY QCD_Pt_1000to1400 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_1000to1400_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_1000to1400_ext1 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_1000to1400_TuneCP5_13TeV_pythia8_Fall17_ext1_v2.xml">
-<!ENTITY QCD_Pt_1400to1800 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_1400to1800_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_1400to1800_ext1 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_1400to1800_TuneCP5_13TeV_pythia8_Fall17_ext1.xml">
-<!ENTITY QCD_Pt_1800to2400 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_1800to2400_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_2400to3200 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_2400to3200_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_3200toInf SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_3200toInf_TuneCP5_13TeV_pythia8_Fall17_v1.xml">
-<!ENTITY QCD_Pt_3200toInf_ext1 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/QCD/QCD_Pt_3200toInf_TuneCP5_13TeV_pythia8_Fall17_ext1_v1.xml">
+<!ENTITY OUTdir   "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/WfromTopTrees/scaleStudy/">
 
-<!ENTITY WJetsToQQ_HT400to600 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/MC_WJetsToQQ_HT400to600_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
-<!ENTITY WJetsToQQ_HT600to800 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/MC_WJetsToQQ_HT600to800_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
-<!ENTITY WJetsToQQ_HT800toInf SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/MC_WJetsToQQ_HT800toInf_qc19_3j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY TTbar_semilep SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/MC_TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8.xml">
+<!ENTITY TTbar_had SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/MC_TTToHadronic_TuneCP5_13TeV-powheg-pythia8.xml">
+<!ENTITY TTbar_dilep SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8.xml">
 
-<!ENTITY ZJetsToQQ_HT400to600 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/MC_ZJetsToQQ_HT400to600_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
-<!ENTITY ZJetsToQQ_HT600to800 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/MC_ZJetsToQQ_HT600to800_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
-<!ENTITY ZJetsToQQ_HT800toInf SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/MC_ZJetsToQQ_HT800toInf_qc19_4j_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY ST_tch_top SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/MC_ST_t-channel_top_5f.xml">
+<!ENTITY ST_tch_antitop SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/MC_ST_t-channel_antitop_5f.xml">
+<!ENTITY ST_tWch_antitop SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/ST_tW_antitop_5f_NoFullyHadronicDecays_TuneCP5_13TeV-powheg-pythia8.xml">
+<!ENTITY ST_tWch_top SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/ST_tW_top_5f_NoFullyHadronicDecays_TuneCP5_13TeV-powheg-pythia8.xml">
+<!ENTITY ST_sch SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/MC_ST_s-channel_4f_leptonDecays_v2.xml">
 
-<!ENTITY TTToHadronic SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v1/2017/MC_TTToHadronic_TuneCP5_13TeV-powheg-pythia8.xml">
-<!ENTITY TTToSemiLeptonic SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v1/2017/MC_TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8.xml">
 
-<!ENTITY ST_tW_top SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v1/2017/ST_tW_top_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8.xml">
-<!ENTITY ST_tW_antitop SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v1/2017/ST_tW_antitop_5f_inclusiveDecays_TuneCP5_13TeV-powheg-pythia8.xml">
+<!ENTITY WJets_HT100to200 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/WJetsToLNu_HT-100To200_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY WJets_HT200to400 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY WJets_HT400to600 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/WJetsToLNu_HT-400To600_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY WJets_HT600to800 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/WJetsToLNu_HT-600To800_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY WJets_HT800to1200 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/WJetsToLNu_HT-800To1200_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY WJets_HT1200to2500 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/WJetsToLNu_HT-1200To2500_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
+<!ENTITY WJets_HT2500toInf SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/WJetsToLNu_HT-2500ToInf_TuneCP5_13TeV-madgraphMLM-pythia8.xml">
 
-<!ENTITY NEVT "-1">
-<!ENTITY OUTdir   "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/WJetsTrees/scaleStudy/">
-<!ENTITY SAMPLES SYSTEM "Vqq_jets_samples.xml">
+<!ENTITY QCD_PT20to30 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/QCD_Pt-20to30_MuEnrichedPt5_TuneCP5_13TeV_pythia8.xml">
+<!ENTITY QCD_PT30to50 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/QCD_Pt-30to50_MuEnrichedPt5_TuneCP5_13TeV_pythia8.xml">
+<!ENTITY QCD_PT50to80 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/QCD_Pt-50to80_MuEnrichedPt5_TuneCP5_13TeV_pythia8.xml">
+<!ENTITY QCD_PT80to120 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/QCD_Pt-80to120_MuEnrichedPt5_TuneCP5_13TeV_pythia8.xml">
+<!ENTITY QCD_PT120to170 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/QCD_Pt-120to170_MuEnrichedPt5_TuneCP5_13TeV_pythia8.xml">
+<!ENTITY QCD_PT170to300 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/QCD_Pt-170to300_MuEnrichedPt5_TuneCP5_13TeV_pythia8.xml">
+<!ENTITY QCD_PT300to470 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/QCD_Pt-300to470_MuEnrichedPt5_TuneCP5_13TeV_pythia8.xml">
+<!ENTITY QCD_PT470to600 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/QCD_Pt-470to600_MuEnrichedPt5_TuneCP5_13TeV_pythia8.xml">
+<!ENTITY QCD_PT600to800 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/QCD_Pt-600to800_MuEnrichedPt5_TuneCP5_13TeV_pythia8.xml">
+<!ENTITY QCD_PT800to1000 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/QCD_Pt-800to1000_MuEnrichedPt5_TuneCP5_13TeV_pythia8.xml">
+<!ENTITY QCD_PT1000toInf SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/QCD_Pt-1000toInf_MuEnrichedPt5_TuneCP5_13TeV_pythia8.xml">
+
+<!ENTITY DYJets_HT100to200 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/MC_DYJetsToLL_M-50_HT-100to200.xml">
+<!ENTITY DYJets_HT200to400 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/MC_DYJetsToLL_M-50_HT-200to400.xml">
+<!ENTITY DYJets_HT400to600 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/MC_DYJetsToLL_M-50_HT-400to600.xml">
+<!ENTITY DYJets_HT600to800 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/MC_DYJetsToLL_M-50_HT-600to800.xml">
+<!ENTITY DYJets_HT800to1200 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/MC_DYJetsToLL_M-50_HT-800to1200.xml">
+<!ENTITY DYJets_HT1200to2500 SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/MC_DYJetsToLL_M-50_HT-1200to2500.xml">
+<!ENTITY DYJets_HT2500toInf SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/MC_DYJetsToLL_M-50_HT-2500toInf.xml">
+
+<!ENTITY SingleMu_B SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/DATA_SingleMuon2017_RunB.xml">
+<!ENTITY SingleMu_C SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/DATA_SingleMuon2017_RunC.xml">
+<!ENTITY SingleMu_D SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/DATA_SingleMuon2017_RunD.xml">
+<!ENTITY SingleMu_E SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/DATA_SingleMuon2017_RunE.xml">
+<!ENTITY SingleMu_F SYSTEM "/nfs/dust/cms/user/schwarzd/CMSSW10/CMSSW_10_2_10/src/UHH2/common/datasets/RunII_102X_v1/2017/DATA_SingleMuon2017_RunF.xml">
+
+<!ENTITY SAMPLES SYSTEM "ttbar_samples.xml">
+
 ]>
-
 <!--
-<ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="40"/>
-<ConfigSGE RAM="4" DISK="4" Mail="steffen.albrecht@desy.de" Notification="as" Workdir="workdir_Vqq_scaleStudy"/>
+<ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="50" />
+<ConfigSGE RAM ="2" DISK ="2" Mail="steffen.albrecht@desy.de" Notification="as" Workdir="workdir_WfromTop_scaleStudy"/>
 -->
 
-<JobConfiguration JobName="VqqJetsScaleStudyJob" OutputLevel="INFO">
+<!-- OutputLevel controls which messages are printed; set to VERBOSE or DEBUG for more verbosity, to WARNING or ERROR for less -->
+<JobConfiguration JobName="WfromTopJob" OutputLevel="INFO">
   <Library Name="libSUHH2JetMass"/>
   <Package Name="SUHH2JetMass.par"/>
 
+
+  <!-- <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/oneScale/" PostFix="" TargetLumi="41860"> -->
   <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;/oneScale/" PostFix="" TargetLumi="41530">
     &SAMPLES;
     <UserConfig>
       <Item Name="GridFile" Value="JetMass/Histograms/grid_oneScale.root" />
-      <Item Name="channel" Value="W"/>
+      <Item Name="channel" Value="WfromTop"/>
       <Item Name="doGenStudies" Value="false"/>
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
       <Item Name="GenParticleCollection"   Value="GenParticles"/>
@@ -85,7 +95,7 @@
     &SAMPLES;
     <UserConfig>
       <Item Name="GridFile" Value="JetMass/Histograms/grid_PF_flavours.root" />
-      <Item Name="channel" Value="W"/>
+      <Item Name="channel" Value="WfromTop"/>
       <Item Name="doGenStudies" Value="false"/>
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
       <Item Name="GenParticleCollection"   Value="GenParticles"/>
@@ -114,7 +124,7 @@
     &SAMPLES;
     <UserConfig>
       <Item Name="GridFile" Value="JetMass/Histograms/grid_2ptbins.root" />
-      <Item Name="channel" Value="W"/>
+      <Item Name="channel" Value="WfromTop"/>
       <Item Name="doGenStudies" Value="false"/>
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
       <Item Name="GenParticleCollection"   Value="GenParticles"/>
@@ -143,7 +153,7 @@
     &SAMPLES;
     <UserConfig>
       <Item Name="GridFile" Value="JetMass/Histograms/grid_2etabins.root" />
-      <Item Name="channel" Value="W"/>
+      <Item Name="channel" Value="WfromTop"/>
       <Item Name="doGenStudies" Value="false"/>
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
       <Item Name="GenParticleCollection"   Value="GenParticles"/>
@@ -172,7 +182,7 @@
     &SAMPLES;
     <UserConfig>
       <Item Name="GridFile" Value="JetMass/Histograms/grid_PF_flavours_2ptbins.root" />
-      <Item Name="channel" Value="W"/>
+      <Item Name="channel" Value="WfromTop"/>
       <Item Name="doGenStudies" Value="false"/>
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
       <Item Name="GenParticleCollection"   Value="GenParticles"/>
@@ -200,7 +210,7 @@
     &SAMPLES;
     <UserConfig>
       <Item Name="GridFile" Value="JetMass/Histograms/grid_PF_flavours_2etabins.root" />
-      <Item Name="channel" Value="W"/>
+      <Item Name="channel" Value="WfromTop"/>
       <Item Name="doGenStudies" Value="false"/>
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
       <Item Name="GenParticleCollection"   Value="GenParticles"/>
@@ -223,5 +233,5 @@
       <Item Name="AnalysisModule" Value="PreSelModule"/>
     </UserConfig>
   </Cycle>
-
+  
 </JobConfiguration>
