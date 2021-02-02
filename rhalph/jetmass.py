@@ -8,23 +8,30 @@ rl.util.install_roofit_helpers()
 rl.ParametericSample.PreferRooParametricHist = False
 
 def scale_lumi(hist,lumiscale):
+    if(lumiscale == 1.0):
+        return hist
     hist_old = hist.Clone()
+    hist.Reset()
     for i in range(1,hist.GetNbinsX()+1):
         hist.SetBinContent(i,hist_old.GetBinContent(i)*lumiscale)
-        hist.SetBinError(i,np.sqrt(hist_old.GetBinContent(i)*lumiscale))
+        hist.SetBinError(i,hist_old.GetBinError(i)*np.sqrt(lumiscale))
     return hist
 
 def build_pseudo(samples,hist_file,hist_dir,vary_pseudo_like,MINIMAL_MODEL=False,seed=123456):
+    lumiScale=1.0
+    if(len(vary_pseudo_like)>0 and 'lumiScale' in vary_pseudo_like[0]):
+        lumiScale = float(vary_pseudo_like[0].split(':')[-1])
+    print('LumiScale:',lumiScale)
     if(len(vary_pseudo_like)>1):
         print('building pseudo data from ',samples,' (varied like',vary_pseudo_like,')')
-        first_hist_dir = (hist_dir+'__%s')%(samples[0],*tuple(vary_pseudo_like))
+        first_hist_dir = (hist_dir+'__%s')%(samples[0],*tuple(vary_pseudo_like[1:]))
         print(first_hist_dir)
         print(hist_file)
         pseudo_data_hist = hist_file.Get(first_hist_dir)
         for sample in samples[1:]:
-            this_hist_dir = (hist_dir+'__%s')%(sample,*tuple(vary_pseudo_like))
-            print(this_hist_dir)
+            this_hist_dir = (hist_dir+'__%s')%(sample,*tuple(vary_pseudo_like[1:]))
             pseudo_data_hist.Add(hist_file.Get(this_hist_dir))
+        pseudo_data_hist = scale_lumi(pseudo_data_hist,lumiScale)
         return pseudo_data_hist
     else:        
         print('building pseudo data from ',samples,' (unvaried)')
@@ -40,9 +47,6 @@ def build_pseudo(samples,hist_file,hist_dir,vary_pseudo_like,MINIMAL_MODEL=False
             print(this_hist_dir)
             pseudo_data_hist.Add(hist_file.Get(this_hist_dir))
 
-        lumiScale=1.0
-        if(len(vary_pseudo_like)>0 and 'lumiScale' in vary_pseudo_like[0]):
-            lumiScale = float(vary_pseudo_like[0].split(':')[-1])
         if(toys):
             N_entries_toys = pseudo_data_hist.Integral()*lumiScale
             toy_pseudo_data = pseudo_data_hist.Clone()
@@ -59,7 +63,7 @@ def build_pseudo(samples,hist_file,hist_dir,vary_pseudo_like,MINIMAL_MODEL=False
         
 def build_mass_scale_variations(grid_hist_file_name):
     
-    print('reading grid for nuisance parameter:')
+    # print('reading grid for nuisance parameter:')
     grid_hist_file = ROOT.TFile(grid_hist_file_name,'READ')
     grid_hist = grid_hist_file.Get('grid')
     grid_axes = dict(item.strip().split("=") for item in grid_hist.GetTitle().split(","))
@@ -72,24 +76,24 @@ def build_mass_scale_variations(grid_hist_file_name):
         particle_categories.append(categories_hist.GetXaxis().GetBinLabel(i))
 
     grid_hist_file.Close()
-    print('used variation categories:',particle_categories)
-    print('X: %s , %i bins'%(grid_axes['x'],len(x_bins)))
-    print('Y: %s , %i bins'%(grid_axes['y'],len(y_bins)))
+    # print('used variation categories:',particle_categories)
+    # print('X: %s , %i bins'%(grid_axes['x'],len(x_bins)))
+    # print('Y: %s , %i bins'%(grid_axes['y'],len(y_bins)))
 
     #setting up nuisances correspondig to consituent-variation according to categories from grid
     grid_nuisances = []
     mass_scale_names = []
-    print('adding nuisance paramters:')
+    # print('adding nuisance paramters:')
     for category in particle_categories:
         for x_bin in x_bins:
             for y_bin in y_bins:
                 scale_name = 'massScale_%s%i_%s%i_%s'%(grid_axes['x'],x_bin,grid_axes['y'],y_bin,category)
-                print(scale_name,'shape')
+                # print(scale_name,'shape')
                 mass_scale_names.append(scale_name)
-                grid_nuisances.append([rl.NuisanceParameter('massScale_%s%i_%s%i_%s'%(grid_axes['x'],x_bin,grid_axes['y'],y_bin,category),'shape',0,0,10),x_bin,y_bin,category])
+                grid_nuisances.append([rl.NuisanceParameter('massScale_%s%i_%s%i_%s'%(grid_axes['x'],x_bin,grid_axes['y'],y_bin,category),'shape',0,-10,10),x_bin,y_bin,category])
     return grid_nuisances, mass_scale_names
 
-def jet_mass_producer(configs=None,MINIMAL_MODEL=False,includeMassScales=True):
+def jet_mass_producer(args,configs=None,MINIMAL_MODEL=False,includeMassScales=True):
     """
     configs: configuration dict including:
     ModelName,gridHistFileName,channels,histLocation
@@ -116,12 +120,13 @@ def jet_mass_producer(configs=None,MINIMAL_MODEL=False,includeMassScales=True):
     hist_file = ROOT.TFile(configs['histLocation'])
 
     do_qcd_estimation =  len(qcd_estimation_channels)>0
-    do_initial_qcd_fit = (configs["InitialQCDFit"] == "True")
-    qcd_fail_region_constant = (configs["QCDFailConstant"] == "True")
+    do_initial_qcd_fit = (configs.get("InitialQCDFit","False") == "True")
+    qcd_fail_region_constant = (configs.get("QCDFailConstant","False") == "True")
 
     lumi_scale = 1.
     if('Pseudo' in configs and len(configs['Pseudo'])>0 and  'lumiScale' in configs['Pseudo'][0]):
         lumi_scale = float(configs['Pseudo'][0].split(':')[-1])
+    model_name=  configs.get('ModelName','Jet_Mass_Model')  #get name from config, or fall back to default
 
     #specify if QCD estimation (using Bernstein-polynomial as TF) should be used
     ################
@@ -141,24 +146,33 @@ def jet_mass_producer(configs=None,MINIMAL_MODEL=False,includeMassScales=True):
             pass_ch = rl.Channel(channel_name + 'pass')
             qcd_model.addChannel(fail_ch)
             qcd_model.addChannel(pass_ch)
-            fail_hist = hist_file.Get('W_QCD__mjet_'+config['pt_bin']+'_fail')
-            pass_hist = hist_file.Get('W_QCD__mjet_'+config['pt_bin']+'_pass')
+            additional_bin = config.get('additional_bin','')
+            fail_hist = hist_file.Get('W_QCD__mjet_'+config['pt_bin']+ additional_bin+'_fail')
+            pass_hist = hist_file.Get('W_QCD__mjet_'+config['pt_bin']+ additional_bin+'_pass')            
             if(rebin_msd > 0):
                 fail_hist = fail_hist.Rebin(len(msd_bins)-1, 'msd', msd_bins)
                 pass_hist = pass_hist.Rebin(len(msd_bins)-1, 'msd', msd_bins)
             if(lumi_scale != 1.0):
                 fail_hist = scale_lumi(fail_hist,lumi_scale) 
-                pass_hist = scale_lumi(pass_hist,lumi_scale) 
+                pass_hist = scale_lumi(pass_hist,lumi_scale)
+
+            empty_hist = fail_hist.Clone()
+            empty_hist.Reset()
+            signal_fail = rl.TemplateSample(channel_name + 'fail' + '_' + 'Signal', rl.Sample.SIGNAL, empty_hist)
+            fail_ch.addSample(signal_fail)
+            signal_pass = rl.TemplateSample(channel_name + 'pass' + '_' + 'Signal', rl.Sample.SIGNAL, empty_hist)
+            pass_ch.addSample(signal_pass)
+
             fail_ch.setObservation(fail_hist)
             pass_ch.setObservation(pass_hist)
             qcd_fail += fail_ch.getObservation().sum()
             qcd_pass += pass_ch.getObservation().sum()
         qcd_eff = qcd_pass / qcd_fail
-        
         #get all lower edges from channel names
-        pt_edges = [float(channel.split('Pt')[-1]) for channel in qcd_estimation_channels]
-        #get last upper edge from name of last channel
-        pt_edges.append(float(channels[list(qcd_estimation_channels.keys())[-1].split('Pt')[0]+'Pt%i'%pt_edges[-1]]['pt_bin'].split('to')[-1]))
+        # pt_edges = [float(channel.split('Pt')[-1]) for channel in qcd_estimation_channels]
+        # #get last upper edge from name of last channel
+        # pt_edges.append(float(channels[list(qcd_estimation_channels.keys())[-1].split('Pt')[0]+'Pt%i'%pt_edges[-1]]['pt_bin'].split('to')[-1]))
+        pt_edges = configs.get('pt_edges',[500,550,600,675,800,1200])
         pt_bins = np.array(pt_edges)
         # pt_bins = np.array([500, 550, 600, 675, 800, 1200])
         n_pt = len(pt_bins) - 1
@@ -173,21 +187,25 @@ def jet_mass_producer(configs=None,MINIMAL_MODEL=False,includeMassScales=True):
         validbins = (rhoscaled >= 0) & (rhoscaled <= 1)
         rhoscaled[~validbins] = 1  # we will mask these out later
 
+        TF_suffix = configs.get('TFSuffix',"")
+        
         if(do_initial_qcd_fit):
             initial_qcd_fit_orders = tuple(configs.get('InitialQCDFitOrders',[2,2]))        
-            if not os.path.exists(configs['ModelName']):
-                os.makedirs(configs['ModelName'])
+            if not os.path.exists(model_name):
+                os.makedirs(model_name)
             print('QCD eff:',qcd_eff)
-            tf_MCtempl = rl.BernsteinPoly("tf_MCtempl", initial_qcd_fit_orders, ['pt', 'rho'], init_params = np.ones((initial_qcd_fit_orders[0]+1,initial_qcd_fit_orders[1]+1)), limits=(-1,10))
+            # tf_MCtempl = rl.BernsteinPoly("tf_MCtempl", initial_qcd_fit_orders, ['pt', 'rho'], init_params = np.ones((initial_qcd_fit_orders[0]+1,initial_qcd_fit_orders[1]+1)), limits=(-1,10))
+            tf_MCtempl = rl.BernsteinPoly("tf_MCtempl_"+model_name+TF_suffix, initial_qcd_fit_orders, ['pt', 'rho'], init_params = np.ones((initial_qcd_fit_orders[0]+1,initial_qcd_fit_orders[1]+1)), limits=(-50,50))
             tf_MCtempl_params = qcd_eff * tf_MCtempl(ptscaled, rhoscaled)
             for channel_name, config in channels.items():
-                ptbin = np.where(pt_bins==float(channel_name.split('Pt')[-1]))[0][0]
+                # ptbin = np.where(pt_bins==float(channel_name.split('Pt')[-1]))[0][0]
+                ptbin = np.where(pt_bins==float(config['pt_bin'].split('to')[0]))[0][0]
                 failCh = qcd_model[channel_name + 'fail']
                 passCh = qcd_model[channel_name + 'pass']
                 failObs = failCh.getObservation()
                 if(qcd_fail_region_constant):
                     print("Setting QCD parameters in fail region constant")
-                qcdparams = np.array([rl.IndependentParameter('qcdparam_ptbin%d_msdbin%d' % (ptbin, i), 0, constant=qcd_fail_region_constant) for i in range(msd.nbins)])
+                qcdparams = np.array([rl.IndependentParameter('qcdparam_'+model_name+TF_suffix+'_ptbin%d_msdbin%d' % (ptbin, i), 0, constant=qcd_fail_region_constant) for i in range(msd.nbins)])
 
                 sigmascale = 10.
                 scaledparams = failObs * (1 + sigmascale/np.maximum(1., np.sqrt(failObs)))**qcdparams
@@ -198,7 +216,9 @@ def jet_mass_producer(configs=None,MINIMAL_MODEL=False,includeMassScales=True):
                 
                 failCh.mask = validbins[ptbin]
                 passCh.mask = validbins[ptbin]
-            
+
+            qcd_model.renderCombine(model_name+"/qcdmodel")
+
             qcdfit_ws = ROOT.RooWorkspace('w')
             simpdf, obs = qcd_model.renderRoofit(qcdfit_ws)
             ROOT.Math.MinimizerOptions.SetDefaultPrecision(1e-18)
@@ -218,7 +238,7 @@ def jet_mass_producer(configs=None,MINIMAL_MODEL=False,includeMassScales=True):
 
             qcdfit_ws.add(qcdfit)
             if "pytest" not in sys.modules:
-                qcdfit_ws.writeToFile(configs['ModelName']+ '/qcdfit.root')
+                qcdfit_ws.writeToFile(model_name+ '/qcdfit_'+model_name+TF_suffix+'.root')
             if qcdfit.status() != 0:
                 raise RuntimeError('Could not fit qcd')
 
@@ -228,17 +248,13 @@ def jet_mass_producer(configs=None,MINIMAL_MODEL=False,includeMassScales=True):
             decoVector = rl.DecorrelatedNuisanceVector.fromRooFitResult(tf_MCtempl.name + '_deco', qcdfit, param_names)
             tf_MCtempl.parameters = decoVector.correlated_params.reshape(tf_MCtempl.parameters.shape)
             tf_MCtempl_params_final = tf_MCtempl(ptscaled, rhoscaled)
-            tf_dataResidual = rl.BernsteinPoly("tf_dataResidual", bernstein_orders, ['pt', 'rho'], limits=(0,10))
+            tf_dataResidual = rl.BernsteinPoly("tf_dataResidual_"+model_name+TF_suffix, bernstein_orders, ['pt', 'rho'], limits=(-50,50))
+            # tf_dataResidual = rl.BernsteinPoly("tf_dataResidual", bernstein_orders, ['pt', 'rho'], limits=(0,10))
             tf_dataResidual_params = tf_dataResidual(ptscaled, rhoscaled)
             tf_params = qcd_eff * tf_MCtempl_params_final * tf_dataResidual_params
         else:
             tf_params = None # define later
         
-    #get name from config, or fall back to default
-    if('ModelName' in configs):
-        model_name = configs['ModelName']
-    else:
-        model_name = 'Jet_Mass_Model'
 
     #Reading categories of consituent-variations for nuisance paramters from gridHist    
 
@@ -254,7 +270,7 @@ def jet_mass_producer(configs=None,MINIMAL_MODEL=False,includeMassScales=True):
 
     norm_nuisances = {}
     for channel_name in channels.keys():
-        if MINIMAL_MODEL:
+        if( MINIMAL_MODEL or args.noNormUncNuis):
             break
         for i, sample in enumerate(channels[channel_name]['samples']):
             if 'NormUnc' not in channels[channel_name]:
@@ -275,7 +291,9 @@ def jet_mass_producer(configs=None,MINIMAL_MODEL=False,includeMassScales=True):
         #using hists with /variable/ in their name (default: Mass, if defined get from config) 
         variable = 'mjet' if 'variable' not in config else config['variable']        
         #getting list of samples from config
-        samples = ['QCD','WJetsMatched'] if MINIMAL_MODEL else config['samples'] 
+        if MINIMAL_MODEL:
+            config['samples'] = ['QCD','WJetsMatched'] 
+        samples =  config['samples']
         #for WMass fit there are multiple regions per sample
         regions = [''] if 'regions' not in config else config['regions']
 
@@ -285,8 +303,9 @@ def jet_mass_producer(configs=None,MINIMAL_MODEL=False,includeMassScales=True):
         msd_bins = binnings[config['selection']]
 
         for region in regions:
+            additional_bin = config.get('additional_bin','')
             region_suffix = '_'+region if len(region)>0 else ''            
-            hist_dir = config['selection']+'_%s__'+variable+'_%s'+config['pt_bin'] + region_suffix
+            hist_dir = config['selection']+'_%s__'+variable+'_%s'+config['pt_bin'] + additional_bin + region_suffix
             print('hist_dir:',hist_dir)
             #setting up channel for fit (name must be unique and can't include any '_')
             region_name = channel_name + region
@@ -302,6 +321,7 @@ def jet_mass_producer(configs=None,MINIMAL_MODEL=False,includeMassScales=True):
                 #specify if sample is signal or background type
                 sample_type = rl.Sample.SIGNAL if sample_name in config['signal'] else rl.Sample.BACKGROUND
                 sample_hist = hist_file.Get(hist_dir%(sample_name,""))
+                print(hist_dir%(sample_name,""))
                 sample_hist.SetName('msd')
 
                 #rebin hist
@@ -312,7 +332,7 @@ def jet_mass_producer(configs=None,MINIMAL_MODEL=False,includeMassScales=True):
 
                 #setup actual rhalphalib sample
                 sample = rl.TemplateSample(ch.name + '_' + sample_name, sample_type, sample_hist)                
-                
+                #sample.autoMCStats()
                 #setting effects of constituent variation nuisances (up/down)
                 for grid_nuisance, x, y, category in grid_nuisances:
                     hist_up = hist_file.Get(hist_dir%(sample_name,str(x) + '_' + str(y) + '_' + category +'_')+ '__up')
@@ -334,8 +354,8 @@ def jet_mass_producer(configs=None,MINIMAL_MODEL=False,includeMassScales=True):
                     
                 ch.addSample(sample)
 
-
-            if 'Pseudo' in configs:
+            PseudoData = 'Pseudo' in configs and len(configs['Pseudo'])>0
+            if PseudoData:
                 data_hist = build_pseudo(samples,hist_file,hist_dir,configs['Pseudo'],MINIMAL_MODEL) 
             else:
                 print('using data!!!!!')
@@ -344,18 +364,18 @@ def jet_mass_producer(configs=None,MINIMAL_MODEL=False,includeMassScales=True):
             if(rebin_msd > 0):
                 data_hist = data_hist.Rebin(len(msd_bins)-1, 'msd', msd_bins)
             data_hist.SetName('msd')
-            ch.setObservation(data_hist)
+            ch.setObservation(data_hist,read_sumw2=PseudoData)
             if('QcdEstimation' in config and config['QcdEstimation']=='True'):
-                mask = validbins[np.where(pt_bins==float(channel_name.split('Pt')[-1]))[0][0]]
-                dropped_events = np.sum(ch.getObservation().astype(float)[~mask])
-                percentage = dropped_events/np.sum(ch.getObservation().astype(float))
-                print('dropping due to mask: %.2f events (out of %.2f -> %.2f%%)'%(dropped_events,np.sum(ch.getObservation().astype(float)),percentage*100))
+                mask = validbins[np.where(pt_bins==float(config['pt_bin'].split('to')[0]))[0][0]]
+                # dropped_events = np.sum(ch.getObservation().astype(float)[~mask])
+                # percentage = dropped_events/np.sum(ch.getObservation().astype(float))
+                # print('dropping due to mask: %.2f events (out of %.2f -> %.2f%%)'%(dropped_events,np.sum(ch.getObservation().astype(float)),percentage*100))
                 ch.mask = mask
                 
     if(do_qcd_estimation):
         #QCD TF
         if(not do_initial_qcd_fit):
-            tf_params = rl.BernsteinPoly('tf_params', bernstein_orders, ['pt','rho'], limits = (0,10))
+            tf_params = rl.BernsteinPoly('tf_params_'+model_name+TF_suffix, bernstein_orders, ['pt','rho'], limits = (-50,50))
             print('Using QCD efficiency (N2-ddt) of %.2f%% to scale initial QCD in pass region'%(qcd_eff*100))
             tf_params = qcd_eff * tf_params(ptscaled,rhoscaled)
         
@@ -365,12 +385,12 @@ def jet_mass_producer(configs=None,MINIMAL_MODEL=False,includeMassScales=True):
             print(channel_name,'qcd estimation')
             fail_ch = model[channel_name + 'fail']
             pass_ch = model[channel_name + 'pass']
-            ptbin = np.where(pt_bins==float(channel_name.split('Pt')[-1]))[0][0]
+            ptbin = np.where(pt_bins==float(config['pt_bin'].split('to')[0]))[0][0]
             if(qcd_fail_region_constant):
                 print("Setting QCD parameters in fail region constant")
-            qcd_params = np.array( [rl.IndependentParameter('qcdparam_ptbin%i_msdbin%i'%(ptbin,i),0, constant=qcd_fail_region_constant) for i in range(msd.nbins)] )
-            
-            initial_qcd = fail_ch.getObservation().astype(float)
+            qcd_params = np.array( [rl.IndependentParameter('qcdparam_'+model_name+TF_suffix+'_ptbin%i_msdbin%i'%(ptbin,i),0, constant=qcd_fail_region_constant) for i in range(msd.nbins)] )
+
+            initial_qcd = fail_ch.getObservation()[0].astype(float) if isinstance(fail_ch.getObservation(), tuple) else fail_ch.getObservation().astype(float)
             for sample in fail_ch:
                 initial_qcd -= sample.getExpectation(nominal=True)
             if np.any(initial_qcd<0.):
@@ -402,6 +422,10 @@ if(__name__ == "__main__"):
     parser.add_argument('--minimalModel',action='store_true')
     parser.add_argument('--noMassScales',action='store_true')
     parser.add_argument('--defaultPOI',action='store_true')
+    parser.add_argument('--skipTemplatePlots',action='store_true')
+    parser.add_argument('--customCombineWrapper',action='store_true')
+    parser.add_argument('--combineOptions',type=str,help="string with additional cli-options passed to combine",default="")
+    # parser.add_argument('--QCDOnly',action="store_true",help="perform full TF fit to QCD MC - for BernsteinOptimization only")
     args = parser.parse_args()
     
     try:
@@ -412,30 +436,54 @@ if(__name__ == "__main__"):
     configs['ModelName'] = configs['ModelName']+str(args.job_index)
 
     if(not args.justplots):
-        jet_mass_producer(configs,args.minimalModel,(not args.noMassScales))
+        jet_mass_producer(args,configs,args.minimalModel,(not args.noMassScales))
         open(configs['ModelName']+'/config.json','w').write(json.dumps(configs,sort_keys=False,indent=2))
-        if(args.build):
-            exit(0) 
-        from runFit import runFits        
-        use_r_poi = args.defaultPOI
-        if use_r_poi:
-            runFits([configs['ModelName']])
-        else:
+        use_r_poi = args.defaultPOI or args.noMassScales
+        if not args.customCombineWrapper:
             _,mass_scale_names = build_mass_scale_variations(configs['gridHistFileName'])
-            runFits([configs['ModelName']],mass_scale_names)
+            from CombineWorkflows import CombineWorkflows
+            cw = CombineWorkflows()
+            cw.workspace = configs['ModelName']+'/'+configs['ModelName']+'_combined.root'
+            cw.extraOptions = "--freezeParameters r --preFitValue 0 " + args.combineOptions
+            cw.POI = "r" if use_r_poi else mass_scale_names
+            cw.method = "diagnostics"
+            cw.write_wrapper()
+        else:
+            if(not os.path.isfile(configs['ModelName']+'/wrapper.sh')):
+                import warnings
+                warnings.warn("\033[93mYou used the option --CustomCombineWrapper, but no wrapper can be found in the modeldir!\033[0m",RuntimeWarning)
+            #write_wrapper([configs['ModelName']],"r" if use_r_poi else mass_scale_names,additional_options=args.combineOptions,combineWorkflow=args.combineWorkflow)
+        if(args.build):
+            exit(0)     
+        from runFit import runFits        
+        runFits([configs['ModelName']])
 
+    if(args.customCombineWrapper):
+        exit(0)
+        
     do_postfit = True
     try:
         fit_diagnostics = ROOT.TFile(configs['ModelName']+'/fitDiagnostics.root',"READ")
         fit_result = fit_diagnostics.Get("fit_s")
+        massScales = []
+        fitargs = fit_diagnostics.Get("fit_s").floatParsFinal()
+        for name in build_mass_scale_variations(configs['gridHistFileName'])[1]:
+            param = fitargs.find(name)
+            center = param.getValV()
+            error_up = abs(param.getErrorHi())
+            error_down = abs(param.getErrorLo())
+            
+            massScales.append([center,error_up,-error_down])
+        np.save(configs['ModelName']+"/"+configs['ModelName']+'MassScales.npy',np.array(massScales))
         do_postfit = fit_result.status() <= 1
     except:
         print("fit failed. only plotting prefit distributions from fitDiangnostics (beware weird shape uncertainties)")
         
         do_postfit = False
-    fitplotter.plot_fit_result(configs,plot_total_sig_bkg = False,do_postfit=do_postfit)
-    fitplotter.plot_fit_result(configs,logY=True,plot_total_sig_bkg = False,do_postfit=do_postfit)
-    if(do_postfit):
+    if(not args.skipTemplatePlots):
+        fitplotter.plot_fit_result(configs,plot_total_sig_bkg = False,do_postfit=do_postfit)
+        fitplotter.plot_fit_result(configs,logY=True,plot_total_sig_bkg = False,do_postfit=do_postfit)
+    if(do_postfit and not args.noMassScales):
         fitplotter.plot_mass_scale_nuisances(configs)
     
     qcd_estimation_channels = {k:v for k,v in configs['channels'].items() if "QcdEstimation" in v and v["QcdEstimation"]=="True"}

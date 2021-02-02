@@ -1,15 +1,26 @@
 {
-  "ModelName":"WJetsModel",
-  "gridHistFileName":"../Histograms/grid.root",
-  "histLocation":"../macros/Histograms.root",
+  "ModelName":"VJetsSelection",
+  "gridHistFileName":"../Histograms/grid_oneScale.root",
+  "histLocation":"../macros/Histograms_oneScale.root",
+  "binning":{
+    "W":[50,200,10],
+    "top":[50,300,5]    
+  },
+  "Pseudo":["lumiScale:1.0"],
+  "BernsteinOrders":[3,4],
+  "InitialQCDFit":"True",
+  "InitialQCDFitOrders":[1,2],
+  "IndividualQCDEff":"True",
+  "QCDFailConstant":"False",
   "channels":{
     "WJetsPt500":{
       "QcdEstimation":"True",
       "selection":"W",
       "pt_bin":"500to550",
       "samples":["QCD","WJetsUnmatched","WJetsMatched","ZJetsUnmatched","ZJetsMatched","TTToHadronic","TTToSemiLeptonic","ST_tW_top","ST_tW_antitop"],
-      "NormUnc":{"WJets":1.00089,"ZJets":1.00072},
+      "NormUnc":{"WJets":1.1,"ZJets":1.1},
       "signal":["WJetsMatched","ZJetsMatched"],
+      "obs":"Data",
       "regions":["pass","fail"]
     },
     "WJetsPt550":{
@@ -17,8 +28,9 @@
       "selection":"W",
       "pt_bin":"550to600",
       "samples":["QCD","WJetsUnmatched","WJetsMatched","ZJetsUnmatched","ZJetsMatched","TTToHadronic","TTToSemiLeptonic","ST_tW_top","ST_tW_antitop"],
-      "NormUnc":{"WJets":1.00089,"ZJets":1.00072},
+      "NormUnc":{"WJets":1.1,"ZJets":1.1},
       "signal":["WJetsMatched","ZJetsMatched"],
+      "obs":"Data",
       "regions":["pass","fail"]
     },
     "WJetsPt600":{
@@ -26,8 +38,9 @@
       "selection":"W",
       "pt_bin":"600to675",
       "samples":["QCD","WJetsUnmatched","WJetsMatched","ZJetsUnmatched","ZJetsMatched","TTToHadronic","TTToSemiLeptonic","ST_tW_top","ST_tW_antitop"],
-      "NormUnc":{"WJets":1.00089,"ZJets":1.00072},
+      "NormUnc":{"WJets":1.1,"ZJets":1.1},
       "signal":["WJetsMatched","ZJetsMatched"],
+      "obs":"Data",
       "regions":["pass","fail"]
     },
     "WJetsPt675":{
@@ -35,8 +48,9 @@
       "selection":"W",
       "pt_bin":"675to800",
       "samples":["QCD","WJetsUnmatched","WJetsMatched","ZJetsUnmatched","ZJetsMatched","TTToHadronic","TTToSemiLeptonic","ST_tW_top","ST_tW_antitop"],
-      "NormUnc":{"WJets":1.00089,"ZJets":1.00072},
+      "NormUnc":{"WJets":1.1,"ZJets":1.1},
       "signal":["WJetsMatched","ZJetsMatched"],
+      "obs":"Data",
       "regions":["pass","fail"]
     },
     "WJetsPt800":{
@@ -44,8 +58,9 @@
       "selection":"W",
       "pt_bin":"800to1200",
       "samples":["QCD","WJetsUnmatched","WJetsMatched","ZJetsUnmatched","ZJetsMatched","TTToHadronic","TTToSemiLeptonic","ST_tW_top","ST_tW_antitop"],
-      "NormUnc":{"WJets":1.00089,"ZJets":1.00072},
+      "NormUnc":{"WJets":1.1,"ZJets":1.1},
       "signal":["WJetsMatched","ZJetsMatched"],
+      "obs":"Data",
       "regions":["pass","fail"]
     }
   }

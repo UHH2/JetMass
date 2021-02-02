@@ -31,7 +31,8 @@ new_binning_dict = {'top':np.linspace(0,350,71),'W':np.linspace(40,160,13),'Wfro
 binning_dict ={
     "ATLAS": {'top':np.linspace(0,350,71),'W':np.linspace(40,160,13),'WfromTop':np.linspace(0,200,40)},
     # "CMS":{'top':np.linspace(0,350,71),'W':np.linspace(0,500,101),'WfromTop':np.linspace(0,300,61)}
-    "CMS":{'top':np.linspace(50,200,16),'W':np.linspace(0,500,101),'WfromTop':np.linspace(0,300,61)}
+    # "CMS":{'top':np.linspace(50,200,16),'W':np.linspace(0,500,101),'WfromTop':np.linspace(0,300,61)}
+    "CMS":{'top':np.linspace(50,300,51),'W':np.linspace(50,200,16),'WfromTop':np.linspace(0,300,61)}
 }
 
 rebin = True
@@ -203,9 +204,13 @@ region_tex = {
 }
 
 pt_bins_dict = {
-    "top":["inclusive","200to250","250to300", "300to400", "400to500", "500toInf","300to500","300to350","350to400","400to450","450to500","500to550","550to600","600toInf"],
+    "top":["inclusive","200to250","250to300", "200to300","300to400", "400to500", "500toInf","300to500","300to350","350to400","400to450","450to500","500to550","550to600","600toInf","400toInf"],
     # "top":["550to600"],
-    "W":["inclusive", "500to550", "550to600", "600to675", "675to800", "800to1200", "1200toInf"],    
+    # "W":["inclusive", "500to550", "550to600", "600to675", "675to800", "800to1200", "1200toInf"],    
+    "W":["inclusive", "500to550", "550to600", "600to675", "675to800", "800to1200", "1200to1600","1600to2000","2000to3000","3000to4000","4000to5000","5000to6000","6000toInf"],    
+    # "top":["inclusive","200to250","250to300", "300to400", "400to500", "500toInf","300to500","300to350","350to400","400to450","450to500","500to550","550to600","600toInf"],
+    # # "top":["550to600"],
+    # "W":["inclusive", "500to550", "550to600", "600to675", "675to800", "800to1200", "1200toInf"],    
     # "W":["inclusive", "500to550", "550to600", "600to675", "675to800", "800to1200", "1200toInf",
     #      "500to600", "600to750", "750to900", "900to1200", "500to1200"],    
     "WfromTop":["inclusive", "200to300", "300to400", "400to500", "500toInf",
@@ -440,8 +445,9 @@ def plot_data_mc(h_data=None,h_mc=None,plot_title="",out_dir=None,legend_entries
     max_val = frame_hist[0].GetMaximum()
             
     if(h_data is not None):
-        max_val = h_data.GetMaximum()
-    elif(bkg_err is not None):
+        max_val = max(max_val ,h_data.GetMaximum())
+        # max_val = h_data.GetMaximum()
+    if(bkg_err is not None):
         max_val = max(max_val ,bkg_err.GetMaximum())
 
     for h_add_data in additional_data:
@@ -457,6 +463,8 @@ def plot_data_mc(h_data=None,h_mc=None,plot_title="",out_dir=None,legend_entries
     if(frame_hist is not None):        
         minY = 0.9*pow(10,round(np.log10(max_val))-4) if logY else 0.0
         maxY = 1.4*max_val
+        print(maxY)
+        print("A"*18)
         frame_hist[0].GetYaxis().SetRangeUser(minY,maxY)
 
         frame_hist[0].Draw(frame_hist[1]+'SAME')
