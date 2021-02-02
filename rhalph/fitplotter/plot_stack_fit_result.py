@@ -1,10 +1,10 @@
 import os,sys
 import ROOT
-sys.path.append('/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_v2/CMSSW_10_2_16/src/UHH2/JetMass/python/')
+sys.path.append('/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/python/')
 import plotter,cms_style
 cms_style.cms_style()
 
-def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_root="fit_shapes.root",plot_total_sig_bkg=True,do_postfit=True): 
+def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_root="fit_shapes.root",plot_total_sig_bkg=True,do_postfit=True,use_config_samples=False): 
     print('opening file',config['ModelName']+"/"+fit_shapes_root)
     fit_shapes_root = "fit_shapes.root" if do_postfit else "fitDiagnostics.root"
     f_shapes = ROOT.TFile(config['ModelName']+"/"+fit_shapes_root,"READ")
@@ -23,13 +23,20 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_roo
     plotter.logY = logY
     plotter.additional_text_size_modifier = 1.3
     plotter.draw_extra_text = False
-    
+    plotter.luminosity = config.get('Luminosity',41.8)
+
+    pseudo_data_info = config.get('Pseudo',[])
+    if(len(pseudo_data_info)>0 and 'lumiScale' in pseudo_data_info[0]):
+            lumiScale = float(pseudo_data_info[0].split(':')[-1])
+            plotter.luminosity *= lumiScale
     for channel_str, channel in config['channels'].items():
         binning = config.get('binning',{"W":[50,300,26],"top":[50,300,26]})
         plotter.yTitle = "Events / %i GeV"%binning[channel['selection']][2]
         # plotter.yTitle = "Events / %i GeV"%config['binning'][channel['selection']][2]
         print('plotting', channel_str)
         backgrounds = list(map(lambda bg: 'qcd' if ('QCD' in bg and "QcdEstimation" in channel and channel["QcdEstimation"]=="True") else bg ,plotter.mc_samples[channel['selection']]))
+        if(use_config_samples):
+            backgrounds = [bg.replace("QCD","qcd") for bg in channel['samples']]
         regions = channel['regions'] if 'regions' in channel else [""]
         for region in regions:
             for suffix in PrePostFit:
