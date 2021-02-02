@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.special import binom
 from pylab import pcolor, show, colorbar, xticks, yticks
 from pylab import *
-sys.path.append('/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_v2/CMSSW_10_2_16/src/UHH2/JetMass/python/')
+sys.path.append('/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/python/')
 import plotter,cms_style
 
 
@@ -23,7 +23,7 @@ def bernstein_poly(pt, rho, n_pt, n_rho, parameters):
             f += parameters[i_pt][i_rho] * bernstein(rho, i_rho, n_rho) * bernstein(pt, i_pt, n_pt)
     return f
             
-def extract_fit_pars(file_path,order,suffix="params"):
+def extract_fit_pars(file_path,order,suffix="params",TFSuffix="tf"):
     """
     file_path: path of root-file containing fit result (i.e. fitDiagnostics.root)
     order: order of BernsteinPolynomials (n_pt,n_rho). Used to derive the number of parameter to be extracted.
@@ -34,7 +34,7 @@ def extract_fit_pars(file_path,order,suffix="params"):
     bernstein_pars=[]
     bernstein_par_names=[]
     for i in range(fitargs.getSize()):
-        if('tf' in fitargs.at(i).GetTitle() and suffix in fitargs.at(i).GetTitle()):
+        if('tf' in fitargs.at(i).GetTitle() and suffix in fitargs.at(i).GetTitle() and TFSuffix in fitargs.at(i).GetTitle()):
             bernstein_pars.append(fitargs.at(i).getVal())
             bernstein_par_names.append(fitargs.at(i).GetTitle())
     return np.array(bernstein_pars).reshape(order[0]+1,order[1]+1),np.array(bernstein_par_names).reshape(order[0]+1,order[1]+1)
@@ -44,15 +44,21 @@ def plot_qcd_fail_parameters(config={'ModelName':'WMassModel'}):
     out_dir = config['ModelName']+'/plots/'
     min_msd, max_msd = (50,200)
     binwidth = 10
+    if('binning' in config):
+        w_binning = config['binning']['W']
+        min_msd = w_binning[0]
+        max_msd = w_binning[1]
+        binwidth = w_binning[2]
+    
     nbins = int(np.floor((max_msd-min_msd)/binwidth))
     msd_bin_edges = np.linspace(min_msd, nbins*binwidth+min_msd, nbins+1)
     pt_bin_edges = np.array([500.,550.,600.,675.,800.,1200.])
 
     result = ROOT.TFile(config['ModelName']+"/fitDiagnostics.root","READ").Get("fit_s")
     args = result.floatParsFinal()
-    qcd_param_names = [name for name in args.contentsString().split(',') if 'qcdparam' in name ]
-    pt_bins = set([int(name.split('_')[1].replace('ptbin','')) for name in qcd_param_names ])
-    msd_bins = set([int(name.split('_')[2].replace('msdbin','')) for name in qcd_param_names ])
+    qcd_param_names = [name for name in args.contentsString().split(',') if ('qcdparam' in name and config.get('TFSuffix','qcdparam') in name) ]
+    pt_bins = set([int(name.split('_')[2].replace('ptbin','')) for name in qcd_param_names ])
+    msd_bins = set([int(name.split('_')[3].replace('msdbin','')) for name in qcd_param_names ])
     th2_qcd_params = ROOT.TH2F("qcdparams","qcdparam",len(msd_bins),msd_bin_edges,len(pt_bins),pt_bin_edges)
     th2_qcd_params.GetYaxis().SetTitle('p_{T}')
     th2_qcd_params.GetXaxis().SetTitle('m_{SD}')
@@ -126,6 +132,12 @@ def plot_qcd_bernstein(config={'ModelName':'WMassModel'},do_3d_plot=True):
 
     min_msd, max_msd = (50,200)
     binwidth = 10
+    if('binning' in config):
+        w_binning = config['binning']['W']
+        min_msd = w_binning[0]
+        max_msd = w_binning[1]
+        binwidth = w_binning[2]
+    
     nbins = int(np.floor((max_msd-min_msd)/binwidth))
     msd_bins = np.linspace(min_msd, nbins*binwidth+min_msd, nbins+1)
     msd_bins = msd_bins.astype("f")
@@ -144,10 +156,14 @@ def plot_qcd_bernstein(config={'ModelName':'WMassModel'},do_3d_plot=True):
         if(parameter_suffix == 'params' and config.get('InitialQCDFit','False') == 'True'):
             bernstein_maps['params'] = bernstein_maps['MCtempl']*bernstein_maps['dataResidual']
         else:
-            bernstein_pars,_ = extract_fit_pars(config['ModelName']+'/fitDiagnostics.root',order,parameter_suffix)
+            bernstein_pars,_ = extract_fit_pars(config['ModelName']+'/fitDiagnostics.root',order,parameter_suffix,config.get('TFSuffix','tf'))
 
             if(parameter_suffix == 'MCtempl'):
-                qcd_fit = ROOT.TFile(config['ModelName']+'/qcdfit.root').Get('w').genobj('fitresult_qcdmodel_simPdf_qcdmodel_observation')                
+                import sys
+                sys.path.append('/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/rhalphalib')
+                import rhalphalib as rl
+                rl.util.install_roofit_helpers()
+                qcd_fit = ROOT.TFile(config['ModelName']+ '/qcdfit_'+config['ModelName']+config.get('TFSuffix','')+'.root').Get('w').genobj('fitresult_qcdmodel_simPdf_qcdmodel_observation')                
                 mean_values = qcd_fit.valueArray()
                 fitargs = qcd_fit.floatParsFinal()
                 qcdFit_pars=[]
@@ -159,7 +175,6 @@ def plot_qcd_bernstein(config={'ModelName':'WMassModel'},do_3d_plot=True):
                 mean_values = np.array(qcdFit_pars)
 
                 deco_param_values = bernstein_pars.reshape(-1)
-                import rhalphalib as rl                
                 decoVector = rl.DecorrelatedNuisanceVector.fromRooFitResult('',qcd_fit,qcdFit_parnames)._transform
                 parameter_for_plot = decoVector.dot(np.array(deco_param_values)) + mean_values
                 bernstein_pars = parameter_for_plot.reshape(bernstein_pars.shape)
@@ -224,7 +239,7 @@ def plot_qcd_bernstein(config={'ModelName':'WMassModel'},do_3d_plot=True):
         cms_style.setup_hist(th2_map)
         th2_map.SetMarkerSize(1)
         th2_map.Draw('textcolz')
-        c.SaveAs(out_dir+"TF_th2%s.pdf"%('' if parameter_suffix == 'params' else '_'+parameter_suffix))
+        c.SaveAs(out_dir+"TF_th2%s.pdf"%(('' if parameter_suffix == 'params' else '_'+parameter_suffix)+config.get('TFSuffix','')))
 
         #MATPLOTLIB 2D
         plt.switch_backend('agg')
@@ -240,7 +255,7 @@ def plot_qcd_bernstein(config={'ModelName':'WMassModel'},do_3d_plot=True):
         z_bar = figure.colorbar(plt_cont,format='%.2f')
         z_bar.set_label(r'TF',rotation=270,labelpad=15)
         for f_type in ['.pdf','.png']:
-            plt.savefig(out_dir+'bernstein%s'%(parameter_suffix+f_type))
+            plt.savefig(out_dir+'bernstein%s'%(parameter_suffix+config.get('TFSuffix','')+f_type))
 
         #Mathematica 3D
         if(do_3d_plot and (config["InitialQCDFit"] == "True" and parameter_suffix != 'params')):
