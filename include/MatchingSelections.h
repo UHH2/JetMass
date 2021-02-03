@@ -27,6 +27,9 @@ public:
   void init(const uhh2::Event & event);
   
   bool passes_matching(const TopJet &probe_jet, matchingOpt opt, float radius = 0.8);
+
+  int FlavourQ1() const;
+  int FlavourQ2() const;
   
 private:
   bool initialzed, is_VJets, is_TTbar,is_valid;
