@@ -14,7 +14,7 @@ def nlls(filename):
     except:
         # raise BaseException("One of the Fits seems to have failed!")
         #warnings.simplefilter("once", UserWarning)
-        warnings.warn(filename+" not found.")
+        warnings.warn("Not able to retrieve limits from "+filename+" !")
         return [None]
 
 class FTest():
@@ -85,20 +85,20 @@ class FTest():
 
         file_path_1 = ""
         file_path_2 = ""
-        files_not_found = True
         for toy_workdir in toy_workdirs:
             file_path_1 = toy_workdir+'/'+file_dir_1+'/higgsCombineBaseline.GoodnessOfFit.mH0.root'
             file_path_2 = toy_workdir+'/'+file_dir_2+'/higgsCombineBaseline.GoodnessOfFit.mH0.root'
             if(os.path.isfile(file_path_1) and os.path.isfile(file_path_2)):
-                files_not_found = False
-                break
-        if(files_not_found):
+                self._nll_base1 = nlls(file_path_1)[0]
+                self._nll_base2 = nlls(file_path_2)[0]
+                if(self._nll_base1 is not  None and self._nll_base2 is not None):
+                    break
+        if(self._nll_base1 is  None or self._nll_base2 is None):
             warnings.warn("Could not find files for both fits. skipping (%i,%i).."%self.orders_1)
-            print("Tried following paths: \n %s \n %s"%(file_path_1,file_path_2))
+            print("Tried following paths last: \n %s \n %s"%(file_path_1,file_path_2))
             return
 
-        self._nll_base1 = nlls(file_path_1)[0]
-        self._nll_base2 = nlls(file_path_2)[0]
+                
 
         if(self._nll_base1 is None or self._nll_base2 is None):
             warnings.warn("One of the Baseline fits failed. skipping")
@@ -284,22 +284,40 @@ def process_TF_prep(dir_pattern,model_dir_pattern,output_dir,algo='KS',n_p_other
         os.makedirs(ft._outDir)
     for i_pt in range(0,6):
         for i_rho in range(0,6):
-            for j_pt in [i_pt,i_pt+1]:
-                for j_rho in [i_rho,i_rho+1]:
-                    print('TF%ix%i vs. TF%ix%i'%(i_pt,i_rho,j_pt,j_rho))
-                    if((j_pt+1)*(j_rho+1) >= ft._nbins):
-                        print('Number of parameters on alternative Bernstein configuration is exceeding number of bins. skipping')
-                        continue
-                    if((j_pt+1)*(j_rho+1) == (i_pt+1)*(i_rho+1)):
-                        print('Number of parameters is equal in both Bernstein configuration. skipping')
-                        continue
-                    ft.orders_1 = (i_pt,i_rho)
-                    ft.orders_2 = (j_pt,j_rho)
-                    success = ft.process_files(dir_pattern,model_dir_pattern)
-                    if(success is None):
-                        continue
-                    ft.plot_ftest()
-                    ft.plot_gofs()
+            for (j_pt,j_rho) in [(i_pt+1,i_rho),(i_pt,i_rho+1)]:
+                print("#"*20)
+                print('TF%ix%i vs. TF%ix%i'%(i_pt,i_rho,j_pt,j_rho))
+                if((j_pt+1)*(j_rho+1) >= ft._nbins):
+                    print('Number of parameters on alternative Bernstein configuration is exceeding number of bins. skipping')
+                    continue
+                if((j_pt+1)*(j_rho+1) == (i_pt+1)*(i_rho+1)):
+                    print('Number of parameters is equal in both Bernstein configuration. skipping')
+                    continue
+                ft.orders_1 = (i_pt,i_rho)
+                ft.orders_2 = (j_pt,j_rho)
+                success = ft.process_files(dir_pattern,model_dir_pattern)
+                if(success is None):
+                    continue
+                ft.plot_ftest()
+                ft.plot_gofs()
+
+            # for j_pt in [i_pt,i_pt+1]:
+            #     for j_rho in [i_rho,i_rho+1]:
+            #         print("#"*20)
+            #         print('TF%ix%i vs. TF%ix%i'%(i_pt,i_rho,j_pt,j_rho))
+            #         if((j_pt+1)*(j_rho+1) >= ft._nbins):
+            #             print('Number of parameters on alternative Bernstein configuration is exceeding number of bins. skipping')
+            #             continue
+            #         if((j_pt+1)*(j_rho+1) == (i_pt+1)*(i_rho+1)):
+            #             print('Number of parameters is equal in both Bernstein configuration. skipping')
+            #             continue
+            #         ft.orders_1 = (i_pt,i_rho)
+            #         ft.orders_2 = (j_pt,j_rho)
+            #         success = ft.process_files(dir_pattern,model_dir_pattern)
+            #         if(success is None):
+            #             continue
+            #         ft.plot_ftest()
+            #         ft.plot_gofs()
                     
     ft.print_results()
     
