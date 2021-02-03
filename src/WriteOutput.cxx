@@ -26,10 +26,20 @@ WriteOutput::WriteOutput(uhh2::Context & ctx){
   h_jecfactor = ctx.declare_event_output<double>("jecfactor");
   h_jecfactor_SD = ctx.declare_event_output<double>("jecfactor_SD");
 
+
+  h_pt_AK4 = ctx.declare_event_output<double>("AK4pt");
+  h_genpt_AK4 = ctx.declare_event_output<double>("AK4genpt");
+  
+  h_CHF = ctx.declare_event_output<double>("CHF");
+  h_NHF = ctx.declare_event_output<double>("NHF");
+  
   h_IsMergedTop = ctx.declare_event_output<bool>("IsMergedTop");
   h_IsMergedQB = ctx.declare_event_output<bool>("IsMergedQB");
   h_IsMergedWZ = ctx.declare_event_output<bool>("IsMergedWZ");
   h_IsNotMerged = ctx.declare_event_output<bool>("IsNotMerged");
+
+  h_pdgId_Q1 = ctx.declare_event_output<int>("pdgIdQ1");
+  h_pdgId_Q2 = ctx.declare_event_output<int>("pdgIdQ2");  
 
   // discriminant variables for old WfromTop selection
   h_ht = ctx.get_handle<double>("HT");
@@ -94,6 +104,9 @@ bool WriteOutput::process(uhh2::Event & event){
   vector<TopJet>* topjets = event.topjets;
   if(topjets->size() < 1) return false;
   matching_selection->init(event);
+
+  event.set(h_pdgId_Q1, matching_selection->FlavourQ1() );
+  event.set(h_pdgId_Q2, matching_selection->FlavourQ2() );
   
   vector<Jet> subjets = topjets->at(0).subjets();
   vector<PFParticle>* allparticles = event.pfparticles;
@@ -122,6 +135,9 @@ bool WriteOutput::process(uhh2::Event & event){
   double tau21 = 0;
   if(topjets->at(0).tau1() > 0) tau21 = topjets->at(0).tau2()/topjets->at(0).tau1();
 
+  double AK8CHF = topjets->at(0).chargedHadronEnergyFraction();
+  double AK8NHF = topjets->at(0).neutralHadronEnergyFraction();
+  
   // set variations for MC
   if(isMC){
     for(int i=0; i<Nbins_pt; i++){
@@ -189,6 +205,22 @@ bool WriteOutput::process(uhh2::Event & event){
   event.set(h_jecfactor, jecfactor);
   event.set(h_jecfactor_SD, jecfactor_SD);
 
+  double ak4_pt = -1.0;
+  double ak4_genpt = -1.0;
+  if(event.jets->size()>0){
+    ak4_pt = event.jets->at(0).pt();
+    if(isMC && event.genjets && event.genjets->size() >0){
+      const GenJet * closest_genjet = closestParticle(event.jets->at(0), *event.genjets);
+      ak4_genpt = closest_genjet->pt();
+    }
+      // cout << "test"<<endl; ak4_genpt = event.genjets->at(event.jets->at(0).genjet_index()).pt();
+  }
+  event.set(h_pt_AK4,ak4_pt);
+  event.set(h_genpt_AK4,ak4_genpt);
+  
+  event.set(h_CHF,AK8CHF);
+  event.set(h_NHF,AK8NHF);
+  
   event.set(h_IsMergedTop, IsMergedTop);
   event.set(h_IsMergedQB, IsMergedQB); 
   event.set(h_IsMergedWZ, IsMergedWZ);   

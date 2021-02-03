@@ -38,6 +38,7 @@ private:
   uhh2::Event::Handle<double>h_mjet_SD;
   uhh2::Event::Handle<double>h_DeepBoost;
   uhh2::Event::Handle<double>h_pt;
+  uhh2::Event::Handle<double>h_pt_AK4,h_genpt_AK4;
   uhh2::Event::Handle<double>h_N2;
   uhh2::Event::Handle<double>h_tau32;
   uhh2::Event::Handle<double>h_tau21;
@@ -46,11 +47,18 @@ private:
   uhh2::Event::Handle<double>h_jecfactor;
   uhh2::Event::Handle<double>h_jecfactor_SD;
 
+  uhh2::Event::Handle<double>h_CHF;
+  uhh2::Event::Handle<double>h_NHF;
+  
   uhh2::Event::Handle<bool>h_IsMergedTop;
   uhh2::Event::Handle<bool>h_IsMergedQB;
   uhh2::Event::Handle<bool>h_IsMergedWZ;
   uhh2::Event::Handle<bool>h_IsNotMerged;
 
+  uhh2::Event::Handle<int>h_pdgId_Q1;
+  uhh2::Event::Handle<int>h_pdgId_Q2;
+  
+  
   // discriminant variables for old WfromTop selection
   uhh2::Event::Handle<double>h_ht;
   uhh2::Event::Handle<double>h_lepW_pt;

@@ -75,4 +75,15 @@ namespace uhh2{
     }else if(opt == oIsNotMerged) return true;
     return false;
   }
+
+  int MatchingSelection::FlavourQ1() const{
+    if(!is_VJets && !is_TTbar) return 10000;
+    return genQ1.pdgId();
+  }
+
+  int MatchingSelection::FlavourQ2() const{
+    if(!is_VJets && !is_TTbar) return 10000;
+    return genQ2.pdgId();
+  }
+
 }
