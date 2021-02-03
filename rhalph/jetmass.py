@@ -270,7 +270,7 @@ def jet_mass_producer(args,configs=None,MINIMAL_MODEL=False,includeMassScales=Tr
 
     norm_nuisances = {}
     for channel_name in channels.keys():
-        if( MINIMAL_MODEL or args.noNormUncNuis):
+        if( MINIMAL_MODEL ):
             break
         for i, sample in enumerate(channels[channel_name]['samples']):
             if 'NormUnc' not in channels[channel_name]:
