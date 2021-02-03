@@ -5,22 +5,44 @@ import sys
 # sys.path.append('../python/')
 # import cms_style
 # cms_style.cms_style()
-
-# selection = 'WJets'
-selection = 'Top'
+#selection = 'WJetsL4fb'
+# selection = 'WJetsL4fbTF1x1TF1x1NormUnc0p05Bins5GeV'
+# selection = 'WJets10GeVBins'
+# selection = 'Top'               
 # selection = 'WfromTop'
-prefix=""
+# prefix="/nfs/dust/cms/user/albrechs/JetMassCalibration/scaleStudy/WJets_CHFHighBin_scaleStudy/"
+
 #prefix = "TopPassAndFail/"
 #prefix = "TopFail/"
-workdir_varied = prefix+"workdir_scaleStudy_"+selection
-workdir_unvaried = prefix+"workdir_nominal_"+selection
+# workdir_varied = prefix+"workdir_scaleStudy_"+selection
+# workdir_unvaried = prefix+"workdir_nominal_"+selection
 
 # rhalphdir = os.getcwd()
-rhalphdir = '/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/rhalph/'
+rhalphdir = '/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/'
 
 ROOT.gROOT.SetBatch(True)
 
-def plot_nuisance_effect_grid(name,config,cycle_suffix=''):
+def collect_and_plot_scaleStudy(nominal_diagnostics,up_diagnostics,down_diagnostics,outdir,categoryName,categoryConfig):
+    if(not os.path.isdir(outdir)):
+        os.makedirs(outdir)
+        os.makedirs(outdir+'/workdir_nominal/%s'%categoryName)
+        os.makedirs(outdir+'/workdir_variations/%s00allup'%categoryName)
+        os.makedirs(outdir+'/workdir_variations/%s00alldown'%categoryName)
+        os.system('cp '+nominal_diagnostics+' ' +outdir+'/workdir_nominal/%s/fitDiagnostics.root'%categoryName)
+        os.system('cp '+up_diagnostics+' ' +outdir+'/workdir_variations/%s00allup/fitDiagnostics.root'%categoryName)
+        os.system('cp '+down_diagnostics+' ' +outdir+'/workdir_variations/%s00alldown/fitDiagnostics.root'%categoryName)
+
+    # workdir_unvaried+'/'+name.replace('_','')+'/fitDiagnostics.root'
+    # model_name = (name+'_'+category+direction).replace('_','')
+
+    # workdir_varied+'/'+model_name+'/fitDiagnostics.root'
+    plot_nuisance_effect_grid(categoryName,categoryConfig,cycle_suffix='',workdir_prefix=outdir)
+    
+def plot_nuisance_effect_grid(name,config,cycle_suffix='',workdir_prefix="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/scaleStudy/WJets_CHFLowBin_scaleStudy/"
+):
+    workdir_varied = workdir_prefix+"/workdir_variations"
+    workdir_unvaried = workdir_prefix+"/workdir_nominal"
+    print(workdir_unvaried)
     unvaried_nuisances = []
     unvaried_grid_file = ROOT.TFile(rhalphdir+"/../Histograms/grid_"+name+".root")
     h_grid = unvaried_grid_file.Get("grid")
@@ -37,7 +59,11 @@ def plot_nuisance_effect_grid(name,config,cycle_suffix=''):
     
     matrix={'up':np.zeros((Ncat,Ncat)),'down':np.zeros((Ncat,Ncat))}
     print('using',workdir_unvaried+cycle_suffix+'/'+name.replace('_','')+'/fitDiagnostics.root')
+    if(not os.path.isfile(workdir_unvaried+cycle_suffix+'/'+name.replace('_','')+'/fitDiagnostics.root')):
+        return matrix
     f_r_unvaried = ROOT.TFile(workdir_unvaried+cycle_suffix+'/'+name.replace('_','')+'/fitDiagnostics.root','READ')
+    if('fit_s' not in f_r_unvaried.GetListOfKeys()):
+        return matrix
     fitargs_unvaried = f_r_unvaried.Get('fit_s').floatParsFinal()
     
     for i in range(Npt):
@@ -73,7 +99,9 @@ def plot_nuisance_effect_grid(name,config,cycle_suffix=''):
     zero.SetLineStyle(ROOT.kDashed)
     zero.Draw("SAME")
     
-    outdir = 'nuisance_plots_'+selection+'_'+prefix.replace('_','')
+    # outdir = 'nuisance_plots_'+selection+'_'+prefix.replace('_','')
+    outdir = workdir_prefix+'/nuisance_plots'
+    print(outdir)
     if(not os.path.isdir(outdir)):
         os.makedirs(outdir)
 
@@ -97,8 +125,21 @@ def plot_nuisance_effect_grid(name,config,cycle_suffix=''):
 
                     parname = []
                     par = []
+                    if(not os.path.isfile(workdir_varied+cycle_suffix+'/'+model_name+'/fitDiagnostics.root')):
+                        print(workdir_varied+cycle_suffix+'/'+model_name+'/fitDiagnostics.root does not exist!')
+                        pars_varied[direction].update({variation_name:[-10.0]*Npt*Neta*Ncat})
+                        continue
                     f_r = ROOT.TFile(workdir_varied+cycle_suffix+'/'+model_name+'/fitDiagnostics.root','READ')
-                    fitargs = f_r.Get('fit_s').floatParsFinal()
+
+                    if('fit_s' not in f_r.GetListOfKeys()):
+                        pars_varied[direction].update({variation_name:[-10.0]*Npt*Neta*Ncat})
+                        continue
+                    
+                    try:
+                        fitargs = f_r.Get('fit_s').floatParsFinal()
+                    except:
+                        pars_varied[direction].update({variation_name:[-10.0]*Npt*Neta*Ncat})
+                        continue
 
                     for i in range(Npt):
                         for j in range(Neta):
@@ -143,7 +184,8 @@ def plot_nuisance_effect_grid(name,config,cycle_suffix=''):
             comp_plot.SetBinContent((j+1),i+1+n_massscales+1,up_value)
             max_val = max(abs(up_value),max_val)
             matrix['up'][j][i] = up_value
-                          
+    
+            
     c = ROOT.TCanvas('nuisance_comp_'+name,'nuisance_comp_'+name,900,600)
     
     ROOT.gStyle.SetOptStat(0)
@@ -184,16 +226,16 @@ def plot_nuisance_effect_grid(name,config,cycle_suffix=''):
 
 if(__name__ == "__main__"):
     grids={
-        # "oneScale":{
-        #     "ptbins":[0.,100000.],
-        #     "etabins":[0.,9.],
-        #     "pfflavours":["all"]
-        # },
-        "PF_flavours":{
+        "oneScale":{
             "ptbins":[0.,100000.],
             "etabins":[0.,9.],
-            "pfflavours":["chargedH", "neutralH", "gamma", "other"]
+            "pfflavours":["all"]
         },
+        # "PF_flavours":{
+        #     "ptbins":[0.,100000.],
+        #     "etabins":[0.,9.],
+        #     "pfflavours":["chargedH", "neutralH", "gamma", "other"]
+        # },
         # "2ptbins":{
         #     "ptbins":[0.,10.,100000.],
         #     "etabins":[0.,9.],
@@ -221,41 +263,54 @@ if(__name__ == "__main__"):
     # pt_bins = ['_inclusive','_300To500','_300To400','_400To500','_500ToInf',"_300To350","_350To400","_400To450","_450To500","_500To550","_550To600","_600ToInf"]
     #cycles = ["_300To500","_300To350","_350To400","_400To450","_450To500","_500To550","_550To600","_600ToInf"]
     cycles = [""]
-    if(len(cycles)>0):
-        matrices = {}
-        for suffix in cycles:
-            for name,config in grids.items():
-                matrices.update({name+suffix:plot_nuisance_effect_grid(name, config, suffix)})
+    # cycles = ['TFPt%iRho%iTFPt%iRho%i'%(qcd_pt_order_MCTF,qcd_rho_order_MCTF,qcd_pt_order,qcd_rho_order) for qcd_pt_order_MCTF in range(1,6) for qcd_rho_order_MCTF in range(1,6) for qcd_pt_order in range(1,6) for qcd_rho_order in range(1,6)]
+    print(cycles)
+    # if(len(cycles)>0):
+    #     matrices = {}
+    #     for suffix in cycles:
+    #         for name,config in grids.items():
+    #             matrices.update({name+suffix:plot_nuisance_effect_grid(name, config, suffix)})
 
-        h_det_up = ROOT.TH1F('determinants_up','determinants_up',len(matrices.keys()),0,len(matrices.keys()))
-        h_det_down = ROOT.TH1F('determinants_down','determinants_down',len(matrices.keys()),0,len(matrices.keys()))
+    #     h_det_up = ROOT.TH1F('determinants_up','determinants_up',len(matrices.keys()),0,len(matrices.keys()))
+    #     h_det_down = ROOT.TH1F('determinants_down','determinants_down',len(matrices.keys()),0,len(matrices.keys()))
 
-        for i,pt_bin in enumerate(cycles):
-            for name,config in grids.items():
-                h_det_up.GetXaxis().SetBinLabel(i+1,pt_bin.replace('_',''))
-                h_det_up.GetYaxis().SetTitle('determinant')
-                h_det_up.GetYaxis().SetRangeUser(-1.5,2.5)
+    #     for i,pt_bin in enumerate(cycles):
+    #         for name,config in grids.items():
+    #             h_det_up.GetXaxis().SetBinLabel(i+1,pt_bin.replace('_',''))
+    #             h_det_up.GetYaxis().SetTitle('determinant')
+    #             h_det_up.GetYaxis().SetRangeUser(-1.5,2.5)
         
-                # h_det_up.SetBinContent(i+1,abs(1-np.linalg.det(matrices[name+pt_bin]['up'])))
-                # h_det_down.SetBinContent(i+1,abs(1-np.linalg.det(matrices[name+pt_bin]['down'])))
-                h_det_up.SetBinContent(i+1,(np.linalg.det(matrices[name+pt_bin]['up'])))
-                h_det_down.SetBinContent(i+1,(np.linalg.det(matrices[name+pt_bin]['down'])))
+    #             # h_det_up.SetBinContent(i+1,abs(1-np.linalg.det(matrices[name+pt_bin]['up'])))
+    #             # h_det_down.SetBinContent(i+1,abs(1-np.linalg.det(matrices[name+pt_bin]['down'])))
+    #             h_det_up.SetBinContent(i+1,(np.linalg.det(matrices[name+pt_bin]['up'])))
+    #             h_det_down.SetBinContent(i+1,(np.linalg.det(matrices[name+pt_bin]['down'])))
                 
-                h_det_up.SetLineColor(ROOT.kBlue+2)
-                h_det_down.SetLineColor(ROOT.kRed+2)
+    #             h_det_up.SetLineColor(ROOT.kBlue+2)
+    #             h_det_down.SetLineColor(ROOT.kRed+2)
 
-        c = ROOT.TCanvas('canv_determinant','canv_determinant',600,600)
-        leg = ROOT.TLegend(0.1,0.7,0.9,0.9)
+    #     c = ROOT.TCanvas('canv_determinant','canv_determinant',600,600)
+    #     leg = ROOT.TLegend(0.1,0.7,0.9,0.9)
 
-        leg.AddEntry(h_det_up,'determinant up-variations','l')
-        leg.AddEntry(h_det_down,'determinant down-variations','l')
+    #     leg.AddEntry(h_det_up,'determinant up-variations','l')
+    #     leg.AddEntry(h_det_down,'determinant down-variations','l')
 
-        h_det_up.Draw('H')
-        h_det_down.Draw('HSAME')
+    #     h_det_up.Draw('H')
+    #     h_det_down.Draw('HSAME')
 
-        leg.Draw('SAME')
+    #     leg.Draw('SAME')
     
-        c.SaveAs('nuisance_plots_'+selection+'_'+prefix.replace('_','')+'/determinants.pdf')
-    else:
-        for name,config in grids.items():
-            plot_nuisance_effect_grid(name, config)
+    #     c.SaveAs('nuisance_plots_'+selection+'_'+prefix.replace('_','')+'/determinants.pdf')
+    # else:
+    # for name,config in grids.items():
+    #     plot_nuisance_effect_grid(name, config)
+
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--nominal',type=str)
+    parser.add_argument('--up',type=str)
+    parser.add_argument('--down',type=str)
+    parser.add_argument('--out',type=str)
+    parser.add_argument('--catName',type=str)
+    args = parser.parse_args()
+    collect_and_plot_scaleStudy(args.nominal,args.up,args.down,args.out,args.catName,grids[args.catName])
