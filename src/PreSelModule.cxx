@@ -30,7 +30,7 @@
 #include "UHH2/JetMass/include/CorrectParticles.h"
 #include "UHH2/common/include/MCLargeWeightKiller.h"
 #include "UHH2/JetMass/include/WriteOutput.h"
-
+#include "UHH2/JetMass/include/PFHists.h"
 
 #include <unistd.h>
 
@@ -69,7 +69,9 @@ private:
   std::unique_ptr<AndSelection> LEP_VETO_sel;
   
   std::vector<std::unique_ptr<uhh2::Hists>> hists;
-
+  std::unique_ptr<uhh2::Hists> h_pfhists_200to500, h_pfhists_500to1000, h_pfhists_1000to2000, h_pfhists_2000to3000, h_pfhists_3000to4000, h_pfhists_4000to5000;
+  std::unique_ptr<uhh2::Hists> h_pfhists_inclusive, h_pfhists_500to550, h_pfhists_550to600, h_pfhists_600to675, h_pfhists_675to800, h_pfhists_800to1200, h_pfhists_1200toInf;
+  
   std::unique_ptr<AnalysisModule> writer;
 
 
@@ -182,6 +184,21 @@ PreSelModule::PreSelModule(Context & ctx){
   hists.emplace_back(new JetHists(ctx, "JetHists"));
   hists.emplace_back(new TopJetHists(ctx, "TopJetHists"));
 
+  h_pfhists_200to500.reset(new PFHists(ctx, "PFHists_200to500"));
+  h_pfhists_500to1000.reset(new PFHists(ctx, "PFHists_500to1000"));
+  h_pfhists_1000to2000.reset(new PFHists(ctx, "PFHists_1000to2000"));
+  h_pfhists_2000to3000.reset(new PFHists(ctx, "PFHists_2000to3000"));
+  h_pfhists_3000to4000.reset(new PFHists(ctx, "PFHists_3000to4000"));
+  h_pfhists_4000to5000.reset(new PFHists(ctx, "PFHists_4000to5000"));
+
+  h_pfhists_inclusive.reset(new PFHists(ctx, "PFHists_inclusive"));
+  h_pfhists_500to550.reset(new PFHists(ctx, "PFHists_500to550"));
+  h_pfhists_550to600.reset(new PFHists(ctx, "PFHists_550to600"));
+  h_pfhists_600to675.reset(new PFHists(ctx, "PFHists_600to675"));
+  h_pfhists_675to800.reset(new PFHists(ctx, "PFHists_675to800"));
+  h_pfhists_800to1200.reset(new PFHists(ctx, "PFHists_800to1200"));
+  h_pfhists_1200toInf.reset(new PFHists(ctx, "PFHists_1200toInf"));
+  
   ctx.undeclare_all_event_output();
 
   writer.reset(new WriteOutput(ctx));
@@ -223,12 +240,19 @@ bool PreSelModule::process(Event & event) {
   //PFHists
   if(event.topjets->size()>0){
     float AK8_pt = event.topjets->at(0).pt();
+    h_pfhists_inclusive->fill(event);
     if(AK8_pt>200 && AK8_pt<500)h_pfhists_200to500->fill(event);
     if(AK8_pt>500 && AK8_pt<1000)h_pfhists_500to1000->fill(event);
     if(AK8_pt>1000 && AK8_pt<2000)h_pfhists_1000to2000->fill(event);
     if(AK8_pt>2000 && AK8_pt<3000)h_pfhists_2000to3000->fill(event);
     if(AK8_pt>3000 && AK8_pt<4000)h_pfhists_3000to4000->fill(event);
     if(AK8_pt>4000 && AK8_pt<5000)h_pfhists_4000to5000->fill(event);
+    if(AK8_pt>500 && AK8_pt<550)h_pfhists_500to550->fill(event);
+    if(AK8_pt>550 && AK8_pt<600)h_pfhists_550to600->fill(event);
+    if(AK8_pt>600 && AK8_pt<675)h_pfhists_600to675->fill(event);
+    if(AK8_pt>675 && AK8_pt<800)h_pfhists_675to800->fill(event);
+    if(AK8_pt>800 && AK8_pt<1200)h_pfhists_800to1200->fill(event);
+    if(AK8_pt>1200)h_pfhists_1200toInf->fill(event);
   }
   
   // TRIGGER
