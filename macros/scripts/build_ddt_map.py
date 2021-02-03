@@ -39,7 +39,7 @@ def plot_map_root(file_path, map_name, wp):
     rho_max = 0
     pt_min = 0
     pt_max = 1500
-    disc_min = 0.12
+    disc_min = 0.12 
     disc_max = 0.3
     left_margin = 0.14
     right_margin = 0.16
@@ -80,8 +80,8 @@ def plot_map_root(file_path, map_name, wp):
         disc_max=1
     hist.GetXaxis().SetRangeUser(rho_min, rho_max)
     hist.GetYaxis().SetRangeUser(pt_min, pt_max)
-    if(disc_max>hist.GetMaximum()):
-        hist.GetZaxis().SetRangeUser(disc_min, disc_max)
+    # if(disc_max>hist.GetMaximum()):
+    #     hist.GetZaxis().SetRangeUser(disc_min, disc_max)
 
     Font=43
     TitleSize=24.0

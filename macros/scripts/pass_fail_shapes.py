@@ -27,10 +27,14 @@ gStyle.SetLegendBorderSize(0)
 
 ratio_plot = True
 
-min_MSD = 0
-max_MSD = 496
-# n_MSD = 62
-n_MSD = -1
+# min_MSD = 0
+# max_MSD = 500
+# n_MSD = 250
+min_MSD = 50
+max_MSD = 200
+n_MSD = 15
+# n_MSD = 100
+# n_MSD = -1
 new_binning = np.linspace(min_MSD,max_MSD,n_MSD+1) if n_MSD > 0 else None
 rebin_MSD = n_MSD > 0
 
@@ -145,29 +149,36 @@ def plot_var(hist_file,dir_suffix,variable,useMC):
         hist_name='W_%s__'+var_str[variable][0]+'_'+pt_bin_str+'_%s'
         if(useMC): 
             h_pass = f_hists.Get(hist_name%('QCD','pass'))
-            h_fail = f_hists.Get(hist_name%('QCD','fail'))       
+            h_fail = f_hists.Get(hist_name%('QCD','fail'))
         else:
             h_pass = f_hists.Get(hist_name%('Data','pass'))
-            h_pass.Add(f_hists.Get(hist_name%('WMatched','pass')),-1)
-            h_pass.Add(f_hists.Get(hist_name%('ZMatched','pass')),-1)
-            h_pass.Add(f_hists.Get(hist_name%('WUnmatched','pass')),-1)
-            h_pass.Add(f_hists.Get(hist_name%('ZUnmatched','pass')),-1)
-            h_pass.Add(f_hists.Get(hist_name%('TTbar','pass')),-1)
+            h_pass.Add(f_hists.Get(hist_name%('WJetsMatched','pass')),-1)
+            h_pass.Add(f_hists.Get(hist_name%('ZJetsMatched','pass')),-1)
+            h_pass.Add(f_hists.Get(hist_name%('WJetsUnmatched','pass')),-1)
+            h_pass.Add(f_hists.Get(hist_name%('ZJetsUnmatched','pass')),-1)
+            h_pass.Add(f_hists.Get(hist_name%('TTToHadronic','pass')),-1)
+            h_pass.Add(f_hists.Get(hist_name%('TTToSemiLeptonic','pass')),-1)
+            h_pass.Add(f_hists.Get(hist_name%('ST_tW_top','pass')),-1)
+            h_pass.Add(f_hists.Get(hist_name%('ST_tW_antitop','pass')),-1)
             h_fail = f_hists.Get(hist_name%('Data','fail'))
-            h_fail.Add(f_hists.Get(hist_name%('WMatched','fail')),-1)
-            h_fail.Add(f_hists.Get(hist_name%('ZMatched','fail')),-1)
-            h_fail.Add(f_hists.Get(hist_name%('WUnmatched','fail')),-1)
-            h_fail.Add(f_hists.Get(hist_name%('ZUnmatched','fail')),-1)
-            h_fail.Add(f_hists.Get(hist_name%('TTbar','fail')),-1)
+            h_fail.Add(f_hists.Get(hist_name%('WJetsMatched','fail')),-1)
+            h_fail.Add(f_hists.Get(hist_name%('ZJetsMatched','fail')),-1)
+            h_fail.Add(f_hists.Get(hist_name%('WJetsUnmatched','fail')),-1)
+            h_fail.Add(f_hists.Get(hist_name%('ZJetsUnmatched','fail')),-1)
+            h_fail.Add(f_hists.Get(hist_name%('TTToHadronic','fail')),-1)
+            h_fail.Add(f_hists.Get(hist_name%('TTToSemiLeptonic','fail')),-1)
+            h_fail.Add(f_hists.Get(hist_name%('ST_tW_top','fail')),-1)
+            h_fail.Add(f_hists.Get(hist_name%('ST_tW_antitop','fail')),-1)
 
         if(rebin_MSD):
             h_pass = h_pass.Rebin(n_MSD,"",new_binning)
             h_fail = h_fail.Rebin(n_MSD,"",new_binning)
-            
+
+        
         norm_pass = h_pass.Integral()
         norm_fail = h_fail.Integral()
-        h_pass.Scale((1./norm_pass) if norm_pass>0. else 1)
-        h_fail.Scale((1./norm_fail) if norm_fail>0. else 1)
+        h_pass.Scale((norm_fail/norm_pass) if norm_pass>0. else 1)
+        # h_fail.Scale((1./norm_fail) if norm_fail>0. else 1)
 
         c = ROOT.TCanvas('c%i'%i,'c%i'%i,700,600)
         legend = ROOT.TLegend(0.60,0.78,0.83,0.90)
@@ -184,8 +195,8 @@ def plot_var(hist_file,dir_suffix,variable,useMC):
         h_fail.GetYaxis().SetTitle('#DeltaN/N')
         y_range_max = max(0.03,1.1*h_pass.GetMaximum())
         h_fail.GetYaxis().SetRangeUser(0,y_range_max)
-        legend.AddEntry(h_pass,'%s pass'%('QCD' if useMC else '(Data-W-Z-TTbar)'),'l')
-        legend.AddEntry(h_fail,'%s fail'%('QCD' if useMC else '(Data-W-Z-TTbar)'),'l')
+        legend.AddEntry(h_pass,'%s pass'%('QCD' if useMC else '(Data-W-Z-TTbar-ST)')+'*%.4f'%(norm_pass/norm_fail),'l')
+        legend.AddEntry(h_fail,'%s fail'%('QCD' if useMC else '(Data-W-Z-TTbar-ST)'),'l')
         
         h_fail.Draw('H')
         h_pass.Draw('HSAME')
@@ -233,4 +244,14 @@ def plot_dir(hist_file,dir_name):
         
 if(__name__ == '__main__'):
 
-    plot_dir('../Histograms.root','pass_fail_shapes')
+    # plot_dir('../Histograms.root','PFMass/pass_fail_shapes')
+    # plot_dir('../MSD/Histograms.root','mSD/pass_fail_shapes')
+    # plot_dir('../Histograms.root','pass_fail_shapes_nominal')
+
+    # plot_dir('../Histograms_Cristina.root','Cristina/pass_fail_shapes')
+    # plot_dir('../Histograms.root','Mine/pass_fail_shapes')
+    # plot_dir('../Histograms_Cristina.root','Cristina/pass_fail_shapes_MSD_Norm50To200')
+    # plot_dir('../Histograms_Mine.root','Mine/pass_fail_shapes_MSD_Norm50To200')
+    # plot_dir('../scaleStudy/Histograms_oneScale.root','pass_fail_shapes_PFMass_July2020')
+    # plot_dir('../scaleStudy_0p01QCDMisstag/Histograms_oneScale.root','0p01QCDMisstag/pass_fail_shapes')
+    plot_dir('../scaleStudy/Histograms_PF_flavours.root','FitClosure/pass_fail_shapes')
