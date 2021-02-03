@@ -6,6 +6,7 @@
 #include <TFile.h>
 #include <TH3.h>
 
+#include "UHH2/JetMass/include/TopJetCorrections.h"
 
 using namespace std;
 
@@ -24,10 +25,13 @@ private:
   // TH3D * N2_v_pT_v_rho_oldBinning; 
 
   TH3D *  N2_v_pT_v_rho;
+  TH3D * N2_v_pT_v_rho_corrected;
   // TH3D *  N2_beta2_v_pT_v_rho;
   TH3D *  DeepBoosted_WvsQCD_v_pT_v_rho;
 
   /* TH3D *  N2_v_pT_v_mSD; */
   /* TH3D *  N2_beta2_v_pT_v_mSD; */
   /* TH3D *  DeepBoosted_WvsQCD_v_pT_v_mSD;  */
+  std::unique_ptr<StandaloneTopJetCorrector> softdrop_jec;
+
 };
