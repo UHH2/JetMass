@@ -14,7 +14,7 @@ def plot_template_variations(c_name,c_grid,file_name='../macros/Histograms.root'
     # colors = {"chargedH":ROOT.kGreen+2, "neutralH":ROOT.kRed-4, "gamma":ROOT.kOrange, "other":ROOT.kBlue+2}
 
     # colors = {"chargedH":ROOT.kGreen+2, "neutralH":ROOT.kRed+1, "gamma":ROOT.kBlue, "other":ROOT.kOrange}
-    colors = {"chargedH":ROOT.kRed-4, "neutralH":ROOT.kAzure+7, "gamma":798, "other":13}
+    colors = {"chargedH":ROOT.kRed-4, "neutralH":ROOT.kAzure+7, "gamma":798, "other":13,"all":ROOT.kRed-4}
 
     for ipt_bin in range(len(plotter.pt_bins_dict[selection])):
         pt_bin = plotter.pt_bins_dict[selection][ipt_bin]
@@ -23,7 +23,8 @@ def plot_template_variations(c_name,c_grid,file_name='../macros/Histograms.root'
 
         for region in plotter.regions[selection]:
 
-            region_out_dir = output_dir+'/'+pt_bin.replace('to','To')+'_'+region
+            # region_out_dir = output_dir+'/'+pt_bin.replace('to','To')+'_'+region
+            region_out_dir = output_dir+'/'+pt_bin+'_'+region
             if(not os.path.exists(region_out_dir)):
                 os.makedirs(region_out_dir)
             for i in range(len(c_grid['ptbins'])-1):
@@ -50,7 +51,7 @@ def plot_template_variations(c_name,c_grid,file_name='../macros/Histograms.root'
                             legend_entries=[(hist,'nominal','l')]
                             legend_entries.append((variations[0],'+1% variation','l'))
                             legend_entries.append((variations[1],'-1% variation','l'))
-                            plotter.plot_data_mc(h_data=hist, h_mc=None ,plot_title=sample + ' '+pt_bin+' '+region+' '+ category,out_dir=region_out_dir,additional_hists=variations,legend_entries=legend_entries,additional_text=add_text+'\\'+category)
+                            #plotter.plot_data_mc(h_data=hist, h_mc=None ,plot_title=sample + ' '+pt_bin+' '+region+' '+ category,out_dir=region_out_dir,additional_hists=variations,legend_entries=legend_entries,additional_text=add_text+'\\'+category)
                             all_mc[sample][pfflavour]=variations
                             all_mc[sample]['nominal']=hist
 
@@ -64,7 +65,7 @@ def plot_template_variations(c_name,c_grid,file_name='../macros/Histograms.root'
                         legend_entries=[(h_pseudo,'nominal','l')]
                         legend_entries.append((variations[0],'+1% variation','l'))
                         legend_entries.append((variations[1],'-1% variation','l'))
-                        plotter.plot_data_mc(h_data=h_pseudo, h_mc=None ,plot_title='PseudoData' + ' '+pt_bin.replace('to','To')+' '+region+' '+ category,out_dir=region_out_dir,additional_hists=variations,legend_entries=legend_entries,additional_text=plotter.selection_tex[selection]+'\\PseudoData\\'+plotter.pt_bins_tex_dict[pt_bin]+'\\'+category)
+                        #plotter.plot_data_mc(h_data=h_pseudo, h_mc=None ,plot_title='PseudoData' + ' '+pt_bin.replace('to','To')+' '+region+' '+ category,out_dir=region_out_dir,additional_hists=variations,legend_entries=legend_entries,additional_text=plotter.selection_tex[selection]+'\\PseudoData\\'+plotter.pt_bins_tex_dict[pt_bin]+'\\'+category)
 
                     
                     for sample,hists in all_mc.items():
@@ -118,23 +119,23 @@ def plot_template_variations(c_name,c_grid,file_name='../macros/Histograms.root'
                         legend.SetFillStyle(0)
                         for entry in reversed(legend_entries):
                             legend.AddEntry(*entry)
-                        c,_,out_name = plotter.plot_data_mc(h_data=hists['nominal'], h_mc=None ,plot_title=sample + ' '+pt_bin+' '+region+' all',out_dir=region_out_dir,additional_hists=all_variations,legend_entries=legend_entries,additional_text=add_text)
+                        c,_,out_name = plotter.plot_data_mc(h_data=hists['nominal'], h_mc=None ,plot_title=selection+'_'+sample + ' '+pt_bin+' '+region+' all',out_dir=region_out_dir,additional_hists=all_variations,legend_entries=legend_entries,additional_text=add_text)
                         legend.Draw('SAME')
-                        hists['nominal'].GetYaxis().SetRangeUser(0,43.5)
+                        #hists['nominal'].GetYaxis().SetRangeUser(0,43.5)
                         c.SaveAs(out_name)
 
-                        variation_stacks = [up_var,down_var]
-                        c,_,out_name = plotter.plot_data_mc(h_data=nominal, h_mc=None ,plot_title=sample + ' '+pt_bin+' '+region+' allstack',out_dir=region_out_dir,additional_hists=variation_stacks,legend_entries=legend_entries,additional_text=add_text)
-                        # frame.GetYaxis().SetRangeUser(-max_y,max_y)
-                        # frame.GetYaxis().SetTitle('stacked ({up,down}-variation - nominal)')
-                        legend.Draw('SAME')
-                        c.SaveAs(out_name)
+                        # variation_stacks = [up_var,down_var]
+                        # c,_,out_name = plotter.plot_data_mc(h_data=nominal, h_mc=None ,plot_title=sample + ' '+pt_bin+' '+region+' allstack',out_dir=region_out_dir,additional_hists=variation_stacks,legend_entries=legend_entries,additional_text=add_text)
+                        # # frame.GetYaxis().SetRangeUser(-max_y,max_y)
+                        # # frame.GetYaxis().SetTitle('stacked ({up,down}-variation - nominal)')
+                        # legend.Draw('SAME')
+                        # c.SaveAs(out_name)
 
-                        c,_,out_name = plotter.plot_data_mc(h_data=frame, h_mc=None ,plot_title=sample + ' '+pt_bin+' '+region+' alldiff',out_dir=region_out_dir,additional_hists=variation_diffs,legend_entries=legend_entries,additional_text=add_text)
-                        frame.GetYaxis().SetRangeUser(-10,10)
-                        frame.GetYaxis().SetTitle('({up,down}-variation - nominal)')
-                        legend.Draw('SAME')
-                        c.SaveAs(out_name)
+                        # c,_,out_name = plotter.plot_data_mc(h_data=frame, h_mc=None ,plot_title=sample + ' '+pt_bin+' '+region+' alldiff',out_dir=region_out_dir,additional_hists=variation_diffs,legend_entries=legend_entries,additional_text=add_text)
+                        # frame.GetYaxis().SetRangeUser(-10,10)
+                        # frame.GetYaxis().SetTitle('({up,down}-variation - nominal)')
+                        # legend.Draw('SAME')
+                        # c.SaveAs(out_name)
                         
                             
                             
@@ -239,19 +240,26 @@ if(__name__ ==  '__main__'):
     
     # selection = 'top'    
 
-    category_grids={
-        "PF_flavours":{
+    category_grids={        
+        "oneScale":{
             "ptbins":[0.,100000.],
             "etabins":[0.,9.],
-            "pfflavours":["chargedH", "neutralH", "gamma", "other"]
-        }
+            "pfflavours":["all"]
+        },
+        # "PF_flavours":{
+        #     "ptbins":[0.,100000.],
+        #     "etabins":[0.,9.],
+        #     "pfflavours":["chargedH", "neutralH", "gamma", "other"]
+        # }
     }
- 
-    output_dir = "../Plots/template_variations_passW"
     
-    file_name='../macros/scaleStudy/Histograms_PF_flavours.root'
+    # output_dir = "../Plots/template_variations_passW"
+    output_dir = "../Plots/template_variationsOneScale"
+    
+    file_name='../macros/scaleStudy/QCDMisstag_0p05/Histograms_oneScale.root'
 
-    for selection in ['top']:#,'W']:
+    for selection in ['top','W']:
         for c_name,c_grid in category_grids.items():
-            plot_template_variations(c_name,c_grid,file_name,selection,'test_variation_newstyle')
+            # plot_template_variations(c_name,c_grid,file_name,selection,'test_variation_newstyle')
+            plot_template_variations(c_name,c_grid,file_name,selection,output_dir)
             # plot_variation_envelope(c_name,c_grid,file_name,selection,'test_envelope')
