@@ -86,20 +86,14 @@ class CombineWorkflows:
             
     @property
     def freezeParameters(self):
-        return self._freezeParameters
+        return '--freezeParameters ' + ','.join(self._freezeParameters)
 
     @freezeParameters.setter
     def freezeParameters(self,pars):
         if(isinstance(pars,str)):
-            if(pars == ""):
-                self._pars = ""
-            elif('--freezeParameters ' in pars):
-                self._pars = pars
-            else:
-                self._pars = '--freezeParameters ' + pars
+            self._freezeParameters = pars.split(",")
         elif(isinstance(pars,list)):
-            self._poi = '--freezeParameters ' + ','.join(pars)
-            return
+            self._freezeParameters = pars
         else:
             raise TypeError("freezeParameters must be either string (',' as delimiter) or list!\nYou provided a ",type(pars))
 
@@ -183,43 +177,34 @@ class CombineWorkflows:
         alt_model_dirs.remove(self.modeldir)
 
         command_string += exec_bash("cd "+ self.modeldir,debug)
-        command_string += exec_bash("source build.sh",debug)        
+        command_string += exec_bash("source build.sh",debug)
 
-        command_string += exec_bash("combine -M MultiDimFit -d {WORKSPACE} --saveWorkspace -m 0 {POI} {FREEZEPARAMS} {EXTRA} -n \"{NAME}Snapshot\"".format(WORKSPACE=self.workspace,FREEZEPARAMS=self.freezeParameters,EXTRA=self.extraOptions,NAME=self.name,POI=self.POI),debug)
-        command_string += exec_bash("combine  -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.root --snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --algo={ALGO} {FREEZEPARAMS} {EXTRA} -n \"{NAME}Baseline\"".format(WORKSPACE=self.workspace,FREEZEPARAMS=self.freezeParameters,EXTRA=self.extraOptions,NAME=self.name,POI=self.POI,ALGO=self.algo),debug)
-        command_string += exec_bash("combine  -M GenerateOnly -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.root --snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} -t {NTOYS} {TOYSOPTIONS} {EXTRA} --saveToys -n \"{NAME}\" --seed {SEED}".format(WORKSPACE=self.workspace,NAME=self.name,POI=self.POI,SEED=self.seed,NTOYS=self.toys,TOYSOPTIONS=self.toysOptions,EXTRA=self.extraOptions),debug)
-        command_string += exec_bash("combine  -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.root --snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --algo={ALGO}  {FREEZEPARAMS} {EXTRA} -n \"{NAME}\" -t {NTOYS} {TOYSOPTIONS} --toysFile higgsCombine{NAME}.GenerateOnly.mH0.{SEED}.root --seed {SEED}".format(WORKSPACE=self.workspace,FREEZEPARAMS=self.freezeParameters,EXTRA=self.extraOptions,NAME=self.name,POI=self.POI,SEED=self.seed,NTOYS=self.toys,TOYSOPTIONS=self.toysOptions,ALGO=self.algo),debug)
+        GOF_extra = self.extraOptions + (" --fixedSignalStrength 1 " if "r" in self._freezeParameters else "")
 
+        # snapshot
+        #combine -M MultiDimFit -d workspace.root --saveWorkspace -m 0 -n '.snapshot' --setParameters r=1 --toysFrequentist --cminDefaultMinimizerStrategy 2 --cminDefaultMinimizerTolerance 0.01 --seed 42 --freezeParameters r
+        command_string += exec_bash("combine -M MultiDimFit   -d {WORKSPACE} --saveWorkspace -m 0 {POI} {FREEZEPARAMS} {EXTRA} -n \"{NAME}Snapshot\" --seed {SEED}".format(WORKSPACE=self.workspace,FREEZEPARAMS=self.freezeParameters,EXTRA=self.extraOptions,NAME=self.name,POI=self.POI,SEED=self.seed),debug)
+        # # snapshot + observed
+        # combine -d snapshot.root -m 0 --snapshotName MultiDimFit --bypassFrequentistFit -M GoodnessOfFit --algo saturated --setParameters r=1 --freezeParameters r --cminDefaultMinimizerStrategy 2 --cminDefaultMinimizerTolerance 0.01 --seed 42 --fixedSignalStrength 1
+        command_string += exec_bash("combine -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root --snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} {EXTRA} -n \"{NAME}Baseline\" --algo={ALGO}".format(WORKSPACE=self.workspace,NAME=self.name,FREEZEPARAMS=self.freezeParameters,POI=self.POI,SEED=self.seed,ALGO=self.algo,EXTRA=GOF_extra),debug)        
+        # # snapshot + generate-only
+        # combine -M GenerateOnly -d snapshot.root -m 0 --snapshotName MultiDimFit --bypassFrequentistFit -t 1 --toysFrequentist --seed 42 --cminDefaultMinimizerStrategy 2 --cminDefaultMinimizerTolerance 0.01 --setParameters r=1 --freezeParameters r --saveToys  -n '.snapshot2gen'
+        command_string += exec_bash("combine -M GenerateOnly  -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root --snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} {EXTRA} -n \"{NAME}\" -t {NTOYS} {TOYSOPTIONS}  --saveToys  ".format(WORKSPACE=self.workspace,NAME=self.name,FREEZEPARAMS=self.freezeParameters,POI=self.POI,SEED=self.seed,NTOYS=self.toys,TOYSOPTIONS=self.toysOptions,EXTRA=self.extraOptions),debug)
+        # combine -d snapshot.root -m 0 --snapshotName MultiDimFit --bypassFrequentistFit -M GoodnessOfFit --algo saturated -t 1 --toysFrequentist --setParameters r=1 --cminDefaultMinimizerStrategy 2 --cminDefaultMinimizerTolerance 0.01 --toysFile toys.root --seed 42 -n '.snapshot2gen' --freezeParameters r
+        command_string += exec_bash("combine -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root --snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} {EXTRA} -n \"{NAME}\" -t {NTOYS} {TOYSOPTIONS}  --toysFile higgsCombine{NAME}.GenerateOnly.mH0.{SEED}.root --algo={ALGO}     ".format(WORKSPACE=self.workspace,NAME=self.name,FREEZEPARAMS=self.freezeParameters,POI=self.POI,SEED=self.seed,NTOYS=self.toys,TOYSOPTIONS=self.toysOptions,ALGO=self.algo,EXTRA=GOF_extra),debug)
         
-        # using the snapshot ensures that one can load the externally produced toys and still have non-zero extArgs in the ModelConfig (by default only the nuisances are saved into the toy snapshot -> specified by ModelConfig)
-        # command_string += exec_bash("combine -M MultiDimFit -d {WORKSPACE} --saveWorkspace -m 0 {POI} {FREEZEPARAMS} {EXTRA} -n \"{NAME}Snapshot\"".format(WORKSPACE=self.workspace,FREEZEPARAMS=self.freezeParameters,EXTRA=self.extraOptions,NAME=self.name,POI=self.POI),debug)
-        # command_string += exec_bash("combine higgsCombine{NAME}Snapshot.MultiDimFit.mH0.root --snapshotName MultiDimFit --bypassFrequentistFit -M GoodnessOfFit -m 0 {POI} --algo={ALGO} {FREEZEPARAMS} {EXTRA} -n \"{NAME}Baseline\"".format(WORKSPACE=self.workspace,FREEZEPARAMS=self.freezeParameters,EXTRA=self.extraOptions,NAME=self.name,POI=self.POI,ALGO=self.algo),debug)
-        # command_string += exec_bash("combine higgsCombine{NAME}Snapshot.MultiDimFit.mH0.root --snapshotName MultiDimFit --bypassFrequentistFit -M GenerateOnly  -m 0 {POI} -t {NTOYS} {TOYSOPTIONS} --saveToys -n \"{NAME}\" --seed {SEED}".format(WORKSPACE=self.workspace,NAME=self.name,POI=self.POI,SEED=self.seed,NTOYS=self.toys,TOYSOPTIONS=self.toysOptions),debug)
-        # command_string += exec_bash("combine higgsCombine{NAME}Snapshot.MultiDimFit.mH0.root --snapshotName MultiDimFit --bypassFrequentistFit -M GoodnessOfFit -m 0 {POI} --algo={ALGO}  {FREEZEPARAMS} {EXTRA} -n \"{NAME}\" -t {NTOYS} --toysFrequentist  --toysFile higgsCombine{NAME}.GenerateOnly.mH0.{SEED}.root --seed {SEED}".format(WORKSPACE=self.workspace,FREEZEPARAMS=self.freezeParameters,EXTRA=self.extraOptions,NAME=self.name,POI=self.POI,SEED=self.seed,NTOYS=self.toys,ALGO=self.algo),debug)
-
-        
-        # command_string += exec_bash("combine -M GoodnessOfFit -d {WORKSPACE} -m 0 {POI} --algo={ALGO} {FREEZEPARAMS} {EXTRA} -n \"{NAME}Baseline\"".format(WORKSPACE=self.workspace,FREEZEPARAMS=self.freezeParameters,EXTRA=self.extraOptions,NAME=self.name,POI=self.POI,ALGO=self.algo),debug)
-        # command_string += exec_bash("combine -M GenerateOnly -d {WORKSPACE} {POI} -m 0 -t {NTOYS} {TOYSOPTIONS} --saveToys -n \"{NAME}\" --seed {SEED}".format(WORKSPACE=self.workspace,NAME=self.name,POI=self.POI,SEED=self.seed,NTOYS=self.toys,TOYSOPTIONS=self.toysOptions),debug)
-        # command_string += exec_bash("combine -M GoodnessOfFit -d {WORKSPACE} -m 0 {POI} --algo={ALGO}  {FREEZEPARAMS} {EXTRA} -n \"{NAME}\" -t {NTOYS} --toysFrequentist  --toysFile higgsCombine{NAME}.GenerateOnly.mH0.{SEED}.root --seed {SEED}".format(WORKSPACE=self.workspace,FREEZEPARAMS=self.freezeParameters,EXTRA=self.extraOptions,NAME=self.name,POI=self.POI,SEED=self.seed,NTOYS=self.toys,ALGO=self.algo),debug)
-
         command_string += exec_bash("",debug)
         
         for model_dir in alt_model_dirs:
             command_string += exec_bash("",debug)
             command_string += exec_bash("cd "+ model_dir,debug)
             command_string += exec_bash("source build.sh",debug)
-
-            # not sure what to do here. One can not load the snapshot created above since then we'd just redo the command above. However just using the toysfile generated above seems to yield reasonable GOF values.
-            # just create another snapshot with the alternative Model dummdumm 
-            command_string += exec_bash("combine -M MultiDimFit -d *_combined.root --saveWorkspace -m 0 {POI} {FREEZEPARAMS} {EXTRA} -n \"{NAME}Snapshot\"".format(WORKSPACE=self.workspace,FREEZEPARAMS=self.freezeParameters,EXTRA=self.extraOptions,NAME=self.name,POI=self.POI),debug)
-            command_string += exec_bash("combine higgsCombine{NAME}Snapshot.MultiDimFit.mH0.root --snapshotName MultiDimFit --bypassFrequentistFit -M GoodnessOfFit -m 0 {POI} --algo={ALGO} {FREEZEPARAMS} {EXTRA} -n \"{NAME}Baseline\"".format(FREEZEPARAMS=self.freezeParameters,EXTRA=self.extraOptions,NAME=self.name,POI=self.POI,ALGO=self.algo),debug)
-            command_string += exec_bash("combine higgsCombine{NAME}Snapshot.MultiDimFit.mH0.root --snapshotName MultiDimFit --bypassFrequentistFit -M GoodnessOfFit -m 0 {POI} --algo={ALGO}  {FREEZEPARAMS} {EXTRA} -n \"{NAME}\" -t {NTOYS} {TOYSOPTIONS} --toysFile {BASEMODELDIR}/higgsCombine{NAME}.GenerateOnly.mH0.{SEED}.root --seed {SEED}".format(FREEZEPARAMS=self.freezeParameters,EXTRA=self.extraOptions,NAME=self.name,POI=self.POI,SEED=self.seed,NTOYS=self.toys,TOYSOPTIONS=self.toysOptions,ALGO=self.algo,BASEMODELDIR=self.modeldir),debug)
-
-
             
-        # print(self.modeldir)
-        # print(alt_model_dirs)
-        
+            command_string += exec_bash("combine -M MultiDimFit   -d *_combined.root --saveWorkspace -m 0 {POI} {FREEZEPARAMS} {EXTRA} -n \"{NAME}Snapshot\" --seed {SEED}".format(WORKSPACE=self.workspace,FREEZEPARAMS=self.freezeParameters,EXTRA=self.extraOptions,NAME=self.name,POI=self.POI,SEED=self.seed),debug)
+            command_string += exec_bash("combine -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root --snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} {EXTRA} -n \"{NAME}Baseline\" --algo={ALGO}".format(WORKSPACE=self.workspace,NAME=self.name,FREEZEPARAMS=self.freezeParameters,POI=self.POI,SEED=self.seed,ALGO=self.algo,EXTRA=GOF_extra),debug)
+            command_string += exec_bash("combine -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root --snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} {EXTRA} -n \"{NAME}\" -t {NTOYS} {TOYSOPTIONS}  --toysFile {BASEMODELDIR}/higgsCombine{NAME}.GenerateOnly.mH0.{SEED}.root --algo={ALGO}     ".format(WORKSPACE=self.workspace,NAME=self.name,FREEZEPARAMS=self.freezeParameters,POI=self.POI,SEED=self.seed,NTOYS=self.toys,TOYSOPTIONS=self.toysOptions,ALGO=self.algo,EXTRA=GOF_extra,BASEMODELDIR=self.modeldir),debug)
+
+                    
         command_string += exec_bash("cd " + self.modeldir + "\n",debug)
 
         return command_string
