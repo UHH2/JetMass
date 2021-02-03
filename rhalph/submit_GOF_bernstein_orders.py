@@ -2,7 +2,7 @@ from jetmass import jet_mass_producer
 import argparse,sys,json,copy,os,subprocess
 
 # sys.path.append("/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2/CMSSW_10_2_10/src/UHH2/JetMass/util/python")
-sys.path.append("/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_v2/CMSSW_10_2_16/src/UHH2/JetMass/util/python")
+sys.path.append("/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/util/python")
 from combine_workflow import plot_gof_result
 
 selection = 'WJets'
@@ -12,13 +12,13 @@ N_jobs_per_fit = int(N_toys/N_toys_per_fit)
 
 cycle_name =".MassScaleFrozen"
 freezeParameters = "massScale"
-suffix=""
+suffix="NoInitialQCDFit"
 # scaleCategory = "oneScale"
 scaleCategory = "PF_flavours"
 
 #suffix="InternToys"
 def submit_bernstein_orders(configs,pt_orders, rho_orders,args):
-    workdir = 'workdir_bernstein_study_'+suffix+'_'+selection
+    workdir = 'workdir_bernstein_gof_'+suffix+'_'+selection
     rhalphdir = os.getcwd()
     if(not os.path.isdir(workdir)):
         os.makedirs(workdir)
@@ -114,7 +114,7 @@ log               = $(ConfigName).$(Cluster).log
 RequestMemory     = 4G
 RequestDisk       = 4G
 #getenv            = True
-JobBatchName      = QCDBernstein"""+suffix+"""
+JobBatchName      = QCDBernsteinGOF"""+suffix+"""
 executable        = """+workdir+"""/batch_wrapper.sh
 arguments         = $(ConfigName) $(FitJobIndex)
 queue ConfigName,FitJobIndex from ("""+'\n'.join(argument_strings)+"""
