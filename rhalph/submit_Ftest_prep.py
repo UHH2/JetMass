@@ -25,9 +25,9 @@ def submit_ftest_prep(config, ntoys, njobs, QCDOrders=None, DataOrders=None, alg
 
         cw = CombineWorkflows()
         cw.method = "FTest"
-        cw.seed = 123456 + i
+        cw.seed = 42 + i
         cw.POI = "r"
-        cw.freezeParameters = ""
+        cw.freezeParameters = "r"
         
         cw.extraOptions = ("--toysFrequentist --setParameters r=1 " if do_data_test else  "") + ("--toysNoSystematics --setParameters r=0 " if do_qcd_test else "") +  " --cminDefaultMinimizerStrategy 1 --cminDefaultMinimizerTolerance 0.1" 
 
@@ -82,7 +82,7 @@ def ftest_Data_TF_fitDiagnostics_closure(config,Orders = (range(0,7),range(0,7))
     fs.scan_TF_orders(Orders,QCDOrders,combine_method = cw)
 
 if(__name__ == '__main__'):
-    NToys = 300
+    NToys = 500
     NToysPerJob=50
     NJobs=int(NToys/NToysPerJob)
     
@@ -90,7 +90,7 @@ if(__name__ == '__main__'):
     config = json.load(open("WJets.json"))
     Orders = (range(0,7)),(range(0,7))
     dry_run = False
-    for algo in ["saturated"]:#,"KS"]:#,"AD"]:
+    for algo in ["saturated","KS"]:#,"AD"]:
         submit_ftest_prep(config, NToys, NJobs, QCDOrders=(3,1), DataOrders = Orders, algo=algo, dry_run=dry_run)
         submit_ftest_prep(config, NToys, NJobs, QCDOrders=Orders,  algo=algo, dry_run=dry_run)
         submit_ftest_prep(config, NToys, NJobs, QCDOrders=None, DataOrders = Orders, algo=algo, dry_run=dry_run)
