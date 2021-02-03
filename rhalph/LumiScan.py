@@ -3,22 +3,6 @@ import FitSubmitter
 import json,argparse
 
 if __name__ == "__main__":
-    import fitplotter
-    parser = argparse.ArgumentParser()
-    parser.add_argument("config", type=str, help="path to json with config")
-    parser.add_argument('--justplots',action='store_true', help='just make plots.')
-    parser.add_argument('--build', action='store_true', help='just build workspace for combine')
-    parser.add_argument('--job_index', default="", type=str)
-    parser.add_argument('--minimalModel',action='store_true')
-    parser.add_argument('--noMassScales',action='store_true')
-    parser.add_argument('--defaultPOI',action='store_true')
-    parser.add_argument('--skipTemplatePlots',action='store_true')
-    parser.add_argument('--customCombineWrapper',action='store_true')
-    parser.add_argument('--combineOptions',type=str,help="string with additional cli-options passed to combine",default="")
-    # parser.add_argument('--QCDOnly',action="store_true",help="perform full TF fit to QCD MC - for BernsteinOptimization only")
-    args = parser.parse_args()
-
-
     submitter = FitSubmitter.FitSubmitter("WJets.json","DUST/test_dir",dry_run=False)
     submitter.display()
     print('1TF:')
