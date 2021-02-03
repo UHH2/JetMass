@@ -72,7 +72,7 @@ private:
   int Nbins_pt, Nbins_eta, Nbins_cat;
   vector<TString> categories;
   vector<int> otherIDs;
-  double variation = 0.1;
+  double variation = 0.01;
   std::unique_ptr<MatchingSelection> matching_selection;
   std::unique_ptr<StandaloneTopJetCorrector> softdrop_jec;
   bool isMC, do_genStudies, is_WSample, is_ZSample, isTopSel, isWSel;
