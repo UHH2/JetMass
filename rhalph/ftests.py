@@ -86,8 +86,9 @@ class FTest():
         file_path_1 = ""
         file_path_2 = ""
         for toy_workdir in toy_workdirs:
-            file_path_1 = toy_workdir+'/'+file_dir_1+'/higgsCombineBaseline.GoodnessOfFit.mH0.root'
-            file_path_2 = toy_workdir+'/'+file_dir_2+'/higgsCombineBaseline.GoodnessOfFit.mH0.root'
+            seed = toy_workdir.split("Seed")[-1].split('/')[0]
+            file_path_1 = toy_workdir+'/'+file_dir_1+'/higgsCombineBaseline.GoodnessOfFit.mH0.%s.root'%seed
+            file_path_2 = toy_workdir+'/'+file_dir_2+'/higgsCombineBaseline.GoodnessOfFit.mH0.%s.root'%seed
             if(os.path.isfile(file_path_1) and os.path.isfile(file_path_2)):
                 self._nll_base1 = nlls(file_path_1)[0]
                 self._nll_base2 = nlls(file_path_2)[0]
