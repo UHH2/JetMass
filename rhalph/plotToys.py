@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import ROOT
 import os
 from CombineUtils import CombineWorkspace as cw
