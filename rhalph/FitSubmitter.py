@@ -10,6 +10,7 @@ class FitSubmitter:
         self._workdir = os.path.realpath(workdir)
         
         self.rhalphdir = os.getcwd()
+        self.CombinePath = self.rhalphdir + "/CMSSW_10_2_13"
             
         self.setup_workdir(self._workdir)
 
@@ -28,7 +29,7 @@ class FitSubmitter:
             os.makedirs(workdir)
             scriptdir = os.getcwd()
             os.chdir(workdir)
-            os.system('ln -sf '+self.rhalphdir+'/CMSSW_10_2_13')
+            os.system('ln -sf '+self.CombinePath)
             os.system('ln -sf '+self.rhalphdir+'/setup_ralph.sh')
             os.system('ln -sf '+self.rhalphdir+'/runFit.py')
             os.system('ln -sf '+self.rhalphdir+'/rhalphalib')
