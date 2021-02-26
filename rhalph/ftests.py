@@ -10,12 +10,13 @@ def nlls(filename):
         f = ROOT.TFile(filename)
         limits = f.Get('limit')
         nll=[l.limit for l in limits]
-        return nll
+        status=[l.limitErr for l in limits]
+        return nll,status
     except:
         # raise BaseException("One of the Fits seems to have failed!")
         #warnings.simplefilter("once", UserWarning)
         warnings.warn("Not able to retrieve limits from "+filename+" !")
-        return [None]
+        return [None],[None]
 
 class FTest():
     def __init__(self):
@@ -76,7 +77,11 @@ class FTest():
         # Will leave this as it is, but keep in mind how negative observed F-vals are possible (i.e. nll1<nll2)
         return result
         
-    def process_files(self,workdir,dir_name_template):
+    def process_files(self,workdir,dir_name_template,skip_failed_fits=False):
+        """
+        skip_failed_fits: if True fits where limitErr != 0 are skipped. 
+        (per default limitErr is 0 when using GoodnessOfFit methods in combine. So to use this, one needs to tweak the used combine installation)
+        """
         itoys_max = 1e9  # *100
         toy_workdirs = glob.glob(workdir)
                 
@@ -90,31 +95,34 @@ class FTest():
             file_path_1 = toy_workdir+'/'+file_dir_1+'/higgsCombineBaseline.GoodnessOfFit.mH0.%s.root'%seed
             file_path_2 = toy_workdir+'/'+file_dir_2+'/higgsCombineBaseline.GoodnessOfFit.mH0.%s.root'%seed
             if(os.path.isfile(file_path_1) and os.path.isfile(file_path_2)):
-                self._nll_base1 = nlls(file_path_1)[0]
-                self._nll_base2 = nlls(file_path_2)[0]
+                self._nll_base1 = nlls(file_path_1)[0][0]
+                self._nll_base2 = nlls(file_path_2)[0][0]
                 if(self._nll_base1 is not  None and self._nll_base2 is not None):
                     break
         if(self._nll_base1 is  None or self._nll_base2 is None):
             warnings.warn("Could not find files for both fits. skipping (%i,%i).."%self.orders_1)
             print("Tried following paths last: \n %s \n %s"%(file_path_1,file_path_2))
-            return
+            return 1
 
                 
 
         if(self._nll_base1 is None or self._nll_base2 is None):
             warnings.warn("One of the Baseline fits failed. skipping")
-            return
+            return 1
         
         nll_toys1 = []
         nll_toys2 = []
+        status_toys1 = []
+        status_toys2 = []
         for i,w in enumerate(toy_workdirs):
             if(i>itoys_max):
                 break
             seed = w.split("Seed")[-1].split('/')[0]
             toy_file_1 = w+'/'+file_dir_1+'/higgsCombine.GoodnessOfFit.mH0.%s.root'%seed
             toy_file_2 = w+'/'+file_dir_2+'/higgsCombine.GoodnessOfFit.mH0.%s.root'%seed
-            this_nll_toys1 = nlls(toy_file_1)
-            this_nll_toys2 = nlls(toy_file_2)
+            
+            this_nll_toys1,this_status_toys1 = nlls(toy_file_1)
+            this_nll_toys2,this_status_toys2 = nlls(toy_file_2)
 
             if((this_nll_toys1[0] is None) or (this_nll_toys2[0] is None) or (len(this_nll_toys1) != len(this_nll_toys2)) ):
                 print("Toys from seed dir %s are empty or not compatible."%seed)
@@ -122,16 +130,27 @@ class FTest():
             
             nll_toys1 += this_nll_toys1
             nll_toys2 += this_nll_toys2
+            status_toys1 += this_status_toys1
+            status_toys2 += this_status_toys2
             
-        self._nll_toys1 = np.array(nll_toys1)
-        self._nll_toys2 = np.array(nll_toys2)
-
-            
+        if(skip_failed_fits):
+            status_1 = np.array(status_toys1)
+            status_2 = np.array(status_toys2)
+            converged_fits = np.where((status_1>=0) & (status_2>=0))
+            if(len(converged_fits[0])==0):
+                print("All Fits faild..skipping")
+                return -1
+            self._nll_toys1 = np.array(nll_toys1)[converged_fits]
+            self._nll_toys2 = np.array(nll_toys2)[converged_fits]
+            print(len(nll_toys1),len(self._nll_toys1))
+        else:
+            self._nll_toys1 = np.array(nll_toys1)
+            self._nll_toys2 = np.array(nll_toys2)
         if(len(nll_toys1) == len(nll_toys2)):
             self._nToys = len(nll_toys1)
         else:
             warnings.warn("Number of Toys does not match between compared TF-Order configurations. skipping..")
-            return
+            return -1
             
         
         self._F_base = self.fstat(self._nll_base1, self._nll_base2)
@@ -139,8 +158,7 @@ class FTest():
 
         if(len(self._F_toys) == 0):
             warnings.warn("F_vals for toys is emtpy (Probably all negative). skipping..")
-            return
-        
+            return -1
         return 0
 
         
@@ -153,6 +171,9 @@ class FTest():
         self.plot(self._F_toys, self._F_base, ftest_prob, ftest_label, "FTest")
 
     def plot_gofs(self):
+        if(self._nll_toys1 is None or len(self._nll_toys1) == 0):
+            print("nll1 empty. No GOF plot will be created!")
+            return
         GOF1_label = "GOF_TF%ix%i"%self.orders_1
         GOF1_prob = self.prob(self._nll_base1, self._nll_toys1)
         print(GOF1_label,"prob:",GOF1_prob)
@@ -296,29 +317,11 @@ def process_TF_prep(dir_pattern,model_dir_pattern,output_dir,algo='KS',n_p_other
                     continue
                 ft.orders_1 = (i_pt,i_rho)
                 ft.orders_2 = (j_pt,j_rho)
-                success = ft.process_files(dir_pattern,model_dir_pattern)
-                if(success is None):
-                    continue
-                ft.plot_ftest()
-                ft.plot_gofs()
-
-            # for j_pt in [i_pt,i_pt+1]:
-            #     for j_rho in [i_rho,i_rho+1]:
-            #         print("#"*20)
-            #         print('TF%ix%i vs. TF%ix%i'%(i_pt,i_rho,j_pt,j_rho))
-            #         if((j_pt+1)*(j_rho+1) >= ft._nbins):
-            #             print('Number of parameters on alternative Bernstein configuration is exceeding number of bins. skipping')
-            #             continue
-            #         if((j_pt+1)*(j_rho+1) == (i_pt+1)*(i_rho+1)):
-            #             print('Number of parameters is equal in both Bernstein configuration. skipping')
-            #             continue
-            #         ft.orders_1 = (i_pt,i_rho)
-            #         ft.orders_2 = (j_pt,j_rho)
-            #         success = ft.process_files(dir_pattern,model_dir_pattern)
-            #         if(success is None):
-            #             continue
-            #         ft.plot_ftest()
-            #         ft.plot_gofs()
+                success = ft.process_files(dir_pattern,model_dir_pattern,skip_failed_fits = True)
+                if(success>=0):
+                    ft.plot_ftest()
+                if(success<=0):
+                    ft.plot_gofs()
                     
     ft.print_results()
     
@@ -328,21 +331,21 @@ if(__name__=='__main__'):
 
     # for algo in ["AD","KS","saturated"]:
     for algo in ["saturated","KS"]:
-
         process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_QCDTFScan_%s_Seed*'%algo,
                         'VJetsSelectionMCTFPt%iRho%iDataResTFPt0Rho0/qcdmodel/',
                         "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/QCDTfFTestPlots%s/"%algo,
                         algo)
 
+        if algo == 'saturated':
         
-        process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_DataTFScan_QCDOrder3x1_%s_Seed*'%algo,
-                        'VJetsSelectionMCTFPt3Rho1DataResTFPt%iRho%i/',
-                        "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/Data2TfFTestPlots%s/"%algo,
-                        algo,
-                        n_p_other = 1 + (3+1)*(1+1))
+            process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_DataTFScan_QCDOrder3x1_%s_Seed*'%algo,
+                            'VJetsSelectionMCTFPt3Rho1DataResTFPt%iRho%i/',
+                            "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/Data2TfFTestPlots%s/"%algo,
+                            algo,
+                            n_p_other = 1 + (3+1)*(1+1))
         
 
-        process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_DataTFScan_%s_Seed*'%algo,
-                        'VJetsSelectionTFPt%iRho%i/',
-                        "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/DataTfFTestPlots%s/"%algo,
-                        algo)
+            process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_DataTFScan_%s_Seed*'%algo,
+                            'VJetsSelectionTFPt%iRho%i/',
+                            "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/DataTfFTestPlots%s/"%algo,
+                            algo)
