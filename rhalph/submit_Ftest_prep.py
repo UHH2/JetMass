@@ -23,13 +23,16 @@ def submit_ftest_prep(config, ntoys, njobs, QCDOrders=None, DataOrders=None, alg
         else:
             config["Pseudo"]=[]
 
+        config["QCDSigmaScale"] = 0.01
+            
         cw = CombineWorkflows()
+        cw.combineCMSSW = '/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/CombineTestground/CMSSW_10_2_13/'
         cw.method = "FTest"
         cw.seed = 42 + i
         cw.POI = "r"
         cw.freezeParameters = "r"
         
-        cw.extraOptions = ("--toysFrequentist --setParameters r=1 " if do_data_test else  "") + ("--toysNoSystematics --setParameters r=0 " if do_qcd_test else "") +  " --cminDefaultMinimizerStrategy 1 --cminDefaultMinimizerTolerance 0.1" 
+        cw.extraOptions = ("--toysFrequentist --setParameters r=1 " if do_data_test else  "") + ("--toysNoSystematics --setParameters r=0 " if do_qcd_test else "") +  " --cminDefaultMinimizerStrategy 2 --cminDefaultMinimizerTolerance 0.01" 
 
         cw.algo = algo
         # cw.toysOptions = ("--toysFrequentist --expectSignal 1" if do_data_test else  "") + ("--toysNoSystematics --expectSignal 0" if do_qcd_test else "")
@@ -88,9 +91,10 @@ if(__name__ == '__main__'):
     
 
     config = json.load(open("WJets.json"))
-    Orders = (range(0,7)),(range(0,7))
+    Orders = (range(0,6)),(range(0,6))
     dry_run = False
     for algo in ["saturated","KS"]:#,"AD"]:
-        submit_ftest_prep(config, NToys, NJobs, QCDOrders=(3,1), DataOrders = Orders, algo=algo, dry_run=dry_run)
+        if(algo == "saturated"):
+            submit_ftest_prep(config, NToys, NJobs, QCDOrders=(3,1), DataOrders = Orders, algo=algo, dry_run=dry_run)
+            submit_ftest_prep(config, NToys, NJobs, QCDOrders=None, DataOrders = Orders, algo=algo, dry_run=dry_run)
         submit_ftest_prep(config, NToys, NJobs, QCDOrders=Orders,  algo=algo, dry_run=dry_run)
-        submit_ftest_prep(config, NToys, NJobs, QCDOrders=None, DataOrders = Orders, algo=algo, dry_run=dry_run)
