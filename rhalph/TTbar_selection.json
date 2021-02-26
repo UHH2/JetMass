@@ -1,11 +1,8 @@
 {
-  "ModelName":"TTbarSelection",
-  "gridHistFileName":"../Histograms/grid_PF_flavours.root",
-  "histLocation":"../macros/scaleStudy/Histograms_PF_flavours.root",
-    "binning":{
-    "W":[50,200,10],
-    "top":[50,300,5]    
-  },
+  "ModelName":"TTbarSelectionOneScale",
+  "gridHistFileName":"../Histograms/grid_oneScale.root",
+  "histLocation":"../macros/Histograms_oneScale_noJEC.root",
+    "binning":[50,300,5],
   "channels":{
     "TopPt200":{
       "selection":"top",
