@@ -45,7 +45,7 @@ def plot_qcd_fail_parameters(config={'ModelName':'WMassModel'}):
     min_msd, max_msd = (50,200)
     binwidth = 10
     if('binning' in config):
-        w_binning = config['binning']['W']
+        w_binning = config['binning']
         min_msd = w_binning[0]
         max_msd = w_binning[1]
         binwidth = w_binning[2]
@@ -133,7 +133,7 @@ def plot_qcd_bernstein(config={'ModelName':'WMassModel'},do_3d_plot=True):
     min_msd, max_msd = (50,200)
     binwidth = 10
     if('binning' in config):
-        w_binning = config['binning']['W']
+        w_binning = config['binning']
         min_msd = w_binning[0]
         max_msd = w_binning[1]
         binwidth = w_binning[2]

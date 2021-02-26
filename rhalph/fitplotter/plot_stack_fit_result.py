@@ -30,8 +30,8 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_roo
             lumiScale = float(pseudo_data_info[0].split(':')[-1])
             plotter.luminosity *= lumiScale
     for channel_str, channel in config['channels'].items():
-        binning = config.get('binning',{"W":[50,300,26],"top":[50,300,26]})
-        plotter.yTitle = "Events / %i GeV"%binning[channel['selection']][2]
+        binning = config.get('binning',[50,300,26])
+        plotter.yTitle = "Events / %i GeV"%binning[2]
         # plotter.yTitle = "Events / %i GeV"%config['binning'][channel['selection']][2]
         print('plotting', channel_str)
         backgrounds = list(map(lambda bg: 'qcd' if ('QCD' in bg and "QcdEstimation" in channel and channel["QcdEstimation"]=="True") else bg ,plotter.mc_samples[channel['selection']]))
