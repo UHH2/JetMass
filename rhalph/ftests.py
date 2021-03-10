@@ -6,17 +6,19 @@ ROOT.gStyle.SetOptStat(0)
 import glob,os,warnings
     
 def nlls(filename):
-    try:
+    # try:
+    if(True):
+        print(filename)
         f = ROOT.TFile(filename)
         limits = f.Get('limit')
         nll=[l.limit for l in limits]
         status=[l.limitErr for l in limits]
         return nll,status
-    except:
-        # raise BaseException("One of the Fits seems to have failed!")
-        #warnings.simplefilter("once", UserWarning)
-        warnings.warn("Not able to retrieve limits from "+filename+" !")
-        return [None],[None]
+    # except:
+    #     # raise BaseException("One of the Fits seems to have failed!")
+    #     #warnings.simplefilter("once", UserWarning)
+    #     warnings.warn("Not able to retrieve limits from "+filename+" !")
+    #     return [None],[None]
 
 class FTest():
     def __init__(self):
@@ -48,6 +50,13 @@ class FTest():
     def orders_1(self):
         return self._orders_1
 
+    def calc_nps(self):
+        '''
+        necessary if python2 is used
+        '''
+        self._np1 = (self.orders_1[0]+1)*(self.orders_1[1]+1) + self._npall
+        self._np2 = (self.orders_2[0]+1)*(self.orders_2[1]+1) + self._npall
+    
     @orders_1.setter
     def orders_1(self,orders):
         self._orders_1 = orders
@@ -77,23 +86,30 @@ class FTest():
         # Will leave this as it is, but keep in mind how negative observed F-vals are possible (i.e. nll1<nll2)
         return result
         
-    def process_files(self,workdir,dir_name_template,skip_failed_fits=False):
+    def process_files(self,workdir,dir_name_template,skip_failed_fits=False,seed='1234567'):
         """
         skip_failed_fits: if True fits where limitErr != 0 are skipped. 
         (per default limitErr is 0 when using GoodnessOfFit methods in combine. So to use this, one needs to tweak the used combine installation)
         """
         itoys_max = 1e9  # *100
         toy_workdirs = glob.glob(workdir)
-                
-        file_dir_1 = (dir_name_template%(self.orders_1[0],self.orders_1[1])).replace("/qcdmodel","")+'/'+dir_name_template%(self.orders_1[0],self.orders_1[1])
-        file_dir_2 = (dir_name_template%(self.orders_1[0],self.orders_1[1])).replace("/qcdmodel","")+'/'+dir_name_template%(self.orders_2[0],self.orders_2[1])
 
+        batch_scan = dir_name_template != ""
+        
+        if(batch_scan):
+            file_dir_1 = (dir_name_template%(self.orders_1[0],self.orders_1[1])).replace("/qcdmodel","")+'/'+dir_name_template%(self.orders_1[0],self.orders_1[1])
+            file_dir_2 = (dir_name_template%(self.orders_1[0],self.orders_1[1])).replace("/qcdmodel","")+'/'+dir_name_template%(self.orders_2[0],self.orders_2[1])
+        else:
+            file_dir_1 = ""
+            file_dir_2 = ""
         file_path_1 = ""
         file_path_2 = ""
         for toy_workdir in toy_workdirs:
-            seed = toy_workdir.split("Seed")[-1].split('/')[0]
+            seed = toy_workdir.split("Seed")[-1].split('/')[0] if batch_scan else self.seed
             file_path_1 = toy_workdir+'/'+file_dir_1+'/higgsCombineBaseline.GoodnessOfFit.mH0.%s.root'%seed
-            file_path_2 = toy_workdir+'/'+file_dir_2+'/higgsCombineBaseline.GoodnessOfFit.mH0.%s.root'%seed
+            file_path_2 = toy_workdir+'/'+file_dir_2+'/higgsCombineBaseline'+("" if batch_scan else "AltModel")+'.GoodnessOfFit.mH0.%s.root'%seed
+            print(file_path_1)
+            print(file_path_2)
             if(os.path.isfile(file_path_1) and os.path.isfile(file_path_2)):
                 self._nll_base1 = nlls(file_path_1)[0][0]
                 self._nll_base2 = nlls(file_path_2)[0][0]
@@ -117,9 +133,9 @@ class FTest():
         for i,w in enumerate(toy_workdirs):
             if(i>itoys_max):
                 break
-            seed = w.split("Seed")[-1].split('/')[0]
+            seed = w.split("Seed")[-1].split('/')[0] if batch_scan else self.seed
             toy_file_1 = w+'/'+file_dir_1+'/higgsCombine.GoodnessOfFit.mH0.%s.root'%seed
-            toy_file_2 = w+'/'+file_dir_2+'/higgsCombine.GoodnessOfFit.mH0.%s.root'%seed
+            toy_file_2 = w+'/'+file_dir_2+'/higgsCombine'+("" if batch_scan else "AltModel")+'.GoodnessOfFit.mH0.%s.root'%seed
             
             this_nll_toys1,this_status_toys1 = nlls(toy_file_1)
             this_nll_toys2,this_status_toys2 = nlls(toy_file_2)
@@ -164,7 +180,7 @@ class FTest():
         
     # def plot(self, nll_base, nll_toys, label=""):
     def plot_ftest(self):
-        ftest_label = "FTest_TF%ix%i_v_TF%ix%i"%(*self.orders_1,*self.orders_2)
+        ftest_label = "FTest_TF%ix%i_v_TF%ix%i"%(self.orders_1[0],self.orders_1[1],self.orders_2[0],self.orders_2[1])
         ftest_prob = self.prob(self._F_base, self._F_toys)
         self.results.update({ftest_label:ftest_prob})
         print(ftest_label,"prob:",ftest_prob)        
@@ -174,7 +190,7 @@ class FTest():
         if(self._nll_toys1 is None or len(self._nll_toys1) == 0):
             print("nll1 empty. No GOF plot will be created!")
             return
-        GOF1_label = "GOF_TF%ix%i"%self.orders_1
+        GOF1_label = "GOF_TF%ix%i"%(self.orders_1[0],self.orders_1[1])
         GOF1_prob = self.prob(self._nll_base1, self._nll_toys1)
         print(GOF1_label,"prob:",GOF1_prob)
         self.plot(self._nll_toys1, self._nll_base1, GOF1_prob, GOF1_label, "GoodnessOfFit")
@@ -326,26 +342,53 @@ def process_TF_prep(dir_pattern,model_dir_pattern,output_dir,algo='KS',n_p_other
     ft.print_results()
     
 if(__name__=='__main__'):
-
+    import argparse
+    parser = argparse.ArgumentParser()
     
+    parser.add_argument('--processScan',action="store_true")
+    parser.add_argument('--BaseOrders',default="1x1")
+    parser.add_argument('--AltOrders',default="1x1") 
+    parser.add_argument('--workdir',type=str)
+    parser.add_argument('--algo',default='saturated')
+    parser.add_argument('-o','--outDir',default='')
+    parser.add_argument('--seed',default='1234567')
+    
+    args = parser.parse_args()    
 
+    if(args.processScan):
     # for algo in ["AD","KS","saturated"]:
-    for algo in ["saturated","KS"]:
-        process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_QCDTFScan_%s_Seed*'%algo,
-                        'VJetsSelectionMCTFPt%iRho%iDataResTFPt0Rho0/qcdmodel/',
-                        "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/QCDTfFTestPlots%s/"%algo,
-                        algo)
-
-        if algo == 'saturated':
-        
-            process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_DataTFScan_QCDOrder3x1_%s_Seed*'%algo,
-                            'VJetsSelectionMCTFPt3Rho1DataResTFPt%iRho%i/',
-                            "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/Data2TfFTestPlots%s/"%algo,
-                            algo,
-                            n_p_other = 1 + (3+1)*(1+1))
-        
-
-            process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_DataTFScan_%s_Seed*'%algo,
-                            'VJetsSelectionTFPt%iRho%i/',
-                            "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/DataTfFTestPlots%s/"%algo,
+        for algo in ["saturated","KS"]:
+            process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_QCDTFScan_%s_Seed*'%algo,
+                            'VJetsSelectionMCTFPt%iRho%iDataResTFPt0Rho0/qcdmodel/',
+                            "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/QCDTfFTestPlots%s/"%algo,
                             algo)
+            
+            if algo == 'saturated':
+            
+                process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_DataTFScan_QCDOrder3x1_%s_Seed*'%algo,
+                                'VJetsSelectionMCTFPt3Rho1DataResTFPt%iRho%i/',
+                                "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/Data2TfFTestPlots%s/"%algo,
+                                algo,
+                                n_p_other = 1 + (3+1)*(1+1))
+                
+                
+                process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_DataTFScan_%s_Seed*'%algo,
+                                'VJetsSelectionTFPt%iRho%i/',
+                                "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/DataTfFTestPlots%s/"%algo,
+                                algo)
+    else:
+
+        ft = FTest()
+        ft._algo = args.algo
+        ft._outDir = args.outDir if args.outDir!="" else args.workdir
+        ft._npall = 1
+        ft.orders_1 = map(float,args.BaseOrders.split("x"))
+        ft.orders_2 = map(float,args.AltOrders.split("x"))
+        ft.calc_nps()
+        ft.seed = args.seed
+        success = ft.process_files(args.workdir,"")
+
+        if(success>=0):
+            ft.plot_ftest()
+            if(success<=0):
+                ft.plot_gofs()
