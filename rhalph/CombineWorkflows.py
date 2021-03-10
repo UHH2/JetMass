@@ -7,7 +7,6 @@ ROOT.gStyle.SetOptStat(0)
 
 import sys
 sys.path.append('/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/python')
-import fitplotter
 import cms_style
 cms_style.extra_text="Preliminary Simulation"
 cms_style.cms_style()
@@ -49,6 +48,7 @@ class CombineWorkflows:
         self.skipplots = True
         self._poi = ""
         self.workspace = ""
+        self.altmodel = None
         self.workers = 1
         self._freezeParameters = ""
         self.lumi = 41.8
@@ -58,11 +58,10 @@ class CombineWorkflows:
         self.algo = "saturated"
         self.extraOptions = ""
         self.job_index = 0
-        self.bernsteinOrders = "2:2"
         self.rhalphdir = os.getcwd()#"/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph"
         self.toysOptions = "--toysFrequentist"
         self.combineCMSSW = self.rhalphdir + '/CMSSW_10_2_13'
-
+        self.modeldir = ""
         self.workspace = ""
 
         self._method = ""
@@ -84,9 +83,22 @@ class CombineWorkflows:
         elif(isinstance(w,list)):
             self._workspace = np.array([os.path.abspath(iw) for iw in w],dtype=object)
             self.modeldir = np.array([os.path.dirname(iw) for iw in self.workspace],dtype=object)
+
+    @property
+    def altmodel(self):
+        return self._altmodel
+            
+    @altmodel.setter
+    def altmodel(self, w):
+        if(isinstance(w,str)):
+            self._altmodel = os.path.abspath(w)
+        elif(w is None):
+            self._altmodel = None
             
     @property
     def freezeParameters(self):
+        if(self._freezeParameters == ''):
+            return ""
         return '--freezeParameters ' + ','.join(self._freezeParameters)
 
     @freezeParameters.setter
@@ -171,7 +183,7 @@ class CombineWorkflows:
         command_string += exec_bash('python {RHALPHDIR}/CombinePlotter.py --method plot_gof_result --parameter "higgsCombine{NAME}Baseline.GoodnessOfFit.mH0.root;higgsCombine.{NAME}GoodnessOfFit.mH0.{SEED}.root;{ALGO};{LUMI}"'.format(RHALPHDIR=self.rhalphdir,NAME=self.name,SEED=self.seed,ALGO=self.algo,LUMI=self.lumi),debug)
         return command_string
 
-    def FTest(self, debug=True):
+    def FTestBatch(self, debug=True):
         command_string = "#FTest\n"
         qcd_fit = "qcdmodel" in self.modeldir
         import glob,json
@@ -221,6 +233,39 @@ class CombineWorkflows:
         command_string += exec_bash("cd " + self.modeldir + "\n",debug)
 
         return command_string
+
+    
+    def FTest(self, debug=True):
+        command_string = "#FTest\n"
+        print("MODELDIR",self.modeldir)
+        if(not debug):
+            os.chdir(self.modeldir)
+        command_string += exec_bash("cd "+ self.modeldir,debug)
+        #command_string += exec_bash("source build.sh",debug)
+
+        GOF_extra = self.extraOptions + (" --fixedSignalStrength 1 " if "r" in self._freezeParameters else "")
+        # # using snapshot
+        command_string += exec_bash("combine -M MultiDimFit   -d {WORKSPACE} --saveWorkspace -m 0 {POI} {FREEZEPARAMS} {EXTRA} -n \"{NAME}Snapshot\" --seed {SEED}".format(WORKSPACE=self.workspace,FREEZEPARAMS=self.freezeParameters,EXTRA=self.extraOptions,NAME=self.name,POI=self.POI,SEED=self.seed),debug)
+        # # snapshot + observed
+        command_string += exec_bash("combine -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root --snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} {EXTRA} -n \"{NAME}Baseline\" --algo={ALGO}".format(WORKSPACE=self.workspace,NAME=self.name,FREEZEPARAMS=self.freezeParameters,POI=self.POI,SEED=self.seed,ALGO=self.algo,EXTRA=GOF_extra),debug)        
+        # # snapshot + generate-only
+        command_string += exec_bash("combine -M GenerateOnly  -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root --snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} {EXTRA} -n \"{NAME}\" -t {NTOYS} {TOYSOPTIONS}  --saveToys  ".format(WORKSPACE=self.workspace,NAME=self.name,FREEZEPARAMS=self.freezeParameters,POI=self.POI,SEED=self.seed,NTOYS=self.toys,TOYSOPTIONS=self.toysOptions,EXTRA=self.extraOptions),debug)
+        command_string += exec_bash("combine -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root --snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} {EXTRA} -n \"{NAME}\" -t {NTOYS} {TOYSOPTIONS}  --toysFile higgsCombine{NAME}.GenerateOnly.mH0.{SEED}.root --algo={ALGO}     ".format(WORKSPACE=self.workspace,NAME=self.name,FREEZEPARAMS=self.freezeParameters,POI=self.POI,SEED=self.seed,NTOYS=self.toys,TOYSOPTIONS=self.toysOptions,ALGO=self.algo,EXTRA=GOF_extra),debug)
+        
+        
+        command_string += exec_bash("",debug)
+        
+        
+        #using snapshot
+        command_string += exec_bash("combine -M MultiDimFit   -d {WORKSPACE} --saveWorkspace -m 0 {POI} {FREEZEPARAMS} {EXTRA} -n \"{NAME}SnapshotAltModel\" --seed {SEED}".format(WORKSPACE=self.altmodel,FREEZEPARAMS=self.freezeParameters,EXTRA=self.extraOptions,NAME=self.name,POI=self.POI,SEED=self.seed),debug)
+        command_string += exec_bash("combine -M GoodnessOfFit -d higgsCombine{NAME}SnapshotAltModel.MultiDimFit.mH0.{SEED}.root --snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} {EXTRA} -n \"{NAME}BaselineAltModel\" --algo={ALGO}".format(NAME=self.name,FREEZEPARAMS=self.freezeParameters,POI=self.POI,SEED=self.seed,ALGO=self.algo,EXTRA=GOF_extra),debug)
+        command_string += exec_bash("combine -M GoodnessOfFit -d higgsCombine{NAME}SnapshotAltModel.MultiDimFit.mH0.{SEED}.root --snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} {EXTRA} -n \"{NAME}AltModel\" -t {NTOYS} {TOYSOPTIONS}  --toysFile {BASEMODELDIR}/higgsCombine{NAME}.GenerateOnly.mH0.{SEED}.root --algo={ALGO}     ".format(NAME=self.name,FREEZEPARAMS=self.freezeParameters,POI=self.POI,SEED=self.seed,NTOYS=self.toys,TOYSOPTIONS=self.toysOptions,ALGO=self.algo,EXTRA=GOF_extra,BASEMODELDIR=self.modeldir),debug)
+
+                    
+        command_string += exec_bash("cd " + self.modeldir + "\n",debug)
+
+        return command_string
+
 if(__name__=='__main__'):
     parser = argparse.ArgumentParser()
     
@@ -230,16 +275,16 @@ if(__name__=='__main__'):
     parser.add_argument('--method',type=str,choices=globals()['CombineWorkflows']().methods,required=True)
     parser.add_argument('--POI',default="r")
     parser.add_argument('--workspace','-w',default = 'WJetsOneScale_combined.root')
+    parser.add_argument('--altmodel','-a',default = None)
     parser.add_argument('--workers',default=5)
-    parser.add_argument('--freezeParameters',default="None")
+    parser.add_argument('--freezeParameters',default=None)
     parser.add_argument('--lumi',default=41.8)
     parser.add_argument('-n','--name',default="")
-    parser.add_argument('--seed',default="123456")
+    parser.add_argument('--seed',default="1234567")
     parser.add_argument('-t','--toys',default=50)
     parser.add_argument('--algo',default="saturated")
     parser.add_argument('--extra',default="",help='pass extra arguments/options to combine commands')
     parser.add_argument('--job_index',default=0,type=int)
-    parser.add_argument('--bernsteinOrders',default="2:2")
     parser.add_argument('--externToys',action="store_true")
     parser.add_argument('--rhalphdir',type=str,default="/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph")
     
@@ -248,18 +293,34 @@ if(__name__=='__main__'):
     if(not os.path.isfile(args.workspace)):
         raise IOError('Could not find workspace file')
     
-    args.model_dir=os.path.abspath('/'.join(args.workspace.split('/')[:-1])+'/') if '/' in args.workspace else ''
-
+    args.modeldir=os.path.abspath('/'.join(args.workspace.split('/')[:-1])+'/') if '/' in args.workspace else ''
     if(args.job_index>0):
         args.seed = str(int(args.seed)+args.job_index)
         print('jobindex!=0. resetting seed to initial_seed+job_index:',args.seed)
 
-    print('workspace',args.workspace)
-    print('model_dir',args.model_dir)
-    print('using method',args.method)
-    method = getattr(globals()['CombineWorkflows'](),args.method)
-    command_string = method(args,args.debug)
-    
+    # print('workspace',args.workspace)
+    # print('model_dir',args.modeldir)
+    # print('using method',args.method)
+    cw = CombineWorkflows()
+    # setting up CombineWorkflow (this is written with python2 in mind. So the property decorators defined above need to be "recreated" here) 
+    cw.method = args.method
+    cw.POI = "" if args.POI=="r" else ("--redefineSignalPOIs"  + args.POI)
+    cw.workspace = os.path.abspath(args.workspace)
+    cw.altmodel = os.path.abspath(args.altmodel)
+    cw.freezeParameters = "" if args.freezeParameters=='' else ('--freezeParameters ' + args.freezeParameters)
+    cw.name = args.name
+    cw.seed = args.seed
+    cw.toys = args.toys
+    cw.algo = args.algo
+    cw.extra = args.extra
+    cw.job_index = args.job_index
+    cw.externToys = args.externToys
+    cw.rhalphdir = args.rhalphdir
+    cw.modeldir = args.modeldir    
+
+    method = getattr(cw,args.method)
+    print(cw)
+    command_string = method(args.debug)
     if(args.debug):
         print()
         print()
