@@ -6,19 +6,18 @@ ROOT.gStyle.SetOptStat(0)
 import glob,os,warnings
     
 def nlls(filename):
-    # try:
-    if(True):
+    try:
         print(filename)
         f = ROOT.TFile(filename)
         limits = f.Get('limit')
         nll=[l.limit for l in limits]
         status=[l.limitErr for l in limits]
         return nll,status
-    # except:
-    #     # raise BaseException("One of the Fits seems to have failed!")
-    #     #warnings.simplefilter("once", UserWarning)
-    #     warnings.warn("Not able to retrieve limits from "+filename+" !")
-    #     return [None],[None]
+    except:
+        # raise BaseException("One of the Fits seems to have failed!")
+        #warnings.simplefilter("once", UserWarning)
+        warnings.warn("Not able to retrieve limits from "+filename+" !")
+        return [None],[None]
 
 class FTest():
     def __init__(self):
