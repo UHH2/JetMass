@@ -56,16 +56,7 @@ private:
   uhh2::Event::Handle<bool>h_IsNotMerged;
 
   uhh2::Event::Handle<int>h_pdgId_Q1;
-  uhh2::Event::Handle<int>h_pdgId_Q2;
-  
-  
-  // discriminant variables for old WfromTop selection
-  uhh2::Event::Handle<double>h_ht;
-  uhh2::Event::Handle<double>h_lepW_pt;
-  uhh2::Event::Handle<int>h_nak4;
-  uhh2::Event::Handle<int>h_nbtag;
-  uhh2::Event::Handle<double>h_deltaPhiAk8Mu;
-  
+  uhh2::Event::Handle<int>h_pdgId_Q2;  
   
   std::vector<std::vector<std::vector< uhh2::Event::Handle<std::vector<double>> >>> h_jetmass_variations;
   TH2F* grid;

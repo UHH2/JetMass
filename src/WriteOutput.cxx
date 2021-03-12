@@ -40,13 +40,6 @@ WriteOutput::WriteOutput(uhh2::Context & ctx){
 
   h_pdgId_Q1 = ctx.declare_event_output<int>("pdgIdQ1");
   h_pdgId_Q2 = ctx.declare_event_output<int>("pdgIdQ2");  
-
-  // discriminant variables for old WfromTop selection
-  h_ht = ctx.get_handle<double>("HT");
-  h_lepW_pt=ctx.declare_event_output<double>("lepW_pt");
-  h_nak4=ctx.declare_event_output<int>("nak4");
-  h_nbtag = ctx.declare_event_output<int>("nbtag");
-  h_deltaPhiAk8Mu=ctx.declare_event_output<double>("deltaPhiAk8Mu");
   
   // read from xml file
   auto dataset_type = ctx.get("dataset_type");
@@ -223,27 +216,8 @@ bool WriteOutput::process(uhh2::Event & event){
   event.set(h_IsMergedTop, IsMergedTop);
   event.set(h_IsMergedQB, IsMergedQB); 
   event.set(h_IsMergedWZ, IsMergedWZ);   
-  event.set(h_IsNotMerged, IsNotMerged);  
+  event.set(h_IsNotMerged, IsNotMerged);
 
-  // discriminant variables for old WfromTop selection
-  JetId DeepJetBTagID = DeepJetBTag(DeepJetBTag::WP_MEDIUM);
-  int n_btag = 0;
-  int n_ak4 = 0;
-  for(const auto & ak4 : *event.jets){
-    if(DeepJetBTagID(ak4,event)) ++n_btag;
-    ++n_ak4;
-  }
-  event.set(h_nbtag,n_btag);  
-  event.set(h_nak4,n_ak4);  
-  if(event.muons->size() > 0 && event.met){
-    LorentzVector neutrino = NeutrinoReconstruction(event.muons->at(0).v4(), event.met->v4())[0];
-    float lepW_pt = (event.muons->at(0).v4() + neutrino).pt();
-    event.set(h_lepW_pt,lepW_pt);
-    event.set(h_deltaPhiAk8Mu,deltaPhi(event.topjets->at(0),event.muons->at(0)));
-  }else{
-    event.set(h_lepW_pt,-1.0);
-    event.set(h_deltaPhiAk8Mu,-1);
-  }
   return true;
 }
 
