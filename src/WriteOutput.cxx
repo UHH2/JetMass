@@ -56,10 +56,9 @@ WriteOutput::WriteOutput(uhh2::Context & ctx){
   is_WSample = version.find("WJets") != std::string::npos;
   is_ZSample = version.find("ZJets") != std::string::npos;
 
-  auto channel = ctx.get("channel", "");
-  isTopSel = channel == "top";
-  // isWfromTopSel = channel == "WfromTop";
-  isWSel = channel == "W";
+  auto selection_ = ctx.get("selection", "");
+  isTTbarSel = selection_ == "ttbar";
+  isVJetsSel = selection_ == "vjets";
 
   do_genStudies = string2bool(ctx.get("doGenStudies", "true"));
   
@@ -159,7 +158,7 @@ bool WriteOutput::process(uhh2::Event & event){
   
   // V matching
   double genjetpt = -1;
-  if(isWSel && (is_WSample || is_ZSample)){
+  if(isVJetsSel && (is_WSample || is_ZSample)){
     //get genjet pt for k factors
     const GenJet * closest_genjet_1 = closestParticle(event.topjets->at(0), *event.genjets);
     const GenJet * closest_genjet_2 = event.topjets->size() > 1 ? closestParticle(event.topjets->at(1), *event.genjets) : closest_genjet_1;

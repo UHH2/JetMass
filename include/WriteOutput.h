@@ -75,7 +75,7 @@ private:
   double variation = 0.01;
   std::unique_ptr<MatchingSelection> matching_selection;
   std::unique_ptr<StandaloneTopJetCorrector> softdrop_jec;
-  bool isMC, do_genStudies, is_WSample, is_ZSample, isTopSel, isWSel;
+  bool isMC, do_genStudies, is_WSample, is_ZSample, isTTbarSel, isVJetsSel;
 
   /*
   Particle IDs

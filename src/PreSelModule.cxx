@@ -61,13 +61,8 @@ private:
   std::unique_ptr<TopJetCleaner> ak8cleaner;
   std::unique_ptr<TopJetLeptonDeltaRCleaner> ak8cleaner_dRlep;
 
-  std::unique_ptr<Selection> TRIGGER_sel, MET_sel;
-  std::unique_ptr<Selection> N_AK8_200_sel, N_AK8_300_sel, N_AK8_500_sel;
-  std::unique_ptr<Selection> N_MUON_sel, N_ELEC_sel, TwoD_sel, bjetCloseToLepton_sel;
-  std::unique_ptr<Selection> HT_sel,Wpt_sel, N_AK4_2_sel, N_btag_sel;  
-  std::unique_ptr<Selection> HT_1000_sel;
-  std::unique_ptr<AndSelection> LEP_VETO_sel;
-  
+  std::unique_ptr<AndSelection> full_selection;
+
   std::vector<std::unique_ptr<uhh2::Hists>> hists;
   std::unique_ptr<uhh2::Hists> h_pfhists_200to500, h_pfhists_500to1000, h_pfhists_1000to2000, h_pfhists_2000to3000, h_pfhists_3000to4000, h_pfhists_4000to5000;
   std::unique_ptr<uhh2::Hists> h_pfhists_inclusive, h_pfhists_500to550, h_pfhists_550to600, h_pfhists_600to675, h_pfhists_675to800, h_pfhists_800to1200, h_pfhists_1200toInf;
@@ -76,9 +71,8 @@ private:
 
 
   bool is_mc, is_QCD, matchV, is_WSample, is_ZSample, is_buggyPU;
-  bool isTopSel = false;
-  bool isWfromTopSel = false;
-  bool isWSel = false;
+  bool isTTbarSel = false;
+  bool isVJetsSel = false;
   bool do_genStudies = false;
   Double_t AK4_Clean_pT,AK4_Clean_eta,AK8_Clean_pT,AK8_Clean_eta;
 
@@ -92,11 +86,10 @@ PreSelModule::PreSelModule(Context & ctx){
   is_QCD = ctx.get("dataset_version").find("QCD") != std::string::npos;
   is_buggyPU = ctx.get("dataset_version").find("buggyPU") != std::string::npos;
   std::cout << "This sample has "<< (is_buggyPU ? "buggyPU" : "normalPU") << std::endl;
-  const std::string& channel = ctx.get("channel", "");
-  if     (channel == "top") isTopSel = true;
-  else if(channel == "WfromTop") isWfromTopSel = true;
-  else if(channel == "W")   isWSel = true;
-  else throw runtime_error("PreSelModule: Select 'top' or 'W' channel");
+  const std::string& selection_ = ctx.get("selection", "");
+  if     (selection_ == "ttbar") isTTbarSel = true;
+  else if(selection_ == "vjets")   isVJetsSel = true;
+  else throw runtime_error("PreSelModule: Select 'ttbar' or 'vjets' selection");
 
   do_genStudies = string2bool(ctx.get("doGenStudies", "true"));
   
@@ -127,7 +120,7 @@ PreSelModule::PreSelModule(Context & ctx){
   if(is_mc) common->disable_metfilters();
   common->init(ctx);
 
-  if(is_mc && isWSel && is_QCD){
+  if(is_mc && isVJetsSel && is_QCD){
     mcSpikeKiller.reset(new MCLargeWeightKiller(ctx,
                                                 2, // maximum allowed ratio of leading reco jet pT / generator HT
                                                 2, // maximum allowed ratio of leading gen jet pT / generator HT
@@ -150,32 +143,27 @@ PreSelModule::PreSelModule(Context & ctx){
   AK4_Clean_eta = 2.4;
   AK8_Clean_pT = 170.0;
   AK8_Clean_eta = 2.4;
-  // ak4cleaner15.reset(new JetCleaner(ctx, 15.0, AK4_Clean_eta));
+
   ak4cleaner.reset(new JetCleaner(ctx, AK4_Clean_pT, AK4_Clean_eta));
   ak8cleaner.reset(new TopJetCleaner(ctx,TopJetId(PtEtaCut(AK8_Clean_pT,AK8_Clean_eta))));
   ak8cleaner_dRlep.reset(new TopJetLeptonDeltaRCleaner(0.8));
 
-  // SELECTIONS
-  N_AK4_2_sel.reset(new NJetSelection(2));
-  N_btag_sel.reset(new NJetSelection(1,-1, (JetId) DeepJetBTag(DeepJetBTag::WP_MEDIUM) ));
-  N_AK8_200_sel.reset(new NTopJetSelection(1,-1,TopJetId(PtEtaCut(200.,100000.))));
-  N_AK8_300_sel.reset(new NTopJetSelection(1,-1,TopJetId(PtEtaCut(300.,100000.))));
-  N_AK8_500_sel.reset(new NTopJetSelection(1,-1,TopJetId(PtEtaCut(500.,100000.))));
-  N_MUON_sel.reset(new NMuonSelection(1,1));
-  N_ELEC_sel.reset(new NElectronSelection(0,0));
-  TwoD_sel.reset(new TwoDCut(0.4, 25));
-  MET_sel.reset(new METCut(50., 100000.));
-  if(isTopSel || isWfromTopSel)    TRIGGER_sel.reset(new TriggerSelection("HLT_Mu50_v*"));
-  else if(isWSel) TRIGGER_sel.reset(new AndSelection(ctx));
-  bjetCloseToLepton_sel.reset(new NMuonBTagSelection(1, 999, DeepJetBTag(DeepJetBTag::WP_MEDIUM) ));
+  full_selection.reset(new AndSelection(ctx,"full_selection"));
+  if(isTTbarSel){
+    full_selection->add<TriggerSelection>("Trigger selection","HLT_Mu50_v*");
+    full_selection->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 200 GeV", 1,-1,TopJetId(PtEtaCut(200.,100000.)));
+    full_selection->add<NMuonSelection>("N_{#mu} #geq 1", 1,1);
+    full_selection->add<NElectronSelection>("N_{e} = 0", 0,0);
+    full_selection->add<METCut>("MET > 50 GeV", 50.,100000.);
+    full_selection->add<TwoDCut>("2D-Cut",0.4,25.);
+    full_selection->add<NMuonBTagSelection>("b-jet in muon hemisphere", 1, 999, DeepJetBTag(DeepJetBTag::WP_MEDIUM));
+  }else if(isVJetsSel){
+    full_selection->add<NElectronSelection>("ele-veto",0,0);
+    full_selection->add<NMuonSelection>("muon-veto",0,0);
+    full_selection->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 500 GeV", 1,-1,TopJetId(PtEtaCut(500.,100000.)));
+    full_selection->add<HTCut>("H_{T} > 1000 GeV",ctx, 1000.);  
+  }
 
-  LEP_VETO_sel.reset(new AndSelection(ctx,"lepton-veto"));
-  LEP_VETO_sel->add<NElectronSelection>("ele-veto",0,0);
-  LEP_VETO_sel->add<NMuonSelection>("muon-veto",0,0);
-
-  HT_sel.reset(new HTCut(ctx, 250.));
-  HT_1000_sel.reset(new HTCut(ctx, 1000.));
-  Wpt_sel.reset(new WToMuNuSelection(250.));
   
   // HISTOGRAMS
   hists.emplace_back(new ElectronHists(ctx, "ElectronHists"));
@@ -221,7 +209,7 @@ bool PreSelModule::process(Event & event) {
   if(!pass_common) return false;
 
   //remove MC Events with very large unphysical weights
-  if(is_mc && isWSel && is_QCD){
+  if(is_mc && isVJetsSel && is_QCD){
     if(!mcSpikeKiller->passes(event)) return false;
   }
 
@@ -255,71 +243,26 @@ bool PreSelModule::process(Event & event) {
     if(AK8_pt>1200)h_pfhists_1200toInf->fill(event);
   }
   
-  // TRIGGER
-  if(!TRIGGER_sel->passes(event)) return false;
-
-  // SELECTIONS
-  bool passTOP = true;
-  bool passWfromTop = true;
-  bool passW = true;
-
-  if(isTopSel || isWfromTopSel) passW = false;
-  if(isWSel || isWfromTopSel) passTOP = false;
-  if(isWSel || isTopSel) passWfromTop = false;
-    
-  if(isTopSel){
-  if(!N_AK8_200_sel->passes(event)) passTOP = false;
-  // if(!N_AK8_300_sel->passes(event)) passTOP = false;
-  if(!N_MUON_sel->passes(event)) passTOP = false;
-  if(!N_ELEC_sel->passes(event)) passTOP = false;
-  if(!MET_sel->passes(event)) passTOP = false;
-  if(!TwoD_sel->passes(event)) passTOP = false;
-  if(!bjetCloseToLepton_sel->passes(event)) passTOP = false;
-  }
-
-  if(passWfromTop && !HT_sel->passes(event)) passWfromTop = false;
-  if(passWfromTop && !N_AK8_200_sel->passes(event)) passWfromTop = false;
-  if(passWfromTop && !N_MUON_sel->passes(event)) passWfromTop = false;
-  if(passWfromTop && !N_ELEC_sel->passes(event)) passWfromTop = false;
-  if(passWfromTop && !MET_sel->passes(event)) passWfromTop = false;
-  if(passWfromTop && !Wpt_sel->passes(event)) passWfromTop = false;
-  if(passWfromTop && !TwoD_sel->passes(event)) passWfromTop = false;
-  if(passWfromTop && !N_AK4_2_sel->passes(event)) passWfromTop = false;
-  if(passWfromTop && !N_btag_sel->passes(event)) passWfromTop = false;
-  if(passWfromTop && deltaPhi(event.topjets->at(0),event.muons->at(0)) < 2) passWfromTop = false;
-
-  if(isWSel){
-  if(!LEP_VETO_sel->passes(event)) passW = false;
-  if(!N_AK8_500_sel->passes(event)) passW = false;
-  if(!HT_1000_sel->passes(event)) passW = false;
-  }
-
+  bool   pass_full_selection = full_selection->passes(event);
+  
   // make sure there is a closest gentopjet to topjet is closer than dR<0.6  
-  if(is_mc && do_genStudies && (passTOP || passWfromTop || passW)){
+  if(is_mc && do_genStudies && pass_full_selection){
     auto dR = numeric_limits<double>::infinity();
     if(event.gentopjets->size()>0){
       const GenTopJet * closest_gentopjet = closestParticle(event.topjets->at(0), *event.gentopjets);
       dR = deltaR(event.topjets->at(0),*closest_gentopjet);
     }
     if(dR>0.6){
-      passTOP = false;
-      passWfromTop = false;
-      passW = false;
+      pass_full_selection = false;
     }
   }
-
-
-  // FILL HISTS
-  if(passTOP && isTopSel)  for(auto & h: hists) h->fill(event);
-  else if(passWfromTop && isWfromTopSel) for(auto & h: hists) h->fill(event);
-  else if(passW && isWSel) for(auto & h: hists) h->fill(event);
-
-  // DECIDE TO STORE EVENT
-  if(!passTOP && !passW && !passWfromTop) return false;
-  else{
+  if(pass_full_selection){  
+    // FILL HISTS
+    for(auto & h: hists) h->fill(event);
+    // STORE EVENT
     writer->process(event);
     return true;
-  }
+  }else return false;
 }
 
 // as we want to run the ExampleCycleNew directly with AnalysisModuleRunner,

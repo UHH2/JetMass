@@ -58,7 +58,7 @@
     &SAMPLES;  
     <UserConfig>
       <Item Name="GridFile" Value="JetMass/Histograms/grid.root" />
-      <Item Name="channel" Value="W"/>
+      <Item Name="selection" Value="vjets"/>
       <Item Name="doGenStudies" Value="false"/>
 
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
