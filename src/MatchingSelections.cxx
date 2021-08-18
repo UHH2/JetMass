@@ -8,11 +8,14 @@ namespace uhh2{
     TString version = ctx.get("dataset_version", "");
     version.ToLower();
     is_VJets = (version.Contains("wjets") || version.Contains("zjets") );
-    is_TTbar = (version.Contains("ttbar") || version.Contains("ttjets") || version.Contains("ttto")) && version.Contains("semilep");
+    // is_TTbar = ((version.Contains("ttbar") || version.Contains("ttjets") || version.Contains("ttto")) && version.Contains("semilep")) || version.Contains("tt_mtt");
+    is_TTbar = ((version.Contains("ttbar") || version.Contains("ttjets") || version.Contains("ttto")));
     is_valid = true;
   }
 
   void MatchingSelection::init(const uhh2::Event &event){
+    //reset is_valid to true
+    is_valid = true;
     if(event.isRealData){
       is_valid = false;
       return;
