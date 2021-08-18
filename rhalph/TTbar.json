@@ -1,8 +1,14 @@
 {
-  "ModelName":"TTbarSelectionOneScale",
+  "ModelName":"TTbar",
   "gridHistFileName":"../Histograms/grid_oneScale.root",
-  "histLocation":"../macros/Histograms_oneScale_noJEC.root",
-    "binning":[50,300,5],
+  "histLocation":"../macros/Histograms.root",
+  "massScaleFactor":2.0,
+  "TTbarTaggingEff":"True",
+  "pt_edges":[200,300,400,500,650],
+  "pTdependentMassScale":"True",
+  "separateMassScales":"True",
+  "VaryOnlySignal":"False",
+  "binning":[50,300,5],
   "channels":{
     "TopPt200":{
       "selection":"top",
@@ -33,25 +39,7 @@
     },
     "TopPt500":{
       "selection":"top",
-      "pt_bin":"500to550",
-      "samples":["QCD", "ST_sch", "ST_tch","ST_tWch", "DYJets", "WJets", "TTbar_had","TTbar_dilep", "TTbar_semilep_mergedTop", "TTbar_semilep_mergedW", "TTbar_semilep_mergedQB",  "TTbar_semilep_notMerged"],
-      "NormUnc":{"QCD":2.0, "DYJets":2.0, "ST":1.23, "WJets":1.19, "TTbar":1.05},
-      "signal":["TTbar_semilep_mergedTop", "TTbar_semilep_mergedW"],
-      "obs":"Data",
-      "regions":["pass","passW","fail"]
-    },
-    "TopPt550":{
-      "selection":"top",
-      "pt_bin":"550to600",
-      "samples":["QCD", "ST_sch", "ST_tch","ST_tWch", "DYJets", "WJets", "TTbar_had","TTbar_dilep", "TTbar_semilep_mergedTop", "TTbar_semilep_mergedW", "TTbar_semilep_mergedQB",  "TTbar_semilep_notMerged"],
-      "NormUnc":{"QCD":2.0, "DYJets":2.0, "ST":1.23, "WJets":1.19, "TTbar":1.05},
-      "signal":["TTbar_semilep_mergedTop", "TTbar_semilep_mergedW"],
-      "obs":"Data",
-      "regions":["pass","passW","fail"]
-    },
-    "TopPt600":{
-      "selection":"top",
-      "pt_bin":"600toInf",
+      "pt_bin":"500to650",
       "samples":["QCD", "ST_sch", "ST_tch","ST_tWch", "DYJets", "WJets", "TTbar_had","TTbar_dilep", "TTbar_semilep_mergedTop", "TTbar_semilep_mergedW", "TTbar_semilep_mergedQB",  "TTbar_semilep_notMerged"],
       "NormUnc":{"QCD":2.0, "DYJets":2.0, "ST":1.23, "WJets":1.19, "TTbar":1.05},
       "signal":["TTbar_semilep_mergedTop", "TTbar_semilep_mergedW"],
