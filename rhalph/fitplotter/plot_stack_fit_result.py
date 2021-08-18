@@ -20,10 +20,12 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_roo
     }
         
     plotter.xTitle = "m_{SD} [GeV]"
+    plotter.private_work = True
     plotter.logY = logY
-    plotter.additional_text_size_modifier = 1.3
-    plotter.draw_extra_text = False
+    plotter.additional_text_size_modifier = 1.5
+    plotter.draw_extra_text = True
     plotter.luminosity = config.get('Luminosity',41.8)
+    plotter.legend_bbox = (0.60,0.2,0.9,0.6)
 
     pseudo_data_info = config.get('Pseudo',[])
     if(len(pseudo_data_info)>0 and 'lumiScale' in pseudo_data_info[0]):

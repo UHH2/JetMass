@@ -57,8 +57,10 @@ def plot_qcd_fail_parameters(config={'ModelName':'WMassModel'}):
     result = ROOT.TFile(config['ModelName']+"/fitDiagnostics.root","READ").Get("fit_s")
     args = result.floatParsFinal()
     qcd_param_names = [name for name in args.contentsString().split(',') if ('qcdparam' in name and config.get('TFSuffix','qcdparam') in name) ]
-    pt_bins = set([int(name.split('_')[2].replace('ptbin','')) for name in qcd_param_names ])
-    msd_bins = set([int(name.split('_')[3].replace('msdbin','')) for name in qcd_param_names ])
+    # pt_bins = set([int(name.split('_')[2].replace('ptbin','')) for name in qcd_param_names ])
+    # msd_bins = set([int(name.split('_')[3].replace('msdbin','')) for name in qcd_param_names ])
+    pt_bins = set([int(name.split('ptbin')[1].split('_')[0]) for name in qcd_param_names ])
+    msd_bins = set([int(name.split('msdbin')[1].split('_')[0]) for name in qcd_param_names ])
     th2_qcd_params = ROOT.TH2F("qcdparams","qcdparam",len(msd_bins),msd_bin_edges,len(pt_bins),pt_bin_edges)
     th2_qcd_params.GetYaxis().SetTitle('p_{T}')
     th2_qcd_params.GetXaxis().SetTitle('m_{SD}')
@@ -122,13 +124,26 @@ def plot_qcd_bernstein(config={'ModelName':'WMassModel'},do_3d_plot=True):
         parameter_suffixes = ['MCtempl','dataResidual'] + parameter_suffixes
     out_dir = config['ModelName']+'/plots/'
 
-    pt_min = 500.
-    pt_max = 1200.
-
+    pt_edges = set()
+    for channel in config['channels'].keys():
+        if(config['channels'][channel].get('QcdEstimation','False') == 'True' ):
+            this_bin = config['channels'][channel]['pt_bin']
+            print(this_bin)
+            pt_edges.add(float(this_bin.split('to')[0]))
+            pt_edges.add(float(this_bin.split('to')[1]))
+    pt_edges = list(pt_edges)
+    pt_edges.sort()
+    
+    # pt_min = 500.
+    # pt_max = 1200.
+    pt_min = pt_edges[0]
+    pt_max = pt_edges[-1]
+    
     rho_min = -6.
     rho_max = -2.1
 
-    pt_bins = np.array([500,550,600,675,800,1200],dtype="f")
+    # pt_bins = np.array([500,550,600,675,800,1200],dtype="f")
+    pt_bins = np.array(pt_edges,dtype="f")
 
     min_msd, max_msd = (50,200)
     binwidth = 10
@@ -195,9 +210,9 @@ def plot_qcd_bernstein(config={'ModelName':'WMassModel'},do_3d_plot=True):
             if(parameter_suffix == 'params'):
                 mc_order = tuple(config.get('InitialQCDFitOrders',[2,2]))
                 data_order = tuple(config.get('BernsteinOrders',[2,2])) 
-                tf_name += '(MCtempl (%i,%i) #times dataResidual (%i,%i))'%(*mc_order,*data_order)
+                tf_name += '(MCtempl (%i,%i) #times dataResidual (%i,%i))'%(mc_order[0],mc_order[1],data_order[0],data_order[1])
             else:
-                tf_name += ' %s (%i,%i)'%(parameter_suffix,*order)
+                tf_name += ' %s (%i,%i)'%(parameter_suffix,order[0],order[1])
 
         th2_name = tf_name
         th2_map = ROOT.TH2F(th2_name,th2_name+";m_{SD} [GeV];p_{T} [GeV]",len(msd_bins)-1,msd_bins,len(pt_bins)-1,pt_bins)    

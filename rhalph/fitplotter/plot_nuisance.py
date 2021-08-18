@@ -6,11 +6,6 @@ import rhalphalib as rl
 rl.util.install_roofit_helpers()
 import numpy as np
 
-def _RooFitResult_nameArray(self):
-    return np.array([p.GetName() for p in self.floatParsFinal()])
-
-ROOT.RooFitResult.nameArray = _RooFitResult_nameArray
-
 def _RooFitResult_massScales(self):
     result = []
     for p in self.floatParsFinal():
