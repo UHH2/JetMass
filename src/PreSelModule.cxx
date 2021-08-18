@@ -6,6 +6,7 @@
 #include "UHH2/common/include/CommonModules.h"
 #include "UHH2/common/include/CleaningModules.h"
 #include "UHH2/common/include/ElectronHists.h"
+#include "UHH2/common/include/TopPtReweight.h"
 #include "UHH2/common/include/MCWeight.h"
 #include "UHH2/common/include/NSelections.h"
 #include "UHH2/common/include/TriggerSelection.h"
@@ -32,6 +33,7 @@
 #include "UHH2/JetMass/include/WriteOutput.h"
 #include "UHH2/JetMass/include/PFHists.h"
 
+#include "UHH2/common/include/TTbarGen.h"
 #include <unistd.h>
 
 #include "TFile.h"
@@ -54,6 +56,7 @@ public:
 private:
 
   std::unique_ptr<CommonModules> common;
+  std::unique_ptr<AnalysisModule> topPtReweighting;
   std::unique_ptr<MCLargeWeightKiller> mcSpikeKiller;
   std::unique_ptr<TopJetCorrections> topjetCorr;
 
@@ -69,12 +72,15 @@ private:
   
   std::unique_ptr<AnalysisModule> writer;
 
-
+  TString version;
   bool is_mc, is_QCD, matchV, is_WSample, is_ZSample, is_buggyPU;
   bool isTTbarSel = false;
   bool isVJetsSel = false;
   bool do_genStudies = false;
   Double_t AK4_Clean_pT,AK4_Clean_eta,AK8_Clean_pT,AK8_Clean_eta;
+
+  // uhh2::Event::Handle<double>h_mtt_gen;
+  uhh2::Event::Handle<double>h_weight_pre_ttbar_reweight;
 
 };
 
@@ -82,6 +88,7 @@ private:
 PreSelModule::PreSelModule(Context & ctx){
 
   // Set some boolians
+  version = ctx.get("dataset_version");
   is_mc = ctx.get("dataset_type") == "MC";
   is_QCD = ctx.get("dataset_version").find("QCD") != std::string::npos;
   is_buggyPU = ctx.get("dataset_version").find("buggyPU") != std::string::npos;
@@ -134,9 +141,15 @@ PreSelModule::PreSelModule(Context & ctx){
   }
 
 
+  ctx.undeclare_all_event_output();
+  
+  h_weight_pre_ttbar_reweight = ctx.declare_event_output<double>("weight_pre_ttbar_reweight");  
+  topPtReweighting.reset(new TopPtReweight(ctx, 0.0615, -0.0005,"","",true));
+  
   // AK8 JEC/JER
   topjetCorr.reset(new TopJetCorrections());
   topjetCorr->init(ctx);
+  topjetCorr->disable_jersmear();
 
   // Jet cleaner
   AK4_Clean_pT = 30.0;
@@ -187,7 +200,6 @@ PreSelModule::PreSelModule(Context & ctx){
   h_pfhists_800to1200.reset(new PFHists(ctx, "PFHists_800to1200"));
   h_pfhists_1200toInf.reset(new PFHists(ctx, "PFHists_1200toInf"));
   
-  ctx.undeclare_all_event_output();
 
   writer.reset(new WriteOutput(ctx));
 }
@@ -196,8 +208,18 @@ bool PreSelModule::process(Event & event) {
   if(EXTRAOUT){
     cout << "PreSelModule: Starting to process event (runid, eventid) = (" << event.run << ", " << event.event << "); weight = " << event.weight << endl;
   }
-  // MATCHING
 
+  // if(version.Contains("TTbar_") && (version.Contains("had") || version.Contains("semilep") || version.Contains("dilep")) ){
+  // float mtt = -1.0;
+  // if(version.Contains("TT")){
+  //   TTbarGen ttgen(*event.genparticles);
+  //   mtt = (ttgen.Top().v4()+ttgen.Antitop().v4()).M();
+  //   if(version.Contains("had") || version.Contains("semilep") || version.Contains("dilep")){
+  //     if(mtt>700) return false;
+  //   }
+  // }
+  // event.set(h_mtt_gen,mtt);
+  
   // Throw away events with NVTX in buggy area for buggy samples
   if(is_mc && is_buggyPU){
     float n_true = event.genInfo->pileup_TrueNumInteractions();
@@ -213,6 +235,9 @@ bool PreSelModule::process(Event & event) {
     if(!mcSpikeKiller->passes(event)) return false;
   }
 
+  event.set(h_weight_pre_ttbar_reweight,event.weight);
+  if(is_mc)topPtReweighting->process(event);
+  
   // AK8 JEC
   topjetCorr->process(event);
 
