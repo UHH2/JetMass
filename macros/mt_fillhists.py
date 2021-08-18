@@ -80,7 +80,7 @@ class JobManager(object):
 
 if(__name__ == "__main__"):
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--selection',choices=["top","W","WfromTop","Wboth","all"],default = 'W',help='W/WfromTop/top/all selection(s)')
+    parser.add_argument('-s', '--selection',choices=["top","W","Zbb","all"],default = 'W',help='W/Zbb/top/all selection(s)')
     parser.add_argument('-n', '--workers', default = 4, type = int, help='number of workers')
     parser.add_argument('-m', '--merge', action='store_true', help='Merge hist root files' )
     parser.add_argument('--submit',action='store_true', help='submit workers')
