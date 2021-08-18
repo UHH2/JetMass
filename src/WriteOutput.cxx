@@ -14,7 +14,27 @@ WriteOutput::WriteOutput(uhh2::Context & ctx){
   h_N2 = ctx.declare_event_output<double>("N2");
   h_tau32 = ctx.declare_event_output<double>("tau32");
   h_tau21 = ctx.declare_event_output<double>("tau21");
-  h_DeepBoost = ctx.declare_event_output<double>("DeepBoostWQCD");
+
+  h_DeepBoostWQCD = ctx.declare_event_output<double>("DeepBoostWQCD");
+  h_DeepBoostZQCD = ctx.declare_event_output<double>("DeepBoostZQCD");
+  h_DeepBoostZbbQCD = ctx.declare_event_output<double>("DeepBoostZbbQCD");
+  h_MDDeepBoostWQCD = ctx.declare_event_output<double>("MDDeepBoostWQCD");
+  h_MDDeepBoostZQCD = ctx.declare_event_output<double>("MDDeepBoostZQCD");
+  h_MDDeepBoostZbbQCD = ctx.declare_event_output<double>("MDDeepBoostZbbQCD");
+
+  h_DeepDoubleBHbbprob = ctx.declare_event_output<double>("DeepDoubleBHbbprob");
+  h_DeepDoubleBQCDprob = ctx.declare_event_output<double>("DeepDoubleBQCDprob");
+
+  h_MIDeepDoubleBHbbprob = ctx.declare_event_output<double>("MIDeepDoubleBHbbprob");
+  h_MIDeepDoubleBQCDprob = ctx.declare_event_output<double>("MIDeepDoubleBQCDprob");
+
+  
+  h_NextraMBtagDR0p8 = ctx.declare_event_output<int>("NextraMBtagDR0p8");
+  h_NextraTBtagDR0p8 = ctx.declare_event_output<int>("NextraTBtagDR0p8");
+  h_NextraMBtagDR1p0 = ctx.declare_event_output<int>("NextraMBtagDR1p0");
+  h_NextraTBtagDR1p0 = ctx.declare_event_output<int>("NextraTBtagDR1p0");
+
+  
   h_mjet = ctx.declare_event_output<double>("mjet");
   h_mjet_SD = ctx.declare_event_output<double>("mjet_SD");
   h_msubjets = ctx.declare_event_output<double>("msubjets");
@@ -25,6 +45,14 @@ WriteOutput::WriteOutput(uhh2::Context & ctx){
   h_genjetpt = ctx.declare_event_output<double>("genjetpt");
   h_jecfactor = ctx.declare_event_output<double>("jecfactor");
   h_jecfactor_SD = ctx.declare_event_output<double>("jecfactor_SD");
+
+  h_jerfactor_SD_nominal = ctx.declare_event_output<double>("jerfactor_SD_nominal");
+  h_jerfactor_SD_up = ctx.declare_event_output<double>("jerfactor_SD_up");
+  h_jerfactor_SD_down = ctx.declare_event_output<double>("jerfactor_SD_down");
+
+  h_jerfactor_SD_JEC_nominal = ctx.declare_event_output<double>("jerfactor_SD_JEC_nominal");
+  h_jerfactor_SD_JEC_up = ctx.declare_event_output<double>("jerfactor_SD_JEC_up");
+  h_jerfactor_SD_JEC_down = ctx.declare_event_output<double>("jerfactor_SD_JEC_down");
 
 
   h_pt_AK4 = ctx.declare_event_output<double>("AK4pt");
@@ -121,7 +149,7 @@ bool WriteOutput::process(uhh2::Event & event){
   double jecfactor_SD = softdrop_jec->getJecFactor(event,softdrop_jet_raw);
   double mjet_SD = topjets->at(0).softdropmass();
 
-  double deepboost = topjets->at(0).btag_DeepBoosted_WvsQCD();
+  // double deepboost_WvsQCD = topjets->at(0).btag_DeepBoosted_WvsQCD();
   double tau32 = 0;
   if(topjets->at(0).tau2() > 0) tau32 = topjets->at(0).tau3()/topjets->at(0).tau2();
   double tau21 = 0;
@@ -148,6 +176,9 @@ bool WriteOutput::process(uhh2::Event & event){
   bool IsMergedQB  = matching_selection->passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedQB);
   bool IsMergedWZ  = matching_selection->passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedV);
   bool IsNotMerged = matching_selection->passes_matching(event.topjets->at(0),MatchingSelection::oIsNotMerged);
+
+  // std::cout << "IsMergedTop : IsMergedQB : IsMergedWZ : IsNotMerged"<< std::endl;
+  // std::cout << IsMergedTop << " : " << IsMergedQB << " : " << IsMergedWZ << " : " << IsNotMerged<< std::endl;
   
   // V matching
   double genjetpt = -1;
@@ -191,12 +222,37 @@ bool WriteOutput::process(uhh2::Event & event){
   event.set(h_N2, N2);
   event.set(h_tau32, tau32);
   event.set(h_tau21, tau21);
-  event.set(h_DeepBoost, deepboost);
+  event.set(h_DeepBoostWQCD, topjets->at(0).btag_DeepBoosted_WvsQCD());
+  event.set(h_DeepBoostZQCD, topjets->at(0).btag_DeepBoosted_ZvsQCD());
+  event.set(h_DeepBoostZbbQCD, topjets->at(0).btag_DeepBoosted_ZbbvsQCD());
+  event.set(h_MDDeepBoostWQCD, topjets->at(0).btag_MassDecorrelatedDeepBoosted_WvsQCD());
+  event.set(h_MDDeepBoostZQCD, topjets->at(0).btag_MassDecorrelatedDeepBoosted_ZvsQCD());
+  event.set(h_MDDeepBoostZbbQCD, topjets->at(0).btag_MassDecorrelatedDeepBoosted_ZbbvsQCD());
+
+  event.set(h_DeepDoubleBHbbprob, topjets->at(0).btag_DeepDoubleBvLJet_probHbb());
+  event.set(h_DeepDoubleBQCDprob, topjets->at(0).btag_DeepDoubleBvLJet_probQCD());
+  event.set(h_MIDeepDoubleBHbbprob, topjets->at(0).btag_MassIndependentDeepDoubleBvLJet_probHbb());
+  event.set(h_MIDeepDoubleBQCDprob, topjets->at(0).btag_MassIndependentDeepDoubleBvLJet_probQCD());
+
+  event.set(h_NextraMBtagDR0p8, countBJetsAroundJet(event, topjets->at(0), *event.jets, DeepJetBTag(DeepJetBTag::WP_MEDIUM),0.8));
+  event.set(h_NextraTBtagDR0p8, countBJetsAroundJet(event, topjets->at(0), *event.jets, DeepJetBTag(DeepJetBTag::WP_TIGHT),0.8));
+  event.set(h_NextraMBtagDR1p0, countBJetsAroundJet(event, topjets->at(0), *event.jets, DeepJetBTag(DeepJetBTag::WP_MEDIUM),1.0));
+  event.set(h_NextraTBtagDR1p0, countBJetsAroundJet(event, topjets->at(0), *event.jets, DeepJetBTag(DeepJetBTag::WP_TIGHT),1.0));
+
   event.set(h_weight, event.weight);
   event.set(h_genjetpt, genjetpt);
   event.set(h_jecfactor, jecfactor);
   event.set(h_jecfactor_SD, jecfactor_SD);
 
+  event.set(h_jerfactor_SD_nominal, softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,0,1.0));
+  event.set(h_jerfactor_SD_up, softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,1,1.0));
+  event.set(h_jerfactor_SD_down, softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,-1,1.0));
+
+  event.set(h_jerfactor_SD_JEC_nominal, softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,0,jecfactor_SD));
+  event.set(h_jerfactor_SD_JEC_up, softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,1,jecfactor_SD));
+  event.set(h_jerfactor_SD_JEC_down, softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,-1,jecfactor_SD));
+  
+    
   double ak4_pt = -1.0;
   double ak4_genpt = -1.0;
   if(event.jets->size()>0){
@@ -289,4 +345,16 @@ void WriteOutput::ConstructOtherIDs(){
     if(AddIDToOther[id]) otherIDs.push_back(id);
   }
   return;
+}
+
+
+int WriteOutput::countBJetsAroundJet(const uhh2::Event & event, TopJet AK8, std::vector<Jet> AK4_jets, JetId btag, float deltaR_min ){
+  int nbtag = 0;
+  for(unsigned int ijet = 0; ijet<AK4_jets.size(); ijet++){
+    Jet thisjet = AK4_jets.at(ijet);
+    bool jettagged = btag(thisjet,event);
+    bool not_overlapping = deltaR(AK8,thisjet)>=deltaR_min;
+    if(jettagged && not_overlapping) nbtag++;
+  }
+  return nbtag;
 }

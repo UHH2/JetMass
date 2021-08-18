@@ -27,16 +27,37 @@ public:
 private:
   double CalculateMJet(vector<PFParticle> Particles);
   vector<double> CalculateMJetVariation(vector<PFParticle>particles, int i, int j, TString cat);
+  // vector<double> CalculateMJetResolutionVariation(vector<PFParticle>particles, int i, int j, TString cat);
   void ConstructOtherIDs();
   bool inCategory(PFParticle p, TString cat);
 
+  int countBJetsAroundJet(const uhh2::Event & event, TopJet AK8, std::vector<Jet> AK4_jets, JetId btag = DeepJetBTag(DeepJetBTag::WP_MEDIUM), float deltaR_min = 0.8 );
+  
   uhh2::Event::Handle<double>h_msubjets; // mass of summed v4 of subjets
   uhh2::Event::Handle<double>h_mgensubjets; // mass of summed v4 of subjets
   uhh2::Event::Handle<double>h_mgenparticles; // mass of summed v4 of genparticle Candidate from subjets
   uhh2::Event::Handle<double>h_genpt;
   uhh2::Event::Handle<double>h_mjet;
   uhh2::Event::Handle<double>h_mjet_SD;
-  uhh2::Event::Handle<double>h_DeepBoost;
+  uhh2::Event::Handle<double>h_DeepBoostWQCD;
+  uhh2::Event::Handle<double>h_DeepBoostZQCD;
+  uhh2::Event::Handle<double>h_DeepBoostZbbQCD;
+  uhh2::Event::Handle<double>h_MDDeepBoostWQCD;
+  uhh2::Event::Handle<double>h_MDDeepBoostZQCD;
+  uhh2::Event::Handle<double>h_MDDeepBoostZbbQCD;
+
+  uhh2::Event::Handle<double>h_DeepDoubleBHbbprob;
+  uhh2::Event::Handle<double>h_DeepDoubleBQCDprob;
+  uhh2::Event::Handle<double>h_MIDeepDoubleBHbbprob;
+  uhh2::Event::Handle<double>h_MIDeepDoubleBQCDprob;
+
+
+  uhh2::Event::Handle<int>h_NextraMBtagDR0p8;
+  uhh2::Event::Handle<int>h_NextraTBtagDR0p8;
+  uhh2::Event::Handle<int>h_NextraMBtagDR1p0;
+  uhh2::Event::Handle<int>h_NextraTBtagDR1p0;
+
+  
   uhh2::Event::Handle<double>h_pt;
   uhh2::Event::Handle<double>h_pt_AK4,h_genpt_AK4;
   uhh2::Event::Handle<double>h_N2;
@@ -46,7 +67,13 @@ private:
   uhh2::Event::Handle<double>h_genjetpt;
   uhh2::Event::Handle<double>h_jecfactor;
   uhh2::Event::Handle<double>h_jecfactor_SD;
-
+  uhh2::Event::Handle<double>h_jerfactor_SD_nominal;
+  uhh2::Event::Handle<double>h_jerfactor_SD_up;
+  uhh2::Event::Handle<double>h_jerfactor_SD_down;
+  uhh2::Event::Handle<double>h_jerfactor_SD_JEC_nominal;
+  uhh2::Event::Handle<double>h_jerfactor_SD_JEC_up;
+  uhh2::Event::Handle<double>h_jerfactor_SD_JEC_down;
+  
   uhh2::Event::Handle<double>h_CHF;
   uhh2::Event::Handle<double>h_NHF;
   
