@@ -30,6 +30,8 @@ void TopJetCorrections::init(Context & ctx){
   }
   init_done = true;
 
+  jer_smearing_ = true;
+
   is_mc = ctx.get("dataset_type") == "MC";
   year = extract_year(ctx);
 
@@ -110,7 +112,7 @@ bool TopJetCorrections::process(uhh2::Event & event){
     tjet_corrector_data->process(event);
   }
 
-  if(is_mc) tjet_resolution_smearer->process(event);
+  if(is_mc && jer_smearing_) tjet_resolution_smearer->process(event);
   return true;
 }
 
@@ -213,6 +215,14 @@ StandaloneTopJetCorrector::StandaloneTopJetCorrector(uhh2::Context& ctx){
     jet_corrector[runPeriod] = std::make_unique<FactorizedJetCorrector>(jec_pars_data);    
   }
 
+  std::unordered_map<std::string,std::string> jer_tag = {
+    {"2016",TopJetCorrections::tjer_tag_2016},
+    {"2017",TopJetCorrections::tjer_tag_2017},
+    {"2018",TopJetCorrections::tjer_tag_2018} 
+  };
+  res_sf_= JME::JetResolutionScaleFactor(locate_file(JERFiles::JERPathStringMC(jer_tag[short_year],tjec_tjet_coll,"SF")));
+  resolution_ = JME::JetResolution(locate_file(JERFiles::JERPathStringMC(jer_tag[short_year],tjec_tjet_coll,"PtResolution")));
+  
 }
 
 float StandaloneTopJetCorrector::getJecFactor(const uhh2::Event & event, LorentzVector topjet){
@@ -250,4 +260,68 @@ float StandaloneTopJetCorrector::getJecFactor(const uhh2::Event & event, Lorentz
   
   
   return correction_factors.back();
+}
+
+float StandaloneTopJetCorrector::getJERSmearingFactor(const uhh2::Event &event, Particle topjet, int direction,float jec_factor){
+  if(! is_mc) return -1.0;
+  float radius = 0.8;
+  float recopt = topjet.pt()*jec_factor;
+  float recoeta = topjet.eta();
+  float abseta = fabs(recoeta);
+  float rho = event.rho;
+
+  assert(event.gentopjets);
+  auto closest_genjet = closestParticle(topjet, *event.gentopjets);
+  float genpt = -1.0;
+  float resolution = resolution_.getResolution({{JME::Binning::JetPt, recopt}, {JME::Binning::JetEta, recoeta}, {JME::Binning::Rho, rho}});
+
+  if (isnan(resolution)) {
+    if (recopt < 35) { // leniency in this problematic region, hopefully fixed in future version of JER
+      cout << "WARNING: getResolution() evaluated to nan. Since this jet is in problematic region, it will instead be set to 0." << endl;
+      cout << "Input eta : rho : pt = " << recoeta << " : " << rho << ": " << recopt << endl;
+      resolution = 0.;
+    } else {
+      throw std::runtime_error("getResolution() evaluated to nan. Input eta : rho : pt = " + double2string(recoeta) + " : " + double2string(rho) + " : " + double2string(recopt));
+      }
+  }
+    if(!(closest_genjet == nullptr) && uhh2::deltaR(*closest_genjet, topjet) < 0.5*radius){
+      genpt = closest_genjet->pt();
+    }
+    if( fabs(genpt-recopt) > 3*resolution*recopt){
+      genpt=-1;
+    }
+    if(genpt < 15.0f) {
+      genpt=-1.;
+    }
+
+    // Get the scale factor for this jet
+    float c = -1.0;
+    if (direction == 0) {
+      c = res_sf_.getScaleFactor({{JME::Binning::JetPt, recopt}, {JME::Binning::JetEta, recoeta}});
+    } else if (direction == 1) {
+      c = res_sf_.getScaleFactor({{JME::Binning::JetPt, recopt}, {JME::Binning::JetEta, recoeta}}, Variation::UP);
+    } else {
+      c = res_sf_.getScaleFactor({{JME::Binning::JetPt, recopt}, {JME::Binning::JetEta, recoeta}}, Variation::DOWN);
+    }
+    
+    if (c < 0) {
+      std::cout << "WARNING: GenericJetResolutionSmearer: no scale factor found for this jet with pt : eta = " << recopt << " : " << recoeta << std::endl;
+      std::cout << "         No JER smearing will be applied." << std::endl;
+      return c;
+    }
+
+    // Calculate the new pt
+    float new_pt = -1.;
+    // Use scaling method in case a matching generator jet was found
+    if(genpt>0){
+      new_pt = std::max(0.0f, genpt + c * (recopt - genpt));
+    }
+    // Use stochastic method if no generator jet could be matched to the reco jet
+    else{
+      // Initialize random generator with eta-dependend random seed to be reproducible
+      TRandom rand((int)(1000*abseta));
+      float random_gauss = rand.Gaus(0, resolution);
+      new_pt = recopt * (1 + random_gauss*sqrt(std::max(c*c-1, 0.0f)));
+    }
+  return new_pt / recopt;
 }

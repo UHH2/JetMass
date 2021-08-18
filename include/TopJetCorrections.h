@@ -19,6 +19,7 @@ public:
 
     virtual bool process(uhh2::Event & event) override;
     void init(uhh2::Context & ctx);
+     void disable_jersmear(){jer_smearing_ = false;}
 
   //these are defined as static members here so the StandalineTopJetCorrector can access them as well.
   inline static const std::string tjec_tag_2016 = "Summer16_07Aug2017";
@@ -27,6 +28,10 @@ public:
   inline static const std::string tjec_ver_2017 = "32";
   inline static const std::string tjec_tag_2018 = "Autumn18";
   inline static const std::string tjec_ver_2018 = "7";
+
+  inline static const std::string tjer_tag_2016 = "Summer16_25nsV1";
+  inline static const std::string tjer_tag_2017 = "Fall17_V3";
+  inline static const std::string tjer_tag_2018 = "Autumn18_V7";
 
 private:
     void fail_if_init() const;
@@ -37,6 +42,7 @@ private:
 
     bool is_mc;
     bool init_done = false;
+    bool jer_smearing_;
 
     Year year;
 
@@ -57,9 +63,18 @@ class StandaloneTopJetCorrector{
 public:
   StandaloneTopJetCorrector(uhh2::Context& ctx);
   float getJecFactor(const uhh2::Event & event, LorentzVector topjet);
+  float getJERSmearingFactor(const uhh2::Event &event, Particle topjet, int direction, float jec_factor = 1.0);
+  float getJERSmearingFactor(const uhh2::Event &event, LorentzVector topjet, int direction, float jec_factor = 1.0){
+    Particle topjet_particle;
+    topjet_particle.set_v4(topjet);
+    return getJERSmearingFactor(event,topjet_particle,direction,jec_factor);
+  };
   
 private:
   bool is_mc;
   std::string short_year;
-  std::map<std::string,std::unique_ptr<FactorizedJetCorrector>> jet_corrector;   
+  std::map<std::string,std::unique_ptr<FactorizedJetCorrector>> jet_corrector;
+  JME::JetResolution resolution_;
+  JME::JetResolutionScaleFactor res_sf_;
+
 };
