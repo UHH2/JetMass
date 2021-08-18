@@ -47,10 +47,10 @@ using namespace uhh2;
 
 Particle GetGeneratorW(Event & event);
 
-class PreSelModule: public AnalysisModule {
+class JetMassModule: public AnalysisModule {
 public:
 
-  explicit PreSelModule(Context & ctx);
+  explicit JetMassModule(Context & ctx);
   virtual bool process(Event & event) override;
 
 private:
@@ -85,7 +85,7 @@ private:
 };
 
 
-PreSelModule::PreSelModule(Context & ctx){
+JetMassModule::JetMassModule(Context & ctx){
 
   // Set some boolians
   version = ctx.get("dataset_version");
@@ -96,7 +96,7 @@ PreSelModule::PreSelModule(Context & ctx){
   const std::string& selection_ = ctx.get("selection", "");
   if     (selection_ == "ttbar") isTTbarSel = true;
   else if(selection_ == "vjets")   isVJetsSel = true;
-  else throw runtime_error("PreSelModule: Select 'ttbar' or 'vjets' selection");
+  else throw runtime_error("JetMassModule: Select 'ttbar' or 'vjets' selection");
 
   do_genStudies = string2bool(ctx.get("doGenStudies", "true"));
   
@@ -204,9 +204,9 @@ PreSelModule::PreSelModule(Context & ctx){
   writer.reset(new WriteOutput(ctx));
 }
 
-bool PreSelModule::process(Event & event) {
+bool JetMassModule::process(Event & event) {
   if(EXTRAOUT){
-    cout << "PreSelModule: Starting to process event (runid, eventid) = (" << event.run << ", " << event.event << "); weight = " << event.weight << endl;
+    cout << "JetMassModule: Starting to process event (runid, eventid) = (" << event.run << ", " << event.event << "); weight = " << event.weight << endl;
   }
 
   // if(version.Contains("TTbar_") && (version.Contains("had") || version.Contains("semilep") || version.Contains("dilep")) ){
@@ -291,5 +291,5 @@ bool PreSelModule::process(Event & event) {
 }
 
 // as we want to run the ExampleCycleNew directly with AnalysisModuleRunner,
-// make sure the PreSelModule is found by class name. This is ensured by this macro:
-UHH2_REGISTER_ANALYSIS_MODULE(PreSelModule)
+// make sure the JetMassModule is found by class name. This is ensured by this macro:
+UHH2_REGISTER_ANALYSIS_MODULE(JetMassModule)
