@@ -61,6 +61,7 @@
 <InputData Version="DATA_JetHTRun2017v2D"                Lumi="1"            Type="DATA" NEventsMax="-1" Cacheable="False"> &DATA_JetHTRun2017D;     <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
 <InputData Version="DATA_JetHTRun2017v2E"                Lumi="1"            Type="DATA" NEventsMax="-1" Cacheable="False"> &DATA_JetHTRun2017E;     <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
 <InputData Version="DATA_JetHTRun2017v2F"                Lumi="1"            Type="DATA" NEventsMax="-1" Cacheable="False"> &DATA_JetHTRun2017F;     <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
+
 <InputData Version="MC_QCD_Pt_170to300_buggyPU_2017v2"   Lumi="542.6481002"  Type="MC"   NEventsMax="-1" Cacheable="False"> &QCD_Pt_170to300;        <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
 <InputData Version="MC_QCD_Pt_170to300_ext1_2017v2"      Lumi="542.6481002"  Type="MC"   NEventsMax="-1" Cacheable="False"> &QCD_Pt_170to300_ext1;   <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
 <InputData Version="MC_QCD_Pt_300to470_buggyPU_2017v2"   Lumi="16285.567"    Type="MC"   NEventsMax="-1" Cacheable="False"> &QCD_Pt_300to470;        <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
@@ -85,7 +86,7 @@
 <InputData Version="MC_ZJetsToQQ_HT400to600_2017v2"      Lumi="70591.52368"  Type="MC"   NEventsMax="-1" Cacheable="False"> &ZJetsToQQ_HT400to600;   <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
 <InputData Version="MC_ZJetsToQQ_HT600to800_2017v2"      Lumi="257572.8596"  Type="MC"   NEventsMax="-1" Cacheable="False"> &ZJetsToQQ_HT600to800;   <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
 <InputData Version="MC_ZJetsToQQ_HT800toInf_2017v2"      Lumi="419492.3825"  Type="MC"   NEventsMax="-1" Cacheable="False"> &ZJetsToQQ_HT800toInf;   <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
-<InputData Version="MC_TTToHadronic_2017v2"              Lumi="109490.4712"  Type="MC"   NEventsMax="-1" Cacheable="False"> &TTToHadronic;           <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
-<InputData Version="MC_TTToSemiLeptonic_2017v2"          Lumi="35279949.78"  Type="MC"   NEventsMax="-1" Cacheable="False"> &TTToSemiLeptonic;       <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
+<InputData Version="TTToHadronic_2017v2"              Lumi="109490.4712"  Type="MC"   NEventsMax="-1" Cacheable="False"> &TTToHadronic;           <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
+<InputData Version="TTToSemiLeptonic_2017v2"          Lumi="35279949.78"  Type="MC"   NEventsMax="-1" Cacheable="False"> &TTToSemiLeptonic;       <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
 <InputData Version="MC_ST_tW_top_2017v2"                 Lumi="7382334.321"  Type="MC"   NEventsMax="-1" Cacheable="False"> &ST_tW_top;              <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
 <InputData Version="MC_ST_tW_antitop_2017v2"             Lumi="7582465.388"  Type="MC"   NEventsMax="-1" Cacheable="False"> &ST_tW_antitop;          <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
