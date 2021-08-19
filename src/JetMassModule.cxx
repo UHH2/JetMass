@@ -32,6 +32,7 @@
 #include "UHH2/common/include/MCLargeWeightKiller.h"
 #include "UHH2/JetMass/include/WriteOutput.h"
 #include "UHH2/JetMass/include/PFHists.h"
+#include "UHH2/JetMass/include/UnfoldingHists.h"
 
 #include "UHH2/common/include/TTbarGen.h"
 #include <unistd.h>
@@ -65,10 +66,14 @@ private:
   std::unique_ptr<TopJetLeptonDeltaRCleaner> ak8cleaner_dRlep;
 
   std::unique_ptr<AndSelection> reco_selection;
+  std::unique_ptr<AndSelection> gen_selection;
 
   std::vector<std::unique_ptr<uhh2::Hists>> hists;
   std::unique_ptr<uhh2::Hists> h_pfhists_200to500, h_pfhists_500to1000, h_pfhists_1000to2000, h_pfhists_2000to3000, h_pfhists_3000to4000, h_pfhists_4000to5000;
   std::unique_ptr<uhh2::Hists> h_pfhists_inclusive, h_pfhists_500to550, h_pfhists_550to600, h_pfhists_600to675, h_pfhists_675to800, h_pfhists_800to1200, h_pfhists_1200toInf;
+
+  std::unique_ptr<uhh2::Hists> h_unfolding_hists;
+  
   
   std::unique_ptr<AnalysisModule> writer;
 
@@ -80,8 +85,10 @@ private:
   Double_t AK4_Clean_pT,AK4_Clean_eta,AK8_Clean_pT,AK8_Clean_eta;
 
   // uhh2::Event::Handle<double>h_mtt_gen;
-  uhh2::Event::Handle<double>h_weight_pre_ttbar_reweight;
-
+  uhh2::Event::Handle<double>handle_weight_pre_ttbar_reweight;
+  uhh2::Event::Handle<bool>handle_reco_selection;
+  uhh2::Event::Handle<bool>handle_gen_selection;
+  
   std::string NLOWeightsDir = "UHHNtupleConverter/NLOweights";
   TH1F *h_kfactor, *h_ewcorr;
   std::unique_ptr<MatchingSelection> matching_selection;
@@ -155,7 +162,12 @@ JetMassModule::JetMassModule(Context & ctx){
 
   ctx.undeclare_all_event_output();
   
-  h_weight_pre_ttbar_reweight = ctx.declare_event_output<double>("weight_pre_ttbar_reweight");  
+  handle_weight_pre_ttbar_reweight = ctx.declare_event_output<double>("weight_pre_ttbar_reweight");
+  std::string reco_selection_handlename("pass_reco_selection"),gen_selection_handlename("pass_gen_selection");
+  handle_reco_selection = ctx.declare_event_output<bool>(reco_selection_handlename);
+  handle_gen_selection = ctx.declare_event_output<bool>(gen_selection_handlename);
+
+  
   topPtReweighting.reset(new TopPtReweight(ctx, 0.0615, -0.0005,"","",true));
   
   // AK8 JEC/JER
@@ -189,6 +201,22 @@ JetMassModule::JetMassModule(Context & ctx){
     reco_selection->add<HTCut>("H_{T} > 1000 GeV",ctx, 1000.);  
   }
 
+  gen_selection.reset(new AndSelection(ctx,"gen_selection"));
+  if(isTTbarSel){
+    // gen_selection->add<TriggerSelection>("Trigger selection","HLT_Mu50_v*");
+    // gen_selection->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 200 GeV", 1,-1,TopJetId(PtEtaCut(200.,100000.)));
+    // gen_selection->add<NMuonSelection>("N_{#mu} #geq 1", 1,1);
+    // gen_selection->add<NElectronSelection>("N_{e} = 0", 0,0);
+    // gen_selection->add<METCut>("MET > 50 GeV", 50.,100000.);
+    // gen_selection->add<TwoDCut>("2D-Cut",0.4,25.);
+    // gen_selection->add<NMuonBTagSelection>("b-jet in muon hemisphere", 1, 999, DeepJetBTag(DeepJetBTag::WP_MEDIUM));
+  }else if(isVJetsSel){
+    //gen_selection->add<GenParticleIdSelection>("genele-veto",0,0,GenParticleId(FlavourParticlePDGIdId(13)));
+    // gen_selection->add<NMuonSelection>("muon-veto",0,0);
+    // gen_selection->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 500 GeV", 1,-1,TopJetId(PtEtaCut(500.,100000.)));
+    // gen_selection->add<HTCut>("H_{T} > 1000 GeV",ctx, 1000.);  
+  }
+  
   
   // HISTOGRAMS
   hists.emplace_back(new ElectronHists(ctx, "ElectronHists"));
@@ -211,7 +239,8 @@ JetMassModule::JetMassModule(Context & ctx){
   h_pfhists_675to800.reset(new PFHists(ctx, "PFHists_675to800"));
   h_pfhists_800to1200.reset(new PFHists(ctx, "PFHists_800to1200"));
   h_pfhists_1200toInf.reset(new PFHists(ctx, "PFHists_1200toInf"));
-  
+
+  h_unfolding_hists.reset(new UnfoldingHists(ctx,"unfolding_hists",reco_selection_handlename,gen_selection_handlename));
 
   writer.reset(new WriteOutput(ctx));
 }
@@ -247,7 +276,7 @@ bool JetMassModule::process(Event & event) {
     if(!mcSpikeKiller->passes(event)) return false;
   }
 
-  event.set(h_weight_pre_ttbar_reweight,event.weight);
+  event.set(handle_weight_pre_ttbar_reweight,event.weight);
   if(is_mc)topPtReweighting->process(event);
   
   // AK8 JEC
@@ -312,7 +341,14 @@ bool JetMassModule::process(Event & event) {
     if(AK8_pt>1200)h_pfhists_1200toInf->fill(event);
   }
   
-  bool   pass_reco_selection = reco_selection->passes(event);
+  bool pass_reco_selection = reco_selection->passes(event);
+  event.set(handle_reco_selection,pass_reco_selection);
+
+  bool pass_gen_selection = gen_selection->passes(event);
+  event.set(handle_gen_selection,pass_gen_selection);
+
+
+  h_unfolding_hists->fill(event);
   
   // make sure there is a closest gentopjet to topjet is closer than dR<0.6  
   if(is_mc && do_genStudies && pass_reco_selection){
