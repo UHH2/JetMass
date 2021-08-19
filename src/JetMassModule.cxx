@@ -82,6 +82,10 @@ private:
   // uhh2::Event::Handle<double>h_mtt_gen;
   uhh2::Event::Handle<double>h_weight_pre_ttbar_reweight;
 
+  std::string NLOWeightsDir = "UHHNtupleConverter/NLOweights";
+  TH1F *h_kfactor, *h_ewcorr;
+  std::unique_ptr<MatchingSelection> matching_selection;
+  
 };
 
 
@@ -98,6 +102,14 @@ JetMassModule::JetMassModule(Context & ctx){
   else if(selection_ == "vjets")   isVJetsSel = true;
   else throw runtime_error("JetMassModule: Select 'ttbar' or 'vjets' selection");
 
+  matching_selection.reset(new MatchingSelection(ctx));
+  if(isVJetsSel && (version.Contains("WJets") || version.Contains("ZJets"))){
+    std::string NLOWeightsFilename = NLOWeightsDir + (std::string)(version.Contains("W") ? "/WJets" : "/ZJets") + "Corr.root";
+    TFile * NLOWeightsFile = new TFile(locate_file(NLOWeightsFilename).c_str());
+    h_kfactor = (TH1F*) NLOWeightsFile->Get("kfactor");
+    h_ewcorr = (TH1F*) NLOWeightsFile->Get("ewcorr");
+  }
+  
   do_genStudies = string2bool(ctx.get("doGenStudies", "true"));
   
   // common modules
@@ -250,8 +262,40 @@ bool JetMassModule::process(Event & event) {
   ak8cleaner->process(event);
   ak8cleaner_dRlep->process(event);
 
-  //PFHists
   if(event.topjets->size()>0){
+    //k-factors
+    if(isVJetsSel){
+      matching_selection->init(event);
+      bool IsMergedWZ  = matching_selection->passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedV);
+      const GenJet * closest_genjet_1 = closestParticle(event.topjets->at(0), *event.genjets);
+      const GenJet * closest_genjet_2 = event.topjets->size() > 1 ? closestParticle(event.topjets->at(1), *event.genjets) : closest_genjet_1;
+      
+      float gen_pt_1 = closest_genjet_1 ? closest_genjet_1->pt() : -9999;
+      float gen_pt_2 = closest_genjet_2 ? closest_genjet_2->pt() : -9999;
+      float genjetpt = IsMergedWZ ? gen_pt_1 : gen_pt_2;
+      
+      double kfactor_pt = genjetpt;
+      double ewk_pt = genjetpt;
+      
+      if( kfactor_pt > 3000 ) kfactor_pt = 2800;
+      if( kfactor_pt < 200 ) kfactor_pt = 205;
+      
+      float kfactor_bin = h_kfactor->GetXaxis()->FindBin(kfactor_pt);
+      
+      float w= h_kfactor->GetBinContent(kfactor_bin);
+      
+      if( ewk_pt > 1205 ) ewk_pt = 1205;
+      if( ewk_pt < 160 ) ewk_pt = 165;
+      
+      float ewk_bin = h_ewcorr->GetXaxis()->FindBin(ewk_pt);
+
+      float w_ew= h_ewcorr->GetBinContent(ewk_bin);
+      float nlo_weight = w * w_ew;
+     
+      event.weight *= nlo_weight ;
+    }
+    
+    //PFHists
     float AK8_pt = event.topjets->at(0).pt();
     h_pfhists_inclusive->fill(event);
     if(AK8_pt>200 && AK8_pt<500)h_pfhists_200to500->fill(event);
