@@ -64,7 +64,7 @@ private:
   std::unique_ptr<TopJetCleaner> ak8cleaner;
   std::unique_ptr<TopJetLeptonDeltaRCleaner> ak8cleaner_dRlep;
 
-  std::unique_ptr<AndSelection> full_selection;
+  std::unique_ptr<AndSelection> reco_selection;
 
   std::vector<std::unique_ptr<uhh2::Hists>> hists;
   std::unique_ptr<uhh2::Hists> h_pfhists_200to500, h_pfhists_500to1000, h_pfhists_1000to2000, h_pfhists_2000to3000, h_pfhists_3000to4000, h_pfhists_4000to5000;
@@ -161,20 +161,20 @@ JetMassModule::JetMassModule(Context & ctx){
   ak8cleaner.reset(new TopJetCleaner(ctx,TopJetId(PtEtaCut(AK8_Clean_pT,AK8_Clean_eta))));
   ak8cleaner_dRlep.reset(new TopJetLeptonDeltaRCleaner(0.8));
 
-  full_selection.reset(new AndSelection(ctx,"full_selection"));
+  reco_selection.reset(new AndSelection(ctx,"reco_selection"));
   if(isTTbarSel){
-    full_selection->add<TriggerSelection>("Trigger selection","HLT_Mu50_v*");
-    full_selection->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 200 GeV", 1,-1,TopJetId(PtEtaCut(200.,100000.)));
-    full_selection->add<NMuonSelection>("N_{#mu} #geq 1", 1,1);
-    full_selection->add<NElectronSelection>("N_{e} = 0", 0,0);
-    full_selection->add<METCut>("MET > 50 GeV", 50.,100000.);
-    full_selection->add<TwoDCut>("2D-Cut",0.4,25.);
-    full_selection->add<NMuonBTagSelection>("b-jet in muon hemisphere", 1, 999, DeepJetBTag(DeepJetBTag::WP_MEDIUM));
+    reco_selection->add<TriggerSelection>("Trigger selection","HLT_Mu50_v*");
+    reco_selection->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 200 GeV", 1,-1,TopJetId(PtEtaCut(200.,100000.)));
+    reco_selection->add<NMuonSelection>("N_{#mu} #geq 1", 1,1);
+    reco_selection->add<NElectronSelection>("N_{e} = 0", 0,0);
+    reco_selection->add<METCut>("MET > 50 GeV", 50.,100000.);
+    reco_selection->add<TwoDCut>("2D-Cut",0.4,25.);
+    reco_selection->add<NMuonBTagSelection>("b-jet in muon hemisphere", 1, 999, DeepJetBTag(DeepJetBTag::WP_MEDIUM));
   }else if(isVJetsSel){
-    full_selection->add<NElectronSelection>("ele-veto",0,0);
-    full_selection->add<NMuonSelection>("muon-veto",0,0);
-    full_selection->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 500 GeV", 1,-1,TopJetId(PtEtaCut(500.,100000.)));
-    full_selection->add<HTCut>("H_{T} > 1000 GeV",ctx, 1000.);  
+    reco_selection->add<NElectronSelection>("ele-veto",0,0);
+    reco_selection->add<NMuonSelection>("muon-veto",0,0);
+    reco_selection->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 500 GeV", 1,-1,TopJetId(PtEtaCut(500.,100000.)));
+    reco_selection->add<HTCut>("H_{T} > 1000 GeV",ctx, 1000.);  
   }
 
   
@@ -268,20 +268,20 @@ bool JetMassModule::process(Event & event) {
     if(AK8_pt>1200)h_pfhists_1200toInf->fill(event);
   }
   
-  bool   pass_full_selection = full_selection->passes(event);
+  bool   pass_reco_selection = reco_selection->passes(event);
   
   // make sure there is a closest gentopjet to topjet is closer than dR<0.6  
-  if(is_mc && do_genStudies && pass_full_selection){
+  if(is_mc && do_genStudies && pass_reco_selection){
     auto dR = numeric_limits<double>::infinity();
     if(event.gentopjets->size()>0){
       const GenTopJet * closest_gentopjet = closestParticle(event.topjets->at(0), *event.gentopjets);
       dR = deltaR(event.topjets->at(0),*closest_gentopjet);
     }
     if(dR>0.6){
-      pass_full_selection = false;
+      pass_reco_selection = false;
     }
   }
-  if(pass_full_selection){  
+  if(pass_reco_selection){  
     // FILL HISTS
     for(auto & h: hists) h->fill(event);
     // STORE EVENT
