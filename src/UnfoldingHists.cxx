@@ -15,10 +15,10 @@ UnfoldingHists::UnfoldingHists(Context & ctx, const string & dirname, const stri
   auto version = ctx.get("dataset_version");
   std::cout << "setting up Unfolding Hists" << std::endl;
 
-  // if (isMC) {
-  //   gen_sel_handle = ctx.get_handle<bool> (gen_sel_handle_name);
-  // }
-  // reco_sel_handle = ctx.get_handle<bool> (reco_sel_handle_name);
+  if (isMC) {
+    gen_sel_handle = ctx.get_handle<bool> (gen_sel_handle_name);
+  }
+  reco_sel_handle = ctx.get_handle<bool> (reco_sel_handle_name);
   
   std::string N2DDT_file_path = "JetMass/Histograms/ddtmaps/QCD_2017_PFMass_smooth_gaus4p00sigma.root";
   std::string N2DDT_hist_name = "N2_v_pT_v_rho_0p05_smooth_gaus4p00sigma_maps_cleaner_PFMass";  
@@ -26,48 +26,72 @@ UnfoldingHists::UnfoldingHists(Context & ctx, const string & dirname, const stri
   h_N2DDT = (TH2D*)f_N2DDT->Get(N2DDT_hist_name.c_str());
   
   //TUnfoldBinning * a = new TUnfoldBinning("a");
-   detector_binning_msd_pt = new TUnfoldBinning("detector");
+  detector_binning_msd_pt = new TUnfoldBinning("detector");
   
-  // detector_binning_msd_pt->AddAxis("msd",msd_edges.size()-1,msd_edges.data(),true,true);
-  // detector_binning_msd_pt->AddAxis("pt",pt_edges.size()-1,pt_edges.data(),true,true);
+  detector_binning_msd_pt->AddAxis("msd",msd_edges.size()-1,msd_edges.data(),true,true);
+  detector_binning_msd_pt->AddAxis("pt",pt_edges.size()-1,pt_edges.data(),true,true);
   
-  // generator_binning_msd_pt = new TUnfoldBinning("generator");
-  // generator_binning_msd_pt->AddAxis("msd",msd_edges.size()-1,msd_edges.data(),true,true);
-  // generator_binning_msd_pt->AddAxis("pt",pt_edges.size()-1,pt_edges.data(),true,true);
+  generator_binning_msd_pt = new TUnfoldBinning("generator");
+  generator_binning_msd_pt->AddAxis("msd",msd_edges.size()-1,msd_edges.data(),true,true);
+  generator_binning_msd_pt->AddAxis("pt",pt_edges.size()-1,pt_edges.data(),true,true);
   
-  // TH2D* h_pt_msd_response_tmp = TUnfoldBinning::CreateHistogramOfMigrations(generator_binning_msd_pt, detector_binning_msd_pt, "hist_msd_pt_response_tmp");
-  // h_pt_msd_response = copy_book_th2d(h_pt_msd_response_tmp, "hist_msd_pt_response");
+  TH2D* h_pt_msd_response_tmp = TUnfoldBinning::CreateHistogramOfMigrations(generator_binning_msd_pt, detector_binning_msd_pt, "hist_msd_pt_response_tmp");
+  h_pt_msd_response = copy_book_th2d(h_pt_msd_response_tmp, "hist_msd_pt_response");
+  delete h_pt_msd_response_tmp;
   
-  // TH1* h_msd_detector_tmp = detector_binning_msd_pt->CreateHistogram("hist_msd_detector_tmp");
-  // h_msd_detector = copy_book_th1d(h_msd_detector,"hist_msd_detector");
+  TH1* h_msd_detector_tmp = detector_binning_msd_pt->CreateHistogram("hist_msd_detector_tmp");
+  h_msd_detector = copy_book_th1d(h_msd_detector_tmp,"hist_msd_detector");
+  delete h_msd_detector_tmp;
+   
+  TH1* h_msd_generator_tmp = generator_binning_msd_pt->CreateHistogram("hist_msd_generator_tmp");
+  h_msd_generator = copy_book_th1d(h_msd_generator_tmp,"hist_msd_generator");
+  delete h_msd_generator_tmp;
   
-  // TH1* h_msd_generator_tmp = generator_binning_msd_pt->CreateHistogram("hist_msd_generator_tmp");
-  // h_msd_generator = copy_book_th1d(h_msd_generator,"hist_msd_generator");
 }
 
 void UnfoldingHists::fill(const Event & event){
   auto weight = event.weight;
   if(event.topjets->size() <1) return;
   auto jet = event.topjets->at(0);
+ 
+  // TH1D* h = h_msd_generator;
+  // // TH2D* h = h_pt_msd_response;
+  // std::cout << h->GetTitle() <<
+  //   " NbinsX=" << h->GetNbinsX() <<
+  //   " XMin=" << h->GetXaxis()->GetXmin() <<
+  //   " XMax=" << h->GetXaxis()->GetXmax() <<
+  //   " NbinsY=" << h->GetNbinsY() <<
+  //   " YMin=" << h->GetYaxis()->GetXmin()<<
+  //   " YMax=" <<h->GetYaxis()->GetXmax() << std::endl;
 
-  // bool pass_reco = event.get(reco_sel_handle);
-  // bool pass_gen(false);
-  // if(isMC){
-  //   pass_gen = event.get(gen_sel_handle);
-  // }
+  bool pass_reco = event.get(reco_sel_handle);
+  bool pass_gen(false);
+  if(isMC){
+    pass_gen = event.get(gen_sel_handle);
+  }
+
+  int reco_bin(0), gen_bin(0);
   
-  // if(pass_reco || pass_gen){
-  //   float gen_pt(-1.0),genmsd(-1.0);
-  //   float reco_pt(-1.0),reco_msd(-1.0);
-  //   if(pass_reco){
-  //     reco_pt = event.topjets->at(0).pt();
-  //     reco_msd = event.topjets->at(0).softdropmass();
-  //   }
-  //   if(pass_gen){
-  //     gen_pt = event.gentopjets->at(0);
-  //     gen_msd = event.gentopjets->at(0).softdropmass();
-  //   }
-  //}
+  if(pass_reco || pass_gen){
+    float gen_pt(-1.0),gen_msd(-1.0);
+    float reco_pt(-1.0),reco_msd(-1.0);
+    if(pass_reco){
+      reco_pt = event.topjets->at(0).pt();
+      reco_msd = event.topjets->at(0).softdropmass();
+      reco_bin = detector_binning_msd_pt->GetGlobalBinNumber(reco_msd, reco_pt);
+    }
+    if(pass_gen){
+      if(event.gentopjets->size()>0){
+      gen_pt = event.gentopjets->at(0).pt();
+      gen_msd = event.gentopjets->at(0).softdropmass();
+      gen_bin = generator_binning_msd_pt->GetGlobalBinNumber(gen_msd, gen_pt);
+      }
+    }
+    h_pt_msd_response->Fill(gen_bin, reco_bin, weight);
+    h_msd_detector->Fill(reco_bin, weight);
+    h_msd_generator->Fill(gen_bin, weight);
+    
+  }
     
 }
   
