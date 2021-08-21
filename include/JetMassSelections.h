@@ -8,6 +8,7 @@
 #include "UHH2/common/include/JetIds.h"
 #include "UHH2/common/include/TopJetIds.h"
 #include "UHH2/common/include/Utils.h"
+#include "UHH2/common/include/TTbarGen.h"
 #include <vector>
 
 
@@ -28,11 +29,12 @@ class TwoDCut : public uhh2::Selection {
 
 class METCut : public uhh2::Selection {
  public:
-  explicit METCut(float minMet_, float maxMet_=infinity);
+  explicit METCut(float minMet_, float maxMet_=infinity, bool genMet_=false);
   virtual bool passes(const uhh2::Event & event) override;
 
  private:
   float minMet, maxMet;
+  bool genMet;
 };
 
 class NMuonBTagSelection: public uhh2::Selection {
@@ -53,7 +55,7 @@ class NMuonBTagSelection: public uhh2::Selection {
 class HTCut: public uhh2::Selection {
  public:
 
-  explicit HTCut(uhh2::Context & ctx, float min_ht_=-1,float max_ht_=infinity);
+  explicit HTCut(uhh2::Context & ctx, float min_ht_=-1,float max_ht_=infinity, std::string ht_handlename="HT");
 
   virtual bool passes(const uhh2::Event &) override;
 
@@ -71,4 +73,26 @@ class WToMuNuSelection: public uhh2::Selection {
 
  private:
   float min_pt, max_pt;
+};
+
+// //adapted from https://github.com/UHH2/VLQSemiLepPreSel/blob/master/include/VLQCommonModules.h#L573
+class GenParticlePDGIdId{
+ public:
+  GenParticlePDGIdId(const int pdgId, const int status = -1):pdgId_(pdgId),status_(status) {}
+  bool operator()(const GenParticle & p, const Event &) const { return (p.pdgId() == pdgId_) && (p.status()==status_);}
+ private:
+  int pdgId_;
+  int status_;
+};
+
+class TTbarGenSemilepSelection: public uhh2::Selection {
+ public:
+
+  explicit TTbarGenSemilepSelection(uhh2::Context & ctx, std::string ttgen_handlename, float mu_pt_min = -1., float mu_pt_max=infinity);
+
+  virtual bool passes(const uhh2::Event &) override;
+
+ private:
+  uhh2::Event::Handle<TTbarGen> h_ttbargen;
+  float mu_pt_min,mu_pt_max;
 };

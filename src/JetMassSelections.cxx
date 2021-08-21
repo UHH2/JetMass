@@ -35,14 +35,18 @@ bool TwoDCut::passes(const Event & event){
   return (drmin > min_deltaR) || (ptrel > min_pTrel);
 }
 
-METCut::METCut(float minMet_, float maxMet_):
-minMet(minMet_), maxMet(maxMet_) {}
+METCut::METCut(float minMet_, float maxMet_, bool genMet_):
+minMet(minMet_), maxMet(maxMet_) , genMet(genMet_){}
 
 bool METCut::passes(const Event & event){
-
-  assert(event.met);
-
-  float MET = event.met->pt();
+  float MET(-1.0);
+  if(genMet){
+    assert(event.genmet);
+    MET = event.genmet->pt();
+  }else{
+    assert(event.met);
+    MET = event.met->pt();
+  }
   return (MET > minMet) && (MET < maxMet);
 }
 
@@ -86,8 +90,8 @@ bool NMuonBTagSelection::passes(const Event & event)
   return true;
 }
 
-HTCut::HTCut(uhh2::Context & ctx, float min_ht_,float max_ht_):min_ht(min_ht_),max_ht(max_ht_){
-  h_ht = ctx.get_handle<double>("HT");
+HTCut::HTCut(uhh2::Context & ctx, float min_ht_,float max_ht_, std::string ht_handlename):min_ht(min_ht_),max_ht(max_ht_){
+  h_ht = ctx.get_handle<double>(ht_handlename);
 }
 
 bool HTCut::passes(const Event & event){
@@ -107,4 +111,19 @@ bool WToMuNuSelection::passes(const Event & event){
   LorentzVector neutrino = NeutrinoReconstruction(event.muons->at(0).v4(), event.met->v4())[0];
   float pt = (event.muons->at(0).v4() + neutrino).pt();
   return (pt > min_pt) && (pt < max_pt);
+}
+
+
+TTbarGenSemilepSelection::TTbarGenSemilepSelection(uhh2::Context & ctx, std::string ttgen_handlename, float mu_pt_min_, float mu_pt_max_):mu_pt_min(mu_pt_min_),mu_pt_max(mu_pt_max_){
+  h_ttbargen = ctx.get_handle<TTbarGen>(ttgen_handlename);
+}
+
+bool TTbarGenSemilepSelection::passes(const Event & event){
+  TTbarGen ttgen  = event.get(h_ttbargen);
+  if(! ttgen.IsSemiLeptonicDecay()) return false;
+  GenParticle muon = ttgen.ChargedLepton();
+  if(abs(muon.pdgId()) != 13) return false;
+  if(muon.pt() < mu_pt_min || muon.pt() > mu_pt_max) return false;
+  
+  return true;
 }

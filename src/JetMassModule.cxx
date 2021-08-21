@@ -10,6 +10,7 @@
 #include "UHH2/common/include/MCWeight.h"
 #include "UHH2/common/include/NSelections.h"
 #include "UHH2/common/include/TriggerSelection.h"
+#include "UHH2/common/include/AdditionalSelections.h"
 #include "UHH2/common/include/ObjectIdUtils.h"
 
 #include "UHH2/common/include/JetCorrections.h"
@@ -33,8 +34,11 @@
 #include "UHH2/JetMass/include/WriteOutput.h"
 #include "UHH2/JetMass/include/PFHists.h"
 #include "UHH2/JetMass/include/UnfoldingHists.h"
+#include "UHH2/JetMass/include/JetMassGenHists.h"
 
 #include "UHH2/common/include/TTbarGen.h"
+#include "UHH2/common/include/PartonHT.h"
+
 #include <unistd.h>
 
 #include "TFile.h"
@@ -72,6 +76,8 @@ private:
   std::unique_ptr<uhh2::Hists> h_pfhists_200to500, h_pfhists_500to1000, h_pfhists_1000to2000, h_pfhists_2000to3000, h_pfhists_3000to4000, h_pfhists_4000to5000;
   std::unique_ptr<uhh2::Hists> h_pfhists_inclusive, h_pfhists_500to550, h_pfhists_550to600, h_pfhists_600to675, h_pfhists_675to800, h_pfhists_800to1200, h_pfhists_1200toInf;
 
+
+  std::unique_ptr<uhh2::Hists> h_gen_hists_commonmodules,h_gen_hists_gensel;
   std::unique_ptr<uhh2::Hists> h_unfolding_hists;
   
   
@@ -88,6 +94,10 @@ private:
   uhh2::Event::Handle<double>handle_weight_pre_ttbar_reweight;
   uhh2::Event::Handle<bool>handle_reco_selection;
   uhh2::Event::Handle<bool>handle_gen_selection;
+
+  uhh2::Event::Handle<double>handle_gen_HT;
+  uhh2::Event::Handle<TTbarGen>handle_ttbar_gen;
+  std::unique_ptr<AnalysisModule>ttgen_producer;
   
   std::string NLOWeightsDir = "UHHNtupleConverter/NLOweights";
   TH1F *h_kfactor, *h_ewcorr;
@@ -167,6 +177,16 @@ JetMassModule::JetMassModule(Context & ctx){
   handle_reco_selection = ctx.declare_event_output<bool>(reco_selection_handlename);
   handle_gen_selection = ctx.declare_event_output<bool>(gen_selection_handlename);
 
+  std::string genHT_handlename("genHT");
+  handle_gen_HT = ctx.declare_event_output<double>(genHT_handlename);
+  
+  std::string ttbargen_handlename("ttbar_gen_system");
+  // handle_ttbar_gen = ctx.declare_event_output<TTbarGen>(ttbargen_handlename);
+
+  // std::cout << "TTbarGenProducer: " << std::endl;
+  ttgen_producer.reset(new TTbarGenProducer(ctx,ttbargen_handlename,false));
+  // std::cout << "TTbarGenProducer set up" << std::endl;
+
   
   topPtReweighting.reset(new TopPtReweight(ctx, 0.0615, -0.0005,"","",true));
   
@@ -204,17 +224,19 @@ JetMassModule::JetMassModule(Context & ctx){
   gen_selection.reset(new AndSelection(ctx,"gen_selection"));
   if(isTTbarSel){
     // gen_selection->add<TriggerSelection>("Trigger selection","HLT_Mu50_v*");
-    // gen_selection->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 200 GeV", 1,-1,TopJetId(PtEtaCut(200.,100000.)));
+    gen_selection->add<NGenTopJetSelection>("N_{gen,AK8} #geq 1, p_{T} > 200 GeV", 1,-1,GenTopJetId(PtEtaCut(200.,100000.)));
+    gen_selection->add<TTbarGenSemilepSelection>("gen semilep-selection",ctx, ttbargen_handlename,55.);
     // gen_selection->add<NMuonSelection>("N_{#mu} #geq 1", 1,1);
     // gen_selection->add<NElectronSelection>("N_{e} = 0", 0,0);
-    // gen_selection->add<METCut>("MET > 50 GeV", 50.,100000.);
+    gen_selection->add<METCut>("MET > 50 GeV", 50.,100000.,true);
     // gen_selection->add<TwoDCut>("2D-Cut",0.4,25.);
     // gen_selection->add<NMuonBTagSelection>("b-jet in muon hemisphere", 1, 999, DeepJetBTag(DeepJetBTag::WP_MEDIUM));
   }else if(isVJetsSel){
-    //gen_selection->add<GenParticleIdSelection>("genele-veto",0,0,GenParticleId(FlavourParticlePDGIdId(13)));
-    // gen_selection->add<NMuonSelection>("muon-veto",0,0);
-    // gen_selection->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 500 GeV", 1,-1,TopJetId(PtEtaCut(500.,100000.)));
-    // gen_selection->add<HTCut>("H_{T} > 1000 GeV",ctx, 1000.);  
+    // gen_selection->add<GenParticleIdSelection>("genele-veto",GenParticleId(GenParticlePDGIdId(11)),0,0);
+    // gen_selection->add<GenParticleIdSelection>("genmuon-veto",GenParticleId(GenParticlePDGIdId(13)),0,0);
+    // uhh2::Event::Handle<std::vector<Jet>> gentopjet_handle = ctx.get_handle<std::vector<GenTopJet>> (ctx.get("GenTopJetCollection"));
+    gen_selection->add<NGenTopJetSelection>("N_{gen,AK8} #geq 1, p_{T} > 500 GeV", 1,-1,GenTopJetId(PtEtaCut(500.,100000.)));
+    gen_selection->add<HTCut>("H_{T} > 1000 GeV",ctx, 1000., infinity, genHT_handlename);  
   }
   
   
@@ -240,6 +262,9 @@ JetMassModule::JetMassModule(Context & ctx){
   h_pfhists_800to1200.reset(new PFHists(ctx, "PFHists_800to1200"));
   h_pfhists_1200toInf.reset(new PFHists(ctx, "PFHists_1200toInf"));
 
+  h_gen_hists_commonmodules.reset(new JetMassGenHists(ctx,"GenHistsCommonModules",ttbargen_handlename));
+  h_gen_hists_gensel.reset(new JetMassGenHists(ctx, "GenHistsGenSel",ttbargen_handlename));
+  
   h_unfolding_hists.reset(new UnfoldingHists(ctx,"unfolding_hists",reco_selection_handlename,gen_selection_handlename));
 
   writer.reset(new WriteOutput(ctx));
@@ -260,6 +285,12 @@ bool JetMassModule::process(Event & event) {
   //   }
   // }
   // event.set(h_mtt_gen,mtt);
+  // if(isTTbarSel){
+    ttgen_producer->process(event);
+  // }
+  double genHT(-1.0);
+  if(event.genparticles) genHT = PartonHT::calculate(*event.genparticles);
+  event.set(handle_gen_HT,genHT);    
   
   // Throw away events with NVTX in buggy area for buggy samples
   if(is_mc && is_buggyPU){
@@ -270,6 +301,8 @@ bool JetMassModule::process(Event & event) {
   // COMMON MODULES
   bool pass_common=common->process(event);
   if(!pass_common) return false;
+
+  h_gen_hists_commonmodules->fill(event);
 
   //remove MC Events with very large unphysical weights
   if(is_mc && isVJetsSel && is_QCD){
@@ -284,6 +317,7 @@ bool JetMassModule::process(Event & event) {
 
   sort_by_pt<Jet>(*event.jets);
   sort_by_pt<TopJet>(*event.topjets);
+  sort_by_pt<GenTopJet>(*event.gentopjets);
 
   // CLEANER
   // ak4cleaner15->process(event);
@@ -291,6 +325,18 @@ bool JetMassModule::process(Event & event) {
   ak8cleaner->process(event);
   ak8cleaner_dRlep->process(event);
 
+  // if(event.electrons->size() >0){
+  //   std::cout << "reco-electron present" << std::endl;
+  //   for(int ig=0;ig<event.genparticles->size();ig++){
+  //     GenParticle p = event.genparticles->at(ig);
+  //     if(p.pdgId() == 11){
+  //       std::cout << "electron found (index = "<<ig <<") status=" << p.status() << " m1="<< p.mother1() << " m2=" << p.mother2() << std::endl; 
+  //     }
+  //   }
+  // }
+
+
+  
   if(event.topjets->size()>0){
     //k-factors
     if(isVJetsSel){
@@ -347,6 +393,7 @@ bool JetMassModule::process(Event & event) {
   bool pass_gen_selection = gen_selection->passes(event);
   event.set(handle_gen_selection,pass_gen_selection);
 
+  if(pass_gen_selection) h_gen_hists_gensel->fill(event);
 
   h_unfolding_hists->fill(event);
   
