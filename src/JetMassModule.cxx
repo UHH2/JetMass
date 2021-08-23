@@ -78,7 +78,7 @@ private:
 
 
   std::unique_ptr<uhh2::Hists> h_gen_hists_commonmodules,h_gen_hists_gensel;
-  std::unique_ptr<uhh2::Hists> h_unfolding_hists;
+  std::unique_ptr<uhh2::Hists> h_unfolding_hists_wp1, h_unfolding_hists_wp2, h_unfolding_hists_wp3, h_unfolding_hists_wp4, h_unfolding_hists_wp5;
   
   
   std::unique_ptr<AnalysisModule> writer;
@@ -101,7 +101,9 @@ private:
   
   std::string NLOWeightsDir = "UHHNtupleConverter/NLOweights";
   TH1F *h_kfactor, *h_ewcorr;
-  std::unique_ptr<MatchingSelection> matching_selection;
+  
+  std::unique_ptr<AnalysisModule> matching_selection_producer;
+  uhh2::Event::Handle<MatchingSelection> handle_matching_selection;
   
 };
 
@@ -119,7 +121,16 @@ JetMassModule::JetMassModule(Context & ctx){
   else if(selection_ == "vjets")   isVJetsSel = true;
   else throw runtime_error("JetMassModule: Select 'ttbar' or 'vjets' selection");
 
-  matching_selection.reset(new MatchingSelection(ctx));
+
+
+  std::string matching_selection_handlename("matching_selection");
+  
+  matching_selection_producer.reset(new MatchingSelectionProducer(ctx, matching_selection_handlename));
+  handle_matching_selection = ctx.get_handle<MatchingSelection>(matching_selection_handlename);
+  
+  handle_weight_pre_ttbar_reweight = ctx.declare_event_output<double>("weight_pre_ttbar_reweight");
+
+  
   if(isVJetsSel && (version.Contains("WJets") || version.Contains("ZJets"))){
     std::string NLOWeightsFilename = NLOWeightsDir + (std::string)(version.Contains("W") ? "/WJets" : "/ZJets") + "Corr.root";
     TFile * NLOWeightsFile = new TFile(locate_file(NLOWeightsFilename).c_str());
@@ -262,12 +273,16 @@ JetMassModule::JetMassModule(Context & ctx){
   h_pfhists_800to1200.reset(new PFHists(ctx, "PFHists_800to1200"));
   h_pfhists_1200toInf.reset(new PFHists(ctx, "PFHists_1200toInf"));
 
-  h_gen_hists_commonmodules.reset(new JetMassGenHists(ctx,"GenHistsCommonModules",ttbargen_handlename));
-  h_gen_hists_gensel.reset(new JetMassGenHists(ctx, "GenHistsGenSel",ttbargen_handlename));
+  h_gen_hists_commonmodules.reset(new JetMassGenHists(ctx,"GenHistsCommonModules",ttbargen_handlename,genHT_handlename));
+  h_gen_hists_gensel.reset(new JetMassGenHists(ctx, "GenHistsGenSel",ttbargen_handlename,genHT_handlename));
   
-  h_unfolding_hists.reset(new UnfoldingHists(ctx,"unfolding_hists",reco_selection_handlename,gen_selection_handlename));
+  h_unfolding_hists_wp1.reset(new UnfoldingHists(ctx,"unfolding_hists_wp1",reco_selection_handlename,gen_selection_handlename,matching_selection_handlename));
+  h_unfolding_hists_wp2.reset(new UnfoldingHists(ctx,"unfolding_hists_wp2",reco_selection_handlename,gen_selection_handlename,matching_selection_handlename));
+  h_unfolding_hists_wp3.reset(new UnfoldingHists(ctx,"unfolding_hists_wp3",reco_selection_handlename,gen_selection_handlename,matching_selection_handlename));
+  h_unfolding_hists_wp4.reset(new UnfoldingHists(ctx,"unfolding_hists_wp4",reco_selection_handlename,gen_selection_handlename,matching_selection_handlename));
+  h_unfolding_hists_wp5.reset(new UnfoldingHists(ctx,"unfolding_hists_wp5",reco_selection_handlename,gen_selection_handlename,matching_selection_handlename));
 
-  writer.reset(new WriteOutput(ctx));
+  writer.reset(new WriteOutput(ctx,matching_selection_handlename));
 }
 
 bool JetMassModule::process(Event & event) {
@@ -285,8 +300,14 @@ bool JetMassModule::process(Event & event) {
   //   }
   // }
   // event.set(h_mtt_gen,mtt);
-  // if(isTTbarSel){
+  if(is_mc){
+
     ttgen_producer->process(event);
+  }
+  // matching_selection->init(event);
+  matching_selection_producer->process(event);
+  MatchingSelection matching_selection = event.get(handle_matching_selection);
+  
   // }
   double genHT(-1.0);
   if(event.genparticles) genHT = PartonHT::calculate(*event.genparticles);
@@ -317,7 +338,7 @@ bool JetMassModule::process(Event & event) {
 
   sort_by_pt<Jet>(*event.jets);
   sort_by_pt<TopJet>(*event.topjets);
-  sort_by_pt<GenTopJet>(*event.gentopjets);
+  if(is_mc)sort_by_pt<GenTopJet>(*event.gentopjets);
 
   // CLEANER
   // ak4cleaner15->process(event);
@@ -340,8 +361,7 @@ bool JetMassModule::process(Event & event) {
   if(event.topjets->size()>0){
     //k-factors
     if(isVJetsSel){
-      matching_selection->init(event);
-      bool IsMergedWZ  = matching_selection->passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedV);
+      bool IsMergedWZ  = matching_selection.passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedV);
       const GenJet * closest_genjet_1 = closestParticle(event.topjets->at(0), *event.genjets);
       const GenJet * closest_genjet_2 = event.topjets->size() > 1 ? closestParticle(event.topjets->at(1), *event.genjets) : closest_genjet_1;
       
@@ -389,13 +409,18 @@ bool JetMassModule::process(Event & event) {
   
   bool pass_reco_selection = reco_selection->passes(event);
   event.set(handle_reco_selection,pass_reco_selection);
-
-  bool pass_gen_selection = gen_selection->passes(event);
+  if(pass_reco_selection && isVJetsSel){
+    float rho = 2 * TMath::Log(event.topjets->at(0).softdropmass()/event.topjets->at(0).pt());
+    if(rho < -6.0 || rho > -2.1) pass_reco_selection = false;
+  }
+  
+  bool pass_gen_selection = false;
+  if(is_mc)pass_gen_selection = gen_selection->passes(event);
   event.set(handle_gen_selection,pass_gen_selection);
 
   if(pass_gen_selection) h_gen_hists_gensel->fill(event);
 
-  h_unfolding_hists->fill(event);
+  h_unfolding_hists_wp1->fill(event);
   
   // make sure there is a closest gentopjet to topjet is closer than dR<0.6  
   if(is_mc && do_genStudies && pass_reco_selection){

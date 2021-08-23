@@ -8,17 +8,24 @@
 using namespace std;
 using namespace uhh2;
 
-UnfoldingHists::UnfoldingHists(Context & ctx, const string & dirname, const string & reco_sel_handle_name, const string & gen_sel_handle_name):Hists(ctx, dirname){
+UnfoldingHists::UnfoldingHists(Context & ctx, const string & dirname, const string & reco_sel_handle_name, const string & gen_sel_handle_name, const string & matching_sel_handle_name):Hists(ctx, dirname){
   
   auto dataset_type = ctx.get("dataset_type");
   isMC = dataset_type == "MC";
   auto version = ctx.get("dataset_version");
   std::cout << "setting up Unfolding Hists" << std::endl;
 
+  const std::string& selection_ = ctx.get("selection", "");
+  if     (selection_ == "ttbar") isTTbarSel = true;
+  else if(selection_ == "vjets")   isVJetsSel = true;
+  else throw runtime_error("JetMassModule: Select 'ttbar' or 'vjets' selection");
+
   if (isMC) {
     gen_sel_handle = ctx.get_handle<bool> (gen_sel_handle_name);
   }
   reco_sel_handle = ctx.get_handle<bool> (reco_sel_handle_name);
+
+  matching_sel_handle = ctx.get_handle<MatchingSelection>(matching_sel_handle_name);
   
   std::string N2DDT_file_path = "JetMass/Histograms/ddtmaps/QCD_2017_PFMass_smooth_gaus4p00sigma.root";
   std::string N2DDT_hist_name = "N2_v_pT_v_rho_0p05_smooth_gaus4p00sigma_maps_cleaner_PFMass";  
@@ -37,14 +44,20 @@ UnfoldingHists::UnfoldingHists(Context & ctx, const string & dirname, const stri
   
   TH2D* h_pt_msd_response_tmp = TUnfoldBinning::CreateHistogramOfMigrations(generator_binning_msd_pt, detector_binning_msd_pt, "hist_msd_pt_response_tmp");
   h_pt_msd_response = copy_book_th2d(h_pt_msd_response_tmp, "hist_msd_pt_response");
+  h_pt_msd_response_matched = copy_book_th2d(h_pt_msd_response_tmp, "hist_msd_pt_response_matched");
+  h_pt_msd_response_unmatched = copy_book_th2d(h_pt_msd_response_tmp, "hist_msd_pt_response_unmatched");
   delete h_pt_msd_response_tmp;
   
   TH1* h_msd_detector_tmp = detector_binning_msd_pt->CreateHistogram("hist_msd_detector_tmp");
   h_msd_detector = copy_book_th1d(h_msd_detector_tmp,"hist_msd_detector");
+  h_msd_detector_matched = copy_book_th1d(h_msd_detector_tmp,"hist_msd_detector_matched");
+  h_msd_detector_unmatched = copy_book_th1d(h_msd_detector_tmp,"hist_msd_detector_unmatched");
   delete h_msd_detector_tmp;
    
   TH1* h_msd_generator_tmp = generator_binning_msd_pt->CreateHistogram("hist_msd_generator_tmp");
   h_msd_generator = copy_book_th1d(h_msd_generator_tmp,"hist_msd_generator");
+  h_msd_generator_matched = copy_book_th1d(h_msd_generator_tmp,"hist_msd_generator_matched");
+  h_msd_generator_unmatched = copy_book_th1d(h_msd_generator_tmp,"hist_msd_generator_unmatched");
   delete h_msd_generator_tmp;
   
 }
@@ -53,7 +66,8 @@ void UnfoldingHists::fill(const Event & event){
   auto weight = event.weight;
   if(event.topjets->size() <1) return;
   auto jet = event.topjets->at(0);
- 
+
+  MatchingSelection matching_selection = event.get(matching_sel_handle);
   // TH1D* h = h_msd_generator;
   // // TH2D* h = h_pt_msd_response;
   // std::cout << h->GetTitle() <<
@@ -90,7 +104,18 @@ void UnfoldingHists::fill(const Event & event){
     h_pt_msd_response->Fill(gen_bin, reco_bin, weight);
     h_msd_detector->Fill(reco_bin, weight);
     h_msd_generator->Fill(gen_bin, weight);
-    
+    bool matched(false);
+    if(isVJetsSel) matched = matching_selection.passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedV);
+    if(isTTbarSel) matched = matching_selection.passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedTop);
+    if(matched){
+      h_pt_msd_response_matched->Fill(gen_bin, reco_bin, weight);
+      h_msd_detector_matched->Fill(reco_bin, weight);
+      h_msd_generator_matched->Fill(gen_bin, weight);
+    }else{
+      h_pt_msd_response_unmatched->Fill(gen_bin, reco_bin, weight);
+      h_msd_detector_unmatched->Fill(reco_bin, weight);
+      h_msd_generator_unmatched->Fill(gen_bin, weight);
+    }      
   }
     
 }

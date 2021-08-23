@@ -21,10 +21,11 @@ using namespace uhh2;
 
 class WriteOutput: public uhh2::AnalysisModule {
 public:
-    WriteOutput(uhh2::Context & ctx);
+  WriteOutput(uhh2::Context & ctx, const std::string & matching_selection_handlename);
     virtual bool process(uhh2::Event & ) override;
 
 private:
+  uhh2::Event::Handle<MatchingSelection> h_matching_selection;
   double CalculateMJet(vector<PFParticle> Particles);
   vector<double> CalculateMJetVariation(vector<PFParticle>particles, int i, int j, TString cat);
   // vector<double> CalculateMJetResolutionVariation(vector<PFParticle>particles, int i, int j, TString cat);

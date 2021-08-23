@@ -2,8 +2,8 @@
 #include "UHH2/core/include/Event.h"
 
 using namespace std;
-// using namespace uhh2;
-namespace uhh2{
+using namespace uhh2;
+// namespace uhh2{
   MatchingSelection::MatchingSelection(uhh2::Context & ctx){
     TString version = ctx.get("dataset_version", "");
     version.ToLower();
@@ -89,4 +89,15 @@ namespace uhh2{
     return genQ2.pdgId();
   }
 
-}
+
+  MatchingSelectionProducer::MatchingSelectionProducer(uhh2::Context & ctx, const std::string & name){
+    matching_selection.reset(new MatchingSelection(ctx));
+    h_matching_selection = ctx.get_handle<MatchingSelection>(name);
+  }
+  
+  bool MatchingSelectionProducer::process(Event & event){
+    matching_selection->init(event);
+    event.set(h_matching_selection, *matching_selection);
+    return true;
+  }
+// }

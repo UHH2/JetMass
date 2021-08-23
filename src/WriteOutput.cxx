@@ -6,7 +6,7 @@
 using namespace uhh2;
 using namespace std;
 
-WriteOutput::WriteOutput(uhh2::Context & ctx){
+WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selection_handlename){
 
   softdrop_jec.reset(new StandaloneTopJetCorrector(ctx));
 
@@ -114,19 +114,18 @@ WriteOutput::WriteOutput(uhh2::Context & ctx){
     }
   }
 
-
-  matching_selection.reset(new MatchingSelection(ctx));
+  h_matching_selection = ctx.get_handle<MatchingSelection>(matching_selection_handlename);
 
 }
 
 bool WriteOutput::process(uhh2::Event & event){
-
   vector<TopJet>* topjets = event.topjets;
   if(topjets->size() < 1) return false;
-  matching_selection->init(event);
 
-  event.set(h_pdgId_Q1, matching_selection->FlavourQ1() );
-  event.set(h_pdgId_Q2, matching_selection->FlavourQ2() );
+  MatchingSelection matching_selection = event.get(h_matching_selection);
+
+  event.set(h_pdgId_Q1, matching_selection.FlavourQ1() );
+  event.set(h_pdgId_Q2, matching_selection.FlavourQ2() );
   
   vector<Jet> subjets = topjets->at(0).subjets();
   vector<PFParticle>* allparticles = event.pfparticles;
@@ -172,10 +171,10 @@ bool WriteOutput::process(uhh2::Event & event){
     }
   }
 
-  bool IsMergedTop = matching_selection->passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedTop);
-  bool IsMergedQB  = matching_selection->passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedQB);
-  bool IsMergedWZ  = matching_selection->passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedV);
-  bool IsNotMerged = matching_selection->passes_matching(event.topjets->at(0),MatchingSelection::oIsNotMerged);
+  bool IsMergedTop = matching_selection.passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedTop);
+  bool IsMergedQB  = matching_selection.passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedQB);
+  bool IsMergedWZ  = matching_selection.passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedV);
+  bool IsNotMerged = matching_selection.passes_matching(event.topjets->at(0),MatchingSelection::oIsNotMerged);
 
   // std::cout << "IsMergedTop : IsMergedQB : IsMergedWZ : IsNotMerged"<< std::endl;
   // std::cout << IsMergedTop << " : " << IsMergedQB << " : " << IsMergedWZ << " : " << IsNotMerged<< std::endl;

@@ -7,12 +7,13 @@
 #include <TFile.h>
 #include <TH2.h>
 #include "TUnfoldBinning.h"
+#include "UHH2/JetMass/include/MatchingSelections.h"
 
 using namespace std;
 
 class UnfoldingHists: public uhh2::Hists {
 public:
-  UnfoldingHists(uhh2::Context & ctx, const std::string & dirname, const string & reco_sel_handle_name, const string & gen_sel_handle_name);
+  UnfoldingHists(uhh2::Context & ctx, const std::string & dirname, const string & reco_sel_handle_name, const string & gen_sel_handle_name, const string & matching_sel_handle_name);
 
   virtual void fill(const uhh2::Event & ev) override;
   virtual ~UnfoldingHists();
@@ -23,11 +24,20 @@ protected:
   
   uhh2::Event::Handle<bool> reco_sel_handle;
   uhh2::Event::Handle<bool> gen_sel_handle;
+  uhh2::Event::Handle<MatchingSelection> matching_sel_handle;
   
   TUnfoldBinning* detector_binning_msd_pt;
   TUnfoldBinning* generator_binning_msd_pt;
   TH2D *h_pt_msd_response;
   TH1D *h_msd_detector, *h_msd_generator;
+
+  TH2D *h_pt_msd_response_matched;
+  TH1D *h_msd_detector_matched, *h_msd_generator_matched;
+  
+  TH2D *h_pt_msd_response_unmatched;
+  TH1D *h_msd_detector_unmatched, *h_msd_generator_unmatched;
+  bool isTTbarSel,isVJetsSel;
+
   
   
   const std::vector<double> pt_edges = {200.00,250.00,300.00,350.00,400.00,450.00,500.00,550.00,600.00,650.00,700.00,750.00,800.00,850.00,900.00,950.00,1000.00,1050.00,1100.00,1150.00,1200.00};
