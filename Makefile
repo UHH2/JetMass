@@ -4,7 +4,7 @@ LHAPDFLIB=$(shell scram tool tag LHAPDF LIBDIR)
 FJINC=$(shell scram tool tag FASTJET INCLUDE) #added
 FJLIB=$(shell scram tool tag FASTJET LIBDIR) #added
 USERCXXFLAGS := -I${LHAPDFINC}
-USERLDFLAGS := -lSUHH2core -lSUHH2common -lGenVector -lSUHH2JetMETObjects -L${LHAPDFLIB} -lLHAPDF
+USERLDFLAGS := -lUnfold -lSUHH2core -lSUHH2common -lGenVector -lSUHH2JetMETObjects -L${LHAPDFLIB} -lLHAPDF
 
 USERCXXFLAGS += -I${FJINC} #added
 USERLDFLAGS += -L${FJLIB} -lfastjettools -lfastjet #added 
