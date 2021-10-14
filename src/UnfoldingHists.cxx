@@ -1,4 +1,5 @@
 #include "UHH2/JetMass/include/UnfoldingHists.h"
+#include "UHH2/JetMass/include/JetMassUtils.h"
 #include "UHH2/core/include/Event.h"
 
 #include "TH1F.h"
@@ -8,12 +9,18 @@
 using namespace std;
 using namespace uhh2;
 
-UnfoldingHists::UnfoldingHists(Context & ctx, const string & dirname, const string & reco_sel_handle_name, const string & gen_sel_handle_name, const string & matching_sel_handle_name):Hists(ctx, dirname){
+UnfoldingHists::UnfoldingHists(Context & ctx, const string & dirname, const std::vector<double> msd_edges, const std::vector<double> pt_edges, const string & reco_sel_handle_name, const string & gen_sel_handle_name, const string & matching_sel_handle_name, const string & recotopjet_handle_name, const string & gentopjet_handle_name):Hists(ctx, dirname){
   
   auto dataset_type = ctx.get("dataset_type");
   isMC = dataset_type == "MC";
   auto version = ctx.get("dataset_version");
-  std::cout << "setting up Unfolding Hists" << std::endl;
+  dirname_=dirname;
+  
+  isTTbarSel = false;
+  isVJetsSel = false;
+
+  if(dirname == "unfolding_hists")debug=true;
+  else debug=false;
 
   const std::string& selection_ = ctx.get("selection", "");
   if     (selection_ == "ttbar") isTTbarSel = true;
@@ -26,100 +33,210 @@ UnfoldingHists::UnfoldingHists(Context & ctx, const string & dirname, const stri
   reco_sel_handle = ctx.get_handle<bool> (reco_sel_handle_name);
 
   matching_sel_handle = ctx.get_handle<MatchingSelection>(matching_sel_handle_name);
+
+  recotopjet_handle = ctx.get_handle<const TopJet*>(recotopjet_handle_name);
+  gentopjet_handle = ctx.get_handle<const GenTopJet*>(gentopjet_handle_name);
   
-  std::string N2DDT_file_path = "JetMass/Histograms/ddtmaps/QCD_2017_PFMass_smooth_gaus4p00sigma.root";
-  std::string N2DDT_hist_name = "N2_v_pT_v_rho_0p05_smooth_gaus4p00sigma_maps_cleaner_PFMass";  
-  TFile* f_N2DDT = new TFile(locate_file(N2DDT_file_path).c_str(),"READ");  
-  h_N2DDT = (TH2D*)f_N2DDT->Get(N2DDT_hist_name.c_str());
-  
-  //TUnfoldBinning * a = new TUnfoldBinning("a");
-  detector_binning_msd_pt = new TUnfoldBinning("detector");
-  
-  detector_binning_msd_pt->AddAxis("msd",msd_edges.size()-1,msd_edges.data(),true,true);
-  detector_binning_msd_pt->AddAxis("pt",pt_edges.size()-1,pt_edges.data(),true,true);
+  //Binning without Underflow/Overflow
+  detector_binning_msd_pt = new TUnfoldBinning("detector");  
+  detector_binning_msd_pt->AddAxis("msd",msd_edges.size()-1,msd_edges.data(),false,false);
+  detector_binning_msd_pt->AddAxis("pt",pt_edges.size()-1,pt_edges.data(),false,false);
   
   generator_binning_msd_pt = new TUnfoldBinning("generator");
-  generator_binning_msd_pt->AddAxis("msd",msd_edges.size()-1,msd_edges.data(),true,true);
-  generator_binning_msd_pt->AddAxis("pt",pt_edges.size()-1,pt_edges.data(),true,true);
+  generator_binning_msd_pt->AddAxis("msd",msd_edges.size()-1,msd_edges.data(),false,false);
+  generator_binning_msd_pt->AddAxis("pt",pt_edges.size()-1,pt_edges.data(),false,false);
   
   TH2D* h_pt_msd_response_tmp = TUnfoldBinning::CreateHistogramOfMigrations(generator_binning_msd_pt, detector_binning_msd_pt, "hist_msd_pt_response_tmp");
   h_pt_msd_response = copy_book_th2d(h_pt_msd_response_tmp, "hist_msd_pt_response");
-  h_pt_msd_response_matched = copy_book_th2d(h_pt_msd_response_tmp, "hist_msd_pt_response_matched");
+  h_pt_msd_response_matched_cat1 = copy_book_th2d(h_pt_msd_response_tmp, "hist_msd_pt_response_matched_cat1");
+  h_pt_msd_response_matched_cat2 = copy_book_th2d(h_pt_msd_response_tmp, "hist_msd_pt_response_matched_cat2");
   h_pt_msd_response_unmatched = copy_book_th2d(h_pt_msd_response_tmp, "hist_msd_pt_response_unmatched");
   delete h_pt_msd_response_tmp;
   
   TH1* h_msd_detector_tmp = detector_binning_msd_pt->CreateHistogram("hist_msd_detector_tmp");
   h_msd_detector = copy_book_th1d(h_msd_detector_tmp,"hist_msd_detector");
-  h_msd_detector_matched = copy_book_th1d(h_msd_detector_tmp,"hist_msd_detector_matched");
+  h_msd_detector_matched_cat1 = copy_book_th1d(h_msd_detector_tmp,"hist_msd_detector_matched_cat1");
+  h_msd_detector_matched_cat2 = copy_book_th1d(h_msd_detector_tmp,"hist_msd_detector_matched_cat2");
   h_msd_detector_unmatched = copy_book_th1d(h_msd_detector_tmp,"hist_msd_detector_unmatched");
   delete h_msd_detector_tmp;
    
   TH1* h_msd_generator_tmp = generator_binning_msd_pt->CreateHistogram("hist_msd_generator_tmp");
   h_msd_generator = copy_book_th1d(h_msd_generator_tmp,"hist_msd_generator");
-  h_msd_generator_matched = copy_book_th1d(h_msd_generator_tmp,"hist_msd_generator_matched");
+  h_msd_generator_matched_cat1 = copy_book_th1d(h_msd_generator_tmp,"hist_msd_generator_matched_cat1");
+  h_msd_generator_matched_cat2 = copy_book_th1d(h_msd_generator_tmp,"hist_msd_generator_matched_cat2");
   h_msd_generator_unmatched = copy_book_th1d(h_msd_generator_tmp,"hist_msd_generator_unmatched");
   delete h_msd_generator_tmp;
+
+  //Binning with Underflow/Overflow
+  detector_binning_msd_pt_flow = new TUnfoldBinning("detector_flow");
   
+  detector_binning_msd_pt_flow->AddAxis("msd",msd_edges.size()-1,msd_edges.data(),true,true);
+  detector_binning_msd_pt_flow->AddAxis("pt",pt_edges.size()-1,pt_edges.data(),true,true);
+  
+  generator_binning_msd_pt_flow = new TUnfoldBinning("generator_flow");
+  generator_binning_msd_pt_flow->AddAxis("msd",msd_edges.size()-1,msd_edges.data(),true,true);
+  generator_binning_msd_pt_flow->AddAxis("pt",pt_edges.size()-1,pt_edges.data(),true,true);
+  
+  TH2D* h_pt_msd_response_flow_tmp = TUnfoldBinning::CreateHistogramOfMigrations(generator_binning_msd_pt_flow, detector_binning_msd_pt_flow, "hist_msd_pt_response_flow_tmp");
+  h_pt_msd_response_flow = copy_book_th2d(h_pt_msd_response_flow_tmp, "hist_msd_pt_response_flow");
+  h_pt_msd_response_matched_cat1_flow = copy_book_th2d(h_pt_msd_response_flow_tmp, "hist_msd_pt_response_matched_cat1_flow");
+  h_pt_msd_response_matched_cat2_flow = copy_book_th2d(h_pt_msd_response_flow_tmp, "hist_msd_pt_response_matched_cat2_flow");
+  h_pt_msd_response_unmatched_flow = copy_book_th2d(h_pt_msd_response_flow_tmp, "hist_msd_pt_response_unmatched_flow");
+  delete h_pt_msd_response_flow_tmp;
+  
+  TH1* h_msd_detector_flow_tmp = detector_binning_msd_pt_flow->CreateHistogram("hist_msd_detector_flow_tmp");
+  h_msd_detector_flow = copy_book_th1d(h_msd_detector_flow_tmp,"hist_msd_detector_flow");
+  h_msd_detector_matched_cat1_flow = copy_book_th1d(h_msd_detector_flow_tmp,"hist_msd_detector_matched_cat1_flow");
+  h_msd_detector_matched_cat2_flow = copy_book_th1d(h_msd_detector_flow_tmp,"hist_msd_detector_matched_cat2_flow");
+  h_msd_detector_unmatched_flow = copy_book_th1d(h_msd_detector_flow_tmp,"hist_msd_detector_unmatched_flow");
+  delete h_msd_detector_flow_tmp;
+   
+  TH1* h_msd_generator_flow_tmp = generator_binning_msd_pt_flow->CreateHistogram("hist_msd_generator_flow_tmp");
+  h_msd_generator_flow = copy_book_th1d(h_msd_generator_flow_tmp,"hist_msd_generator_flow");
+  h_msd_generator_matched_cat1_flow = copy_book_th1d(h_msd_generator_flow_tmp,"hist_msd_generator_matched_cat1_flow");
+  h_msd_generator_matched_cat2_flow = copy_book_th1d(h_msd_generator_flow_tmp,"hist_msd_generator_matched_cat2_flow");
+  h_msd_generator_unmatched_flow = copy_book_th1d(h_msd_generator_flow_tmp,"hist_msd_generator_unmatched_flow");
+  delete h_msd_generator_flow_tmp;
+
+
+  h_control_gen_tau21 = book<TH1D>("control_gen_tau21","control_gen_tau21",100,-1,1);
+  h_control_reco_tau21 = book<TH1D>("control_reco_tau21","control_reco_tau21",100,-1,1);
+
+  h_control_gen_tau32 = book<TH1D>("control_gen_tau32","control_gen_tau32",100,-1,1);
+  h_control_reco_tau32 = book<TH1D>("control_reco_tau32","control_reco_tau32",100,-1,1);
+
+  h_control_gen_N2 = book<TH1D>("control_gen_N2","control_gen_N2",100,-1,1);
+  h_control_reco_N2 = book<TH1D>("control_reco_N2","control_reco_N2",100,-1,1);
+
 }
 
 void UnfoldingHists::fill(const Event & event){
+  //don't fill for Data
+  if(!isMC)return;
   auto weight = event.weight;
   if(event.topjets->size() <1) return;
   auto jet = event.topjets->at(0);
-
   MatchingSelection matching_selection = event.get(matching_sel_handle);
-  // TH1D* h = h_msd_generator;
-  // // TH2D* h = h_pt_msd_response;
-  // std::cout << h->GetTitle() <<
-  //   " NbinsX=" << h->GetNbinsX() <<
-  //   " XMin=" << h->GetXaxis()->GetXmin() <<
-  //   " XMax=" << h->GetXaxis()->GetXmax() <<
-  //   " NbinsY=" << h->GetNbinsY() <<
-  //   " YMin=" << h->GetYaxis()->GetXmin()<<
-  //   " YMax=" <<h->GetYaxis()->GetXmax() << std::endl;
 
   bool pass_reco = event.get(reco_sel_handle);
-  bool pass_gen(false);
-  if(isMC){
-    pass_gen = event.get(gen_sel_handle);
-  }
+  bool pass_gen = event.get(gen_sel_handle);
 
+  //get gentopjet from handle if valid and fallback to leading gentopjet in event if exists.
+  const GenTopJet *gentopjet(NULL);
+  if(event.is_valid(gentopjet_handle))gentopjet = event.get(gentopjet_handle);
+  else{
+    if(event.gentopjets->size()>0)gentopjet = &event.gentopjets->at(0);
+  }
+  //get gentopjet from handle if valid and fallback to leading topjet in event if exists.
+  const TopJet *recotopjet(NULL);
+  if(event.is_valid(recotopjet_handle))recotopjet = event.get(recotopjet_handle);
+  else{
+    if(event.topjets->size()>0)recotopjet = &event.topjets->at(0);
+  }
+  
+
+  if(gentopjet==nullptr && recotopjet==nullptr){
+    throw std::runtime_error("UnfoldingHists: No valid jet handles were provided and there are no leading gen- & reco-topjets in the event. Skipping UnfoldingHist filling!");
+    return;
+  }
+  
   int reco_bin(0), gen_bin(0);
+  int reco_bin_flow(0), gen_bin_flow(0);
   
   if(pass_reco || pass_gen){
     float gen_pt(-1.0),gen_msd(-1.0);
     float reco_pt(-1.0),reco_msd(-1.0);
-    if(pass_reco){
-      reco_pt = event.topjets->at(0).pt();
-      reco_msd = event.topjets->at(0).softdropmass();
+    if(pass_reco && recotopjet){
+      reco_pt = recotopjet->pt();
+      reco_msd = recotopjet->softdropmass();
       reco_bin = detector_binning_msd_pt->GetGlobalBinNumber(reco_msd, reco_pt);
+      reco_bin_flow = detector_binning_msd_pt_flow->GetGlobalBinNumber(reco_msd, reco_pt);
+
+      h_control_reco_tau21->Fill(safe_tau21(recotopjet), weight);
+      h_control_reco_tau32->Fill(safe_tau32(recotopjet), weight);
+      h_control_reco_N2->Fill(recotopjet->ecfN2_beta1(), weight);
     }
-    if(pass_gen){
-      if(event.gentopjets->size()>0){
-      gen_pt = event.gentopjets->at(0).pt();
-      gen_msd = event.gentopjets->at(0).softdropmass();
+    if(pass_gen && gentopjet){
+      gen_pt = gentopjet->pt();
+      gen_msd = gentopjet->softdropmass();
       gen_bin = generator_binning_msd_pt->GetGlobalBinNumber(gen_msd, gen_pt);
-      }
+      gen_bin_flow = generator_binning_msd_pt_flow->GetGlobalBinNumber(gen_msd, gen_pt);
+
+      h_control_gen_tau21->Fill(safe_tau21(gentopjet), weight);
+      h_control_gen_tau32->Fill(safe_tau32(gentopjet), weight);
+      h_control_gen_N2->Fill(gentopjet->ecfN2_beta1(), weight);
     }
     h_pt_msd_response->Fill(gen_bin, reco_bin, weight);
     h_msd_detector->Fill(reco_bin, weight);
     h_msd_generator->Fill(gen_bin, weight);
-    bool matched(false);
-    if(isVJetsSel) matched = matching_selection.passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedV);
-    if(isTTbarSel) matched = matching_selection.passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedTop);
-    if(matched){
-      h_pt_msd_response_matched->Fill(gen_bin, reco_bin, weight);
-      h_msd_detector_matched->Fill(reco_bin, weight);
-      h_msd_generator_matched->Fill(gen_bin, weight);
+    //with Under-/Overflow
+    h_pt_msd_response_flow->Fill(gen_bin_flow, reco_bin_flow, weight);
+    h_msd_detector_flow->Fill(reco_bin_flow, weight);
+    h_msd_generator_flow->Fill(gen_bin_flow, weight);
+
+    bool reco_parton_matched_cat1(false),reco_parton_matched_cat2(false);
+    bool gen_parton_matched_cat1(false),gen_parton_matched_cat2(false);
+    if(isVJetsSel){
+      if(recotopjet)reco_parton_matched_cat1 = matching_selection.passes_matching(*recotopjet,MatchingSelection::oIsMergedV);
+      
+      if(gentopjet)gen_parton_matched_cat1 = matching_selection.passes_matching(*gentopjet,MatchingSelection::oIsMergedV);
+    }
+    if(isTTbarSel){
+      if(recotopjet)reco_parton_matched_cat1 = matching_selection.passes_matching(*recotopjet,MatchingSelection::oIsMergedTop);
+      if(recotopjet)reco_parton_matched_cat2 = matching_selection.passes_matching(*recotopjet,MatchingSelection::oIsMergedV) || matching_selection.passes_matching(*recotopjet,MatchingSelection::oIsMergedQB);
+
+      if(gentopjet)gen_parton_matched_cat1 = matching_selection.passes_matching(*gentopjet,MatchingSelection::oIsMergedTop);
+      if(gentopjet)gen_parton_matched_cat2 = matching_selection.passes_matching(*gentopjet,MatchingSelection::oIsMergedV) || matching_selection.passes_matching(*gentopjet,MatchingSelection::oIsMergedQB);
+    }
+    
+    if(reco_parton_matched_cat1 || gen_parton_matched_cat1){
+      int reco_bin_matched(0),gen_bin_matched(0);
+      int reco_bin_flow_matched(0),gen_bin_flow_matched(0);
+      if(reco_parton_matched_cat1){
+        reco_bin_matched = reco_bin;
+        reco_bin_flow_matched = reco_bin_flow;
+
+        h_msd_detector_matched_cat1->Fill(reco_bin, weight);        
+        h_msd_detector_matched_cat1_flow->Fill(reco_bin_flow, weight);
+      }
+      if(gen_parton_matched_cat1){
+        gen_bin_matched = gen_bin;
+        gen_bin_flow_matched = gen_bin_flow;
+        h_msd_generator_matched_cat1->Fill(gen_bin_matched, weight);        
+        h_msd_generator_matched_cat1_flow->Fill(gen_bin_flow, weight);
+      }
+      h_pt_msd_response_matched_cat1->Fill(gen_bin_matched, reco_bin_matched, weight);
+      h_pt_msd_response_matched_cat1_flow->Fill(gen_bin_flow_matched, reco_bin_flow_matched, weight);
+    }else if((reco_parton_matched_cat2 || gen_parton_matched_cat2) && isTTbarSel){
+      int reco_bin_matched(0),gen_bin_matched(0);
+      int reco_bin_flow_matched(0),gen_bin_flow_matched(0);
+      if(reco_parton_matched_cat2){
+        reco_bin_matched = reco_bin;
+        reco_bin_flow_matched = reco_bin_flow;
+        
+        h_msd_detector_matched_cat2->Fill(reco_bin, weight);        
+        h_msd_detector_matched_cat2_flow->Fill(reco_bin_flow, weight);
+      }
+      if(gen_parton_matched_cat2){
+        gen_bin_matched = gen_bin;
+        gen_bin_flow_matched = gen_bin_flow;
+        h_msd_generator_matched_cat2->Fill(gen_bin_matched, weight);        
+        h_msd_generator_matched_cat2_flow->Fill(gen_bin_flow, weight);
+      }
+      h_pt_msd_response_matched_cat2->Fill(gen_bin_matched, reco_bin_matched, weight);
+      h_pt_msd_response_matched_cat2_flow->Fill(gen_bin_flow_matched, reco_bin_flow_matched, weight);
     }else{
       h_pt_msd_response_unmatched->Fill(gen_bin, reco_bin, weight);
       h_msd_detector_unmatched->Fill(reco_bin, weight);
       h_msd_generator_unmatched->Fill(gen_bin, weight);
+      h_pt_msd_response_unmatched_flow->Fill(gen_bin_flow, reco_bin_flow, weight);
+      h_msd_detector_unmatched_flow->Fill(reco_bin_flow, weight);
+      h_msd_generator_unmatched_flow->Fill(gen_bin_flow, weight);
     }      
   }
-    
-}
   
+}
+
 
 
 UnfoldingHists::~UnfoldingHists(){}

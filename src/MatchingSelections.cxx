@@ -57,7 +57,7 @@ using namespace uhh2;
     }
   }
 
-  bool MatchingSelection::passes_matching(const TopJet &probe_jet, matchingOpt opt, float radius) {
+  bool MatchingSelection::passes_matching(const FlavorParticle &probe_jet, matchingOpt opt, float radius) {
     if(!is_VJets && !is_TTbar) return false;
 
     if(!is_valid){
@@ -66,6 +66,9 @@ using namespace uhh2;
     }
 
     bool b_in_Jet = is_TTbar ? deltaR(probe_jet, genB) < radius : false;
+    float dr_q1_Jet = deltaR(probe_jet, genQ1);
+    float dr_q2_Jet = deltaR(probe_jet, genQ2);
+    //std::cout << "dR jet,qi : " << dr_q1_Jet << " " << dr_q2_Jet << std::endl;
     bool q1_in_Jet = deltaR(probe_jet, genQ1) < radius;
     bool q2_in_Jet = deltaR(probe_jet, genQ2) < radius;
 

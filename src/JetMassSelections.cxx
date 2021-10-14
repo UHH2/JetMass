@@ -7,6 +7,23 @@
 using namespace uhh2;
 using namespace std;
 
+template<typename GenericJet>
+bool JetIdSelection<GenericJet>::passes(const uhh2::Event & event){
+  if(!event.is_valid(jet_handle)) throw std::runtime_error("JetIdSelection: jet handle is invalid!");
+  const GenericJet * jet = event.get(jet_handle);
+  if(!jet)return false;
+  return jet_id(*jet,event);
+}
+
+
+template<typename GenericTopJet>
+bool RhoCut<GenericTopJet>::passes(const uhh2::Event &event){
+  if(!event.is_valid(jet_handle))return false;
+  const GenericTopJet *jet = event.get(jet_handle);
+  if(jet == nullptr) return false;
+  double rho=2*TMath::Log(jet->softdropmass()/jet->pt());
+  return ( rho < rho_max ) && ( rho > rho_min);
+}
 
 MassCut::MassCut(){}
 

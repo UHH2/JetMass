@@ -27,10 +27,12 @@ public:
 
   void init(const uhh2::Event & event);
   
-  bool passes_matching(const TopJet &probe_jet, matchingOpt opt, float radius = 0.8);
+  bool passes_matching(const FlavorParticle &probe_jet, matchingOpt opt, float radius = 0.8);
 
   int FlavourQ1() const;
   int FlavourQ2() const;
+
+  const GenParticle * get_genV(){return &genV;};
   
 private:
   bool initialzed, is_VJets, is_TTbar,is_valid;

@@ -12,6 +12,36 @@
 #include <vector>
 
 
+template<typename GenericJet>
+class JetIdSelection: public uhh2::Selection {
+public:
+  explicit JetIdSelection(uhh2::Context & ctx, const std::function<bool (const GenericJet &, const uhh2::Event &)> jet_id_, const std::string jet_handlename=""):jet_handle(ctx.get_handle<const GenericJet*>(jet_handlename)),jet_id(jet_id_){};
+  virtual bool passes(const uhh2::Event & event) override;  
+private:
+  uhh2::Event::Handle<const GenericJet*> jet_handle;
+  const std::function<bool (const GenericJet &, const uhh2::Event &)> jet_id;
+};
+
+template class JetIdSelection<Jet>;
+template class JetIdSelection<TopJet>;
+template class JetIdSelection<GenJet>;
+template class JetIdSelection<GenTopJet>;
+
+
+
+template<typename GenericTopJet>
+class RhoCut: public uhh2::Selection {
+public:
+  explicit RhoCut(uhh2::Context & ctx, double rho_min_ = - infinity, double rho_max_ = infinity, const std::string & jet_handlename=""): rho_min(rho_min_),rho_max(rho_max_),jet_handle(ctx.get_handle<const GenericTopJet*>(jet_handlename)){};
+  virtual bool passes(const uhh2::Event & event) override;
+  
+private:
+  double rho_min,rho_max;
+  uhh2::Event::Handle<const GenericTopJet*> jet_handle;
+};
+template class RhoCut<TopJet>;
+template class RhoCut<GenTopJet>;
+
 class MassCut: public uhh2::Selection {
 public:
     MassCut();
@@ -96,3 +126,5 @@ class TTbarGenSemilepSelection: public uhh2::Selection {
   uhh2::Event::Handle<TTbarGen> h_ttbargen;
   float mu_pt_min,mu_pt_max;
 };
+
+
