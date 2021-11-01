@@ -96,7 +96,7 @@ NLOWeights::NLOWeights(uhh2::Context & ctx, const std::string & genjet_handlenam
     genjet_handle = ctx.get_handle<const GenTopJet*>(genjet_handlename);
     // recojet_handle = ctx.get_handle<const TopJet*>(recojet_handlename);
     
-    std::string NLOWeightsFilename =  "UHHNtupleConverter/NLOweights" + (std::string)(version.Contains("W") ? "/WJets" : "/ZJets") + "Corr.root";
+    std::string NLOWeightsFilename =  "JetMass/NLOweights" + (std::string)(version.Contains("W") ? "/WJets" : "/ZJets") + "Corr.root";
     
     TFile * NLOWeightsFile = new TFile(locate_file(NLOWeightsFilename).c_str());
     h_kfactor = (TH1F*) NLOWeightsFile->Get("kfactor");
