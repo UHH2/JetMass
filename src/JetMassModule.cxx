@@ -1,6 +1,14 @@
 #include <iostream>
 #include <memory>
 
+
+#ifdef CMSSW_10_6_28
+#include "UHH2/JetMass/include/JetMassUtils106X.h"
+#else
+#include "UHH2/JetMass/include/JetMassUtils102X.h"
+#endif
+
+  
 #include "UHH2/core/include/AnalysisModule.h"
 #include "UHH2/core/include/Event.h"
 #include "UHH2/common/include/CommonModules.h"
@@ -16,9 +24,6 @@
 #include "UHH2/common/include/JetCorrections.h"
 #include "UHH2/common/include/YearRunSwitchers.h"
 #include "UHH2/common/include/Utils.h" //mainly for runPeriods vectors
-
-#include "UHH2/common/include/ElectronIds.h"
-#include "UHH2/common/include/MuonIds.h"
 
 #include "UHH2/common/include/ElectronHists.h"
 #include "UHH2/common/include/EventHists.h"
@@ -140,8 +145,10 @@ JetMassModule::JetMassModule(Context & ctx){
   do_genStudies = string2bool(ctx.get("doGenStudies", "true"));
   
   // common modules
-  MuonId muid = AndId<Muon>(MuonID(Muon::CutBasedIdTight), PtEtaCut(55., 2.4));
-  ElectronId eleid = AndId<Electron>(ElectronID_Fall17_medium_noIso, PtEtaCut(55., 2.4));
+  // MuonId muid = AndId<Muon>(MuonID(Muon::CutBasedIdTight), PtEtaCut(55., 2.4));
+  // ElectronId eleid = AndId<Electron>(ElectronID_Fall17_medium_noIso, PtEtaCut(55., 2.4));
+  // // ElectronId eleid = AndId<Electron>(ElectronTagID(Electron::tagname2tag("cutBasedElectronID-Fall17-94X-V2-medium")), PtEtaCut(55., 2.4));
+
   JetId jetid = AndId<Jet>(JetPFID(JetPFID::WP_TIGHT_CHS), PtEtaCut(30.0, 2.4));
 
 
