@@ -65,14 +65,26 @@ void TopJetCorrections::init(Context & ctx){
     tjet_corrector_MC->setup2016(std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_2016, tjec_ver_2016, tjec_tjet_coll)));
     tjet_corrector_MC->setup2017(std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_2017, tjec_ver_2017, tjec_tjet_coll)));
     tjet_corrector_MC->setup2018(std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_2018, tjec_ver_2018, tjec_tjet_coll)));
+    tjet_corrector_MC->setupUL16preVFP(std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_UL16preVFP, tjec_ver_UL16preVFP, tjec_tjet_coll)));
+    tjet_corrector_MC->setupUL16postVFP(std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_UL16postVFP, tjec_ver_UL16postVFP, tjec_tjet_coll)));
+    tjet_corrector_MC->setupUL17(std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_UL17, tjec_ver_UL17, tjec_tjet_coll)));
+    tjet_corrector_MC->setupUL18(std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_UL18, tjec_ver_UL18, tjec_tjet_coll)));
 
     std::string jer_tag = "";
     if (year == Year::is2016v2 || year == Year::is2016v3) {
-      jer_tag = "Summer16_25nsV1";
+      jer_tag = tjer_tag_2016;
     } else if (year == Year::is2017v1 || year == Year::is2017v2) {
-      jer_tag = "Fall17_V3";
+      jer_tag = tjer_tag_2017;
     } else if (year == Year::is2018) {
-      jer_tag = "Autumn18_V7";
+      jer_tag = tjer_tag_2018;
+    } else if (year == Year::isUL16preVFP) {
+      jer_tag = tjer_tag_UL16preVFP;
+    } else if (year == Year::isUL16postVFP) {
+      jer_tag = tjer_tag_UL16postVFP;
+    } else if (year == Year::isUL17) {
+      jer_tag = tjer_tag_UL17;
+    } else if (year == Year::isUL18) {
+      jer_tag = tjer_tag_UL18;
     } else {
       throw runtime_error("Cannot find suitable jet resolution file & scale factors for this year for JetResolutionSmearer");
     }
@@ -95,10 +107,35 @@ void TopJetCorrections::init(Context & ctx){
       tjec_switcher_18->setupRun(runItr, std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_2018, tjec_ver_2018, tjec_tjet_coll, runItr)));
     }
 
+    tjec_switcher_UL16preVFP.reset(new RunSwitcher(ctx, "UL16preVFP"));
+    for (const auto & runItr : runPeriodsUL16preVFP) {
+      tjec_switcher_UL16preVFP->setupRun(runItr, std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_UL16preVFP, tjec_ver_UL16preVFP, tjec_tjet_coll, runItr)));
+    }
+
+    tjec_switcher_UL16postVFP.reset(new RunSwitcher(ctx, "UL16postVFP"));
+    for (const auto & runItr : runPeriodsUL16postVFP) {
+      tjec_switcher_UL16postVFP->setupRun(runItr, std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_UL16postVFP, tjec_ver_UL16postVFP, tjec_tjet_coll, runItr)));
+    }
+
+    tjec_switcher_UL17.reset(new RunSwitcher(ctx, "UL17"));
+    for (const auto & runItr : runPeriods2017) {
+      tjec_switcher_UL17->setupRun(runItr, std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_UL17, tjec_ver_UL17, tjec_tjet_coll, runItr)));
+    }
+
+    tjec_switcher_UL18.reset(new RunSwitcher(ctx, "UL18"));
+    for (const auto & runItr : runPeriods2018) {
+      tjec_switcher_UL18->setupRun(runItr, std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_UL18, tjec_ver_UL18, tjec_tjet_coll, runItr)));
+    }
+
     tjet_corrector_data.reset(new YearSwitcher(ctx));
     tjet_corrector_data->setup2016(tjec_switcher_16);
     tjet_corrector_data->setup2017(tjec_switcher_17);
     tjet_corrector_data->setup2018(tjec_switcher_18);
+
+    tjet_corrector_data->setup2016(tjec_switcher_UL16preVFP);
+    tjet_corrector_data->setup2016(tjec_switcher_UL16postVFP);
+    tjet_corrector_data->setup2017(tjec_switcher_UL17);
+    tjet_corrector_data->setup2018(tjec_switcher_UL18);
   }
 }
 
@@ -182,11 +219,16 @@ StandaloneTopJetCorrector::StandaloneTopJetCorrector(uhh2::Context& ctx){
   std::unordered_map<std::string,std::vector<std::string>> jec_mc_files = {
     {"2016",JERFiles::JECFilesMC(TopJetCorrections::tjec_tag_2016, TopJetCorrections::tjec_ver_2016, tjec_tjet_coll)},
     {"2017",JERFiles::JECFilesMC(TopJetCorrections::tjec_tag_2017, TopJetCorrections::tjec_ver_2017, tjec_tjet_coll)},
-    {"2018",JERFiles::JECFilesMC(TopJetCorrections::tjec_tag_2018, TopJetCorrections::tjec_ver_2018, tjec_tjet_coll)}
+    {"2018",JERFiles::JECFilesMC(TopJetCorrections::tjec_tag_2018, TopJetCorrections::tjec_ver_2018, tjec_tjet_coll)},
+    {"UL16preVFP",JERFiles::JECFilesMC(TopJetCorrections::tjec_tag_UL16preVFP, TopJetCorrections::tjec_ver_UL16preVFP, tjec_tjet_coll)},
+    {"UL16postVFP",JERFiles::JECFilesMC(TopJetCorrections::tjec_tag_UL16postVFP, TopJetCorrections::tjec_ver_UL16postVFP, tjec_tjet_coll)},
+    {"UL17",JERFiles::JECFilesMC(TopJetCorrections::tjec_tag_UL17, TopJetCorrections::tjec_ver_UL17, tjec_tjet_coll)},
+    {"UL18",JERFiles::JECFilesMC(TopJetCorrections::tjec_tag_UL18, TopJetCorrections::tjec_ver_UL18, tjec_tjet_coll)}
   };
     
   std::unordered_map<std::string,std::map<std::string,std::vector<std::string>>> jec_data_files;
   std::map<std::string,std::vector<std::string>> jec_data_files_16,jec_data_files_17,jec_data_files_18;
+  std::map<std::string,std::vector<std::string>> jec_data_files_UL16preVFP,jec_data_files_UL16postVFP,jec_data_files_UL17,jec_data_files_UL18;
   for (const auto runPeriod : year2runPeriods("2016")) {
     jec_data_files_16[runPeriod] = JERFiles::JECFilesDATA(TopJetCorrections::tjec_tag_2016, TopJetCorrections::tjec_ver_2016, tjec_tjet_coll,runPeriod);
   }
@@ -196,9 +238,25 @@ StandaloneTopJetCorrector::StandaloneTopJetCorrector(uhh2::Context& ctx){
   for (const auto runPeriod : year2runPeriods("2018")) {
     jec_data_files_18[runPeriod] = JERFiles::JECFilesDATA(TopJetCorrections::tjec_tag_2018, TopJetCorrections::tjec_ver_2018, tjec_tjet_coll,runPeriod);
   }
+  for (const auto runPeriod : year2runPeriods("UL16preVFP")) {
+    jec_data_files_UL16preVFP[runPeriod] = JERFiles::JECFilesDATA(TopJetCorrections::tjec_tag_UL16preVFP, TopJetCorrections::tjec_ver_UL16preVFP, tjec_tjet_coll,runPeriod);
+  }
+  for (const auto runPeriod : year2runPeriods("UL16postVFP")) {
+    jec_data_files_UL16postVFP[runPeriod] = JERFiles::JECFilesDATA(TopJetCorrections::tjec_tag_UL16postVFP, TopJetCorrections::tjec_ver_UL16postVFP, tjec_tjet_coll,runPeriod);
+  }
+  for (const auto runPeriod : year2runPeriods("UL17")) {
+    jec_data_files_UL17[runPeriod] = JERFiles::JECFilesDATA(TopJetCorrections::tjec_tag_UL17, TopJetCorrections::tjec_ver_UL17, tjec_tjet_coll,runPeriod);
+  }
+  for (const auto runPeriod : year2runPeriods("UL18")) {
+    jec_data_files_UL18[runPeriod] = JERFiles::JECFilesDATA(TopJetCorrections::tjec_tag_UL18, TopJetCorrections::tjec_ver_UL18, tjec_tjet_coll,runPeriod);
+  }
   jec_data_files["2016"] = jec_data_files_16;
   jec_data_files["2017"] = jec_data_files_17;
   jec_data_files["2018"] = jec_data_files_18;
+  jec_data_files["UL16preVFP"] = jec_data_files_UL16preVFP;
+  jec_data_files["UL16postVFP"] = jec_data_files_UL16postVFP;
+  jec_data_files["UL17"] = jec_data_files_UL17;
+  jec_data_files["UL18"] = jec_data_files_UL18;
     
   std::vector<JetCorrectorParameters> jec_pars_mc;
   for(const auto & filename: jec_mc_files.find(short_year)->second){
@@ -218,7 +276,11 @@ StandaloneTopJetCorrector::StandaloneTopJetCorrector(uhh2::Context& ctx){
   std::unordered_map<std::string,std::string> jer_tag = {
     {"2016",TopJetCorrections::tjer_tag_2016},
     {"2017",TopJetCorrections::tjer_tag_2017},
-    {"2018",TopJetCorrections::tjer_tag_2018} 
+    {"2018",TopJetCorrections::tjer_tag_2018},
+    {"UL16preVFP",TopJetCorrections::tjer_tag_UL16preVFP},
+    {"UL16postVFP",TopJetCorrections::tjer_tag_UL16postVFP},
+    {"UL17",TopJetCorrections::tjer_tag_UL17},
+    {"UL18",TopJetCorrections::tjer_tag_UL18}
   };
   res_sf_= JME::JetResolutionScaleFactor(locate_file(JERFiles::JERPathStringMC(jer_tag[short_year],tjec_tjet_coll,"SF")));
   resolution_ = JME::JetResolution(locate_file(JERFiles::JERPathStringMC(jer_tag[short_year],tjec_tjet_coll,"PtResolution")));

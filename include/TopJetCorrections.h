@@ -29,15 +29,31 @@ public:
   inline static const std::string tjec_tag_2018 = "Autumn18";
   inline static const std::string tjec_ver_2018 = "7";
 
+  inline static const std::string tjec_tag_UL16preVFP = "Summer19UL16APV";
+  inline static const std::string tjec_ver_UL16preVFP = "7";
+  inline static const std::string tjec_tag_UL16postVFP = "Summer19UL16";
+  inline static const std::string tjec_ver_UL16postVFP = "7";
+  inline static const std::string tjec_tag_UL17 = "Summer19UL17";
+  inline static const std::string tjec_ver_UL17 = "5";
+  inline static const std::string tjec_tag_UL18 = "Summer19UL18";
+  inline static const std::string tjec_ver_UL18 = "5";
+
   inline static const std::string tjer_tag_2016 = "Summer16_25nsV1";
   inline static const std::string tjer_tag_2017 = "Fall17_V3";
   inline static const std::string tjer_tag_2018 = "Autumn18_V7";
+
+  inline static const std::string tjer_tag_UL16preVFP = "Summer20UL16APV_JRV3";
+  inline static const std::string tjer_tag_UL16postVFP = "Summer20UL16_JRV3";
+  inline static const std::string tjer_tag_UL17 = "Summer19UL17_JRV3";
+  inline static const std::string tjer_tag_UL18 = "Summer19UL18_JRV2";
+  
 
 private:
     void fail_if_init() const;
 
     std::unique_ptr<YearSwitcher> tjet_corrector_MC, tjet_corrector_data;
     std::shared_ptr<RunSwitcher> tjec_switcher_16, tjec_switcher_17, tjec_switcher_18;
+    std::shared_ptr<RunSwitcher> tjec_switcher_UL16preVFP, tjec_switcher_UL16postVFP, tjec_switcher_UL17, tjec_switcher_UL18;
     std::unique_ptr<GenericJetResolutionSmearer> tjet_resolution_smearer;
 
     bool is_mc;
