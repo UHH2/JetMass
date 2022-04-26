@@ -19,7 +19,7 @@ void TopJetCorrections::fail_if_init() const{
 }
 
 
-TopJetCorrections::TopJetCorrections(){
+TopJetCorrections::TopJetCorrections(const std::string jet_collection_name):jet_collection_name_(jet_collection_name){
   tjec_tjet_coll = "dummy";
 }
 
@@ -37,7 +37,14 @@ void TopJetCorrections::init(Context & ctx){
 
   // setup correction tjet type for JECs
   std::string userTopJetColl = string2lowercase(ctx.get("TopJetCollection"));
+  recojet_collection = "topjets";
+  genjet_collection = "gentopjets";
 
+  if(jet_collection_name_ != ""){
+    recojet_collection = jet_collection_name_;
+    userTopJetColl = string2lowercase(recojet_collection);
+  }
+  
   std::string algo = "";
   // algo size
   if (userTopJetColl.find("ak4") != std::string::npos) {
@@ -62,13 +69,14 @@ void TopJetCorrections::init(Context & ctx){
 
   if(is_mc){
     tjet_corrector_MC.reset(new YearSwitcher(ctx));
-    tjet_corrector_MC->setup2016(std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_2016, tjec_ver_2016, tjec_tjet_coll)));
-    tjet_corrector_MC->setup2017(std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_2017, tjec_ver_2017, tjec_tjet_coll)));
-    tjet_corrector_MC->setup2018(std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_2018, tjec_ver_2018, tjec_tjet_coll)));
-    tjet_corrector_MC->setupUL16preVFP(std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_UL16preVFP, tjec_ver_UL16preVFP, tjec_tjet_coll)));
-    tjet_corrector_MC->setupUL16postVFP(std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_UL16postVFP, tjec_ver_UL16postVFP, tjec_tjet_coll)));
-    tjet_corrector_MC->setupUL17(std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_UL17, tjec_ver_UL17, tjec_tjet_coll)));
-    tjet_corrector_MC->setupUL18(std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_UL18, tjec_ver_UL18, tjec_tjet_coll)));
+
+    tjet_corrector_MC->setup2016(       std::make_shared<GenericTopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_2016,        tjec_ver_2016,        tjec_tjet_coll),recojet_collection));
+    tjet_corrector_MC->setup2017(       std::make_shared<GenericTopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_2017,        tjec_ver_2017,        tjec_tjet_coll),recojet_collection));
+    tjet_corrector_MC->setup2018(       std::make_shared<GenericTopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_2018,        tjec_ver_2018,        tjec_tjet_coll),recojet_collection));
+    tjet_corrector_MC->setupUL16preVFP( std::make_shared<GenericTopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_UL16preVFP,  tjec_ver_UL16preVFP,  tjec_tjet_coll),recojet_collection));
+    tjet_corrector_MC->setupUL16postVFP(std::make_shared<GenericTopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_UL16postVFP, tjec_ver_UL16postVFP, tjec_tjet_coll),recojet_collection));
+    tjet_corrector_MC->setupUL17(       std::make_shared<GenericTopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_UL17,        tjec_ver_UL17,        tjec_tjet_coll),recojet_collection));
+    tjet_corrector_MC->setupUL18(       std::make_shared<GenericTopJetCorrector>(ctx, JERFiles::JECFilesMC(tjec_tag_UL18,        tjec_ver_UL18,        tjec_tjet_coll),recojet_collection));
 
     std::string jer_tag = "";
     if (year == Year::is2016v2 || year == Year::is2016v3) {
@@ -89,22 +97,26 @@ void TopJetCorrections::init(Context & ctx){
       throw runtime_error("Cannot find suitable jet resolution file & scale factors for this year for JetResolutionSmearer");
     }
 
-    tjet_resolution_smearer.reset(new GenericJetResolutionSmearer(ctx, "topjets", "gentopjets", JERFiles::JERPathStringMC(jer_tag,tjec_tjet_coll,"SF"), JERFiles::JERPathStringMC(jer_tag,tjec_tjet_coll,"PtResolution")));
+    // tjet_resolution_smearer.reset(new GenericJetResolutionSmearer(ctx, "topjets", "gentopjets", JERFiles::JERPathStringMC(jer_tag,tjec_tjet_coll,"SF"), JERFiles::JERPathStringMC(jer_tag,tjec_tjet_coll,"PtResolution")));
+    tjet_resolution_smearer.reset(new GenericJetResolutionSmearer(ctx, recojet_collection, genjet_collection, JERFiles::JERPathStringMC(jer_tag,tjec_tjet_coll,"SF"), JERFiles::JERPathStringMC(jer_tag,tjec_tjet_coll,"PtResolution")));
   }
   else{
     tjec_switcher_16.reset(new RunSwitcher(ctx, "2016"));
     for (const auto & runItr : runPeriods2016) { // runPeriods defined in common/include/Utils.h
-      tjec_switcher_16->setupRun(runItr, std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_2016, tjec_ver_2016, tjec_tjet_coll, runItr)));
+      // tjec_switcher_16->setupRun(runItr, std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_2016, tjec_ver_2016, tjec_tjet_coll, runItr)));
+      tjec_switcher_16->setupRun(runItr, std::make_shared<GenericTopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_2016, tjec_ver_2016, tjec_tjet_coll, runItr),recojet_collection));
     }
 
     tjec_switcher_17.reset(new RunSwitcher(ctx, "2017"));
     for (const auto & runItr : runPeriods2017) {
-      tjec_switcher_17->setupRun(runItr, std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_2017, tjec_ver_2017, tjec_tjet_coll, runItr)));
+      // tjec_switcher_17->setupRun(runItr, std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_2017, tjec_ver_2017, tjec_tjet_coll, runItr)));
+      tjec_switcher_17->setupRun(runItr, std::make_shared<GenericTopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_2017, tjec_ver_2017, tjec_tjet_coll, runItr),recojet_collection));
     }
 
     tjec_switcher_18.reset(new RunSwitcher(ctx, "2018"));
     for (const auto & runItr : runPeriods2018) {
-      tjec_switcher_18->setupRun(runItr, std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_2018, tjec_ver_2018, tjec_tjet_coll, runItr)));
+      // tjec_switcher_18->setupRun(runItr, std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_2018, tjec_ver_2018, tjec_tjet_coll, runItr)));
+      tjec_switcher_18->setupRun(runItr, std::make_shared<GenericTopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_2018, tjec_ver_2018, tjec_tjet_coll, runItr),recojet_collection));
     }
 
     tjec_switcher_UL16preVFP.reset(new RunSwitcher(ctx, "UL16preVFP"));
@@ -153,12 +165,17 @@ bool TopJetCorrections::process(uhh2::Event & event){
   return true;
 }
 
-bool TopJetLeptonDeltaRCleaner::process(uhh2::Event & event) {
 
-  assert(event.topjets);
+TopJetLeptonDeltaRCleaner::TopJetLeptonDeltaRCleaner(uhh2::Context & ctx, float mindr, const std::string jet_collection_name):minDR_(mindr),jet_collection_name_(jet_collection_name){
+  h_topjets = ctx.get_handle<std::vector<TopJet> >(jet_collection_name_);  
+}
+bool TopJetLeptonDeltaRCleaner::process(uhh2::Event & event) {
+  const auto topjets = &event.get(h_topjets);
+  assert(topjets);
+  
   std::vector<TopJet> cleaned_topjets;
 
-  for(const auto & tjet : *event.topjets){
+  for(const auto & tjet : *topjets){
     bool skip_tjet(false);
 
     if(event.muons){
@@ -176,15 +193,15 @@ bool TopJetLeptonDeltaRCleaner::process(uhh2::Event & event) {
     if(!skip_tjet) cleaned_topjets.push_back(tjet);
   }
 
-  event.topjets->clear();
-  event.topjets->reserve(cleaned_topjets.size());
-  for(auto & j : cleaned_topjets) event.topjets->push_back(j);
+  topjets->clear();
+  topjets->reserve(cleaned_topjets.size());
+  for(auto & j : cleaned_topjets) topjets->push_back(j);
 
   return true;
 }
 
 
-StandaloneTopJetCorrector::StandaloneTopJetCorrector(uhh2::Context& ctx){
+StandaloneTopJetCorrector::StandaloneTopJetCorrector(uhh2::Context& ctx, std::string tjec_tjet_coll){
 
   is_mc = ctx.get("dataset_type") == "MC";
   Year year = extract_year(ctx);
@@ -192,30 +209,30 @@ StandaloneTopJetCorrector::StandaloneTopJetCorrector(uhh2::Context& ctx){
   const std::string year_str = year_str_map.at(year);
   short_year = year_str.substr(0, year_str.find("v"));
 
-  std::string userTopJetColl = string2lowercase(ctx.get("TopJetCollection"));
+  // std::string userTopJetColl = string2lowercase(ctx.get("TopJetCollection"));
   
-  std::string algo = "";
-  // algo size
-  if (userTopJetColl.find("ak4") != std::string::npos) {
-    algo = "AK4";
-  }
-  else if(userTopJetColl.find("ak8") != std::string::npos){
-    algo = "AK8";
-  }
-  else if (userTopJetColl.find("ak8") == std::string::npos) {
-    std::cout << "TopJetCorrections.cxx: Cannot determine tjet cone + radius (neither AK4 nor AK8) - going to assume it is AK8 for JECs" << '\n';
-    algo = "AK8";
-  }
+  // std::string algo = "";
+  // // algo size
+  // if (userTopJetColl.find("ak4") != std::string::npos) {
+  //   algo = "AK4";
+  // }
+  // else if(userTopJetColl.find("ak8") != std::string::npos){
+  //   algo = "AK8";
+  // }
+  // else if (userTopJetColl.find("ak8") == std::string::npos) {
+  //   std::cout << "TopJetCorrections.cxx: Cannot determine tjet cone + radius (neither AK4 nor AK8) - going to assume it is AK8 for JECs" << '\n';
+  //   algo = "AK8";
+  // }
 
-  std::string pus = "PFchs";
-  // Pileup subtraction
-  if (userTopJetColl.find("puppi") != std::string::npos) {
-    pus = "PFPuppi";
-  } else if (userTopJetColl.find("chs") == std::string::npos) {
-    std::cout << "Cannot determine pileup subtraction (neither CHS nor PUPPI) - going to assume it is CHS for JECs" << std::endl;
-  }
-  std::string tjec_tjet_coll = algo + pus;
-  
+  // std::string pus = "PFchs";
+  // // Pileup subtraction
+  // if (userTopJetColl.find("puppi") != std::string::npos) {
+  //   pus = "PFPuppi";
+  // } else if (userTopJetColl.find("chs") == std::string::npos) {
+  //   std::cout << "Cannot determine pileup subtraction (neither CHS nor PUPPI) - going to assume it is CHS for JECs" << std::endl;
+  // }
+  // std::string tjec_tjet_coll = algo + pus;
+  std::cout << "Standalone TopJetCorrector for " << tjec_tjet_coll << std::endl;
   std::unordered_map<std::string,std::vector<std::string>> jec_mc_files = {
     {"2016",JERFiles::JECFilesMC(TopJetCorrections::tjec_tag_2016, TopJetCorrections::tjec_ver_2016, tjec_tjet_coll)},
     {"2017",JERFiles::JECFilesMC(TopJetCorrections::tjec_tag_2017, TopJetCorrections::tjec_ver_2017, tjec_tjet_coll)},

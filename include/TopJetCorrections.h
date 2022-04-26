@@ -15,7 +15,7 @@
 
 class TopJetCorrections: public uhh2::AnalysisModule {
 public:
-    TopJetCorrections();
+  TopJetCorrections(const std::string jet_collection_name="");
 
     virtual bool process(uhh2::Event & event) override;
     void init(uhh2::Context & ctx);
@@ -64,20 +64,25 @@ private:
 
     // Parameters for JEC & JLC sets
   std::string tjec_tjet_coll;
+  std::string recojet_collection,genjet_collection;
+  const std::string jet_collection_name_;
 };
 
 class TopJetLeptonDeltaRCleaner : public uhh2::AnalysisModule {
  public:
-  explicit TopJetLeptonDeltaRCleaner(float mindr=0.8): minDR_(mindr) {}
+  explicit TopJetLeptonDeltaRCleaner(uhh2::Context & ctx, float mindr=0.8, const std::string jet_collection_name="topjets");//: minDR_(mindr) {}
   virtual bool process(uhh2::Event&) override;
 
  private:
   float minDR_;
+  std::string jet_collection_name_;
+  uhh2::Event::Handle<std::vector<TopJet> > h_topjets;
+
 };
 
 class StandaloneTopJetCorrector{
 public:
-  StandaloneTopJetCorrector(uhh2::Context& ctx);
+  StandaloneTopJetCorrector(uhh2::Context& ctx, std::string tjec_tjet_coll = "AK8PFPuppi");
   float getJecFactor(const uhh2::Event & event, LorentzVector topjet);
   float getJERSmearingFactor(const uhh2::Event &event, Particle topjet, int direction, float jec_factor = 1.0);
   float getJERSmearingFactor(const uhh2::Event &event, LorentzVector topjet, int direction, float jec_factor = 1.0){
