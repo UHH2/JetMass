@@ -14,7 +14,7 @@ using namespace uhh2;
 class MatchingSelection{
 public:
   // enum matchingOpt{oIsAnyGenW,oIsLeadingGenW,oIsMergedGenW,oIsAnyGenZ,oIsLeadingGenZ,oIsMergedGenZ,oIsMergedW,};
-  enum matchingOpt{oIsMergedV,oIsMergedW,oIsMergedZ,oIsMergedQB,oIsMergedTop,oIsSemiMergedTop,oIsNotMerged};
+  enum matchingOpt{oIsMergedV,oIsMergedW,oIsMergedZ,oIsMergedQB,oIsMergedTop,oIsSemiMergedTop,oIsNotMerged,oIsMergedHiggs};
   
   explicit MatchingSelection(uhh2::Context & ctx);
   
@@ -32,11 +32,17 @@ public:
   int FlavourQ1() const;
   int FlavourQ2() const;
 
+  int n_merged_partons(const FlavorParticle &probe_jet, float radius = 0.8);
+
   const GenParticle * get_genV(){return &genV;};
   
 private:
-  bool initialzed, is_VJets, is_TTbar,is_valid;
+  bool initialzed, is_VJets, is_TTbar, is_HiggsToWW, is_valid;
   GenParticle genV,genTop,genB,genQ1,genQ2;
+
+  GenParticle genH,genQ3,genQ4;
+  
+  std::vector<GenParticle> extra_partons;
 };
 
 
