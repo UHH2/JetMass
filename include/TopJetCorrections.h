@@ -27,7 +27,7 @@ public:
   inline static const std::string tjec_tag_2017 = "Fall17_17Nov2017";
   inline static const std::string tjec_ver_2017 = "32";
   inline static const std::string tjec_tag_2018 = "Autumn18";
-  inline static const std::string tjec_ver_2018 = "7";
+  inline static const std::string tjec_ver_2018 = "19";
 
   inline static const std::string tjec_tag_UL16preVFP = "Summer19UL16APV";
   inline static const std::string tjec_ver_UL16preVFP = "7";
@@ -44,7 +44,7 @@ public:
 
   inline static const std::string tjer_tag_UL16preVFP = "Summer20UL16APV_JRV3";
   inline static const std::string tjer_tag_UL16postVFP = "Summer20UL16_JRV3";
-  inline static const std::string tjer_tag_UL17 = "Summer19UL17_JRV3";
+  inline static const std::string tjer_tag_UL17 = "Summer19UL17_JRV2";
   inline static const std::string tjer_tag_UL18 = "Summer19UL18_JRV2";
   
 
