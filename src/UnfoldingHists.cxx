@@ -2,6 +2,8 @@
 #include "UHH2/JetMass/include/JetMassUtils.h"
 #include "UHH2/core/include/Event.h"
 
+// #include "UHH2/common/include/Utils.h"
+
 #include "TH1F.h"
 #include "TH2F.h"
 #include <iostream>
@@ -25,7 +27,8 @@ UnfoldingHists::UnfoldingHists(Context & ctx, const string & dirname, const std:
   const std::string& selection_ = ctx.get("selection", "");
   if     (selection_ == "ttbar") isTTbarSel = true;
   else if(selection_ == "vjets")   isVJetsSel = true;
-  else throw runtime_error("JetMassModule: Select 'ttbar' or 'vjets' selection");
+  else if(selection_ == "none") skip_filling = true;
+  else throw runtime_error("UnfoldingHists: Select 'ttbar' or 'vjets' selection");
 
   if (isMC) {
     gen_sel_handle = ctx.get_handle<bool> (gen_sel_handle_name);
@@ -108,11 +111,28 @@ UnfoldingHists::UnfoldingHists(Context & ctx, const string & dirname, const std:
   h_control_gen_N2 = book<TH1D>("control_gen_N2","control_gen_N2",100,-1,1);
   h_control_reco_N2 = book<TH1D>("control_reco_N2","control_reco_N2",100,-1,1);
 
+  h_control_gen_pt = book<TH1D>("control_gen_pt","control_gen_pt",200,0,3000);
+  h_control_reco_pt = book<TH1D>("control_reco_pt","control_reco_pt",200,0,3000);
+
+  h_control_dRVJets = book<TH2D>("control_dRVJets","control_dRVJets",200,0,6,200,0,6);
+
+  h_control_msd_detector_bin0 = book<TH1D>("control_msd_detector_bin0","control_msd_detector_bin0",msd_edges.size()-1,msd_edges.data());
+  h_control_msd_detector_bin1 = book<TH1D>("control_msd_detector_bin1","control_msd_detector_bin1",msd_edges.size()-1,msd_edges.data());
+  h_control_msd_detector_bin2 = book<TH1D>("control_msd_detector_bin2","control_msd_detector_bin2",msd_edges.size()-1,msd_edges.data());
+  h_control_msd_detector_bin3 = book<TH1D>("control_msd_detector_bin3","control_msd_detector_bin3",msd_edges.size()-1,msd_edges.data());
+
+  h_control_msd_generator_bin0 = book<TH1D>("control_msd_generator_bin0","control_msd_generator_bin0",msd_edges.size()-1,msd_edges.data());
+  h_control_msd_generator_bin1 = book<TH1D>("control_msd_generator_bin1","control_msd_generator_bin1",msd_edges.size()-1,msd_edges.data());
+  h_control_msd_generator_bin2 = book<TH1D>("control_msd_generator_bin2","control_msd_generator_bin2",msd_edges.size()-1,msd_edges.data());
+  h_control_msd_generator_bin3 = book<TH1D>("control_msd_generator_bin3","control_msd_generator_bin3",msd_edges.size()-1,msd_edges.data());
+
+
 }
 
 void UnfoldingHists::fill(const Event & event){
   //don't fill for Data
   if(!isMC)return;
+  if(skip_filling)return;
   auto weight = event.weight;
   if(event.topjets->size() <1) return;
   auto jet = event.topjets->at(0);
@@ -159,6 +179,7 @@ void UnfoldingHists::fill(const Event & event){
     if(pass_gen && gentopjet){
       gen_pt = gentopjet->pt();
       gen_msd = gentopjet->softdropmass();
+      // std::cout << "genjet mass: " << gen_msd << std::endl;
       gen_bin = generator_binning_msd_pt->GetGlobalBinNumber(gen_msd, gen_pt);
       gen_bin_flow = generator_binning_msd_pt_flow->GetGlobalBinNumber(gen_msd, gen_pt);
 
@@ -166,71 +187,109 @@ void UnfoldingHists::fill(const Event & event){
       h_control_gen_tau32->Fill(safe_tau32(gentopjet), weight);
       h_control_gen_N2->Fill(gentopjet->ecfN2_beta1(), weight);
     }
-    h_pt_msd_response->Fill(gen_bin, reco_bin, weight);
-    h_msd_detector->Fill(reco_bin, weight);
-    h_msd_generator->Fill(gen_bin, weight);
-    //with Under-/Overflow
-    h_pt_msd_response_flow->Fill(gen_bin_flow, reco_bin_flow, weight);
-    h_msd_detector_flow->Fill(reco_bin_flow, weight);
-    h_msd_generator_flow->Fill(gen_bin_flow, weight);
 
-    bool reco_parton_matched_cat1(false),reco_parton_matched_cat2(false);
-    bool gen_parton_matched_cat1(false),gen_parton_matched_cat2(false);
-    if(isVJetsSel){
-      if(recotopjet)reco_parton_matched_cat1 = matching_selection.passes_matching(*recotopjet,MatchingSelection::oIsMergedV);
+    h_pt_msd_response->Fill(gen_bin, reco_bin, weight);
+    h_pt_msd_response_flow->Fill(gen_bin_flow, reco_bin_flow, weight);
+    
+    if(pass_gen&&pass_reco){
+      h_msd_detector->Fill(reco_bin, weight);
+      h_msd_generator->Fill(gen_bin, weight);
+
+      h_msd_detector_flow->Fill(reco_bin_flow, weight);
+      h_msd_generator_flow->Fill(gen_bin_flow, weight);
       
-      if(gentopjet)gen_parton_matched_cat1 = matching_selection.passes_matching(*gentopjet,MatchingSelection::oIsMergedV);
+      h_control_gen_pt->Fill(gen_pt,weight);
+      h_control_reco_pt->Fill(reco_pt,weight);
+    }    
+
+    bool pass_reco_parton_matched_cat1(false),pass_reco_parton_matched_cat2(false);
+    bool pass_gen_parton_matched_cat1(false),pass_gen_parton_matched_cat2(false);
+    if(isVJetsSel){
+      if(recotopjet)pass_reco_parton_matched_cat1 = matching_selection.passes_matching(*recotopjet,MatchingSelection::oIsMergedV) && pass_reco;
+      
+      if(gentopjet)pass_gen_parton_matched_cat1 = matching_selection.passes_matching(*gentopjet,MatchingSelection::oIsMergedV) && pass_gen;
+      if(pass_reco_parton_matched_cat1 && pass_gen_parton_matched_cat1 ){
+        const GenParticle * genV = matching_selection.get_genV();        
+        float dRVreco = deltaR(*recotopjet,*genV);
+        float dRVgen = deltaR(*gentopjet,*genV);
+        h_control_dRVJets->Fill(dRVreco,dRVgen,weight);
+      }
     }
     if(isTTbarSel){
-      if(recotopjet)reco_parton_matched_cat1 = matching_selection.passes_matching(*recotopjet,MatchingSelection::oIsMergedTop);
-      if(recotopjet)reco_parton_matched_cat2 = matching_selection.passes_matching(*recotopjet,MatchingSelection::oIsMergedV) || matching_selection.passes_matching(*recotopjet,MatchingSelection::oIsMergedQB);
+      if(recotopjet)pass_reco_parton_matched_cat1 = matching_selection.passes_matching(*recotopjet,MatchingSelection::oIsMergedTop) && pass_reco;
+      if(recotopjet)pass_reco_parton_matched_cat2 = ( matching_selection.passes_matching(*recotopjet,MatchingSelection::oIsMergedV) || matching_selection.passes_matching(*recotopjet,MatchingSelection::oIsMergedQB) ) && pass_reco;
 
-      if(gentopjet)gen_parton_matched_cat1 = matching_selection.passes_matching(*gentopjet,MatchingSelection::oIsMergedTop);
-      if(gentopjet)gen_parton_matched_cat2 = matching_selection.passes_matching(*gentopjet,MatchingSelection::oIsMergedV) || matching_selection.passes_matching(*gentopjet,MatchingSelection::oIsMergedQB);
+      if(gentopjet)pass_gen_parton_matched_cat1 = matching_selection.passes_matching(*gentopjet,MatchingSelection::oIsMergedTop) && pass_gen;
+      if(gentopjet)pass_gen_parton_matched_cat2 = ( matching_selection.passes_matching(*gentopjet,MatchingSelection::oIsMergedV) || matching_selection.passes_matching(*gentopjet,MatchingSelection::oIsMergedQB) ) && pass_gen;
     }
     
-    if(reco_parton_matched_cat1 || gen_parton_matched_cat1){
+    if(pass_reco_parton_matched_cat1 || pass_gen_parton_matched_cat1){
       int reco_bin_matched(0),gen_bin_matched(0);
       int reco_bin_flow_matched(0),gen_bin_flow_matched(0);
-      if(reco_parton_matched_cat1){
+      if(pass_reco_parton_matched_cat1){
         reco_bin_matched = reco_bin;
         reco_bin_flow_matched = reco_bin_flow;
 
-        h_msd_detector_matched_cat1->Fill(reco_bin, weight);        
-        h_msd_detector_matched_cat1_flow->Fill(reco_bin_flow, weight);
       }
-      if(gen_parton_matched_cat1){
+      if(pass_gen_parton_matched_cat1){
         gen_bin_matched = gen_bin;
         gen_bin_flow_matched = gen_bin_flow;
-        h_msd_generator_matched_cat1->Fill(gen_bin_matched, weight);        
-        h_msd_generator_matched_cat1_flow->Fill(gen_bin_flow, weight);
       }
+
       h_pt_msd_response_matched_cat1->Fill(gen_bin_matched, reco_bin_matched, weight);
       h_pt_msd_response_matched_cat1_flow->Fill(gen_bin_flow_matched, reco_bin_flow_matched, weight);
-    }else if((reco_parton_matched_cat2 || gen_parton_matched_cat2) && isTTbarSel){
+
+      if(pass_reco_parton_matched_cat1 && pass_gen_parton_matched_cat1){
+        h_msd_detector_matched_cat1->Fill(reco_bin, weight);        
+        h_msd_generator_matched_cat1->Fill(gen_bin_matched, weight);        
+
+        h_msd_detector_matched_cat1_flow->Fill(reco_bin_flow, weight);
+        h_msd_generator_matched_cat1_flow->Fill(gen_bin_flow, weight);
+
+
+        if(reco_pt>500 && reco_pt<650)h_control_msd_detector_bin0->Fill(reco_msd,weight);
+        if(reco_pt>650 && reco_pt<800)h_control_msd_detector_bin1->Fill(reco_msd,weight);
+        if(reco_pt>800 && reco_pt<1200)h_control_msd_detector_bin2->Fill(reco_msd,weight);
+        if(reco_pt>1200)h_control_msd_detector_bin3->Fill(reco_msd,weight);
+
+        if(gen_pt>500 && gen_pt<650)h_control_msd_generator_bin0->Fill(gen_msd,weight);
+        if(gen_pt>650 && gen_pt<800)h_control_msd_generator_bin1->Fill(gen_msd,weight);
+        if(gen_pt>800 && gen_pt<1200)h_control_msd_generator_bin2->Fill(gen_msd,weight);
+        if(gen_pt>1200)h_control_msd_generator_bin3->Fill(gen_msd,weight);
+
+      }
+      
+    }else if((pass_reco_parton_matched_cat2 || pass_gen_parton_matched_cat2) && isTTbarSel){
       int reco_bin_matched(0),gen_bin_matched(0);
       int reco_bin_flow_matched(0),gen_bin_flow_matched(0);
-      if(reco_parton_matched_cat2){
+      if(pass_reco_parton_matched_cat2){
         reco_bin_matched = reco_bin;
         reco_bin_flow_matched = reco_bin_flow;
-        
-        h_msd_detector_matched_cat2->Fill(reco_bin, weight);        
-        h_msd_detector_matched_cat2_flow->Fill(reco_bin_flow, weight);
       }
-      if(gen_parton_matched_cat2){
+      if(pass_gen_parton_matched_cat2){
         gen_bin_matched = gen_bin;
         gen_bin_flow_matched = gen_bin_flow;
-        h_msd_generator_matched_cat2->Fill(gen_bin_matched, weight);        
-        h_msd_generator_matched_cat2_flow->Fill(gen_bin_flow, weight);
       }
+
       h_pt_msd_response_matched_cat2->Fill(gen_bin_matched, reco_bin_matched, weight);
       h_pt_msd_response_matched_cat2_flow->Fill(gen_bin_flow_matched, reco_bin_flow_matched, weight);
+
+      if(pass_reco_parton_matched_cat2 && pass_gen_parton_matched_cat2){  
+        h_msd_detector_matched_cat2->Fill(reco_bin, weight);        
+        h_msd_generator_matched_cat2->Fill(gen_bin_matched, weight);        
+
+        h_msd_detector_matched_cat2_flow->Fill(reco_bin_flow, weight);
+        h_msd_generator_matched_cat2_flow->Fill(gen_bin_flow, weight);
+      }
+      
     }else{
       h_pt_msd_response_unmatched->Fill(gen_bin, reco_bin, weight);
-      h_msd_detector_unmatched->Fill(reco_bin, weight);
-      h_msd_generator_unmatched->Fill(gen_bin, weight);
       h_pt_msd_response_unmatched_flow->Fill(gen_bin_flow, reco_bin_flow, weight);
+
+      h_msd_detector_unmatched->Fill(reco_bin, weight);
       h_msd_detector_unmatched_flow->Fill(reco_bin_flow, weight);
+
+      h_msd_generator_unmatched->Fill(gen_bin, weight);
       h_msd_generator_unmatched_flow->Fill(gen_bin_flow, weight);
     }      
   }

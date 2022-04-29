@@ -64,7 +64,13 @@ protected:
   TH1D * h_control_gen_tau32,* h_control_reco_tau32;
   TH1D * h_control_gen_N2,* h_control_reco_N2;
 
-  bool isTTbarSel,isVJetsSel;
+  TH2D * h_control_dRVJets;
+  TH1D * h_control_gen_pt,*h_control_reco_pt;
+
+  TH1D * h_control_msd_detector_bin0,* h_control_msd_detector_bin1,* h_control_msd_detector_bin2,* h_control_msd_detector_bin3;
+  TH1D * h_control_msd_generator_bin0,* h_control_msd_generator_bin1,* h_control_msd_generator_bin2,* h_control_msd_generator_bin3;
+  
+  bool isTTbarSel,isVJetsSel,skip_filling;
   
   TH1D * copy_book_th1d(TH1 * h, const std::string & newName);
   TH2D * copy_book_th2d(TH2 * h, const std::string & newName);
