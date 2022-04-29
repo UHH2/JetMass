@@ -157,8 +157,10 @@ JetMassModule::JetMassModule(Context & ctx){
   do_genStudies = string2bool(ctx.get("doGenStudies", "true"));
   
   // common modules
-  MuonId muid = AndId<Muon>(MuonID(Muon::CutBasedIdTight), PtEtaCut(55., 2.4));
-  ElectronId eleid = AndId<Electron>(ElectronID_Fall17_medium_noIso, PtEtaCut(55., 2.4));
+  // MuonId muid = AndId<Muon>(MuonID(Muon::CutBasedIdTight), PtEtaCut(55., 2.4));
+  // ElectronId eleid = AndId<Electron>(ElectronID_Fall17_medium_noIso, PtEtaCut(55., 2.4));
+  // MuonId muid = uhh2::muid;
+  // ElectronId eleid = uhh2::eleid;
   // // ElectronId eleid = AndId<Electron>(ElectronTagID(Electron::tagname2tag("cutBasedElectronID-Fall17-94X-V2-medium")), PtEtaCut(55., 2.4));
 
   JetId jetid = AndId<Jet>(JetPFID(JetPFID::WP_TIGHT_CHS), PtEtaCut(30.0, 2.4));
@@ -175,6 +177,7 @@ JetMassModule::JetMassModule(Context & ctx){
   std::cout << "reweighting mc pileup using " << ctx.get("pileup_directory")<<" as mc profile dir" <<std::endl;
 
   common.reset(new CommonModules());
+  //muid and eleid are taken from release dependent header file (JetMassUtils10[2,6]X.h)
   common->set_muon_id(muid);
   common->set_electron_id(eleid);
   common->set_jet_id(jetid);
