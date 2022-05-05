@@ -2,7 +2,7 @@ from __future__ import print_function
 import json,os,copy,subprocess
 from CombineWorkflows import CombineWorkflows
 
-class FitSubmitter:
+class FitSubmitter(object):
     def __init__(self, config, workdir,dry_run = False):
 
         self._email = "steffen.albrecht@desy.de"
@@ -101,7 +101,10 @@ queue ConfigName from ("""+'\n'.join(job_workdirs)+"""
         batch_wrapper = open(batch_wrapper_name,'w')
         batch_wrapper.write("#!/bin/bash\n")
         batch_wrapper.write("source /cvmfs/cms.cern.ch/cmsset_default.sh\n")
-        batch_wrapper.write("source setup_ralph.sh\n")
+        batch_wrapper.write("cd "+self.CombinePath+"/src/\n")
+        batch_wrapper.write("eval `scramv1 runtime -sh`\n")
+        batch_wrapper.write("cd "+self._workdir+"\n")
+        # batch_wrapper.write("source setup_ralph.sh\n")
         jetmass_options = self.extra_jetmass_options +("" if defaultFit else " --customCombineWrapper")
         batch_wrapper.write('cd $1\n')
 
@@ -109,7 +112,8 @@ queue ConfigName from ("""+'\n'.join(job_workdirs)+"""
         batch_wrapper.write('for i in *.json; do python jetmass.py $i %s;done\n'%jetmass_options) 
         # write wrapper that runs combine workflow if previous command did not do that yet!
         if('--build' in self.extra_jetmass_options):
-            batch_wrapper.write('env -i bash $1/'+('qcdmodel/' if self.fit_qcd_model else '')+'wrapper.sh\n')
+            # batch_wrapper.write('env -i bash $1/'+('qcdmodel/' if self.fit_qcd_model else '')+'wrapper.sh\n')
+            batch_wrapper.write('source $1/'+('qcdmodel/' if self.fit_qcd_model else '')+'wrapper.sh\n')
         batch_wrapper.write(self.postfit_command)
                         
         batch_wrapper.close()
@@ -146,7 +150,7 @@ queue ConfigName from ("""+'\n'.join(job_workdirs)+"""
             for QCD_rho in QCDOrders[1]:
                 for DATA_pt in DATAOrders[0]:
                     for DATA_rho in DATAOrders[1]:
-                        FTest = isinstance(combine_method,CombineWorkflows) and combine_method.method == "FTest" 
+                        FTest = isinstance(combine_method,CombineWorkflows) and (combine_method.method == "FTest" or combine_method.method == "FTestBatch") 
                         #print(QCD_pt,QCD_rho,DATA_pt,DATA_rho)
                         QCDOrders_str = 'MCTFPt%iRho%i'
                         DataOrders_str = 'DataResTFPt%iRho%i'
@@ -183,7 +187,8 @@ queue ConfigName from ("""+'\n'.join(job_workdirs)+"""
                             if(isinstance(combine_method,str)):
                                 cw = CombineWorkflows()
                                 cw.method(combine_method)
-                                cw.workspace = job_self._workdir + '/' + this_config['ModelName'] + '/'+this_config['ModelName'] + '_combined.root'
+                                # cw.workspace = job_self._workdir + '/' + this_config['ModelName'] + '/'+this_config['ModelName'] + '_combined.root'
+                                cw.workspace = job_self._workdir + '/' + this_config['ModelName'] + '/model_combined.root'
                                 from jetmass import build_mass_scale_variations
                                 cw.POI = build_mass_scale_variations(this_config['gridHistFileName'])[1]
                                 cw.freezeParameters = "r"
@@ -195,9 +200,11 @@ queue ConfigName from ("""+'\n'.join(job_workdirs)+"""
                                 if(self.fit_qcd_model):
                                     # if(FTest):
                                     #     combine_method.workspace = 
-                                    combine_method.workspace = job_workdir + '/' + this_config['ModelName'] + '/qcdmodel/qcdmodel_combined.root'
+                                    # combine_method.workspace = job_workdir + '/' + this_config['ModelName'] + '/qcdmodel/qcdmodel_combined.root'
+                                    combine_method.workspace = job_workdir + '/' + this_config['ModelName'] + '/qcdmodel/model_combined.root'
                                 else:
-                                    combine_method.workspace = job_workdir + '/' + this_config['ModelName'] + '/'+this_config['ModelName'] + '_combined.root'
+                                    # combine_method.workspace = job_workdir + '/' + this_config['ModelName'] + '/'+this_config['ModelName'] + '_combined.root'
+                                    combine_method.workspace = job_workdir + '/' + this_config['ModelName'] + '/model_combined.root'
                                 combine_method.write_wrapper()
                             else:
                                 raise(TypeError("combine_method should be either str or CombineWorkflow instance. You provided "+type(combine_method)))

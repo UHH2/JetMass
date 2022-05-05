@@ -3,6 +3,12 @@ import FitSubmitter
 from CombineWorkflows import CombineWorkflows
 import json
 
+#dirty hack to keep this primarily python3 compatible, but still be able to run in py2 wihtout changes
+try:
+    range = xrange
+except:
+    pass
+    
 def submit_ftest_prep(config, ntoys, njobs, QCDOrders=None, DataOrders=None, algo = "saturated", dry_run=False,PseudoData=False):
     for i in range(njobs):
         do_qcd_test = False
@@ -23,16 +29,16 @@ def submit_ftest_prep(config, ntoys, njobs, QCDOrders=None, DataOrders=None, alg
         else:
             config["Pseudo"]=[]
 
-        config["QCDSigmaScale"] = 0.01
+        #config["QCDSigmaScale"] = 0.01
             
         cw = CombineWorkflows()
         cw.combineCMSSW = '/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/CombineTestground/CMSSW_10_2_13/'
-        cw.method = "FTest"
+        cw.method = "FTestBatch"
         cw.seed = 42 + i
         cw.POI = "r"
         cw.freezeParameters = "r"
         
-        cw.extraOptions = ("--toysFrequentist --setParameters r=1 " if do_data_test else  "") + ("--toysNoSystematics --setParameters r=0 " if do_qcd_test else "") +  " --cminDefaultMinimizerStrategy 2 --cminDefaultMinimizerTolerance 0.01" 
+        cw.extraOptions = ("--toysFrequentist --setParameters r=1 " if do_data_test else  "") + ("--toysNoSystematics --setParameters r=0 " if do_qcd_test else "") +  " --cminDefaultMinimizerStrategy 2 --cminDefaultMinimizerTolerance 0.01" + " --redefineSignalPOIs massScale_pt0_eta0_all_Z_PT800,massScale_pt0_eta0_all_W_PT500,massScale_pt0_eta0_all_W_PT650,massScale_pt0_eta0_all_Z_PT650,massScale_pt0_eta0_all_Z_PT500,massScale_pt0_eta0_all_W_PT800"
 
         cw.algo = algo
         # cw.toysOptions = ("--toysFrequentist --expectSignal 1" if do_data_test else  "") + ("--toysNoSystematics --expectSignal 0" if do_qcd_test else "")
@@ -43,7 +49,9 @@ def submit_ftest_prep(config, ntoys, njobs, QCDOrders=None, DataOrders=None, alg
 
         fs = FitSubmitter.FitSubmitter(config, "DUST/"+workdir, dry_run = dry_run)
         fs.batchname = workdir.replace("_","")
-        fs.extra_jetmass_options = "--build --noMassScales"
+        fs.CombinePath = cw.combineCMSSW
+        # fs.extra_jetmass_options = "--build --noMassScales"
+        fs.extra_jetmass_options = "--build"
         fs.fit_qcd_model = do_qcd_test
         fs.scan_TF_orders(DataOrders,QCDOrders,combine_method=cw)
  
@@ -90,11 +98,13 @@ if(__name__ == '__main__'):
     NJobs=int(NToys/NToysPerJob)
     
 
-    config = json.load(open("WJets.json"))
-    Orders = (range(0,6)),(range(0,6))
+    config = json.load(open("VJets.json"))
+    # config = json.load(open("Zbb.json"))
+    Orders = (range(0,7)),(range(0,7))
     dry_run = False
-    for algo in ["saturated","KS"]:#,"AD"]:
+    for algo in ["saturated"]:#,"KS"]:#,"AD"]:
+    # for algo in ["saturated"]:
         if(algo == "saturated"):
-            submit_ftest_prep(config, NToys, NJobs, QCDOrders=(3,1), DataOrders = Orders, algo=algo, dry_run=dry_run)
+            # submit_ftest_prep(config, NToys, NJobs, QCDOrders=(0,4), DataOrders = Orders, algo=algo, dry_run=dry_run)
             submit_ftest_prep(config, NToys, NJobs, QCDOrders=None, DataOrders = Orders, algo=algo, dry_run=dry_run)
-        submit_ftest_prep(config, NToys, NJobs, QCDOrders=Orders,  algo=algo, dry_run=dry_run)
+        # submit_ftest_prep(config, NToys, NJobs, QCDOrders=Orders,  algo=algo, dry_run=dry_run)

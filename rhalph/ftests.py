@@ -7,7 +7,7 @@ import glob,os,warnings
     
 def nlls(filename):
     try:
-        print(filename)
+        # print(filename)
         f = ROOT.TFile(filename)
         limits = f.Get('limit')
         nll=[l.limit for l in limits]
@@ -19,9 +19,9 @@ def nlls(filename):
         warnings.warn("Not able to retrieve limits from "+filename+" !")
         return [None],[None]
 
-class FTest():
+class FTest(object):
     def __init__(self):
-        self._nbins=15*5
+        self._nbins=50*3
         self._maxNToys = -1
         self._orders_1 = (0,0)
         self._orders_2 = (0,0)
@@ -44,6 +44,10 @@ class FTest():
         self.results = {}
 
         self._npall = 1
+
+    def printNLL(self):
+        print("NLL1: observed=",self._nll_base1,"toys (N=%i)="%len(self._nll_toys1),self._nll_toys1)
+        print("NLL2: observed=",self._nll_base2,"toys (N=%i)="%len(self._nll_toys2),self._nll_toys2)
         
     @property
     def orders_1(self):
@@ -107,8 +111,8 @@ class FTest():
             seed = toy_workdir.split("Seed")[-1].split('/')[0] if batch_scan else self.seed
             file_path_1 = toy_workdir+'/'+file_dir_1+'/higgsCombineBaseline.GoodnessOfFit.mH0.%s.root'%seed
             file_path_2 = toy_workdir+'/'+file_dir_2+'/higgsCombineBaseline'+("" if batch_scan else "AltModel")+'.GoodnessOfFit.mH0.%s.root'%seed
-            print(file_path_1)
-            print(file_path_2)
+            # print(file_path_1)
+            # print(file_path_2)
             if(os.path.isfile(file_path_1) and os.path.isfile(file_path_2)):
                 self._nll_base1 = nlls(file_path_1)[0][0]
                 self._nll_base2 = nlls(file_path_2)[0][0]
@@ -170,6 +174,7 @@ class FTest():
         
         self._F_base = self.fstat(self._nll_base1, self._nll_base2)
         self._F_toys = self.fstat(self._nll_toys1, self._nll_toys2)
+        # print("Fstat: observed=",self._F_base,"toys (N=%i)="%len(self._F_toys),self._F_toys)
 
         if(len(self._F_toys) == 0):
             warnings.warn("F_vals for toys is emtpy (Probably all negative). skipping..")
@@ -210,19 +215,20 @@ class FTest():
         lCan.SetRightMargin(0.1)
         lCan.SetTopMargin(0.1)
 
+        nbins = 35
         max_x = max(max(iToys),iCentral)
         if method=='FTest':
-            lH = ROOT.TH1F(iLabel+"hist",iLabel,70,0,max_x+1)
-            lH_cut = ROOT.TH1F(iLabel+"hist",iLabel.replace("_"," "),70,0,max_x+1)
+            lH = ROOT.TH1F(iLabel+"hist",iLabel,nbins,0,max_x+1)
+            lH_cut = ROOT.TH1F(iLabel+"hist",iLabel.replace("_"," "),nbins,0,max_x+1)
         elif method=='GoodnessOfFit' and self._algo=='saturated':
-            lH = ROOT.TH1F(iLabel+"hist",iLabel,70,0,max_x+100)
-            lH_cut = ROOT.TH1F(iLabel+"hist",iLabel.replace("_"," "),70,0,max_x+100)
+            lH = ROOT.TH1F(iLabel+"hist",iLabel,nbins,0,max_x+100)
+            lH_cut = ROOT.TH1F(iLabel+"hist",iLabel.replace("_"," "),nbins,0,max_x+100)
         elif method=='GoodnessOfFit' and self._algo=='KS':
-            lH = ROOT.TH1F(iLabel+"hist",iLabel.replace("_"," "),70,0,max_x+0.05)
-            lH_cut = ROOT.TH1F(iLabel+"hist",iLabel+"hist",70,0,max_x+0.05)
+            lH = ROOT.TH1F(iLabel+"hist",iLabel.replace("_"," "),nbins,0,max_x+0.05)
+            lH_cut = ROOT.TH1F(iLabel+"hist",iLabel+"hist",nbins,0,max_x+0.05)
         elif method=='GoodnessOfFit' and self._algo=='AD':
-            lH = ROOT.TH1F(iLabel+"hist",iLabel.replace("_"," "),70,0,max_x+10)
-            lH_cut = ROOT.TH1F(iLabel+"hist",iLabel+"hist",70,0,max_x+10)
+            lH = ROOT.TH1F(iLabel+"hist",iLabel.replace("_"," "),nbins,0,max_x+10)
+            lH_cut = ROOT.TH1F(iLabel+"hist",iLabel+"hist",nbins,0,max_x+10)
     
         if method=='FTest':
             lH.GetXaxis().SetTitle("F = #frac{-2log(#lambda_{1}/#lambda_{2})/(p_{2}-p_{1})}{-2log#lambda_{2}/(n-p_{2})}")
@@ -255,7 +261,7 @@ class FTest():
         lH_cut.SetLineColor(ROOT.kViolet-10)
         lH_cut.SetFillColor(ROOT.kViolet-10)
         lH_cut.Draw("histsame")
-    
+        
         if method=='FTest':
             fdist = ROOT.TF1("fDist", "[0]*TMath::FDist(x, [1], [2])", 0,max_x+1)
             fdist.SetParameter(0,lH.Integral()*((max_x+1)/70.))
@@ -321,6 +327,8 @@ def process_TF_prep(dir_pattern,model_dir_pattern,output_dir,algo='KS',n_p_other
         os.makedirs(ft._outDir)
     for i_pt in range(0,6):
         for i_rho in range(0,6):
+    # for i_pt in [1]:
+    #     for i_rho in [4]:
             for (j_pt,j_rho) in [(i_pt+1,i_rho),(i_pt,i_rho+1)]:
                 print("#"*20)
                 print('TF%ix%i vs. TF%ix%i'%(i_pt,i_rho,j_pt,j_rho))
@@ -332,7 +340,9 @@ def process_TF_prep(dir_pattern,model_dir_pattern,output_dir,algo='KS',n_p_other
                     continue
                 ft.orders_1 = (i_pt,i_rho)
                 ft.orders_2 = (j_pt,j_rho)
+                # print(dir_pattern)
                 success = ft.process_files(dir_pattern,model_dir_pattern,skip_failed_fits = True)
+                # ft.printNLL()
                 if(success>=0):
                     ft.plot_ftest()
                 if(success<=0):
@@ -354,25 +364,28 @@ if(__name__=='__main__'):
     
     args = parser.parse_args()    
 
+    model_prefix = "VJets"
+    # model_prefix = "ZbbJets"
     if(args.processScan):
     # for algo in ["AD","KS","saturated"]:
-        for algo in ["saturated","KS"]:
-            process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_QCDTFScan_%s_Seed*'%algo,
-                            'VJetsSelectionMCTFPt%iRho%iDataResTFPt0Rho0/qcdmodel/',
-                            "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/QCDTfFTestPlots%s/"%algo,
-                            algo)
+        for algo in ["saturated"]:#,"KS"]:
+            # process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_QCDTFScan_%s_Seed*'%algo,
+            #                 # 'VJetsSelectionMCTFPt%iRho%iDataResTFPt0Rho0/qcdmodel/',
+            #                 model_prefix+'MCTFPt%iRho%iDataResTFPt0Rho0/qcdmodel/',
+            #                 "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/QCDTfFTestPlots%s/"%algo,
+            #                 algo)
             
             if algo == 'saturated':
             
-                process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_DataTFScan_QCDOrder3x1_%s_Seed*'%algo,
-                                'VJetsSelectionMCTFPt3Rho1DataResTFPt%iRho%i/',
-                                "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/Data2TfFTestPlots%s/"%algo,
-                                algo,
-                                n_p_other = 1 + (3+1)*(1+1))
+                # process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_DataTFScan_QCDOrder0x4_%s_Seed*'%algo,
+                #                 'VJetsMCTFPt0Rho4DataResTFPt%iRho%i/',
+                #                 "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/Data2TfFTestPlots%s/"%algo,
+                #                 algo,
+                #                 n_p_other = 1 + (0+1)*(4+1))
                 
                 
                 process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_DataTFScan_%s_Seed*'%algo,
-                                'VJetsSelectionTFPt%iRho%i/',
+                                model_prefix+'TFPt%iRho%i/',
                                 "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/DataTfFTestPlots%s/"%algo,
                                 algo)
     else:

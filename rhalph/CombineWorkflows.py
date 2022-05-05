@@ -4,6 +4,19 @@ import os,argparse,ROOT
 ROOT.gROOT.SetBatch(True)
 ROOT.gStyle.SetOptStat(0)
 
+import rhalphalib as rl
+rl.util.install_roofit_helpers()
+import numpy as np
+
+def _RooFitResult_massScales(self):
+    result = []
+    for p in self.floatParsFinal():
+        if("massScale" in p.GetName()):
+             result.append([p.GetName(),p.getVal(),p.getErrorHi(),p.getErrorLo()])
+    return np.array(result,dtype=object)
+
+ROOT.RooFitResult.massScales = _RooFitResult_massScales
+
 
 import sys
 sys.path.append('/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/python')
@@ -37,7 +50,7 @@ def get_parameters(args,query, workspace):
 rMIN=-1.5
 rMAX=1.5
 
-class CombineWorkflows:
+class CombineWorkflows(object):
     def __init__(self):
         # print('Nothing to do here. This class is just a wrapper for some worflow methods using combine')
         self.methods = [func for func in dir(CombineWorkflows) if (callable(getattr(CombineWorkflows, func)) and '__' not in func )]        
@@ -47,7 +60,7 @@ class CombineWorkflows:
         self.justplots = False
         self.skipplots = True
         self._poi = ""
-        self.workspace = ""
+        self.POIRange = (-10,10)
         self.altmodel = None
         self.workers = 1
         self._freezeParameters = ""
@@ -62,8 +75,7 @@ class CombineWorkflows:
         self.toysOptions = "--toysFrequentist"
         self.combineCMSSW = self.rhalphdir + '/CMSSW_10_2_13'
         self.modeldir = ""
-        self.workspace = ""
-
+        self._workspace = 'model_combined.root'
         self._method = ""
 
         def dummyMethod(debug=True):
@@ -77,6 +89,10 @@ class CombineWorkflows:
 
     @workspace.setter
     def workspace(self, w):
+        if(sys.version_info.major < 3):
+            if(isinstance(w,unicode)):
+                w = str(w)
+
         if(isinstance(w,str)):
             self._workspace = os.path.abspath(w)
             self.modeldir = self.workspace.replace(self.workspace.split('/')[-1],'')
@@ -126,6 +142,8 @@ class CombineWorkflows:
                 self._poi = '--redefineSignalPOIs ' + pois
         elif(isinstance(pois,list)):
             self._poi = '--redefineSignalPOIs ' + ','.join(pois)
+            range_str = '=%i,%i:'%(self.POIRange[0],self.POIRange[1])
+            self._poi += ' --setParameterRanges ' + range_str.join(pois) + range_str[:-1]
             return
         else:
             raise TypeError("POI must be either string (',' as delimiter) or list!\nYou provided a ",type(pois))
@@ -150,9 +168,9 @@ class CombineWorkflows:
         wrapper_name = self.modeldir+'/wrapper.sh'
         with open(wrapper_name,'w') as wrapper:
             wrapper.write("#!/bin/bash\n")
-            wrapper.write("source /cvmfs/cms.cern.ch/cmsset_default.sh\n")
-            wrapper.write("cd "+pathCMSSW+"/src/\n")
-            wrapper.write("eval `scramv1 runtime -sh`\n")
+            # wrapper.write("source /cvmfs/cms.cern.ch/cmsset_default.sh\n")
+            # wrapper.write("cd "+pathCMSSW+"/src/\n")
+            # wrapper.write("eval `scramv1 runtime -sh`\n")
             wrapper.write(self.combineString(debug=True))
             wrapper.close()
         os.system('chmod u+x '+ wrapper_name)
@@ -163,7 +181,7 @@ class CombineWorkflows:
         command_string = """#FitDiagnostics Workflow\n"""
         command_string += exec_bash("cd " + self.modeldir + "\n",debug)
         command_string += exec_bash("source build.sh\n",debug)
-        command_string += exec_bash("combine -M FitDiagnostics {WORKSPACE} {POI} --saveShapes {EXTRA}".format(WORKSPACE=self.workspace,POI=self.POI,EXTRA=self.extraOptions),debug)
+        command_string += exec_bash("combine -M FitDiagnostics {WORKSPACE} {POI} --saveShapes {EXTRA} -n ''".format(WORKSPACE=self.workspace,POI=self.POI,EXTRA=self.extraOptions),debug)
         command_string += exec_bash("PostFitShapesFromWorkspace -w {WORKSPACE} -o {MODELDIR}fit_shapes.root --postfit --sampling -f {MODELDIR}fitDiagnostics.root:fit_s".format(WORKSPACE=self.workspace,MODELDIR=self.modeldir),debug)
         return command_string
 

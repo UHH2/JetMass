@@ -1,5 +1,5 @@
 {
-  "ModelName":"CombinationOneScale",
+  "ModelName":"Combination",
   "gridHistFileName":"../Histograms/grid_oneScale.root",
   "histLocation":"../macros/Histograms_oneScale_noJEC.root",
   "binning":[50,300,5],
