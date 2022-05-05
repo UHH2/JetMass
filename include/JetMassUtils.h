@@ -84,3 +84,11 @@ const GenericJet * find_Vmatched_jet(std::vector<GenericJet> & jets, MatchingSel
   }
   return jet;
 };
+
+int PFMultiplicity(std::vector<PFParticle>,int);
+
+float PFEnergy(std::vector<PFParticle>,int);
+
+float PFTransverseMomentum(std::vector<PFParticle>,int);
+
+

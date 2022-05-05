@@ -44,7 +44,7 @@ int get_V_index(std::vector<GenParticle> particles){
   int v_index(-1);
   for(unsigned int i=0; i<particles.size();i++){
     GenParticle p = particles.at(i);
-    if( (abs(p.pdgId()) == 23) || (abs(p.pdgId()) == 24) ) v_index = i ;
+    if( ((abs(p.pdgId()) == 23) || (abs(p.pdgId()) == 24)) && (p.status() == 22) ) v_index = i ;
   }
   return v_index;
 }
@@ -93,10 +93,10 @@ NLOWeights::NLOWeights(uhh2::Context & ctx, const std::string & genjet_handlenam
   TString selection = ctx.get("selection");
   apply_nloweights = false;
   if(selection == "vjets" && (version.Contains("WJets") || version.Contains("ZJets")) ){
-    genjet_handle = ctx.get_handle<const GenTopJet*>(genjet_handlename);
+    // genjet_handle = ctx.get_handle<const GenTopJet*>(genjet_handlename);
     // recojet_handle = ctx.get_handle<const TopJet*>(recojet_handlename);
     
-    std::string NLOWeightsFilename =  "UHHNtupleConverter/NLOweights" + (std::string)(version.Contains("W") ? "/WJets" : "/ZJets") + "Corr.root";
+    std::string NLOWeightsFilename =  "JetMass/NLOweights" + (std::string)(version.Contains("W") ? "/WJets" : "/ZJets") + "Corr.root";
     
     TFile * NLOWeightsFile = new TFile(locate_file(NLOWeightsFilename).c_str());
     h_kfactor = (TH1F*) NLOWeightsFile->Get("kfactor");
@@ -109,14 +109,19 @@ NLOWeights::NLOWeights(uhh2::Context & ctx, const std::string & genjet_handlenam
 bool NLOWeights::process(uhh2::Event & event){
   if(!apply_nloweights) return false;
 
-  if(!event.is_valid(genjet_handle))throw std::runtime_error("NLOWeights: genjet handle is invalid!");
-  const GenTopJet *genjet(NULL);
-  genjet = event.get(genjet_handle);
-  if(genjet == nullptr)throw std::runtime_error("NLOWeights: genjet from handle is nullptr! ");
+  // if(!event.is_valid(genjet_handle))throw std::runtime_error("NLOWeights: genjet handle is invalid!");
+  // const GenTopJet *genjet(NULL);
+  // genjet = event.get(genjet_handle);
+  // if(genjet == nullptr)throw std::runtime_error("NLOWeights: genjet from handle is nullptr! ");
 
-  float genjetpt = genjet->pt();
-  double kfactor_pt = genjetpt;
-  double ewk_pt = genjetpt;
+  // float genjetpt = genjet->pt();
+  // double kfactor_pt = genjetpt;
+  // double ewk_pt = genjetpt;
+
+  const Particle gen_V_particle = event.genparticles->at(get_V_index(*event.genparticles));
+  float boson_pt = gen_V_particle.pt();
+  double kfactor_pt = boson_pt;
+  double ewk_pt = boson_pt;
   
   if( kfactor_pt > 3000 ) kfactor_pt = 2800;
   if( kfactor_pt < 200 ) kfactor_pt = 205;
@@ -171,4 +176,30 @@ double N2DDTComputer<GenericTopJet>::computeDDTValue(const GenericTopJet * jet){
   double N2ddt_map_value = h_n2ddt_map->GetBinContent(rho_bin,pt_bin);
   
   return n2-N2ddt_map_value;
+}
+
+
+
+int PFMultiplicity(std::vector<PFParticle> particles_, int particleID_){
+  int multiplicity(0);
+  for(auto p: particles_){
+    if(p.particleID() == particleID_)multiplicity++;
+  }
+  return multiplicity;
+}
+
+
+float PFEnergy(std::vector<PFParticle> particles_, int particleID_){
+  float energy(0.0);
+  for(auto p: particles_)if(p.particleID() == particleID_)energy+=p.energy();
+  return energy;
+}
+
+
+float PFTransverseMomentum(std::vector<PFParticle> particles_, int particleID_){
+  float momentum(0.0);
+  for(auto p: particles_){
+    if(p.particleID() == particleID_)momentum+=p.pt();
+  }
+  return momentum;
 }

@@ -1,3 +1,9 @@
 # JetMass
 Create histograms for jet mass calibration
-- when processing V+Jets samples with PreSelModule (in WSelection), make sure to clone [UHHNtupleConverter](https://github.com/Diboson3D/UHHNtupleConverter) to get the root-Files containing the k-factors
+- make sure to get ROOT files with EW-Correction and QCD k-factors from [UHHNtupleConverter](https://github.com/Diboson3D/UHHNtupleConverter):
+
+```
+mkdir NLOWeights; cd NLOWeights
+wget https://github.com/Diboson3D/UHHNtupleConverter/raw/master/NLOweights/WJetsCorr.root
+wget https://github.com/Diboson3D/UHHNtupleConverter/raw/master/NLOweights/ZJetsCorr.root
+```

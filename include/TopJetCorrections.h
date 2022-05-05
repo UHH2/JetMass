@@ -15,7 +15,7 @@
 
 class TopJetCorrections: public uhh2::AnalysisModule {
 public:
-    TopJetCorrections();
+  TopJetCorrections(const std::string jet_collection_name="");
 
     virtual bool process(uhh2::Event & event) override;
     void init(uhh2::Context & ctx);
@@ -27,17 +27,33 @@ public:
   inline static const std::string tjec_tag_2017 = "Fall17_17Nov2017";
   inline static const std::string tjec_ver_2017 = "32";
   inline static const std::string tjec_tag_2018 = "Autumn18";
-  inline static const std::string tjec_ver_2018 = "7";
+  inline static const std::string tjec_ver_2018 = "19";
+
+  inline static const std::string tjec_tag_UL16preVFP = "Summer19UL16APV";
+  inline static const std::string tjec_ver_UL16preVFP = "7";
+  inline static const std::string tjec_tag_UL16postVFP = "Summer19UL16";
+  inline static const std::string tjec_ver_UL16postVFP = "7";
+  inline static const std::string tjec_tag_UL17 = "Summer19UL17";
+  inline static const std::string tjec_ver_UL17 = "5";
+  inline static const std::string tjec_tag_UL18 = "Summer19UL18";
+  inline static const std::string tjec_ver_UL18 = "5";
 
   inline static const std::string tjer_tag_2016 = "Summer16_25nsV1";
   inline static const std::string tjer_tag_2017 = "Fall17_V3";
   inline static const std::string tjer_tag_2018 = "Autumn18_V7";
+
+  inline static const std::string tjer_tag_UL16preVFP = "Summer20UL16APV_JRV3";
+  inline static const std::string tjer_tag_UL16postVFP = "Summer20UL16_JRV3";
+  inline static const std::string tjer_tag_UL17 = "Summer19UL17_JRV2";
+  inline static const std::string tjer_tag_UL18 = "Summer19UL18_JRV2";
+  
 
 private:
     void fail_if_init() const;
 
     std::unique_ptr<YearSwitcher> tjet_corrector_MC, tjet_corrector_data;
     std::shared_ptr<RunSwitcher> tjec_switcher_16, tjec_switcher_17, tjec_switcher_18;
+    std::shared_ptr<RunSwitcher> tjec_switcher_UL16preVFP, tjec_switcher_UL16postVFP, tjec_switcher_UL17, tjec_switcher_UL18;
     std::unique_ptr<GenericJetResolutionSmearer> tjet_resolution_smearer;
 
     bool is_mc;
@@ -48,20 +64,25 @@ private:
 
     // Parameters for JEC & JLC sets
   std::string tjec_tjet_coll;
+  std::string recojet_collection,genjet_collection;
+  const std::string jet_collection_name_;
 };
 
 class TopJetLeptonDeltaRCleaner : public uhh2::AnalysisModule {
  public:
-  explicit TopJetLeptonDeltaRCleaner(float mindr=0.8): minDR_(mindr) {}
+  explicit TopJetLeptonDeltaRCleaner(uhh2::Context & ctx, float mindr=0.8, const std::string jet_collection_name="topjets");//: minDR_(mindr) {}
   virtual bool process(uhh2::Event&) override;
 
  private:
   float minDR_;
+  std::string jet_collection_name_;
+  uhh2::Event::Handle<std::vector<TopJet> > h_topjets;
+
 };
 
 class StandaloneTopJetCorrector{
 public:
-  StandaloneTopJetCorrector(uhh2::Context& ctx);
+  StandaloneTopJetCorrector(uhh2::Context& ctx, std::string tjec_tjet_coll = "AK8PFPuppi");
   float getJecFactor(const uhh2::Event & event, LorentzVector topjet);
   float getJERSmearingFactor(const uhh2::Event &event, Particle topjet, int direction, float jec_factor = 1.0);
   float getJERSmearingFactor(const uhh2::Event &event, LorentzVector topjet, int direction, float jec_factor = 1.0){

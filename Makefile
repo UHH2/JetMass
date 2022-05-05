@@ -9,6 +9,8 @@ USERLDFLAGS := -lUnfold -lSUHH2core -lSUHH2common -lGenVector -lSUHH2JetMETObjec
 USERCXXFLAGS += -I${FJINC} #added
 USERLDFLAGS += -L${FJLIB} -lfastjettools -lfastjet #added 
 
+USERCXXFLAGS += -D$$CMSSW_VERSION
+
 # enable par creation; this is necessary for all packages containing AnalysisModules
 # to be loaded from by AnalysisModuleRunner.
 PAR := 1
