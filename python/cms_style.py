@@ -14,13 +14,42 @@ colors = {
     'WJets':413,
     'other':867
 }
+
+
+obs_draw_option = 'PE1'
+draw_option = 'H'
+
+ratio_plot = True
+additional_pad = False
+label_size_modifier = 1.0
+xLabelSize=18.*label_size_modifier
+yLabelSize=18.*label_size_modifier
+xTitleSize=22.*label_size_modifier
+yTitleSize=22.*label_size_modifier
+xTitleOffset_ratio=2.8
+xTitleOffset=1.0
+yTitleOffset=1.7
+
+bottom_right_margin_modifier = 1.0
+
+
+logX=False
+logY=False
+
+yplot=0.7
+yratio=0.3
+ymax=1.0
+xmax=1.0
+xmin=0.0
+
+
 cms_text = "CMS"
 extra_text = "Preliminary Simulation"
 extra_text_rel_X = 0.12
 font_size_modifier = 1.0
 text_padding = 0.1
 
-additional_text_size = 0.3
+additional_text_size = 0.3*font_size_modifier
 additional_text_ypos = 1.0
 extra_right_margin = 0.0
 def draw_lumi(plotpad, lumi = 41.8,do_extra_text=True,out_of_frame = True,do_cms_text=False,private_work=False,parent_pad = None):
@@ -28,7 +57,8 @@ def draw_lumi(plotpad, lumi = 41.8,do_extra_text=True,out_of_frame = True,do_cms
     global additional_text_ypos
     global cms_text
     lumi_text = "%.1f fb^{-1} (13 TeV)"%float(lumi)
-
+    if private_work:
+        extra_text = "____,work_in_progress"
     latex = ROOT.TLatex()
     latex.SetNDC()
 
@@ -58,23 +88,27 @@ def draw_lumi(plotpad, lumi = 41.8,do_extra_text=True,out_of_frame = True,do_cms
     if(not private_work and not do_cms_text):
         return
     # CMS Text
-    latex.SetTextFont(42 if private_work else 61)
+    # latex.SetTextFont(42 if private_work else 61)
+    latex.SetTextFont(61)
     latex.SetTextAlign(11)
     latex.SetTextSize(cms_text_size*top_margin)
     
+    # if(not private_work):
     if(out_of_frame):
         latex.DrawLatex(left_margin,y_pos,cms_text)
     else:
         y_pos -= top_margin+top_margin*text_padding
         latex.DrawLatex(left_margin*(1+text_padding),y_pos,cms_text)
         
-    if(do_extra_text and not private_work):
+    if(do_extra_text):
+        # latex.SetTextFont(42 if private_work else 52)
         latex.SetTextFont(52)
-        extra_x_pos = left_margin + extra_text_rel_X*(1-left_margin-right_margin) if out_of_frame else left_margin*(1+text_padding)
+        extra_x_pos = left_margin*(1+text_padding) if private_work else left_margin + extra_text_rel_X*(1-left_margin-right_margin) if out_of_frame else left_margin*(1+text_padding)
         counter = 1
         if(not out_of_frame):
             y_pos -= extra_text_size*top_margin
         for extra_t in extra_text.split(" "):
+            extra_t = extra_t.replace("_"," ")
             latex.SetTextSize(extra_text_size * top_margin * (1-0.1*(counter-1)) )
             latex.SetText(extra_x_pos, y_pos, extra_t)
             latex.DrawLatex(extra_x_pos, y_pos, extra_t)
@@ -105,8 +139,9 @@ def cms_style():
     cmsStyle.SetPaperSize(20,26)
     cmsStyle.SetPadTopMargin(0.055)
     cmsStyle.SetPadRightMargin(0.055)
-    cmsStyle.SetPadBottomMargin(0.15)
-    cmsStyle.SetPadLeftMargin(0.15)
+
+    cmsStyle.SetPadBottomMargin(0.15*label_size_modifier)
+    cmsStyle.SetPadLeftMargin(0.15*label_size_modifier)
     
     # cmsStyle.SetTextFont(132)
     cmsStyle.SetTextFont(42)
@@ -143,28 +178,6 @@ def cms_style():
 
 
 
-obs_draw_option = 'PE1'
-draw_option = 'H'
-
-ratio_plot = True
-additional_pad = False
-xLabelSize=18.
-yLabelSize=18.
-xTitleSize=22.
-yTitleSize=22.
-xTitleOffset_ratio=2.8
-xTitleOffset=1.0
-yTitleOffset=1.5
-
-logX=False
-logY=False
-
-yplot=0.7
-yratio=0.3
-ymax=1.0
-xmax=1.0
-xmin=0.0
-
 def setup_hist(hist):
     hist.GetYaxis().SetTitleFont(43)
     hist.GetYaxis().SetTitleSize(yTitleSize)
@@ -182,13 +195,13 @@ def setup_hist(hist):
         hist.GetXaxis().SetLabelFont(43)
         hist.GetXaxis().SetLabelSize(xLabelSize)
         hist.GetXaxis().SetNdivisions(506)
-
-        hist.GetZaxis().SetTitleFont(43)
-        hist.GetZaxis().SetTitleSize(xTitleSize)
-        hist.GetZaxis().SetTitleOffset(1.2*xTitleOffset)
-        hist.GetZaxis().SetLabelFont(43)
-        hist.GetZaxis().SetLabelSize(xLabelSize)
-        hist.GetZaxis().SetNdivisions(506)
+        if(hasattr(hist,"GetZaxis")):
+            hist.GetZaxis().SetTitleFont(43)
+            hist.GetZaxis().SetTitleSize(xTitleSize)
+            hist.GetZaxis().SetTitleOffset(1.2*xTitleOffset)
+            hist.GetZaxis().SetLabelFont(43)
+            hist.GetZaxis().SetLabelSize(xLabelSize)
+            hist.GetZaxis().SetNdivisions(506)
 
     # if(YRangeUser):
     #     hist.GetYaxis().SetRangeUser(y_range[0],y_range[1])
@@ -252,27 +265,27 @@ def setup_pads(c,logY=False):
         ratiopad = None
 
     plotpad.SetTopMargin(0.08)
-    plotpad.SetLeftMargin(0.14)
-    plotpad.SetRightMargin(0.05)
+    plotpad.SetLeftMargin(0.14*label_size_modifier)
+    plotpad.SetRightMargin(0.05*(bottom_right_margin_modifier+1.2))
     plotpad.SetTicks()
     plotpad.Draw()
     
     if(ratio_plot):
-        plotpad.SetBottomMargin(0.016)
+        plotpad.SetBottomMargin(0.016*label_size_modifier)
         ratiopad.SetTopMargin(0.016)
-        ratiopad.SetBottomMargin(0.35)
-        ratiopad.SetLeftMargin(0.14)
-        ratiopad.SetRightMargin(0.05)
+        ratiopad.SetBottomMargin(0.35*bottom_right_margin_modifier)
+        ratiopad.SetLeftMargin(0.14*label_size_modifier)
+        ratiopad.SetRightMargin(0.05*(bottom_right_margin_modifier+1.2))
         ratiopad.SetTicks()
         ratiopad.Draw()
     else:
-        plotpad.SetBottomMargin(0.1)
+        plotpad.SetBottomMargin(0.1*label_size_modifier*bottom_right_margin_modifier)
 
     if(additional_pad):
         addpad.SetTopMargin(0.016)
-        addpad.SetBottomMargin(0.016)
-        addpad.SetLeftMargin(0.14)
-        addpad.SetRightMargin(0.05)
+        addpad.SetBottomMargin(0.016*label_size_modifier*bottom_right_margin_modifier)
+        addpad.SetLeftMargin(0.14*label_size_modifier)
+        addpad.SetRightMargin(0.05*(bottom_right_margin_modifier+0.2))
         addpad.SetTicks()
         addpad.Draw()
 

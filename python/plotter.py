@@ -5,6 +5,8 @@ import argparse, os, json
 import numpy as np
 import sys
 import cms_style
+import collections
+    
 cms_style.cms_style()
 
 
@@ -32,7 +34,9 @@ binning_dict ={
     "ATLAS": {'top':np.linspace(0,350,71),'W':np.linspace(40,160,13),'WfromTop':np.linspace(0,200,40)},
     # "CMS":{'top':np.linspace(0,350,71),'W':np.linspace(0,500,101),'WfromTop':np.linspace(0,300,61)}
     # "CMS":{'top':np.linspace(50,200,16),'W':np.linspace(0,500,101),'WfromTop':np.linspace(0,300,61)}
-    "CMS":{'top':np.linspace(50,300,51),'W':np.linspace(50,200,16),'WfromTop':np.linspace(0,300,61)}
+    # "CMS":{'top':np.linspace(50,300,51),'W':np.linspace(50,200,16),'WfromTop':np.linspace(0,300,61)}
+    "CMS":{'top':np.linspace(50,300,51),'W':np.linspace(50,300,51),'Zbb':np.linspace(50,300,51)}
+    # "CMS":{'top':np.linspace(50,300,26),'W':np.linspace(50,200,16),'WfromTop':np.linspace(0,300,61)}
 }
 
 rebin = True
@@ -153,6 +157,7 @@ legend_names = {
 
 samples = {
     "W":["QCD","ST_tW_top","ST_tW_antitop","TTToSemiLeptonic","TTToHadronic", "ZJetsUnmatched","ZJetsMatched", "WJetsUnmatched","WJetsMatched"],
+    "Zbb":["QCD","ST_tW_top","ST_tW_antitop","TTToSemiLeptonic","TTToHadronic", "ZJetsUnmatched","ZJetsMatched", "WJetsUnmatched","WJetsMatched"],
     "WfromTop":["QCD", "ST_sch", "ST_tch","ST_tWch", "DYJets", "WJets", "TTbar_had","TTbar_dilep", "TTbar_semilep"],
     "top":["QCD", "ST_sch", "ST_tch","ST_tWch", "DYJets", "WJets", "TTbar_had","TTbar_dilep", "TTbar_semilep_mergedTop", "TTbar_semilep_mergedW", "TTbar_semilep_mergedQB", "TTbar_semilep_notMerged"],
 }
@@ -160,6 +165,7 @@ samples = {
 
 mc_samples = {
     "W":["other_vjets","QCD", "ZJetsUnmatched","ZJetsMatched", "WJetsUnmatched","WJetsMatched"],
+    "Zbb":["QCD","ST_tW_top","ST_tW_antitop","TTToSemiLeptonic","TTToHadronic", "ZJetsUnmatched","ZJetsMatched", "WJetsUnmatched","WJetsMatched"],
     "WfromTop":["other_ttbar", "WJets", "ST", "TTbar"],
     # "top":["other_ttbar", "WJets", "ST", "TTbar"],
     # "top":["other_ttbar", "WJets", "ST", "TTbarNonSemiLep","TTbar_semilep_notMerged", "TTbar_semilep_mergedQB","TTbar_semilep_mergedW", "TTbar_semilep_mergedTop" ],
@@ -168,11 +174,24 @@ mc_samples = {
 
 merged_hists={
     "TTbar":["TTbar_had","TTbar_dilep","TTbar_semilep_mergedTop", "TTbar_semilep_mergedW", "TTbar_semilep_mergedQB", "TTbar_semilep_semiMergedTop", "TTbar_semilep_notMerged"],
+
+    # 'TTbarMergedTop':['TTbar_mergedTop'],
+    # 'TTbarMergedW':['TTbar_mergedW'],
+    # 'TTbarMergedQB':['TTbar_mergedQB'],
+    # "TTbarNotMerged":["TTbar_notMerged"],
+
+    # 'TTbarMergedTop':['TTbar_semilep_mergedTop','TT_Mtt_mergedTop'],
+    # 'TTbarMergedW':['TTbar_semilep_mergedW','TT_Mtt_mergedW'],
+    # 'TTbarMergedQB':['TTbar_semilep_mergedQB','TT_Mtt_mergedQB'],
+    # "TTbarNonSemiLep":["TTbar_had","TTbar_dilep"],
+    # "TTbarNotMerged":["TTbar_had","TTbar_dilep","TTbar_semilep_notMerged",'TT_Mtt_notMerged'],
+
     'TTbarMergedTop':['TTbar_semilep_mergedTop'],
     'TTbarMergedW':['TTbar_semilep_mergedW'],
     'TTbarMergedQB':['TTbar_semilep_mergedQB'],
     "TTbarNonSemiLep":["TTbar_had","TTbar_dilep"],
     "TTbarNotMerged":["TTbar_had","TTbar_dilep","TTbar_semilep_notMerged"],
+
     "ST":["ST_sch", "ST_tch","ST_tWch"],
     "other_ttbar":["QCD","DYJets"],
     "other_vjets":["ST_tW_top","ST_tW_antitop","TTToSemiLeptonic","TTToHadronic"]
@@ -181,12 +200,14 @@ merged_hists={
 
 selection_tex = {
     'top':'t#bar{t}#rightarrow #mu + jets',
-    'W':'W/Z + jets'
+    'W':'V + jets',
+    'Zbb':'Zbb + jets'
 }
 
 regions = {
     'top':['_pass','_passW','_fail'],
-    'W':['_pass','_fail']
+    'W':['_pass','_fail'],
+    'Zbb':['_pass','_fail']
 }
 
 region_tex = {
@@ -200,28 +221,47 @@ region_tex = {
         '':'',
         'pass':'pass region',
         'fail':'fail region'
+    },
+    'Zbb':{
+        '':'',
+        'pass':'pass region',
+        'fail':'fail region'
     }
 }
 
 pt_bins_dict = {
-    "top":["inclusive","200to250","250to300", "200to300","300to400", "400to500", "500toInf","300to500","300to350","350to400","400to450","450to500","500to550","550to600","600toInf","400toInf"],
-    # "top":["550to600"],
-    # "W":["inclusive", "500to550", "550to600", "600to675", "675to800", "800to1200", "1200toInf"],    
-    "W":["inclusive", "500to550", "550to600", "600to675", "675to800", "800to1200", "1200to1600","1600to2000","2000to3000","3000to4000","4000to5000","5000to6000","6000toInf"],    
+    # "top":["inclusive","200to250","250to300", "200to300","300to400", "400to500", "500to600","300to500","300to350","350to400","400to450","450to500","500to550","550to600","600toInf","400toInf"],
+    # "W":  ["inclusive", "500to550", "550to600", "600to675", "675to800", "800to1200", "1200toInf"],    
+    "top":["inclusive","200to300","300to400", "400to500", "500to650","650toInf"],
+    "W":["inclusive", "500to650", "650to800", "800to1200", "1200toInf"],
+    "Zbb":["inclusive", "500to650", "650to800", "800to1200", "1200toInf"]
+    # "W":["inclusive", "500to550", "550to600", "600to675", "675to800", "800to1200", "1200to1600","1600to2000","2000to3000","3000to4000","4000to5000","5000to6000","6000toInf"],    
     # "top":["inclusive","200to250","250to300", "300to400", "400to500", "500toInf","300to500","300to350","350to400","400to450","450to500","500to550","550to600","600toInf"],
     # # "top":["550to600"],
     # "W":["inclusive", "500to550", "550to600", "600to675", "675to800", "800to1200", "1200toInf"],    
     # "W":["inclusive", "500to550", "550to600", "600to675", "675to800", "800to1200", "1200toInf",
     #      "500to600", "600to750", "750to900", "900to1200", "500to1200"],    
-    "WfromTop":["inclusive", "200to300", "300to400", "400to500", "500toInf",
-                "200to225", "225to250", "250to275", "275to300", "300to325", "325to350", "350to400", "400to500","200to350"],
+    # "WfromTop":["inclusive", "200to300", "300to400", "400to500", "500toInf",
+    #             "200to225", "225to250", "250to275", "275to300", "300to325", "325to350", "350to400", "400to500","200to350"],
 }
 
 pt_bins_tex_dict = {}
 for selection, bins in pt_bins_dict.items():
     for pt_bin in bins:
-        pt_bins_tex_dict[pt_bin] = "" if pt_bin is "inclusive" else " %s GeV #leq p_{T} < %s GeV"%(pt_bin.split('to')[0],pt_bin.split('to')[1])
+        pt_bins_tex_dict[pt_bin] = "" if (pt_bin == "inclusive") else " %s GeV #leq p_{T} < %s GeV"%(pt_bin.split('to')[0],pt_bin.split('to')[1])
 
+
+nbjet_bins_dict = {
+    "top":[""],
+    "W":[""],
+    "Zbb":["","Nbjeteq0","Nbjetgt0"]
+}
+
+nbjet_bins_tex_dict = {
+    "":"",
+    "Nbjeteq0":"N_{b-tag outside AK8} = 0",
+    "Nbjetgt0":"N_{b-tag outside AK8} > 0",
+}
 
 obs_draw_option = 'PE1X0'
 draw_option = 'H'
@@ -237,6 +277,7 @@ additional_text_padding = 0.4
 additional_text_size_modifier=1.0
 draw_extra_text=True
 luminosity = 41.8
+private_work = False
 
 ratio_plot = True
 ratio_hist_yTitle = "#frac{Data}{MC}"
@@ -263,10 +304,10 @@ x_range = [None,None]
 YRangeUser = all(list(map(lambda a: a is not None ,y_range)))
 XRangeUser = all(list(map(lambda a: a is not None ,x_range)))                
 
-def get_hists(f_hists, samples, hist_dir='_%s_mjet_inclusive_pass',selection='top',pseudo_data=False):
-    print(f_hists, samples, hist_dir,selection)
+def get_hists(f_hists, samples, hist_dir='_%s_mjet_inclusive_pass',selection='top',pseudo_data=False,include_merged_hists = True):
+    # print(f_hists, samples, hist_dir,selection)
     hists = []
-    hist_dir = selection+hist_dir if hist_dir[0] is '_' else hist_dir
+    hist_dir = selection+hist_dir if (hist_dir[0] == '_') else hist_dir
     print(hist_dir)
     new_binning = None
     if(rebin):
@@ -275,7 +316,7 @@ def get_hists(f_hists, samples, hist_dir='_%s_mjet_inclusive_pass',selection='to
     h_data = None
     if(not pseudo_data):
         for data_name in ['Data','data_obs','data']:
-            h_data = f_hists.Get(hist_dir%data_name)
+            h_data = f_hists.Get(str(hist_dir%data_name))
             try:
                 h_data.GetName()
                 break
@@ -305,14 +346,17 @@ def get_hists(f_hists, samples, hist_dir='_%s_mjet_inclusive_pass',selection='to
             h_data.GetYaxis().SetTitle(yTitle)
                                        
         h_qcd_from_data = h_data.Clone()
-        
-    mc_hists = {}
+
+    #mc_hists = {}
+    mc_hists = collections.OrderedDict()
+    
     for sample in samples:
         this_hist = None
-        if(sample in merged_hists):
+        print(sample, hist_dir)
+        if(sample in merged_hists and include_merged_hists):
             for subsample in merged_hists[sample]:
                 try:
-                    this_subhist = f_hists.Get(hist_dir%subsample).Clone()
+                    this_subhist = f_hists.Get(str(hist_dir%subsample)).Clone()
                 except:
                     this_subhist = h_data.Clone()
                     this_subhist.Reset()
@@ -324,7 +368,7 @@ def get_hists(f_hists, samples, hist_dir='_%s_mjet_inclusive_pass',selection='to
                 else:
                     this_hist.Add(this_subhist.Clone())
         else:                
-            this_hist = f_hists.Get(hist_dir%sample).Clone()
+            this_hist = f_hists.Get(str(hist_dir%sample)).Clone()
 
         if(new_binning is not None):
             this_hist = this_hist.Rebin(len(new_binning)-1,"",new_binning)
@@ -345,18 +389,20 @@ def get_hists(f_hists, samples, hist_dir='_%s_mjet_inclusive_pass',selection='to
             else:
                 h_data.Add(h,1.0)
     else:
-        if(scaleQCD and selection == "W"):
+        if(scaleQCD and (selection in ["W","Zbb"]) ):
             norm = mc_hists['QCD'].Integral()
             mc_hists['QCD'].Scale((h_qcd_from_data.Integral()/norm) if norm > 0 else 1.0)
 
     return (h_data,mc_hists)
         
         
-def plot_data_mc(h_data=None,h_mc=None,plot_title="",out_dir=None,legend_entries=[],additional_text="",signal_mc=[],additional_hists=[],additional_data=[]):
+def plot_data_mc(h_data=None,h_mc=None,plot_title="",out_dir=None,legend_entries=[],additional_text="",signal_mc=[],additional_hists=[],additional_data=[],cutflow = False):
+    cms_style.bottom_right_margin_modifier =1.5 if cutflow else 1.0
+    cms_style.cms_style()
     if(h_data is None and h_mc is None and len(additional_hists)==0):
         raise ValueError("No Histograms were provided!")    
-    c_width = 1800 if ultrawide else 600 
-            
+    c_width = 1200 if ultrawide else (900 if cutflow else 600)
+    #print(plot_title)
     c = ROOT.TCanvas(plot_title,plot_title,c_width,600)            
     legend = ROOT.TLegend(0,0,1,1) if legend_on_extern_canvas else ROOT.TLegend(*legend_bbox)
     legend.SetFillStyle(0)
@@ -365,7 +411,14 @@ def plot_data_mc(h_data=None,h_mc=None,plot_title="",out_dir=None,legend_entries
     cms_style.ratio_plot = ratio_plot
     cms_style.additional_pad = len(signal_mc)>0
     plotpad,ratiopad,additional_pad = cms_style.setup_pads(c,logY=logY )
-            
+
+    minY = y_range[0]
+    maxY = y_range[1]
+
+    # if(private_work):
+    #     cms_style.cms_text = ""
+    #     cms_style.extra_text = "private work"
+    # else:
     cms_style.extra_text = extra_text
     cms_style.extra_text_rel_X = 0.14
     cms_style.font_size_modifier = 0.8
@@ -373,7 +426,7 @@ def plot_data_mc(h_data=None,h_mc=None,plot_title="",out_dir=None,legend_entries
     cms_style.text_padding = lumi_text_padding
     #cms_style.text_padding = lumi_text_padding
         
-    cms_style.draw_lumi(plotpad, lumi = luminosity,do_extra_text=draw_extra_text,out_of_frame = True,do_cms_text=draw_extra_text)
+    cms_style.draw_lumi(plotpad, lumi = luminosity,do_extra_text=draw_extra_text,out_of_frame = True,do_cms_text=draw_extra_text,private_work = private_work)
     plotpad.cd()
 
     bkg_err = None
@@ -389,7 +442,7 @@ def plot_data_mc(h_data=None,h_mc=None,plot_title="",out_dir=None,legend_entries
     elif(type(h_mc) is ROOT.TH1F):
         bkg_stack = h_mc.Clone()
         bkg_err = h_mc.Clone()
-    elif(type(h_mc) is list or type(h_mc) is dict):
+    elif(type(h_mc) is list or type(h_mc) in [dict,collections.OrderedDict]):
         bkg_stack = ROOT.THStack()
         bkg_err = None
         h_mc_list = h_mc if type(h_mc) is list else h_mc.values()
@@ -433,9 +486,26 @@ def plot_data_mc(h_data=None,h_mc=None,plot_title="",out_dir=None,legend_entries
             bkg_stack.Draw(draw_option + 'SAME')
     else:
         if(bkg_stack is not None):
+            if(maxY is not None):
+                bkg_stack.SetMaximum(maxY)
+            if(minY is not None):
+                bkg_stack.SetMinimum(minY)
+            
             bkg_stack.Draw(draw_option)
-            frame_hist = (bkg_stack,draw_option)
+            frame_hist = (bkg_stack.GetHistogram(),draw_option)
+            # frame_hist[0].Draw(draw_option)
+            # for i in range(1,frame_hist[0].GetNbinsX()+1):
+            #     print('changing label:')
+            #     print(frame_hist[0].GetXaxis().GetBinLabel(i))
+            #     frame_hist[0].GetXaxis().ChangeLabel(i,30.)
+
+            # frame_hist[0].Draw(draw_option)
+            # bkg_stack.Draw(draw_option+"SAME")
+            # frame_hist = (bkg_stack.GetHistogram(),draw_option)
+            # frame_hist = (bkg_stack,draw_option)
             # bkg_stack.GetYaxis().SetRangeUser(0.9*pow(10,round(np.log10(max_val))-4),1.4*max_val)
+            # plotpad.RedrawAxis()
+
             cms_style.setup_hist(bkg_stack)
         else:
             first_add_hist = additional_hists.pop(0)
@@ -460,12 +530,17 @@ def plot_data_mc(h_data=None,h_mc=None,plot_title="",out_dir=None,legend_entries
         max_val = max(max_val ,h.GetMaximum())
         h.Draw(draw_option+'SAME')
 
-    if(frame_hist is not None):        
-        minY = 0.9*pow(10,round(np.log10(max_val))-4) if logY else 0.0
-        maxY = 1.4*max_val
-        print(maxY)
-        print("A"*18)
+    if(frame_hist is not None):
+        if(None in y_range):
+            minY = 0.9*pow(10,round(np.log10(max_val))-4) if logY else 0.0
+            maxY = 1.4*max_val
         frame_hist[0].GetYaxis().SetRangeUser(minY,maxY)
+        # for i in range(1,frame_hist[0].GetNbinsX()+1):
+        #     print('changing label:')
+        #     print(frame_hist[0].GetXaxis().GetBinLabel(i))
+            # frame_hist[0].GetXaxis().ChangeLabel(i,30.)
+            # frame_hist[0].GetXaxis().ChangeLabel(i,-1,-1,-1,-1,-1,"#pi")
+
 
         frame_hist[0].Draw(frame_hist[1]+'SAME')
         
@@ -582,7 +657,7 @@ def plot_data_mc(h_data=None,h_mc=None,plot_title="",out_dir=None,legend_entries
     if(out_dir is not None):
         c.SaveAs(out_dir+'/'+plot_title.replace(" ","_")+'.pdf')
         # c.SaveAs(out_dir+'/'+plot_title.replace(" ","_")+'.png')
-    return (c,(plotpad,ratiopad,additional_pad),out_dir+'/'+plot_title.replace(" ","_")+'.pdf')
+    return (c,(plotpad,ratiopad,additional_pad),plot_title.replace(" ","_")+'.pdf')
 
 
     
