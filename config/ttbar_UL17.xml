@@ -1,0 +1,124 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE JobConfiguration PUBLIC "" "JobConfig.dtd" [
+<!ENTITY 	 SingleMuon_RunB 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL17/SingleMuon_Run2017B-UL2017_MiniAODv2-v1.xml">
+<!ENTITY 	 SingleMuon_RunC 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL17/SingleMuon_Run2017C-UL2017_MiniAODv2-v1.xml">
+<!ENTITY 	 SingleMuon_RunD 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL17/SingleMuon_Run2017D-UL2017_MiniAODv2-v1.xml">
+<!ENTITY 	 SingleMuon_RunE 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL17/SingleMuon_Run2017E-UL2017_MiniAODv2-v1.xml">
+<!ENTITY 	 SingleMuon_RunF 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL17/SingleMuon_Run2017F-UL2017_MiniAODv2-v1.xml">
+
+<!ENTITY 	 ST_s-channel_4f_leptonDecays 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/ST_s-channel_4f_leptonDecays_CP5_amcatnlo-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 ST_t-channel_antitop_4f_InclusiveDecays 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/ST_t-channel_antitop_4f_InclusiveDecays_CP5_powheg-madspin-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 ST_t-channel_top_4f_InclusiveDecays 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/ST_t-channel_top_4f_InclusiveDecays_CP5_powheg-madspin-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 ST_tW_antitop_5f_NoFullyHadronicDecays_PDFWeights 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/ST_tW_antitop_5f_NoFullyHadronicDecays_CP5_PDFWeights-powheg-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 ST_tW_top_5f_NoFullyHadronicDecays_PDFWeights 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/ST_tW_top_5f_NoFullyHadronicDecays_CP5_PDFWeights-powheg-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 QCD_Pt-15To20_MuEnrichedPt5 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/QCD_Pt-15To20_MuEnrichedPt5_CP5_pythia8_Summer20UL17_v2.xml">
+<!ENTITY 	 QCD_Pt-20To30_MuEnrichedPt5 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/QCD_Pt-20To30_MuEnrichedPt5_CP5_pythia8_Summer20UL17_v2.xml">
+<!ENTITY 	 QCD_Pt-30To50_MuEnrichedPt5 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/QCD_Pt-30To50_MuEnrichedPt5_CP5_pythia8_Summer20UL17_v2.xml">
+<!ENTITY 	 QCD_Pt-50To80_MuEnrichedPt5 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/QCD_Pt-50To80_MuEnrichedPt5_CP5_pythia8_Summer20UL17_v2.xml">
+<!ENTITY 	 QCD_Pt-80To120_MuEnrichedPt5 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/QCD_Pt-80To120_MuEnrichedPt5_CP5_pythia8_Summer20UL17_v2.xml">
+<!ENTITY 	 QCD_Pt-120To170_MuEnrichedPt5 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/QCD_Pt-120To170_MuEnrichedPt5_CP5_pythia8_Summer20UL17_v2.xml">
+<!ENTITY 	 QCD_Pt-170To300_MuEnrichedPt5 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/QCD_Pt-170To300_MuEnrichedPt5_CP5_pythia8_Summer20UL17_v2.xml">
+<!ENTITY 	 QCD_Pt-300To470_MuEnrichedPt5 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/QCD_Pt-300To470_MuEnrichedPt5_CP5_pythia8_Summer20UL17_v2.xml">
+<!ENTITY 	 QCD_Pt-470To600_MuEnrichedPt5 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/QCD_Pt-470To600_MuEnrichedPt5_CP5_pythia8_Summer20UL17_v2.xml">
+<!ENTITY 	 QCD_Pt-600To800_MuEnrichedPt5 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/QCD_Pt-600To800_MuEnrichedPt5_CP5_pythia8_Summer20UL17_v2.xml">
+<!ENTITY 	 QCD_Pt-800To1000_MuEnrichedPt5 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/QCD_Pt-800To1000_MuEnrichedPt5_CP5_pythia8_Summer20UL17_v2.xml">
+<!ENTITY 	 QCD_Pt-1000_MuEnrichedPt5 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/QCD_Pt-1000_MuEnrichedPt5_CP5_pythia8_Summer20UL17_v2.xml">
+<!ENTITY 	 DYJetsToLL_M-50_HT-100to200 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/DYJetsToLL_M-50_HT-100to200_CP5_PSweights_madgraphMLM-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 DYJetsToLL_M-50_HT-1200to2500 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/DYJetsToLL_M-50_HT-1200to2500_CP5_PSweights_madgraphMLM-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 DYJetsToLL_M-50_HT-200to400 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/DYJetsToLL_M-50_HT-200to400_CP5_PSweights_madgraphMLM-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 DYJetsToLL_M-50_HT-2500toInf 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/DYJetsToLL_M-50_HT-2500toInf_CP5_PSweights_madgraphMLM-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 DYJetsToLL_M-50_HT-400to600 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/DYJetsToLL_M-50_HT-400to600_CP5_PSweights_madgraphMLM-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 DYJetsToLL_M-50_HT-600to800 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/DYJetsToLL_M-50_HT-600to800_CP5_PSweights_madgraphMLM-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 DYJetsToLL_M-50_HT-70to100 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/DYJetsToLL_M-50_HT-70to100_CP5_PSweights_madgraphMLM-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 DYJetsToLL_M-50_HT-800to1200 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/DYJetsToLL_M-50_HT-800to1200_CP5_PSweights_madgraphMLM-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 WJetsToLNu_HT-70to100 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/WJetsToLNu_HT-70To100_CP5_madgraphMLM-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 WJetsToLNu_HT-100to200 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/WJetsToLNu_HT-100To200_CP5_madgraphMLM-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 WJetsToLNu_HT-200to400 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/WJetsToLNu_HT-200To400_CP5_madgraphMLM-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 WJetsToLNu_HT-400to600 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/WJetsToLNu_HT-400To600_CP5_madgraphMLM-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 WJetsToLNu_HT-600to800 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/WJetsToLNu_HT-600To800_CP5_madgraphMLM-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 WJetsToLNu_HT-800to1200 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/WJetsToLNu_HT-800To1200_CP5_madgraphMLM-pythia8_Summer20UL17_v2.xml">
+<!ENTITY 	 WJetsToLNu_HT-1200to2500 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/WJetsToLNu_HT-1200To2500_CP5_madgraphMLM-pythia8_Summer20UL17_v1.xml">
+<!ENTITY 	 WJetsToLNu_HT-2500toInf 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/WJetsToLNu_HT-2500ToInf_CP5_madgraphMLM-pythia8_Summer20UL17_v2.xml">
+
+<!ENTITY 	 OUTdir 	 "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/ttbarTrees/UL17/">
+
+]>
+
+<!--
+<ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="5" />
+<ConfigSGE RAM ="4" DISK ="4" Mail="steffen.albrecht@desy.de" Notification="as" Workdir="workdir_ttbar_UL17"/>
+-->
+
+
+<JobConfiguration JobName="ttbarJob" OutputLevel="INFO">
+  <Library Name="libSUHH2JetMass"/>
+  <Package Name="SUHH2JetMass.par"/>
+  <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="41479.68052876168">
+    <InputData Version="SingleMuon_RunB_UL17" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_RunB;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="SingleMuon_RunC_UL17" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_RunC;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="SingleMuon_RunD_UL17" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_RunD;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="SingleMuon_RunE_UL17" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_RunE;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="SingleMuon_RunF_UL17" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_RunF;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="ST_s-channel_4f_leptonDecays_UL17" Lumi="14651569.056094544" Type="MC" NEventsMax="-1" Cacheable="False">&ST_s-channel_4f_leptonDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="ST_t-channel_antitop_4f_InclusiveDecays_UL17" Lumi="55232349.35083384" Type="MC" NEventsMax="-1" Cacheable="False">&ST_t-channel_antitop_4f_InclusiveDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="ST_t-channel_top_4f_InclusiveDecays_UL17" Lumi="101514487.91795324" Type="MC" NEventsMax="-1" Cacheable="False">&ST_t-channel_top_4f_InclusiveDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="ST_tW_antitop_5f_NoFullyHadronicDecays_PDFWeights_UL17" Lumi="13905537.621355606" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_antitop_5f_NoFullyHadronicDecays_PDFWeights;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="ST_tW_top_5f_NoFullyHadronicDecays_PDFWeights_UL17" Lumi="13870826.424096718" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_top_5f_NoFullyHadronicDecays_PDFWeights;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_Pt-15To20_MuEnrichedPt5_UL17" Lumi="3.2173091976676176" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_Pt-15To20_MuEnrichedPt5;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_Pt-20To30_MuEnrichedPt5_UL17" Lumi="25.598242563762376" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_Pt-20To30_MuEnrichedPt5;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_Pt-30To50_MuEnrichedPt5_UL17" Lumi="43.00857540263543" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_Pt-30To50_MuEnrichedPt5;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_Pt-50To80_MuEnrichedPt5_UL17" Lumi="106.90483717235901" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_Pt-50To80_MuEnrichedPt5;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_Pt-80To120_MuEnrichedPt5_UL17" Lumi="518.9184234348905" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_Pt-80To120_MuEnrichedPt5;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_Pt-120To170_MuEnrichedPt5_UL17" Lumi="1860.0166230689329" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_Pt-120To170_MuEnrichedPt5;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_Pt-170To300_MuEnrichedPt5_UL17" Lumi="10416.534141126158" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_Pt-170To300_MuEnrichedPt5;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_Pt-300To470_MuEnrichedPt5_UL17" Lumi="94650.73420480567" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_Pt-300To470_MuEnrichedPt5;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_Pt-470To600_MuEnrichedPt5_UL17" Lumi="668447.9528402167" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_Pt-470To600_MuEnrichedPt5;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_Pt-600To800_MuEnrichedPt5_UL17" Lumi="2154626.911868493" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_Pt-600To800_MuEnrichedPt5;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_Pt-800To1000_MuEnrichedPt5_UL17" Lumi="23875323.260073263" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_Pt-800To1000_MuEnrichedPt5;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_Pt-1000_MuEnrichedPt5_UL17" Lumi="25513716.805942435" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_Pt-1000_MuEnrichedPt5;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="DYJetsToLL_M-50_HT-100to200_UL17" Lumi="135201.51925820258" Type="MC" NEventsMax="-1" Cacheable="False">&DYJetsToLL_M-50_HT-100to200;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="DYJetsToLL_M-50_HT-1200to2500_UL17" Lumi="36069586.95139518" Type="MC" NEventsMax="-1" Cacheable="False">&DYJetsToLL_M-50_HT-1200to2500;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="DYJetsToLL_M-50_HT-200to400_UL17" Lumi="325869.3455558738" Type="MC" NEventsMax="-1" Cacheable="False">&DYJetsToLL_M-50_HT-200to400;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="DYJetsToLL_M-50_HT-2500toInf_UL17" Lumi="496987670.3792985" Type="MC" NEventsMax="-1" Cacheable="False">&DYJetsToLL_M-50_HT-2500toInf;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="DYJetsToLL_M-50_HT-400to600_UL17" Lumi="1063502.3921976374" Type="MC" NEventsMax="-1" Cacheable="False">&DYJetsToLL_M-50_HT-400to600;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="DYJetsToLL_M-50_HT-600to800_UL17" Lumi="4170452.803653401" Type="MC" NEventsMax="-1" Cacheable="False">&DYJetsToLL_M-50_HT-600to800;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="DYJetsToLL_M-50_HT-70to100_UL17" Lumi="87123.18344039972" Type="MC" NEventsMax="-1" Cacheable="False">&DYJetsToLL_M-50_HT-70to100;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="DYJetsToLL_M-50_HT-800to1200_UL17" Lumi="7928652.302902871" Type="MC" NEventsMax="-1" Cacheable="False">&DYJetsToLL_M-50_HT-800to1200;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="WJetsToLNu_HT-70to100_UL17" Lumi="35197.66168371361" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToLNu_HT-70to100;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="WJetsToLNu_HT-100to200_UL17" Lumi="37848.737430167595" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToLNu_HT-100to200;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="WJetsToLNu_HT-200to400_UL17" Lumi="126830.6251860673" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToLNu_HT-200to400;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="WJetsToLNu_HT-400to600_UL17" Lumi="120957.15549657155" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToLNu_HT-400to600;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="WJetsToLNu_HT-600to800_UL17" Lumi="504576.7060964513" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToLNu_HT-600to800;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="WJetsToLNu_HT-800to1200_UL17" Lumi="1030892.017828201" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToLNu_HT-800to1200;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="WJetsToLNu_HT-1200to2500_UL17" Lumi="4286882.352941177" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToLNu_HT-1200to2500;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="WJetsToLNu_HT-2500toInf_UL17" Lumi="45203926.801372476" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToLNu_HT-2500toInf;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <UserConfig>
+      <Item Name="pileup_directory_data" Value="common/UHH2-data/UL17/MyDataPileupHistogram_UL17.root"/>
+      <Item Name="selection" Value="ttbar"/>
+      <Item Name="GenParticleCollection" Value="GenParticles"/>
+      <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
+      <Item Name="pileup_directory" Value="common/UHH2-data/UL17/MyMCPileupHistogram_UL17.root"/>
+      <Item Name="MuonCollection" Value="slimmedMuonsUSER"/>
+      <Item Name="AnalysisModule" Value="JetMassModule"/>
+      <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/>
+      <Item Name="lumi_file" Value="common/UHH2-data/UL17/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON_normtag.root"/>
+      <Item Name="GridFile" Value="JetMass/Histograms/grid_AllPFFlavours.root"/>
+      <Item Name="doGenStudies" Value="false"/>
+      <Item Name="ElectronCollection" Value="slimmedElectronsUSER"/>
+      <Item Name="JetCollection" Value="jetsAk4CHS"/>
+      <Item Name="GenJetCollection" Value="slimmedGenJets"/>
+      <Item Name="dometfilters" Value="true"/>
+      <Item Name="TopJetCollection" Value="jetsAk8PuppiSubstructure_SoftDropPuppi"/>
+      <Item Name="GenTopJetCollection" Value="genjetsAk8Substructure"/>
+      <Item Name="PFParticleCollection" Value="PFParticles"/>
+      <Item Name="METName" Value="slimmedMETs"/>
+      <Item Name="genMETName" Value="slimmedMETs_GenMET"/>
+      <Item Name="additionalBranches" Value="jetsAk8CHSSubstructure_SoftDropCHSgenjetsAk8SubstructureSoftDrop"/>
+      <Item Name="chsjets" Value="jetsAk8CHSSubstructure_SoftDropCHS"/>
+      <Item Name="sdgenjets" Value="genjetsAk8SubstructureSoftDrop"/>
+      <Item Name="use_sframe_weight" Value="false"/>
+      <Item Name="dopvfilter" Value="true"/>
+      <Item Name="doSpikeKiller" Value="true"/>
+    </UserConfig>
+  </Cycle>
+</JobConfiguration>
