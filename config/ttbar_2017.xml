@@ -62,7 +62,9 @@
   <Package Name="SUHH2JetMass.par"/>
 
 
-  <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="41530">
+  <!-- <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="41530">     -->
+  <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="41528.9954019578">
+    <!-- this lumi is taken from recalculation with bricalc (physics normtag and /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions17/13TeV/ReReco/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.txt)-->    
     <InputData Version="SingleMu_B_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_B;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="SingleMu_C_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_C;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="SingleMu_D_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_D;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
