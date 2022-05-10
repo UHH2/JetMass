@@ -26,7 +26,7 @@
 <!ENTITY 	 ST_tW_antitop_5f_inclusiveDecays 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16preVFP/ST_tW_antitop_5f_inclusiveDecays_CP5_powheg-pythia8_Summer20UL16APV_v1.xml">
 <!ENTITY 	 ST_tW_top_5f_inclusiveDecays 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16preVFP/ST_tW_top_5f_inclusiveDecays_CP5_powheg-pythia8_Summer20UL16APV_v1.xml">
 
-<!ENTITY 	 OUTdir 	 "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/UL16preVFP/">
+<!ENTITY 	 OUTdir 	 "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/">
 
 ]>
 
@@ -65,10 +65,13 @@
     <InputData Version="ST_tW_antitop_5f_inclusiveDecays_UL16preVFP" Lumi="2085532.5289818689" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_antitop_5f_inclusiveDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="ST_tW_top_5f_inclusiveDecays_UL16preVFP" Lumi="2081580.7006945608" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_top_5f_inclusiveDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <UserConfig>
+      <Item Name="doGenStudies" Value="false"/>
+      <Item Name="doSpikeKiller" Value="true"/>
+      <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/>
+      <Item Name="selection" Value="vjets"/>
+      <Item Name="pileup_directory_data" Value="common/UHH2-data/UL16preVFP/MyDataPileupHistogram_UL16preVFP.root"/>
       <Item Name="pileup_directory" Value="common/UHH2-data/UL16preVFP/MyMCPileupHistogram_UL16preVFP.root"/>
       <Item Name="lumi_file" Value="common/UHH2-data/UL16preVFP/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON_UL16preVFP_normtag.root"/>
-      <Item Name="GridFile" Value="JetMass/Histograms/grid_AllPFFlavours.root"/>
-      <Item Name="doGenStudies" Value="false"/>
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
       <Item Name="GenParticleCollection" Value="GenParticles"/>
       <Item Name="ElectronCollection" Value="slimmedElectronsUSER"/>
@@ -80,17 +83,16 @@
       <Item Name="PFParticleCollection" Value="PFParticles"/>
       <Item Name="METName" Value="slimmedMETs"/>
       <Item Name="genMETName" Value="slimmedMETs_GenMET"/>
-      <Item Name="additionalBranches" Value="jetsAk8CHSSubstructure_SoftDropCHSgenjetsAk8SubstructureSoftDrop"/>
+      <Item Name="additionalBranches" Value="jetsAk8CHSSubstructure_SoftDropCHS genjetsAk8SubstructureSoftDrop"/>
       <Item Name="chsjets" Value="jetsAk8CHSSubstructure_SoftDropCHS"/>
       <Item Name="sdgenjets" Value="genjetsAk8SubstructureSoftDrop"/>
       <Item Name="use_sframe_weight" Value="false"/>
       <Item Name="dometfilters" Value="true"/>
       <Item Name="dopvfilter" Value="true"/>
-      <Item Name="doSpikeKiller" Value="true"/>
-      <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/>
       <Item Name="AnalysisModule" Value="JetMassModule"/>
-      <Item Name="selection" Value="vjets"/>
-      <Item Name="pileup_directory_data" Value="common/UHH2-data/UL16preVFP/MyDataPileupHistogram_UL16preVFP.root"/>
+      <Item Name="jecsmear_direction" Value="nominal"/>
+      <Item Name="jersmear_direction" Value="nominal"/>
+      <Item Name="GridFile" Value="JetMass/Histograms/grid_AllPFFlavours.root"/>
     </UserConfig>
   </Cycle>
 </JobConfiguration>

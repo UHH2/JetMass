@@ -3,8 +3,6 @@
 <!ENTITY 	 JetHT_RunB 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL18/JetHT_Run2018B-UL2018_MiniAODv2-v1.xml">
 <!ENTITY 	 JetHT_RunC 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL18/JetHT_Run2018C-UL2018_MiniAODv2-v1.xml">
 <!ENTITY 	 JetHT_RunD 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL18/JetHT_Run2018D-UL2018_MiniAODv2-v2.xml">
-<!ENTITY 	 JetHT_RunE 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/">
-<!ENTITY 	 JetHT_RunF 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/">
 
 <!ENTITY 	 QCD_HT50to100 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL18/QCD_HT50to100_CP5_PSWeights_madgraph-pythia8_Summer20UL18_v1.xml">
 <!ENTITY 	 QCD_HT100to200 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL18/QCD_HT100to200_CP5_PSWeights_madgraph-pythia8_Summer20UL18_v1.xml">
@@ -26,7 +24,7 @@
 <!ENTITY 	 ST_tW_antitop_5f_inclusiveDecays 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL18/ST_tW_antitop_5f_inclusiveDecays_CP5_powheg-pythia8_Summer20UL18_v2.xml">
 <!ENTITY 	 ST_tW_top_5f_inclusiveDecays 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL18/ST_tW_top_5f_inclusiveDecays_CP5_powheg-pythia8_Summer20UL18_v2.xml">
 
-<!ENTITY 	 OUTdir 	 "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/UL18/">
+<!ENTITY 	 OUTdir 	 "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/">
 
 ]>
 
@@ -43,8 +41,6 @@
     <InputData Version="JetHT_RunB_UL18" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&JetHT_RunB;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="JetHT_RunC_UL18" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&JetHT_RunC;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="JetHT_RunD_UL18" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&JetHT_RunD;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="JetHT_RunE_UL18" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&JetHT_RunE;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="JetHT_RunF_UL18" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&JetHT_RunF;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="QCD_HT50to100_UL18" Lumi="0.2076352286175363" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT50to100;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="QCD_HT100to200_UL18" Lumi="3.5773606946209235" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT100to200;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="QCD_HT200to300_UL18" Lumi="36.96751966473243" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT200to300;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
@@ -65,32 +61,34 @@
     <InputData Version="ST_tW_antitop_5f_inclusiveDecays_UL18" Lumi="7026559.400055788" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_antitop_5f_inclusiveDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="ST_tW_top_5f_inclusiveDecays_UL18" Lumi="7200485.489735007" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_top_5f_inclusiveDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <UserConfig>
+      <Item Name="dometfilters" Value="true"/>
+      <Item Name="dopvfilter" Value="true"/>
+      <Item Name="AnalysisModule" Value="JetMassModule"/>
+      <Item Name="jecsmear_direction" Value="nominal"/>
+      <Item Name="jersmear_direction" Value="nominal"/>
+      <Item Name="GridFile" Value="JetMass/Histograms/grid_AllPFFlavours.root"/>
+      <Item Name="doGenStudies" Value="false"/>
+      <Item Name="doSpikeKiller" Value="true"/>
+      <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/>
+      <Item Name="use_sframe_weight" Value="false"/>
+      <Item Name="GenParticleCollection" Value="GenParticles"/>
+      <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
       <Item Name="selection" Value="vjets"/>
+      <Item Name="MuonCollection" Value="slimmedMuonsUSER"/>
       <Item Name="pileup_directory_data" Value="common/UHH2-data/UL18/MyDataPileupHistogram_UL18.root"/>
       <Item Name="pileup_directory" Value="common/UHH2-data/UL18/MyMCPileupHistogram_UL18.root"/>
       <Item Name="lumi_file" Value="common/UHH2-data/UL18/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON_normtag.root"/>
-      <Item Name="dopvfilter" Value="true"/>
-      <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/>
-      <Item Name="GridFile" Value="JetMass/Histograms/grid_AllPFFlavours.root"/>
-      <Item Name="AnalysisModule" Value="JetMassModule"/>
-      <Item Name="doGenStudies" Value="false"/>
-      <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
-      <Item Name="GenParticleCollection" Value="GenParticles"/>
       <Item Name="ElectronCollection" Value="slimmedElectronsUSER"/>
-      <Item Name="MuonCollection" Value="slimmedMuonsUSER"/>
       <Item Name="JetCollection" Value="jetsAk4CHS"/>
       <Item Name="GenJetCollection" Value="slimmedGenJets"/>
+      <Item Name="sdgenjets" Value="genjetsAk8SubstructureSoftDrop"/>
       <Item Name="TopJetCollection" Value="jetsAk8PuppiSubstructure_SoftDropPuppi"/>
       <Item Name="GenTopJetCollection" Value="genjetsAk8Substructure"/>
       <Item Name="PFParticleCollection" Value="PFParticles"/>
       <Item Name="METName" Value="slimmedMETs"/>
       <Item Name="genMETName" Value="slimmedMETs_GenMET"/>
-      <Item Name="additionalBranches" Value="jetsAk8CHSSubstructure_SoftDropCHSgenjetsAk8SubstructureSoftDrop"/>
+      <Item Name="additionalBranches" Value="jetsAk8CHSSubstructure_SoftDropCHS genjetsAk8SubstructureSoftDrop"/>
       <Item Name="chsjets" Value="jetsAk8CHSSubstructure_SoftDropCHS"/>
-      <Item Name="sdgenjets" Value="genjetsAk8SubstructureSoftDrop"/>
-      <Item Name="use_sframe_weight" Value="false"/>
-      <Item Name="dometfilters" Value="true"/>
-      <Item Name="doSpikeKiller" Value="true"/>
     </UserConfig>
   </Cycle>
 </JobConfiguration>

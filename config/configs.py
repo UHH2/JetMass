@@ -2,6 +2,8 @@
 
 import os
 from collections import OrderedDict
+from lxml.etree import tostring
+from lxml.builder import ElementMaker
 
 
 uhh2datasets_path="/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets"
@@ -16,7 +18,18 @@ selection_names = {
 }
 
 
-sample_lists ={
+test_sample_list = {
+    "vjets":{
+        "DATA":["JetHT_RunB"],
+        "MC":["WJetsToQQ_HT800toInf"]
+    },
+    "ttbar":{
+        "DATA":["SingleMuon_RunB"],
+        "MC":["TTToHadronic"]
+    }    
+}
+
+sample_lists = {
     "vjets":{
         "DATA":[
             "JetHT_RunB",
@@ -56,6 +69,9 @@ sample_lists ={
             "SingleMuon_RunF",
         ],
         "MC":[
+            "TTToHadronic",
+            "TTToSemiLeptonic",
+            "TTTo2L2Nu",
             "ST_s-channel_4f_leptonDecays",
             "ST_t-channel_antitop_4f_InclusiveDecays",
             "ST_t-channel_top_4f_InclusiveDecays",
@@ -103,10 +119,16 @@ lumi_files = {
 }
 
 class Sample(object):
-    def __init__(self,xml,lumi=1.0):
-        self.name=""
-        self.xml=xml
+    def __init__(self,name,xml,lumi=1.0):
+        self.name=name
+        self.xml=xml if xml != "" else None
         self.lumi=float(lumi)
+        if(self.xml is None):
+            self.test_file = None
+        else:
+            xml_ = [l for l in open(os.path.join(uhh2datasets_path,xml),"r").read().split("\n") if ".root" in l]
+            self.test_file = xml_[0].split('"')[1]
+        
     def __str__(self):
         return f"{self.name}({self.lumi}:{self.xml})"
     def __repr__(self):
@@ -114,15 +136,16 @@ class Sample(object):
 
 class SFrameConfig(object):
 
-    def __init__(self,sample,year):
+    def __init__(self,sample,year,test_config=False):
+        self.test_config = test_config
         self.samples={}
-        self.setup_samples(sample_lists[sample],year)
+        self.setup_samples(test_sample_list[sample] if self.test_config else sample_lists[sample],year)
         self.selection = selection_names.get(sample,sample)
         self.year = year
         
         self.AnalysisName = "JetMass" #i.e. name of the directory of the analysis (.../UHH2/<AnalysisName>/)
         
-        self.output_directory= f"/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/{self.selection}Trees/{self.year}/"
+        self.output_directory= "./" if self.test_config else f"/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/{self.selection}Trees/"
         if(not os.path.isdir(self.output_directory)):
             os.makedirs(self.output_directory)
         self.config_dir="."
@@ -159,19 +182,26 @@ class SFrameConfig(object):
         samples_db = MCSampleValuesHelper()
         self.samples = {
             "DATA":{
-                s:Sample(samples_db.get_xml(s,"13TeV",year))
+                s:Sample(s,samples_db.get_xml(s,"13TeV",year))
                 for s in samples["DATA"]
             },
             "MC":{
-                s:Sample(samples_db.get_xml(s,"13TeV",year), samples_db.get_lumi(s,"13TeV",year))
+                s:Sample(s,samples_db.get_xml(s,"13TeV",year), samples_db.get_lumi(s,"13TeV",year))
                 for s in samples["MC"]
             }
         }
+        #clean non-existing xmls (UL16 Data that do not belong to pre- or post-VFP)
+        for t in ["DATA","MC"]:
+            samples_to_remove = []
+            for s in self.samples[t].keys():
+                if(self.samples[t][s].xml == None):
+                    samples_to_remove.append(s)
+            for s in samples_to_remove:
+                del self.samples[t][s]
+                
 
-    def build_xml(self):
-        import lxml.etree as ET
-        import lxml.builder as B
-        F = B.ElementMaker()
+    def build_xml(self):        
+        element_maker = ElementMaker()
 
         entities = "\n".join([f"<!ENTITY \t {name} \t SYSTEM \t \"{os.path.join(uhh2datasets_path,sample.xml)}\">" for name,sample in self.samples["DATA"].items()])
         entities += "\n\n"
@@ -187,35 +217,40 @@ class SFrameConfig(object):
                            '-->\n\n')
 
 
-        config = F.JobConfiguration(
-            F.Library(Name=f"libSUHH2{self.AnalysisName}"),
-            F.Package(Name=f"SUHH2{self.AnalysisName}.par"),
-            F.Cycle(
+        config = element_maker.JobConfiguration(
+            element_maker.Library(Name=f"libSUHH2{self.AnalysisName}"),
+            element_maker.Package(Name=f"SUHH2{self.AnalysisName}.par"),
+            element_maker.Cycle(
                 *(
-                    F.InputData(
-                    f"&{name};",
-                    F.InputTree(Name="AnalysisTree"),
-                    F.OutputTree(Name="AnalysisTree"),
-                    Version=f'{name}_{self.year}', Lumi=str(sample.lumi), Type="Data", NEventsMax="-1", Cacheable="False")
+                    element_maker.InputData(
+                        element_maker.In(FileName=sample.test_file, Lumi="0.0") if self.test_config else f"&{name};",
+                        element_maker.InputTree(Name="AnalysisTree"),
+                        element_maker.OutputTree(Name="AnalysisTree"),
+                        Version=f'{name}_{self.year}' + ("_test" if self.test_config else ""), Lumi=str(sample.lumi), Type="Data", NEventsMax="1000" if self.test_config else "-1", Cacheable="False")
                     for name,sample in self.samples['DATA'].items()
                 ),
                 *(
-                    F.InputData(
-                    f"&{name};",
-                    F.InputTree(Name="AnalysisTree"),
-                    F.OutputTree(Name="AnalysisTree"),
-                    Version=f'{name}_{self.year}', Lumi=str(sample.lumi), Type="MC", NEventsMax="-1", Cacheable="False")
+                    element_maker.InputData(
+                        element_maker.In(FileName=sample.test_file, Lumi="0.0") if self.test_config else f"&{name};",
+                        element_maker.InputTree(Name="AnalysisTree"),
+                        element_maker.OutputTree(Name="AnalysisTree"),
+                        Version=f'{name}_{self.year}' + ("_test" if self.test_config else ""), Lumi=str(sample.lumi), Type="MC", NEventsMax="1000" if self.test_config else "-1", Cacheable="False")
                     for name,sample in self.samples['MC'].items()
                 ),
 
-                F.UserConfig(
-                    *{F.Item(Name=k, Value=v) for k,v in self.user_config.items()}
+                element_maker.UserConfig(
+                    *{element_maker.Item(Name=k, Value=v) for k,v in self.user_config.items()}
                 ),
                 Name="uhh2::AnalysisModuleRunner", OutputDirectory="&OUTdir;",PostFix="",TargetLumi=str(self.target_lumi)),
             JobName=f"{self.selection}Job", OutputLevel="INFO")
-        s = ET.tostring(config, pretty_print=True,xml_declaration=True,encoding="UTF-8",doctype=doctype_string).decode("utf-8").encode("utf-8").decode("utf-8")
+        s = tostring(config, pretty_print=True,xml_declaration=True,encoding="UTF-8",doctype=doctype_string).decode("utf-8").encode("utf-8").decode("utf-8")
 
-        with open(f"{self.config_dir}/{self.selection}_{self.year}.xml","w") as fout:
+        xml_path = f"{self.config_dir}/{self.selection}_{self.year}.xml"
+
+        if(self.test_config):
+            xml_path = xml_path.replace(".xml","_test.xml")
+        
+        with open(xml_path,"w") as fout:
             fout.write(s.replace('&amp;','&'))        
 
 
@@ -229,18 +264,20 @@ if(__name__ == '__main__'):
     parser.add_argument("--year",default = "UL17", choices = years)
     parser.add_argument("--sample", default = "vjets", choices = samples )
     parser.add_argument("--all", action="store_true")
+    parser.add_argument("--test", action="store_true")
+    
     args = parser.parse_args()
 
 
     all_years = years if args.all else [args.year]
     all_samples = samples if args.all else [args.sample]
     
-    for year in years:
-        for sample in samples:
-            sfconfig = SFrameConfig(sample,year)
+    for sample in all_samples:
+        for year in all_years:
+            print(f"---> creating {'test-' if args.test else ''}config for {sample} {year}")
+            sfconfig = SFrameConfig(sample,year,args.test)
             sfconfig.user_config.update(OrderedDict({
-                "GridFile":"JetMass/Histograms/grid_AllPFFlavours.root",
-                "doGenStudies":"false",
+                #ObjectCollections
                 "PrimaryVertexCollection":"offlineSlimmedPrimaryVertices",
                 "GenParticleCollection":"GenParticles",
                 "ElectronCollection":"slimmedElectronsUSER",
@@ -252,21 +289,23 @@ if(__name__ == '__main__'):
                 "PFParticleCollection":"PFParticles",
                 "METName":"slimmedMETs",
                 "genMETName":"slimmedMETs_GenMET",
-                "additionalBranches":"jetsAk8CHSSubstructure_SoftDropCHSgenjetsAk8SubstructureSoftDrop",
+                "additionalBranches":"jetsAk8CHSSubstructure_SoftDropCHS genjetsAk8SubstructureSoftDrop",
                 "chsjets":"jetsAk8CHSSubstructure_SoftDropCHS",
                 "sdgenjets":"genjetsAk8SubstructureSoftDrop",
+
+                #mandatory UHH2 options
                 "use_sframe_weight":"false",
                 "dometfilters":"true",
                 "dopvfilter":"true",
+                "AnalysisModule":"JetMassModule",
+                "jecsmear_direction":"nominal",
+                "jersmear_direction":"nominal",
+
+                #my custom options
+                "GridFile":"JetMass/Histograms/grid_AllPFFlavours.root",
+                "doGenStudies":"false",
                 "doSpikeKiller":"true",
                 "NLOweightsDir":"UHHNtupleConverter/NLOweights",
-                "AnalysisModule":"JetMassModule",
                 
             }))
             sfconfig.build_xml()
-            
-    
-    # helper = MCSampleValuesHelper()
-    # helper.get_lumi("TTTo2L2Nu","13TeV","2018")
-    # print(helper.get_xs("TTTo2L2Nu","13TeV","UL18"))
-    # os.system(f'tail -n 10 {uhh2datasets_path}/{helper.get_xml("TTTo2L2Nu","13TeV","UL18")}')
