@@ -46,7 +46,7 @@
 ]>
 
 <!--
-<ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="5" />
+<ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="50" />
 <ConfigSGE RAM ="4" DISK ="4" Mail="steffen.albrecht@desy.de" Notification="as" Workdir="workdir_ttbar_UL18"/>
 -->
 
@@ -95,34 +95,34 @@
     <InputData Version="WJetsToLNu_HT-1200to2500_UL18" Lumi="5606849.480968858" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToLNu_HT-1200to2500;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="WJetsToLNu_HT-2500toInf_UL18" Lumi="79971330.53755242" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToLNu_HT-2500toInf;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <UserConfig>
+      <Item Name="sdgenjets" Value="genjetsAk8SubstructureSoftDrop"/>
+      <Item Name="use_sframe_weight" Value="false"/>
       <Item Name="dometfilters" Value="true"/>
       <Item Name="dopvfilter" Value="true"/>
       <Item Name="AnalysisModule" Value="JetMassModule"/>
       <Item Name="jecsmear_direction" Value="nominal"/>
       <Item Name="jersmear_direction" Value="nominal"/>
-      <Item Name="pileup_directory_data" Value="common/UHH2-data/UL18/MyDataPileupHistogram_UL18.root"/>
       <Item Name="GridFile" Value="JetMass/Histograms/grid_AllPFFlavours.root"/>
       <Item Name="doGenStudies" Value="false"/>
-      <Item Name="use_sframe_weight" Value="false"/>
       <Item Name="doSpikeKiller" Value="true"/>
       <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/>
+      <Item Name="pileup_directory_data" Value="common/UHH2-data/UL18/MyDataPileupHistogram_UL18.root"/>
+      <Item Name="chsjets" Value="jetsAk8CHSSubstructure_SoftDropCHS"/>
       <Item Name="pileup_directory" Value="common/UHH2-data/UL18/MyMCPileupHistogram_UL18.root"/>
-      <Item Name="selection" Value="ttbar"/>
       <Item Name="ElectronCollection" Value="slimmedElectronsUSER"/>
+      <Item Name="selection" Value="ttbar"/>
       <Item Name="lumi_file" Value="common/UHH2-data/UL18/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON_normtag.root"/>
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
       <Item Name="GenParticleCollection" Value="GenParticles"/>
       <Item Name="MuonCollection" Value="slimmedMuonsUSER"/>
       <Item Name="GenJetCollection" Value="slimmedGenJets"/>
-      <Item Name="sdgenjets" Value="genjetsAk8SubstructureSoftDrop"/>
+      <Item Name="additionalBranches" Value="jetsAk8CHSSubstructure_SoftDropCHS genjetsAk8SubstructureSoftDrop"/>
       <Item Name="JetCollection" Value="jetsAk4CHS"/>
       <Item Name="GenTopJetCollection" Value="genjetsAk8Substructure"/>
       <Item Name="TopJetCollection" Value="jetsAk8PuppiSubstructure_SoftDropPuppi"/>
       <Item Name="PFParticleCollection" Value="PFParticles"/>
       <Item Name="METName" Value="slimmedMETs"/>
       <Item Name="genMETName" Value="slimmedMETs_GenMET"/>
-      <Item Name="additionalBranches" Value="jetsAk8CHSSubstructure_SoftDropCHS genjetsAk8SubstructureSoftDrop"/>
-      <Item Name="chsjets" Value="jetsAk8CHSSubstructure_SoftDropCHS"/>
     </UserConfig>
   </Cycle>
 </JobConfiguration>

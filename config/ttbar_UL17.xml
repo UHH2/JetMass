@@ -48,7 +48,7 @@
 ]>
 
 <!--
-<ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="5" />
+<ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="50" />
 <ConfigSGE RAM ="4" DISK ="4" Mail="steffen.albrecht@desy.de" Notification="as" Workdir="workdir_ttbar_UL17"/>
 -->
 
@@ -99,24 +99,26 @@
     <InputData Version="WJetsToLNu_HT-1200to2500_UL17" Lumi="4286882.352941177" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToLNu_HT-1200to2500;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="WJetsToLNu_HT-2500toInf_UL17" Lumi="45203926.801372476" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToLNu_HT-2500toInf;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <UserConfig>
+      <Item Name="sdgenjets" Value="genjetsAk8SubstructureSoftDrop"/>
+      <Item Name="use_sframe_weight" Value="false"/>
       <Item Name="dometfilters" Value="true"/>
       <Item Name="dopvfilter" Value="true"/>
       <Item Name="AnalysisModule" Value="JetMassModule"/>
       <Item Name="jecsmear_direction" Value="nominal"/>
       <Item Name="jersmear_direction" Value="nominal"/>
-      <Item Name="pileup_directory_data" Value="common/UHH2-data/UL17/MyDataPileupHistogram_UL17.root"/>
       <Item Name="GridFile" Value="JetMass/Histograms/grid_AllPFFlavours.root"/>
       <Item Name="doGenStudies" Value="false"/>
-      <Item Name="use_sframe_weight" Value="false"/>
       <Item Name="doSpikeKiller" Value="true"/>
       <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/>
+      <Item Name="pileup_directory_data" Value="common/UHH2-data/UL17/MyDataPileupHistogram_UL17.root"/>
+      <Item Name="chsjets" Value="jetsAk8CHSSubstructure_SoftDropCHS"/>
+      <Item Name="selection" Value="ttbar"/>
       <Item Name="pileup_directory" Value="common/UHH2-data/UL17/MyMCPileupHistogram_UL17.root"/>
       <Item Name="lumi_file" Value="common/UHH2-data/UL17/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON_normtag.root"/>
-      <Item Name="selection" Value="ttbar"/>
       <Item Name="GenParticleCollection" Value="GenParticles"/>
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
       <Item Name="ElectronCollection" Value="slimmedElectronsUSER"/>
-      <Item Name="sdgenjets" Value="genjetsAk8SubstructureSoftDrop"/>
+      <Item Name="additionalBranches" Value="jetsAk8CHSSubstructure_SoftDropCHS genjetsAk8SubstructureSoftDrop"/>
       <Item Name="MuonCollection" Value="slimmedMuonsUSER"/>
       <Item Name="JetCollection" Value="jetsAk4CHS"/>
       <Item Name="GenJetCollection" Value="slimmedGenJets"/>
@@ -125,8 +127,6 @@
       <Item Name="PFParticleCollection" Value="PFParticles"/>
       <Item Name="METName" Value="slimmedMETs"/>
       <Item Name="genMETName" Value="slimmedMETs_GenMET"/>
-      <Item Name="additionalBranches" Value="jetsAk8CHSSubstructure_SoftDropCHS genjetsAk8SubstructureSoftDrop"/>
-      <Item Name="chsjets" Value="jetsAk8CHSSubstructure_SoftDropCHS"/>
     </UserConfig>
   </Cycle>
 </JobConfiguration>

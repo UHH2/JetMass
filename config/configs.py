@@ -162,7 +162,7 @@ class SFrameConfig(object):
         })
 
         self.mail = "steffen.albrecht@desy.de"
-        self.file_split = 5
+        self.file_split = 50
         self.memory = 4
         self.disk = 4
 
@@ -308,4 +308,5 @@ if(__name__ == '__main__'):
                 "NLOweightsDir":"UHHNtupleConverter/NLOweights",
                 
             }))
+            print(sfconfig.user_config.keys())
             sfconfig.build_xml()
