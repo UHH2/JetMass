@@ -207,31 +207,10 @@ StandaloneTopJetCorrector::StandaloneTopJetCorrector(uhh2::Context& ctx, std::st
   Year year = extract_year(ctx);
 
   const std::string year_str = year_str_map.at(year);
-  short_year = year_str.substr(0, year_str.find("v"));
-
-  // std::string userTopJetColl = string2lowercase(ctx.get("TopJetCollection"));
+  if(year_str.find("16") != std::string::npos) short_year = "2016";
+  if(year_str.find("17") != std::string::npos) short_year = "2017";
+  if(year_str.find("18") != std::string::npos) short_year = "2018";
   
-  // std::string algo = "";
-  // // algo size
-  // if (userTopJetColl.find("ak4") != std::string::npos) {
-  //   algo = "AK4";
-  // }
-  // else if(userTopJetColl.find("ak8") != std::string::npos){
-  //   algo = "AK8";
-  // }
-  // else if (userTopJetColl.find("ak8") == std::string::npos) {
-  //   std::cout << "TopJetCorrections.cxx: Cannot determine tjet cone + radius (neither AK4 nor AK8) - going to assume it is AK8 for JECs" << '\n';
-  //   algo = "AK8";
-  // }
-
-  // std::string pus = "PFchs";
-  // // Pileup subtraction
-  // if (userTopJetColl.find("puppi") != std::string::npos) {
-  //   pus = "PFPuppi";
-  // } else if (userTopJetColl.find("chs") == std::string::npos) {
-  //   std::cout << "Cannot determine pileup subtraction (neither CHS nor PUPPI) - going to assume it is CHS for JECs" << std::endl;
-  // }
-  // std::string tjec_tjet_coll = algo + pus;
   std::cout << "Standalone TopJetCorrector for " << tjec_tjet_coll << std::endl;
   std::unordered_map<std::string,std::vector<std::string>> jec_mc_files = {
     {"2016",JERFiles::JECFilesMC(TopJetCorrections::tjec_tag_2016, TopJetCorrections::tjec_ver_2016, tjec_tjet_coll)},

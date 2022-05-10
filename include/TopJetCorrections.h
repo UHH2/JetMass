@@ -44,7 +44,7 @@ public:
 
   inline static const std::string tjer_tag_UL16preVFP = "Summer20UL16APV_JRV3";
   inline static const std::string tjer_tag_UL16postVFP = "Summer20UL16_JRV3";
-  inline static const std::string tjer_tag_UL17 = "Summer19UL17_JRV2";
+  inline static const std::string tjer_tag_UL17 = "Summer19UL17_JRV3";
   inline static const std::string tjer_tag_UL18 = "Summer19UL18_JRV2";
   
 

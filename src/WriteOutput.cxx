@@ -230,11 +230,25 @@ bool WriteOutput::process(uhh2::Event & event){
   vector<TopJet>* topjets = event.topjets;
   if(topjets->size() < 1) return false;
 
-  event.set(h_n_pv,event.pvs->size());
-  event.set(h_n_trueint_intime,event.genInfo->pileup_NumInteractions_intime());
-  event.set(h_n_trueint_ootimebefore,event.genInfo->pileup_NumInteractions_ootbefore());
-  event.set(h_n_trueint_ootimeafter,event.genInfo->pileup_NumInteractions_ootafter());
-  event.set(h_n_trueint, event.genInfo->pileup_TrueNumInteractions());
+  float n_pv = -999.0;
+  float n_trueint_intime = -999.0;
+  float n_trueint_ootimebefore = -999.0;
+  float n_trueint_ootimeafter = -999.0;
+  float n_trueint =  -999.0;
+  
+  if(isMC){
+    n_pv = event.pvs->size();
+    n_trueint_intime = event.genInfo->pileup_NumInteractions_intime();
+    n_trueint_ootimebefore = event.genInfo->pileup_NumInteractions_ootbefore();
+    n_trueint_ootimeafter = event.genInfo->pileup_NumInteractions_ootafter();
+    n_trueint =  event.genInfo->pileup_TrueNumInteractions();
+  }
+  
+  event.set(h_n_pv, n_pv);
+  event.set(h_n_trueint_intime, n_trueint_intime);
+  event.set(h_n_trueint_ootimebefore, n_trueint_ootimebefore);
+  event.set(h_n_trueint_ootimeafter, n_trueint_ootimeafter);
+  event.set(h_n_trueint, n_trueint);
 
   MatchingSelection matching_selection = event.get(h_matching_selection);
 
