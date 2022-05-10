@@ -49,11 +49,11 @@
 <!ENTITY DYJets_HT1200to2500 SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/MC_DYJetsToLL_M-50_HT-1200to2500.xml">
 <!ENTITY DYJets_HT2500toInf SYSTEM "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_102X_v2/2017/MC_DYJetsToLL_M-50_HT-2500toInf.xml">
 
-<!ENTITY OUTdir   "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/ttbarTrees/2017/">
+<!ENTITY OUTdir   "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/ttbarTrees/">
 
 ]>
 <!--
-<ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="5" />
+<ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="50" />
 <ConfigSGE RAM ="4" DISK ="4" Mail="steffen.albrecht@desy.de" Notification="as" Workdir="workdir_ttbar_2017"/>
 -->
 
@@ -65,11 +65,11 @@
   <!-- <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="41530">     -->
   <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="41528.9954019578">
     <!-- this lumi is taken from recalculation with bricalc (physics normtag and /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions17/13TeV/ReReco/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.txt)-->    
-    <InputData Version="SingleMu_B_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_B;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="SingleMu_C_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_C;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="SingleMu_D_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_D;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="SingleMu_E_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_E;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="SingleMu_F_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_F;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="SingleMu_RunB_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_B;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="SingleMu_RunC_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_C;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="SingleMu_RunD_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_D;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="SingleMu_RunE_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_E;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="SingleMu_RunF_2017v2"          Lumi="1"           Type="DATA" NEventsMax="-1" Cacheable="False">&SingleMu_F;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="TTbar_semilep_2017v2"       Lumi="35279949.78" Type="MC" NEventsMax="-1" Cacheable="False">&TTbar_semilep;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="TTbar_dilep_2017v2"         Lumi="7428080.259" Type="MC" NEventsMax="-1" Cacheable="False">&TTbar_dilep;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="TTbar_had_2017v2"           Lumi="109490.4712" Type="MC" NEventsMax="-1" Cacheable="False">&TTbar_had;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
