@@ -91,6 +91,8 @@
     <InputData Version="WJetsToLNu_HT-1200to2500_UL16postVFP" Lumi="1808443.7716262976" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToLNu_HT-1200to2500;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="WJetsToLNu_HT-2500toInf_UL16postVFP" Lumi="27049714.06786123" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToLNu_HT-2500toInf;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <UserConfig>
+      <Item Name="additionalBranches" Value="jetsAk8CHSSubstructure_SoftDropCHS genjetsAk8SubstructureSoftDrop"/>
+      <Item Name="chsjets" Value="jetsAk8CHSSubstructure_SoftDropCHS"/>
       <Item Name="sdgenjets" Value="genjetsAk8SubstructureSoftDrop"/>
       <Item Name="use_sframe_weight" Value="false"/>
       <Item Name="dometfilters" Value="true"/>
@@ -99,26 +101,25 @@
       <Item Name="jecsmear_direction" Value="nominal"/>
       <Item Name="jersmear_direction" Value="nominal"/>
       <Item Name="GridFile" Value="JetMass/Histograms/grid_AllPFFlavours.root"/>
+      <Item Name="pileup_directory_data" Value="common/UHH2-data/UL16postVFP/MyDataPileupHistogram_UL16postVFP.root"/>
       <Item Name="doGenStudies" Value="false"/>
       <Item Name="doSpikeKiller" Value="true"/>
       <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/>
-      <Item Name="pileup_directory_data" Value="common/UHH2-data/UL16postVFP/MyDataPileupHistogram_UL16postVFP.root"/>
-      <Item Name="chsjets" Value="jetsAk8CHSSubstructure_SoftDropCHS"/>
+      <Item Name="genMETName" Value="slimmedMETs_GenMET"/>
+      <Item Name="JMSJESCorrelationStudy" Value="false"/>
       <Item Name="pileup_directory" Value="common/UHH2-data/UL16postVFP/MyMCPileupHistogram_UL16postVFP.root"/>
       <Item Name="ElectronCollection" Value="slimmedElectronsUSER"/>
+      <Item Name="selection" Value="ttbar"/>
       <Item Name="lumi_file" Value="common/UHH2-data/UL16postVFP/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON_UL16postVFP_normtag.root"/>
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
-      <Item Name="selection" Value="ttbar"/>
       <Item Name="GenParticleCollection" Value="GenParticles"/>
       <Item Name="MuonCollection" Value="slimmedMuonsUSER"/>
       <Item Name="GenJetCollection" Value="slimmedGenJets"/>
       <Item Name="JetCollection" Value="jetsAk4CHS"/>
       <Item Name="TopJetCollection" Value="jetsAk8PuppiSubstructure_SoftDropPuppi"/>
-      <Item Name="additionalBranches" Value="jetsAk8CHSSubstructure_SoftDropCHS genjetsAk8SubstructureSoftDrop"/>
+      <Item Name="METName" Value="slimmedMETs"/>
       <Item Name="GenTopJetCollection" Value="genjetsAk8Substructure"/>
       <Item Name="PFParticleCollection" Value="PFParticles"/>
-      <Item Name="METName" Value="slimmedMETs"/>
-      <Item Name="genMETName" Value="slimmedMETs_GenMET"/>
     </UserConfig>
   </Cycle>
 </JobConfiguration>
