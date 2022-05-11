@@ -109,6 +109,7 @@
       <Item Name="GridFile" Value="JetMass/Histograms/grid_AllPFFlavours.root" />
       <Item Name="selection" Value="ttbar"/>
       <Item Name="doGenStudies" Value="false"/>
+      <Item Name="JMSJESCorrelationStudy" Value="false"/>
 
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
       <Item Name="GenParticleCollection"   Value="GenParticles"/>
@@ -133,11 +134,14 @@
       <Item Name="use_sframe_weight" Value="false"/>
       <Item Name="dometfilters" Value="true" />
       <Item Name="dopvfilter" Value="true" />
+      <Item Name="jecsmear_direction" Value="nominal"/>
+      <Item Name="jersmear_direction" Value="nominal"/>
+
       <Item Name="doSpikeKiller" Value="true" />
-      <Item Name="lumi_file" Value="common/data/2017/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.root"/>
+      <Item Name="lumi_file" Value="common/UHH2-data/2017/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.root"/>
       <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/>
-      <Item Name="pileup_directory_data" Value="common/data/2017/MyDataPileupHistogram.root" />
-      <Item Name="pileup_directory" Value="common/data/2017/MyMCPileupHistogram.root" />
+      <Item Name="pileup_directory_data" Value="common/UHH2-data/2017/MyDataPileupHistogram.root" />
+      <Item Name="pileup_directory" Value="common/UHH2-data/2017/MyMCPileupHistogram.root" />
       
       <Item Name="AnalysisModule" Value="JetMassModule"/>
     </UserConfig>   

@@ -271,6 +271,16 @@ if(__name__ == '__main__'):
 
     all_years = years if args.all else [args.year]
     all_samples = samples if args.all else [args.sample]
+
+    sframe_batch_config = {
+        'vjets':{
+            'file_split':25,
+        },
+        'ttbar':{
+            'file_split':50,
+        },
+    }
+
     
     for sample in all_samples:
         for year in all_years:
@@ -306,7 +316,10 @@ if(__name__ == '__main__'):
                 "doGenStudies":"false",
                 "doSpikeKiller":"true",
                 "NLOweightsDir":"UHHNtupleConverter/NLOweights",
+                "JMSJESCorrelationStudy":"false",
                 
             }))
-            print(sfconfig.user_config.keys())
+            sfconfig.file_split = sframe_batch_config[sample]['file_split']
+            
+            
             sfconfig.build_xml()
