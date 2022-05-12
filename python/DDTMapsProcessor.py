@@ -21,10 +21,6 @@ class DDTMapPrep(processor.ProcessorABC):
         hists.update({'leadingJet_corrected_pt_mass':hist.Hist("Events", year_axis, pT_ax, rho_ax, N2_ax)})
         hists.update({'leadingJet_corrected_pt':hist.Hist("Events", year_axis, pT_ax, rho_ax, N2_ax)})
 
-        hists.update({'leadingJet_msd':hist.Hist("Events", year_axis, pT_ax, rho_ax, N2_ax)})
-        hists.update({'leadingJet_msd_corrected_pt_mass':hist.Hist("Events", year_axis, pT_ax, rho_ax, N2_ax)})
-        hists.update({'leadingJet_msd_corrected_pt':hist.Hist("Events", year_axis, pT_ax, rho_ax, N2_ax)})
-        
         self._hists = processor.dict_accumulator(hists)
 
     @property
@@ -53,15 +49,6 @@ class DDTMapPrep(processor.ProcessorABC):
 
         rho_corrected_pt_mass = 2*np.log(mjet/pt)
         out['leadingJet_corrected_pt_mass'].fill(year=year, pt = pt, rho = rho_corrected_pt_mass, n2 = events.N2, weight = events.weight)
-
-        rho_SD = 2*np.log(mjet_SD_raw/pt_raw)
-        out['leadingJet'].fill(year=year, pt = pt_raw, rho = rho_SD, n2 = events.N2, weight = events.weight)
-        
-        rho_SD_corrected_pt = 2*np.log(mjet_SD_raw/pt)
-        out['leadingJet_corrected_pt'].fill(year=year, pt = pt, rho = rho_SD_corrected_pt, n2 = events.N2, weight = events.weight)
-
-        rho_SD_corrected_pt_mass = 2*np.log(mjet_SD/pt)
-        out['leadingJet_corrected_pt_mass'].fill(year=year, pt = pt, rho = rho_SD_corrected_pt_mass, n2 = events.N2, weight = events.weight)
 
         return out
 
