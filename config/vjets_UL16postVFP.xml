@@ -55,6 +55,24 @@
     <InputData Version="ST_tW_antitop_5f_inclusiveDecays_UL16postVFP" Lumi="2315875.7897517434" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_antitop_5f_inclusiveDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="ST_tW_top_5f_inclusiveDecays_UL16postVFP" Lumi="2254433.3204490934" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_top_5f_inclusiveDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <UserConfig>
+      <Item Name="selection" Value="vjets"/>
+      <Item Name="pileup_directory_data" Value="common/UHH2-data/UL16postVFP/MyDataPileupHistogram_UL16postVFP.root"/>
+      <Item Name="pileup_directory" Value="common/UHH2-data/UL16postVFP/MyMCPileupHistogram_UL16postVFP.root"/>
+      <Item Name="lumi_file" Value="common/UHH2-data/UL16postVFP/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON_UL16postVFP_normtag.root"/>
+      <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
+      <Item Name="GenParticleCollection" Value="GenParticles"/>
+      <Item Name="ElectronCollection" Value="slimmedElectronsUSER"/>
+      <Item Name="MuonCollection" Value="slimmedMuonsUSER"/>
+      <Item Name="JetCollection" Value="jetsAk4CHS"/>
+      <Item Name="GenJetCollection" Value="slimmedGenJets"/>
+      <Item Name="TopJetCollection" Value="jetsAk8PuppiSubstructure_SoftDropPuppi"/>
+      <Item Name="GenTopJetCollection" Value="genjetsAk8Substructure"/>
+      <Item Name="PFParticleCollection" Value="PFParticles"/>
+      <Item Name="METName" Value="slimmedMETs"/>
+      <Item Name="genMETName" Value="slimmedMETs_GenMET"/>
+      <Item Name="additionalBranches" Value="jetsAk8CHSSubstructure_SoftDropCHS genjetsAk8SubstructureSoftDrop"/>
+      <Item Name="chsjets" Value="jetsAk8CHSSubstructure_SoftDropCHS"/>
+      <Item Name="sdgenjets" Value="genjetsAk8SubstructureSoftDrop"/>
       <Item Name="use_sframe_weight" Value="false"/>
       <Item Name="dometfilters" Value="true"/>
       <Item Name="dopvfilter" Value="true"/>
@@ -66,24 +84,7 @@
       <Item Name="doSpikeKiller" Value="true"/>
       <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/>
       <Item Name="JMSJESCorrelationStudy" Value="false"/>
-      <Item Name="selection" Value="vjets"/>
-      <Item Name="ElectronCollection" Value="slimmedElectronsUSER"/>
-      <Item Name="pileup_directory_data" Value="common/UHH2-data/UL16postVFP/MyDataPileupHistogram_UL16postVFP.root"/>
-      <Item Name="MuonCollection" Value="slimmedMuonsUSER"/>
-      <Item Name="pileup_directory" Value="common/UHH2-data/UL16postVFP/MyMCPileupHistogram_UL16postVFP.root"/>
-      <Item Name="lumi_file" Value="common/UHH2-data/UL16postVFP/Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON_UL16postVFP_normtag.root"/>
-      <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
-      <Item Name="GenParticleCollection" Value="GenParticles"/>
-      <Item Name="sdgenjets" Value="genjetsAk8SubstructureSoftDrop"/>
-      <Item Name="JetCollection" Value="jetsAk4CHS"/>
-      <Item Name="GenJetCollection" Value="slimmedGenJets"/>
-      <Item Name="TopJetCollection" Value="jetsAk8PuppiSubstructure_SoftDropPuppi"/>
-      <Item Name="GenTopJetCollection" Value="genjetsAk8Substructure"/>
-      <Item Name="PFParticleCollection" Value="PFParticles"/>
-      <Item Name="METName" Value="slimmedMETs"/>
-      <Item Name="genMETName" Value="slimmedMETs_GenMET"/>
-      <Item Name="additionalBranches" Value="jetsAk8CHSSubstructure_SoftDropCHS genjetsAk8SubstructureSoftDrop"/>
-      <Item Name="chsjets" Value="jetsAk8CHSSubstructure_SoftDropCHS"/>
+      <Item Name="WriteOutputLevel" Value="0"/>
     </UserConfig>
   </Cycle>
 </JobConfiguration>

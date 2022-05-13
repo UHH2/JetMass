@@ -200,7 +200,7 @@ class SFrameConfig(object):
                 del self.samples[t][s]
                 
 
-    def build_xml(self):        
+    def build_xml(self,xml_name):
         element_maker = ElementMaker()
 
         entities = "\n".join([f"<!ENTITY \t {name} \t SYSTEM \t \"{os.path.join(uhh2datasets_path,sample.xml)}\">" for name,sample in self.samples["DATA"].items()])
@@ -239,14 +239,14 @@ class SFrameConfig(object):
                 ),
 
                 element_maker.UserConfig(
-                    *{element_maker.Item(Name=k, Value=v) for k,v in self.user_config.items()}
+                    *[element_maker.Item(Name=k, Value=v) for k,v in self.user_config.items()]
                 ),
                 Name="uhh2::AnalysisModuleRunner", OutputDirectory="&OUTdir;",PostFix="",TargetLumi=str(self.target_lumi)),
             JobName=f"{self.selection}Job", OutputLevel="INFO")
         s = tostring(config, pretty_print=True,xml_declaration=True,encoding="UTF-8",doctype=doctype_string).decode("utf-8").encode("utf-8").decode("utf-8")
 
-        xml_path = f"{self.config_dir}/{self.selection}_{self.year}.xml"
-
+        xml_path = f"{self.config_dir}/{xml_name.replace('.xml','')}.xml"
+        
         if(self.test_config):
             xml_path = xml_path.replace(".xml","_test.xml")
         
@@ -281,45 +281,51 @@ if(__name__ == '__main__'):
         },
     }
 
+
+    common_user_settings = OrderedDict({
+        #ObjectCollections
+        "PrimaryVertexCollection":"offlineSlimmedPrimaryVertices",
+        "GenParticleCollection":"GenParticles",
+        "ElectronCollection":"slimmedElectronsUSER",
+        "MuonCollection":"slimmedMuonsUSER",
+        "JetCollection":"jetsAk4CHS",
+        "GenJetCollection":"slimmedGenJets",
+        "TopJetCollection":"jetsAk8PuppiSubstructure_SoftDropPuppi",
+        "GenTopJetCollection":"genjetsAk8Substructure",
+        "PFParticleCollection":"PFParticles",
+        "METName":"slimmedMETs",
+        "genMETName":"slimmedMETs_GenMET",
+        "additionalBranches":"jetsAk8CHSSubstructure_SoftDropCHS genjetsAk8SubstructureSoftDrop",
+        "chsjets":"jetsAk8CHSSubstructure_SoftDropCHS",
+        "sdgenjets":"genjetsAk8SubstructureSoftDrop",
+        
+        #mandatory UHH2 options
+        "use_sframe_weight":"false",
+        "dometfilters":"true",
+        "dopvfilter":"true",
+        "AnalysisModule":"JetMassModule",
+        "jecsmear_direction":"nominal",
+        "jersmear_direction":"nominal",
+        
+        #my custom options
+        "GridFile":"JetMass/Histograms/grid_AllPFFlavours.root",
+        "doGenStudies":"false",
+        "doSpikeKiller":"true",
+        "NLOweightsDir":"UHHNtupleConverter/NLOweights",        
+    })
     
     for sample in all_samples:
         for year in all_years:
             print(f"---> creating {'test-' if args.test else ''}config for {sample} {year}")
             sfconfig = SFrameConfig(sample,year,args.test)
             sfconfig.user_config.update(OrderedDict({
-                #ObjectCollections
-                "PrimaryVertexCollection":"offlineSlimmedPrimaryVertices",
-                "GenParticleCollection":"GenParticles",
-                "ElectronCollection":"slimmedElectronsUSER",
-                "MuonCollection":"slimmedMuonsUSER",
-                "JetCollection":"jetsAk4CHS",
-                "GenJetCollection":"slimmedGenJets",
-                "TopJetCollection":"jetsAk8PuppiSubstructure_SoftDropPuppi",
-                "GenTopJetCollection":"genjetsAk8Substructure",
-                "PFParticleCollection":"PFParticles",
-                "METName":"slimmedMETs",
-                "genMETName":"slimmedMETs_GenMET",
-                "additionalBranches":"jetsAk8CHSSubstructure_SoftDropCHS genjetsAk8SubstructureSoftDrop",
-                "chsjets":"jetsAk8CHSSubstructure_SoftDropCHS",
-                "sdgenjets":"genjetsAk8SubstructureSoftDrop",
-
-                #mandatory UHH2 options
-                "use_sframe_weight":"false",
-                "dometfilters":"true",
-                "dopvfilter":"true",
-                "AnalysisModule":"JetMassModule",
-                "jecsmear_direction":"nominal",
-                "jersmear_direction":"nominal",
-
-                #my custom options
-                "GridFile":"JetMass/Histograms/grid_AllPFFlavours.root",
-                "doGenStudies":"false",
-                "doSpikeKiller":"true",
-                "NLOweightsDir":"UHHNtupleConverter/NLOweights",
+                **common_user_settings,
+                **OrderedDict({
                 "JMSJESCorrelationStudy":"false",
-                
+                "WriteOutputLevel":"0"
+                }),
             }))
             sfconfig.file_split = sframe_batch_config[sample]['file_split']
             
             
-            sfconfig.build_xml()
+            sfconfig.build_xml(f"{sample}_{year}")
