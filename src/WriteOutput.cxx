@@ -533,7 +533,7 @@ bool WriteOutput::process(uhh2::Event & event){
   std::vector<float> PF_energy_reco_ak8_puppi,PF_energy_reco_ak8_chs,PF_energy_reco_ak8_puppi_sd,PF_energy_reco_ak8_chs_sd;
   std::vector<float> PF_pt_reco_ak8_puppi,PF_pt_reco_ak8_chs,PF_pt_reco_ak8_puppi_sd,PF_pt_reco_ak8_chs_sd;
     
-  for(int i=0;i<all_cat.size();i++){
+  for(unsigned int i=0;i<all_cat.size();i++){
     PF_multiplicities_reco_ak8_puppi.push_back(PFMultiplicity(particles_puppi, i));
     PF_multiplicities_reco_ak8_chs.push_back(PFMultiplicity(particles_chs, i));
     PF_multiplicities_reco_ak8_puppi_sd.push_back(PFMultiplicity(particles_puppi_sd, i));
