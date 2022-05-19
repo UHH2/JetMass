@@ -67,9 +67,11 @@ public:
 private:
   TString version;
   bool is_mc, is_QCD, matchV, is_WSample, is_ZSample, is_buggyPU;
-  bool isTTbarSel = false;
-  bool isVJetsSel = false;
+  bool isttbarSel = false;
+  bool isvjetsSel = false;
   bool do_genStudies = false;
+  bool save_all_jets = false;
+  int write_output_level = 0;
 
   Double_t AK4_Clean_pT,AK4_Clean_eta,AK8_Clean_pT,AK8_Clean_eta;
 
@@ -140,9 +142,15 @@ JetMassModule::JetMassModule(Context & ctx){
   is_QCD = ctx.get("dataset_version").find("QCD") != std::string::npos;
   is_buggyPU = ctx.get("dataset_version").find("buggyPU") != std::string::npos;
   std::cout << "This sample has "<< (is_buggyPU ? "buggyPU" : "normalPU") << std::endl;
+
+  save_all_jets =  string2bool(ctx.get("SaveAllJets","false"));
+
+  write_output_level = (int) string2double(ctx.get("WriteOutputLevel","0"));
+
+    
   const std::string& selection_ = ctx.get("selection", "");
-  if     (selection_ == "ttbar") isTTbarSel = true;
-  else if(selection_ == "vjets")   isVJetsSel = true;
+  if     (selection_ == "ttbar") isttbarSel = true;
+  else if(selection_ == "vjets")   isvjetsSel = true;
   else if(selection_ == "none") std::cout << "ATTENTION: You are about to run on a sample and will not apply any selection!" << std::endl;
   else throw runtime_error("JetMassModule: Select 'ttbar' or 'vjets' selection");
 
@@ -168,10 +176,10 @@ JetMassModule::JetMassModule(Context & ctx){
 
   if(is_buggyPU){
     TString pu_file_path = (TString) ctx.get("dataset_version");
-    pu_file_path = pu_file_path.ReplaceAll("MC","");
+    // pu_file_path = pu_file_path.ReplaceAll("MC","");
     pu_file_path = pu_file_path.ReplaceAll("_buggyPU","");
     pu_file_path = pu_file_path.ReplaceAll("_test","");
-    pu_file_path = "common/data/2017/Pileup_QCD_PtBinned/MyMCPileupHistogram"+pu_file_path+".root";
+    pu_file_path = "common/data/2017/Pileup_QCD_PtBinned/MyMCPileupHistogram_"+pu_file_path+".root";
     ctx.set("pileup_directory",(std::string) pu_file_path);
   }
   std::cout << "reweighting mc pileup using " << ctx.get("pileup_directory")<<" as mc profile dir" <<std::endl;
@@ -185,10 +193,11 @@ JetMassModule::JetMassModule(Context & ctx){
   common->switch_metcorrection(true);
   common->switch_jetPtSorter();
   common->set_HTjetid(jetid);
-  if(is_mc) common->disable_metfilters();
+  if(is_mc || isvjetsSel) common->disable_metfilters(); //TODO: remove || isVJets as soon as updated JetHT-samples with correct METFilters are available
+  // impact of disabling metfilters for jetht seems to negligible
   common->init(ctx);
 
-  if(is_mc && isVJetsSel && is_QCD){
+  if(is_mc && isvjetsSel && is_QCD){
     mcSpikeKiller.reset(new MCLargeWeightKiller(ctx,
                                                 2, // maximum allowed ratio of leading reco jet pT / generator HT
                                                 2, // maximum allowed ratio of leading gen jet pT / generator HT
@@ -287,7 +296,7 @@ JetMassModule::JetMassModule(Context & ctx){
   //Selections
   reco_selection_part1.reset(new AndSelection(ctx,"reco_selection_part1"));
   reco_selection_part2.reset(new AndSelection(ctx,"reco_selection_part2"));
-  if(isTTbarSel){
+  if(isttbarSel){
     reco_selection_part1->add<TriggerSelection>("Trigger selection","HLT_Mu50_v*");
     reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 200 GeV", 1,-1,TopJetId(PtEtaCut(200.,100000.)));
     reco_selection_part1->add<NMuonSelection>("N_{#mu} #geq 1", 1,1);
@@ -297,11 +306,11 @@ JetMassModule::JetMassModule(Context & ctx){
     reco_selection_part1->add<NMuonBTagSelection>("b-jet in muon hemisphere", 1, 999, DeepJetBTag(DeepJetBTag::WP_MEDIUM));
 
     // reco_selection_part2->add<JetIdSelection<TopJet>>("selected jet - p_{T} > 200 GeV", ctx, TopJetId(PtEtaCut(200.,100000.)) ,recotopjet_handlename);
-  }else if(isVJetsSel){
+  }else if(isvjetsSel){
     reco_selection_part1->add<NElectronSelection>("ele-veto",0,0);
     reco_selection_part1->add<NMuonSelection>("muon-veto",0,0);
     reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 500 GeV", 1,-1,TopJetId(PtEtaCut(500.,100000.)));
-    reco_selection_part1->add<HTCut>("H_{T} > 1000 GeV",ctx, 1000.);
+    // reco_selection_part1->add<HTCut>("H_{T} > 1000 GeV",ctx, 1000.); 
 
     // reco_selection_part2->add<JetIdSelection<TopJet>>("selected jet - p_{T} > 500 GeV", ctx, TopJetId(PtEtaCut(500.,100000.)) ,recotopjet_handlename);
     reco_selection_part2->add<RhoCut<TopJet>>("rhocut",ctx, -6.0, -2.1,recotopjet_handlename);
@@ -310,7 +319,7 @@ JetMassModule::JetMassModule(Context & ctx){
 
   gen_selection_part1.reset(new AndSelection(ctx,"gen_selection_part1"));
   gen_selection_part2.reset(new AndSelection(ctx,"gen_selection_part2"));
-  if(isTTbarSel){
+  if(isttbarSel){
     // gen_selection->add<TriggerSelection>("Trigger selection","HLT_Mu50_v*");
     gen_selection_part1->add<NGenTopJetSelection>("N_{gen,AK8} #geq 1, p_{T} > 200 GeV", 1,-1,GenTopJetId(PtEtaCut(200.,100000.)));
     gen_selection_part1->add<TTbarGenSemilepSelection>("gen semilep-selection",ctx, ttbargen_handlename,55.);
@@ -320,7 +329,7 @@ JetMassModule::JetMassModule(Context & ctx){
     // gen_selection->add<TwoDCut>("2D-Cut",0.4,25.);
     // gen_selection->add<NMuonBTagSelection>("b-jet in muon hemisphere", 1, 999, DeepJetBTag(DeepJetBTag::WP_MEDIUM));
     // gen_selection_part2->add<JetIdSelection<GenTopJet>>("selected jet - p_{T} > 200 GeV", ctx, GenTopJetId(PtEtaCut(200.,100000.)) ,gentopjet_handlename); // used to make sure we only get jets over pt-threshold (only useful if we do not select leading jet in pT, e.g. for the test where i picked the trailing jet in N2)
-  }else if(isVJetsSel){
+  }else if(isvjetsSel){
     // gen_selection->add<GenParticleIdSelection>("genele-veto",GenParticleId(GenParticlePDGIdId(11)),0,0);
     // gen_selection->add<GenParticleIdSelection>("genmuon-veto",GenParticleId(GenParticlePDGIdId(13)),0,0);
     // uhh2::Event::Handle<std::vector<Jet>> gentopjet_handle = ctx.get_handle<std::vector<GenTopJet>> (ctx.get("GenTopJetCollection"));
@@ -440,7 +449,7 @@ JetMassModule::JetMassModule(Context & ctx){
 
   
 
-  writer.reset(new WriteOutput(ctx,matching_selection_handlename,recotopjet_handlename,recotopjet_chs_handlename,gentopjet_nocut_handlename));
+  writer.reset(new WriteOutput(ctx,matching_selection_handlename,recotopjet_handlename,recotopjet_chs_handlename,gentopjet_nocut_handlename,write_output_level));
 
   std::string N2DDT_file_path = "JetMass/Histograms/ddtmaps/QCD_2017_PFMass_smooth_gaus4p00sigma.root";
   std::string N2DDT_hist_name = "N2_v_pT_v_rho_0p05_smooth_gaus4p00sigma_maps_cleaner_PFMass";
@@ -479,7 +488,7 @@ bool JetMassModule::process(Event & event) {
   if(EXTRAOUT) std::cout << "JetMassModule: CommonModules done!" << std::endl;
 
   //remove MC Events with very large unphysical weights
-  if(is_mc && isVJetsSel && is_QCD){
+  if(is_mc && isvjetsSel && is_QCD){
     if(!mcSpikeKiller->passes(event)) return false;
     if(EXTRAOUT) std::cout << "JetMassModule: SpikeKiller done!" << std::endl;
   }
@@ -661,11 +670,11 @@ bool JetMassModule::process(Event & event) {
   if(pass_reco_selection_part1){
     const TopJet * recotopjet = NULL;
     if(event.is_valid(handle_recotopjet))recotopjet=event.get(handle_recotopjet);
-    if(isVJetsSel){
+    if(isvjetsSel){
       double n2ddt = reco_n2ddt_computer->computeDDTValue(recotopjet);
       pass_substructure_cut = n2ddt < 0;
     }
-    if(isTTbarSel){
+    if(isttbarSel){
       double tau32 = safe_tau32(recotopjet);
       pass_substructure_cut = tau32<0.5;
     }
@@ -709,7 +718,10 @@ bool JetMassModule::process(Event & event) {
 
   //Write everything used for JetMassCalibration to Tree if first part of reco-selection passes
   // if(pass_reco_selection_part1){  
-  if(event.topjets->size() >0){  
+  if(
+    (event.topjets->size() >0 && save_all_jets) ||
+    pass_reco_selection_part1
+    ){  
     // FILL HISTS
     for(auto & h: hists) h->fill(event);
     // STORE EVENT
