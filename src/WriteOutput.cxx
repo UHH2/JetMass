@@ -37,6 +37,10 @@ WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selec
   }
 
   h_pt = ctx.declare_event_output<double>("pt");
+  h_eta = ctx.declare_event_output<double>("eta");
+  h_phi = ctx.declare_event_output<double>("phi");
+  h_mass = ctx.declare_event_output<double>("mass");
+  
   h_N2 = ctx.declare_event_output<double>("N2");
   h_tau32 = ctx.declare_event_output<double>("tau32");
   h_tau21 = ctx.declare_event_output<double>("tau21");
@@ -97,6 +101,7 @@ WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selec
   h_pdgId_Q2 = ctx.declare_event_output<int>("pdgIdQ2");
   h_V_pt = ctx.declare_event_output<double>("V_pt");
   
+  h_HT = ctx.declare_event_output<double>("HT");
 
   // h_n_ak8_reco = ctx.declare_event_output<int>("N_ak8_reco");
   // h_n_ak8_gen = ctx.declare_event_output<int>("N_ak8_gen");
@@ -291,22 +296,26 @@ bool WriteOutput::process(uhh2::Event & event){
       particles.push_back(allparticles->at(candInd));
     }
   }
-
-  double pt = topjets->at(0).v4().Pt();
-  double N2 = topjets->at(0).ecfN2_beta1();
+  TopJet candidateJet = topjets->at(0);
+  double pt = candidateJet.v4().Pt()*candidateJet.JEC_factor_raw();
+  double eta = candidateJet.v4().Eta();
+  double phi = candidateJet.v4().Phi();
+  double mass = candidateJet.v4().M()*candidateJet.JEC_factor_raw();
+  
+  double N2 = candidateJet.ecfN2_beta1();
   double mjet = CalculateMJet(particles);
-  double jecfactor = 1.0/topjets->at(0).JEC_factor_raw();
+  double jecfactor = 1.0/candidateJet.JEC_factor_raw();
   double jecfactor_SD = softdrop_jec->getJecFactor(event,softdrop_jet_raw);
-  double mjet_SD = topjets->at(0).softdropmass();
+  double mjet_SD = candidateJet.softdropmass();
 
-  // double deepboost_WvsQCD = topjets->at(0).btag_DeepBoosted_WvsQCD();
+  // double deepboost_WvsQCD = candidateJet.btag_DeepBoosted_WvsQCD();
   double tau32 = 0;
-  if(topjets->at(0).tau2() > 0) tau32 = topjets->at(0).tau3()/topjets->at(0).tau2();
+  if(candidateJet.tau2() > 0) tau32 = candidateJet.tau3()/candidateJet.tau2();
   double tau21 = 0;
-  if(topjets->at(0).tau1() > 0) tau21 = topjets->at(0).tau2()/topjets->at(0).tau1();
+  if(candidateJet.tau1() > 0) tau21 = candidateJet.tau2()/candidateJet.tau1();
 
-  double AK8CHF = topjets->at(0).chargedHadronEnergyFraction();
-  double AK8NHF = topjets->at(0).neutralHadronEnergyFraction();
+  double AK8CHF = candidateJet.chargedHadronEnergyFraction();
+  double AK8NHF = candidateJet.neutralHadronEnergyFraction();
   
   // set variations for MC
   if(isMC & save_variations){
@@ -321,11 +330,11 @@ bool WriteOutput::process(uhh2::Event & event){
       }
     }
   }
-  bool IsMergedHiggs = matching_selection.passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedHiggs);
-  bool IsMergedTop = matching_selection.passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedTop);
-  bool IsMergedQB  = matching_selection.passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedQB);
-  bool IsMergedWZ  = matching_selection.passes_matching(event.topjets->at(0),MatchingSelection::oIsMergedV);
-  bool IsNotMerged = matching_selection.passes_matching(event.topjets->at(0),MatchingSelection::oIsNotMerged);
+  bool IsMergedHiggs = matching_selection.passes_matching(event.candidateJet,MatchingSelection::oIsMergedHiggs);
+  bool IsMergedTop = matching_selection.passes_matching(event.candidateJet,MatchingSelection::oIsMergedTop);
+  bool IsMergedQB  = matching_selection.passes_matching(event.candidateJet,MatchingSelection::oIsMergedQB);
+  bool IsMergedWZ  = matching_selection.passes_matching(event.candidateJet,MatchingSelection::oIsMergedV);
+  bool IsNotMerged = matching_selection.passes_matching(event.candidateJet,MatchingSelection::oIsNotMerged);
 
   // std::cout << "IsMergedTop : IsMergedQB : IsMergedWZ : IsNotMerged"<< std::endl;
   // std::cout << IsMergedTop << " : " << IsMergedQB << " : " << IsMergedWZ << " : " << IsNotMerged<< std::endl;
@@ -334,7 +343,7 @@ bool WriteOutput::process(uhh2::Event & event){
   double genjetpt = -1;
   if(isVJetsSel && (is_WSample || is_ZSample)){
     //get genjet pt for k factors
-    const GenJet * closest_genjet_1 = closestParticle(event.topjets->at(0), *event.genjets);
+    const GenJet * closest_genjet_1 = closestParticle(event.candidateJet, *event.genjets);
     const GenJet * closest_genjet_2 = event.topjets->size() > 1 ? closestParticle(event.topjets->at(1), *event.genjets) : closest_genjet_1;
     float gen_pt_1 = closest_genjet_1 ? closest_genjet_1->pt() : -999;
     float gen_pt_2 = closest_genjet_2 ? closest_genjet_2->pt() : -999;
@@ -345,7 +354,7 @@ bool WriteOutput::process(uhh2::Event & event){
 
   if(isMC && do_genStudies){    
     if(event.gentopjets->size()<1)return false;
-    const GenTopJet * matched_gentopjet = closestParticle(event.topjets->at(0), *event.gentopjets);    
+    const GenTopJet * matched_gentopjet = closestParticle(event.candidateJet, *event.gentopjets);    
     vector<GenJet> gensubjets = matched_gentopjet->subjets();
     LorentzVector softdrop_genjet;
     for(auto gensubjet: gensubjets){
@@ -360,6 +369,9 @@ bool WriteOutput::process(uhh2::Event & event){
   }
   
   event.set(h_pt, pt);
+  event.set(h_eta, eta);
+  event.set(h_phi, phi);
+  event.set(h_mass, mass);
   event.set(h_mjet, mjet);
   
   event.set(h_msubjets, softdrop_jet_raw.M());
@@ -369,25 +381,27 @@ bool WriteOutput::process(uhh2::Event & event){
   event.set(h_mgenparticles, m_genparticles);
   event.set(h_genpt, genpt);
 
+  event.set(h_HT,HT);
+  
   event.set(h_N2, N2);
   event.set(h_tau32, tau32);
   event.set(h_tau21, tau21);
-  event.set(h_DeepBoostWQCD, topjets->at(0).btag_DeepBoosted_WvsQCD());
-  event.set(h_DeepBoostZQCD, topjets->at(0).btag_DeepBoosted_ZvsQCD());
-  event.set(h_DeepBoostZbbQCD, topjets->at(0).btag_DeepBoosted_ZbbvsQCD());
-  event.set(h_MDDeepBoostWQCD, topjets->at(0).btag_MassDecorrelatedDeepBoosted_WvsQCD());
-  event.set(h_MDDeepBoostZQCD, topjets->at(0).btag_MassDecorrelatedDeepBoosted_ZvsQCD());
-  event.set(h_MDDeepBoostZbbQCD, topjets->at(0).btag_MassDecorrelatedDeepBoosted_ZbbvsQCD());
+  event.set(h_DeepBoostWQCD, candidateJet.btag_DeepBoosted_WvsQCD());
+  event.set(h_DeepBoostZQCD, candidateJet.btag_DeepBoosted_ZvsQCD());
+  event.set(h_DeepBoostZbbQCD, candidateJet.btag_DeepBoosted_ZbbvsQCD());
+  event.set(h_MDDeepBoostWQCD, candidateJet.btag_MassDecorrelatedDeepBoosted_WvsQCD());
+  event.set(h_MDDeepBoostZQCD, candidateJet.btag_MassDecorrelatedDeepBoosted_ZvsQCD());
+  event.set(h_MDDeepBoostZbbQCD, candidateJet.btag_MassDecorrelatedDeepBoosted_ZbbvsQCD());
 
-  event.set(h_DeepDoubleBHbbprob, topjets->at(0).btag_DeepDoubleBvLJet_probHbb());
-  event.set(h_DeepDoubleBQCDprob, topjets->at(0).btag_DeepDoubleBvLJet_probQCD());
-  event.set(h_MIDeepDoubleBHbbprob, topjets->at(0).btag_MassIndependentDeepDoubleBvLJet_probHbb());
-  event.set(h_MIDeepDoubleBQCDprob, topjets->at(0).btag_MassIndependentDeepDoubleBvLJet_probQCD());
+  event.set(h_DeepDoubleBHbbprob, candidateJet.btag_DeepDoubleBvLJet_probHbb());
+  event.set(h_DeepDoubleBQCDprob, candidateJet.btag_DeepDoubleBvLJet_probQCD());
+  event.set(h_MIDeepDoubleBHbbprob, candidateJet.btag_MassIndependentDeepDoubleBvLJet_probHbb());
+  event.set(h_MIDeepDoubleBQCDprob, candidateJet.btag_MassIndependentDeepDoubleBvLJet_probQCD());
 
-  event.set(h_NextraMBtagDR0p8, countBJetsAroundJet(event, topjets->at(0), *event.jets, DeepJetBTag(DeepJetBTag::WP_MEDIUM),0.8));
-  event.set(h_NextraTBtagDR0p8, countBJetsAroundJet(event, topjets->at(0), *event.jets, DeepJetBTag(DeepJetBTag::WP_TIGHT),0.8));
-  event.set(h_NextraMBtagDR1p0, countBJetsAroundJet(event, topjets->at(0), *event.jets, DeepJetBTag(DeepJetBTag::WP_MEDIUM),1.0));
-  event.set(h_NextraTBtagDR1p0, countBJetsAroundJet(event, topjets->at(0), *event.jets, DeepJetBTag(DeepJetBTag::WP_TIGHT),1.0));
+  event.set(h_NextraMBtagDR0p8, countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_MEDIUM),0.8));
+  event.set(h_NextraTBtagDR0p8, countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_TIGHT),0.8));
+  event.set(h_NextraMBtagDR1p0, countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_MEDIUM),1.0));
+  event.set(h_NextraTBtagDR1p0, countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_TIGHT),1.0));
 
   event.set(h_weight, event.weight);
   event.set(h_genjetpt, genjetpt);

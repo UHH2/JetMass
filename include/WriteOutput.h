@@ -72,8 +72,12 @@ private:
   uhh2::Event::Handle<int>h_NextraMBtagDR1p0;
   uhh2::Event::Handle<int>h_NextraTBtagDR1p0;
 
-  
+
   uhh2::Event::Handle<double>h_pt;
+  uhh2::Event::Handle<double>h_eta;
+  uhh2::Event::Handle<double>h_phi;
+  uhh2::Event::Handle<double>h_mass;
+  
   uhh2::Event::Handle<double>h_pt_AK4,h_genpt_AK4;
   uhh2::Event::Handle<double>h_N2;
   uhh2::Event::Handle<double>h_tau32;
@@ -88,6 +92,8 @@ private:
   uhh2::Event::Handle<double>h_jerfactor_SD_JEC_nominal;
   uhh2::Event::Handle<double>h_jerfactor_SD_JEC_up;
   uhh2::Event::Handle<double>h_jerfactor_SD_JEC_down;
+
+  uhh2::Event::Handle<double>h_HT;
   
   uhh2::Event::Handle<double>h_CHF;
   uhh2::Event::Handle<double>h_NHF;
