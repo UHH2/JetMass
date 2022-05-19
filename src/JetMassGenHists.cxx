@@ -67,15 +67,18 @@ void JetMassGenHists::fill(const Event & event){
     h_m_vs_eta->Fill(matched_gentopjet->softdropmass(),matched_gentopjet->eta(),weight);
     if(event.topjets->size()>0)h_m_vs_dRreco->Fill(matched_gentopjet->softdropmass(),deltaR(event.topjets->at(0),*matched_gentopjet),weight);
     int v_index = get_V_index(*event.genparticles);
-    double dRV=deltaR(event.genparticles->at(v_index),*matched_gentopjet);
-    if(v_index>=0)h_m_vs_dRV->Fill(matched_gentopjet->softdropmass(),dRV,weight);
-  }  
+    if(v_index>=0){
+      double dRV=deltaR(event.genparticles->at(v_index),*matched_gentopjet);
+      h_m_vs_dRV->Fill(matched_gentopjet->softdropmass(),dRV,weight);
+    }
+  }
+
 
   hist("genMET")->Fill(event.genmet->pt(),weight);
 
   float genHT = event.get(h_genHT);
   hist("genHT")->Fill(genHT,weight);
-  
+
 }
 
 JetMassGenHists::~JetMassGenHists(){}
