@@ -5,18 +5,36 @@
 
 using namespace uhh2;
 using namespace std;
-WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selection_handlename, const std::string & reco_topjet_handlename, const std::string & reco_topjet_chs_handlename, const std::string & gen_topjet_handlename){
+WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selection_handlename, const std::string & reco_topjet_handlename, const std::string & reco_topjet_chs_handlename, const std::string & gen_topjet_handlename, int output_level){
 
+  if(output_level == 0){
+    //save everthing
+    save_jms_jes_study_specific = true;
+    save_variations = true;
+    save_selection_variables = true;
+  }else if(output_level == -1){
+    //do not save variations and things needed for JMS-JES study
+    save_jms_jes_study_specific = false;
+    save_variations = false;
+    save_selection_variables = true;
+  }else if(output_level == -2){
+    //just save kinematics and variables needed for selections -> use this to create Trees for DDTMapProcessor
+    save_jms_jes_study_specific = false;
+    save_variations = false;
+    save_selection_variables = true;
+  }
+  
   softdrop_jec.reset(new StandaloneTopJetCorrector(ctx,"AK8PFPuppi"));
   softdrop_jec_chs.reset(new StandaloneTopJetCorrector(ctx,"AK8PFchs"));
 
 
-  h_n_pv = ctx.declare_event_output<int>("n_pv");
-  h_n_trueint_intime = ctx.declare_event_output<int>("n_trueint_inttime");
-  h_n_trueint_ootimebefore = ctx.declare_event_output<int>("n_trueint_ootimebefore");
-  h_n_trueint_ootimeafter = ctx.declare_event_output<int>("n_trueint_ootimeafter");
-  h_n_trueint  = ctx.declare_event_output<float>("n_trueint");
-
+  if(save_jms_jes_study_specific){
+    h_n_pv = ctx.declare_event_output<int>("n_pv");
+    h_n_trueint_intime = ctx.declare_event_output<int>("n_trueint_inttime");
+    h_n_trueint_ootimebefore = ctx.declare_event_output<int>("n_trueint_ootimebefore");
+    h_n_trueint_ootimeafter = ctx.declare_event_output<int>("n_trueint_ootimeafter");
+    h_n_trueint  = ctx.declare_event_output<float>("n_trueint");
+  }
 
   h_pt = ctx.declare_event_output<double>("pt");
   h_N2 = ctx.declare_event_output<double>("N2");
@@ -97,128 +115,127 @@ WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selec
 
   do_genStudies = string2bool(ctx.get("doGenStudies", "true"));
   
-  // read configuration from root file
-  TString gfilename = ctx.get("GridFile");
-  TFile* gfile = new TFile(locate_file((std::string)gfilename).c_str());
-  grid = (TH2F*) gfile->Get("grid");
-  TH1F* h_cat = (TH1F*) gfile->Get("categories");
-  for(int bin=1; bin<=h_cat->GetXaxis()->GetNbins(); bin++) categories.push_back(h_cat->GetXaxis()->GetBinLabel(bin));
-  ConstructOtherIDs();
-  if(categories.size() > all_cat.size()+1) throw runtime_error("you gave too many categories");
-  if(categories.size() + otherIDs.size() -1 != 9) throw runtime_error("categories and size of 'other' does not match");
+  if(save_variations){
+    // read configuration from root file
+    TString gfilename = ctx.get("GridFile");
+    TFile* gfile = new TFile(locate_file((std::string)gfilename).c_str());
+    grid = (TH2F*) gfile->Get("grid");
+    TH1F* h_cat = (TH1F*) gfile->Get("categories");
+    for(int bin=1; bin<=h_cat->GetXaxis()->GetNbins(); bin++) categories.push_back(h_cat->GetXaxis()->GetBinLabel(bin));
+    ConstructOtherIDs();
+    if(categories.size() > all_cat.size()+1) throw runtime_error("you gave too many categories");
+    if(categories.size() + otherIDs.size() -1 != 9) throw runtime_error("categories and size of 'other' does not match");
+    
+    // get binnings and size of variation
+    Nbins_pt =  grid->GetXaxis()->GetNbins();
+    Nbins_eta = grid->GetYaxis()->GetNbins();
+    Nbins_cat = categories.size();
 
-  // get binnings and size of variation
-  Nbins_pt =  grid->GetXaxis()->GetNbins();
-  Nbins_eta = grid->GetYaxis()->GetNbins();
-  Nbins_cat = categories.size();
+    // name and create all handles for mjet variations
+    if(isMC){
+      h_jetmass_variations.resize(Nbins_pt);
 
-  // name and create all handles for mjet variations
-  if(isMC){
-    h_jetmass_variations.resize(Nbins_pt);
+      h_reco_pt_variations_puppi.resize(Nbins_pt);
+      h_reco_mass_variations_puppi.resize(Nbins_pt);
+      h_reco_msd_variations_puppi.resize(Nbins_pt);
+      h_reco_pt_variations_chs.resize(Nbins_pt);
+      h_reco_mass_variations_chs.resize(Nbins_pt);
+      h_reco_msd_variations_chs.resize(Nbins_pt);
 
-    h_reco_pt_variations_puppi.resize(Nbins_pt);
-    h_reco_mass_variations_puppi.resize(Nbins_pt);
-    h_reco_msd_variations_puppi.resize(Nbins_pt);
-    h_reco_pt_variations_chs.resize(Nbins_pt);
-    h_reco_mass_variations_chs.resize(Nbins_pt);
-    h_reco_msd_variations_chs.resize(Nbins_pt);
+      for(int i=0; i<Nbins_pt; i++){
+        h_jetmass_variations[i].resize(Nbins_eta);
 
-    for(int i=0; i<Nbins_pt; i++){
-      h_jetmass_variations[i].resize(Nbins_eta);
+        h_reco_pt_variations_puppi[i].resize(Nbins_eta);
+        h_reco_mass_variations_puppi[i].resize(Nbins_eta);
+        h_reco_msd_variations_puppi[i].resize(Nbins_eta);
+        h_reco_pt_variations_chs[i].resize(Nbins_eta);
+        h_reco_mass_variations_chs[i].resize(Nbins_eta);
+        h_reco_msd_variations_chs[i].resize(Nbins_eta);
 
-      h_reco_pt_variations_puppi[i].resize(Nbins_eta);
-      h_reco_mass_variations_puppi[i].resize(Nbins_eta);
-      h_reco_msd_variations_puppi[i].resize(Nbins_eta);
-      h_reco_pt_variations_chs[i].resize(Nbins_eta);
-      h_reco_mass_variations_chs[i].resize(Nbins_eta);
-      h_reco_msd_variations_chs[i].resize(Nbins_eta);
+        for(int j=0; j<Nbins_eta; j++){
+          h_jetmass_variations[i][j].resize(Nbins_cat);
 
-      for(int j=0; j<Nbins_eta; j++){
-        h_jetmass_variations[i][j].resize(Nbins_cat);
+          h_reco_pt_variations_puppi[i][j].resize(Nbins_cat);
+          h_reco_mass_variations_puppi[i][j].resize(Nbins_cat);
+          h_reco_msd_variations_puppi[i][j].resize(Nbins_cat);
+          h_reco_pt_variations_chs[i][j].resize(Nbins_cat);
+          h_reco_mass_variations_chs[i][j].resize(Nbins_cat);
+          h_reco_msd_variations_chs[i][j].resize(Nbins_cat);
 
-        h_reco_pt_variations_puppi[i][j].resize(Nbins_cat);
-        h_reco_mass_variations_puppi[i][j].resize(Nbins_cat);
-        h_reco_msd_variations_puppi[i][j].resize(Nbins_cat);
-        h_reco_pt_variations_chs[i][j].resize(Nbins_cat);
-        h_reco_mass_variations_chs[i][j].resize(Nbins_cat);
-        h_reco_msd_variations_chs[i][j].resize(Nbins_cat);
+          for(int k=0; k<Nbins_cat; k++){
+            TString bin_name = "_" + to_string(i) + "_" + to_string(j) + "_" + categories[k];
+            TString handlename = "mjet"+bin_name;
+            h_jetmass_variations[i][j][k] = ctx.declare_event_output<std::vector<double>>((string)handlename);
 
-        for(int k=0; k<Nbins_cat; k++){
-          TString bin_name = "_" + to_string(i) + "_" + to_string(j) + "_" + categories[k];
-          TString handlename = "mjet"+bin_name;
-          h_jetmass_variations[i][j][k] = ctx.declare_event_output<std::vector<double>>((string)handlename);
+            // pt_reco_ak8_chs
+            h_reco_pt_variations_puppi[i][j][k] = ctx.declare_event_output<std::vector<double>>((string)("pt_reco_ak8_puppi"+bin_name));
+            h_reco_mass_variations_puppi[i][j][k] = ctx.declare_event_output<std::vector<double>>((string)("mass_reco_ak8_puppi"+bin_name));
+            h_reco_msd_variations_puppi[i][j][k] = ctx.declare_event_output<std::vector<double>>((string)("msd_reco_ak8_puppi"+bin_name));
+            h_reco_pt_variations_chs[i][j][k] = ctx.declare_event_output<std::vector<double>>((string)("pt_reco_ak8_chs"+bin_name));
+            h_reco_mass_variations_chs[i][j][k] = ctx.declare_event_output<std::vector<double>>((string)("mass_reco_ak8_chs"+bin_name));
+            h_reco_msd_variations_chs[i][j][k] = ctx.declare_event_output<std::vector<double>>((string)("msd_reco_ak8_chs"+bin_name));
 
-          // pt_reco_ak8_chs
-          h_reco_pt_variations_puppi[i][j][k] = ctx.declare_event_output<std::vector<double>>((string)("pt_reco_ak8_puppi"+bin_name));
-          h_reco_mass_variations_puppi[i][j][k] = ctx.declare_event_output<std::vector<double>>((string)("mass_reco_ak8_puppi"+bin_name));
-          h_reco_msd_variations_puppi[i][j][k] = ctx.declare_event_output<std::vector<double>>((string)("msd_reco_ak8_puppi"+bin_name));
-          h_reco_pt_variations_chs[i][j][k] = ctx.declare_event_output<std::vector<double>>((string)("pt_reco_ak8_chs"+bin_name));
-          h_reco_mass_variations_chs[i][j][k] = ctx.declare_event_output<std::vector<double>>((string)("mass_reco_ak8_chs"+bin_name));
-          h_reco_msd_variations_chs[i][j][k] = ctx.declare_event_output<std::vector<double>>((string)("msd_reco_ak8_chs"+bin_name));
-
+          }
         }
       }
     }
   }
-
   h_matching_selection = ctx.get_handle<MatchingSelection>(matching_selection_handlename);
 
   
+  if(save_jms_jes_study_specific){
+    // Stuff for pt, msd response studies
+    handle_gentopjet = ctx.get_handle<const GenTopJet*>(gen_topjet_handlename);
+    handle_recotopjet = ctx.get_handle<const TopJet*>(reco_topjet_handlename);
+    handle_recotopjet_chs = ctx.get_handle<const TopJet*>(reco_topjet_chs_handlename);
 
-  // Stuff for pt, msd response studies
-  handle_gentopjet = ctx.get_handle<const GenTopJet*>(gen_topjet_handlename);
-  handle_recotopjet = ctx.get_handle<const TopJet*>(reco_topjet_handlename);
-  handle_recotopjet_chs = ctx.get_handle<const TopJet*>(reco_topjet_chs_handlename);
+    h_mass_reco_ak8_puppi = ctx.declare_event_output<double>("mass_reco_ak8_puppi");
+    h_msd_reco_ak8_puppi = ctx.declare_event_output<double>("msd_reco_ak8_puppi");
+    h_pt_reco_ak8_puppi = ctx.declare_event_output<double>("pt_reco_ak8_puppi");
+    h_pt_pf_reco_ak8_puppi = ctx.declare_event_output<double>("pt_pf_reco_ak8_puppi");
+    h_pt_pf_sd_reco_ak8_puppi = ctx.declare_event_output<double>("pt_pf_sd_reco_ak8_puppi");
 
-  h_mass_reco_ak8_puppi = ctx.declare_event_output<double>("mass_reco_ak8_puppi");
-  h_msd_reco_ak8_puppi = ctx.declare_event_output<double>("msd_reco_ak8_puppi");
-  h_pt_reco_ak8_puppi = ctx.declare_event_output<double>("pt_reco_ak8_puppi");
-  h_pt_pf_reco_ak8_puppi = ctx.declare_event_output<double>("pt_pf_reco_ak8_puppi");
-  h_pt_pf_sd_reco_ak8_puppi = ctx.declare_event_output<double>("pt_pf_sd_reco_ak8_puppi");
+    h_mass_reco_ak8_chs = ctx.declare_event_output<double>("mass_reco_ak8_chs");
+    h_msd_reco_ak8_chs = ctx.declare_event_output<double>("msd_reco_ak8_chs");
+    h_pt_reco_ak8_chs = ctx.declare_event_output<double>("pt_reco_ak8_chs");
+    h_pt_pf_reco_ak8_chs = ctx.declare_event_output<double>("pt_pf_reco_ak8_chs");
+    h_pt_pf_sd_reco_ak8_chs = ctx.declare_event_output<double>("pt_pf_sd_reco_ak8_chs");
 
-  h_mass_reco_ak8_chs = ctx.declare_event_output<double>("mass_reco_ak8_chs");
-  h_msd_reco_ak8_chs = ctx.declare_event_output<double>("msd_reco_ak8_chs");
-  h_pt_reco_ak8_chs = ctx.declare_event_output<double>("pt_reco_ak8_chs");
-  h_pt_pf_reco_ak8_chs = ctx.declare_event_output<double>("pt_pf_reco_ak8_chs");
-  h_pt_pf_sd_reco_ak8_chs = ctx.declare_event_output<double>("pt_pf_sd_reco_ak8_chs");
+    h_pt_gen_ak8 = ctx.declare_event_output<double>("pt_gen_ak8");
+    h_mass_gen_ak8 = ctx.declare_event_output<double>("mass_gen_ak8");
+    h_msd_gen_ak8 = ctx.declare_event_output<double>("msd_gen_ak8"); 
 
-  h_pt_gen_ak8 = ctx.declare_event_output<double>("pt_gen_ak8");
-  h_mass_gen_ak8 = ctx.declare_event_output<double>("mass_gen_ak8");
-  h_msd_gen_ak8 = ctx.declare_event_output<double>("msd_gen_ak8"); 
+    h_dR_chs_puppi = ctx.declare_event_output<double>("dr_chs_puppi");
+    h_dR_gen_puppi = ctx.declare_event_output<double>("dr_gen_puppi");
+    h_dR_gen_chs = ctx.declare_event_output<double>("dr_gen_chs");
 
-  h_dR_chs_puppi = ctx.declare_event_output<double>("dr_chs_puppi");
-  h_dR_gen_puppi = ctx.declare_event_output<double>("dr_gen_puppi");
-  h_dR_gen_chs = ctx.declare_event_output<double>("dr_gen_chs");
+    h_jecfactor_puppi = ctx.declare_event_output<double>("jecfactor_puppi");
+    h_jecfactor_puppi_sd = ctx.declare_event_output<double>("jecfactor_puppi_sd");
+    h_jecfactor_chs = ctx.declare_event_output<double>("jecfactor_chs");
+    h_jecfactor_chs_sd = ctx.declare_event_output<double>("jecfactor_chs_sd");
 
-  h_jecfactor_puppi = ctx.declare_event_output<double>("jecfactor_puppi");
-  h_jecfactor_puppi_sd = ctx.declare_event_output<double>("jecfactor_puppi_sd");
-  h_jecfactor_chs = ctx.declare_event_output<double>("jecfactor_chs");
-  h_jecfactor_chs_sd = ctx.declare_event_output<double>("jecfactor_chs_sd");
+    h_n_particles_puppi = ctx.declare_event_output<int>("n_particles_puppi");
+    h_n_particles_sd_puppi = ctx.declare_event_output<int>("n_particles_sd_puppi");
 
-  h_n_particles_puppi = ctx.declare_event_output<int>("n_particles_puppi");
-  h_n_particles_sd_puppi = ctx.declare_event_output<int>("n_particles_sd_puppi");
-
-  h_n_particles_chs = ctx.declare_event_output<int>("n_particles_chs");
-  h_n_particles_sd_chs = ctx.declare_event_output<int>("n_particles_sd_chs");
+    h_n_particles_chs = ctx.declare_event_output<int>("n_particles_chs");
+    h_n_particles_sd_chs = ctx.declare_event_output<int>("n_particles_sd_chs");
 
 
-  // for(int i=0;i<all_cat.size();i++){
-  h_PF_multiplicities_reco_ak8_puppi = ctx.declare_event_output<std::vector<int>>("PF_multiplicity_reco_ak8_puppi");
-  h_PF_multiplicities_reco_ak8_chs = ctx.declare_event_output<std::vector<int>>("PF_multiplicity_reco_ak8_chs");;
-  h_PF_multiplicities_reco_ak8_puppi_sd = ctx.declare_event_output<std::vector<int>>("PF_multiplicity_reco_ak8_puppi_sd");
-  h_PF_multiplicities_reco_ak8_chs_sd = ctx.declare_event_output<std::vector<int>>("PF_multiplicity_reco_ak8_chs_sd");;
+    h_PF_multiplicities_reco_ak8_puppi = ctx.declare_event_output<std::vector<int>>("PF_multiplicity_reco_ak8_puppi");
+    h_PF_multiplicities_reco_ak8_chs = ctx.declare_event_output<std::vector<int>>("PF_multiplicity_reco_ak8_chs");;
+    h_PF_multiplicities_reco_ak8_puppi_sd = ctx.declare_event_output<std::vector<int>>("PF_multiplicity_reco_ak8_puppi_sd");
+    h_PF_multiplicities_reco_ak8_chs_sd = ctx.declare_event_output<std::vector<int>>("PF_multiplicity_reco_ak8_chs_sd");;
   
-  h_PF_energy_reco_ak8_puppi = ctx.declare_event_output<std::vector<float>>("PF_energy_reco_ak8_puppi");
-  h_PF_energy_reco_ak8_chs = ctx.declare_event_output<std::vector<float>>("PF_energy_reco_ak8_chs");;
-  h_PF_energy_reco_ak8_puppi_sd = ctx.declare_event_output<std::vector<float>>("PF_energy_reco_ak8_puppi_sd");
-  h_PF_energy_reco_ak8_chs_sd = ctx.declare_event_output<std::vector<float>>("PF_energy_reco_ak8_chs_sd");;
+    h_PF_energy_reco_ak8_puppi = ctx.declare_event_output<std::vector<float>>("PF_energy_reco_ak8_puppi");
+    h_PF_energy_reco_ak8_chs = ctx.declare_event_output<std::vector<float>>("PF_energy_reco_ak8_chs");;
+    h_PF_energy_reco_ak8_puppi_sd = ctx.declare_event_output<std::vector<float>>("PF_energy_reco_ak8_puppi_sd");
+    h_PF_energy_reco_ak8_chs_sd = ctx.declare_event_output<std::vector<float>>("PF_energy_reco_ak8_chs_sd");;
   
-  h_PF_pt_reco_ak8_puppi = ctx.declare_event_output<std::vector<float>>("PF_pt_reco_ak8_puppi");
-  h_PF_pt_reco_ak8_chs = ctx.declare_event_output<std::vector<float>>("PF_pt_reco_ak8_chs");;
-  h_PF_pt_reco_ak8_puppi_sd = ctx.declare_event_output<std::vector<float>>("PF_pt_reco_ak8_puppi_sd");
-  h_PF_pt_reco_ak8_chs_sd = ctx.declare_event_output<std::vector<float>>("PF_pt_reco_ak8_chs_sd");;
-// }
-  
+    h_PF_pt_reco_ak8_puppi = ctx.declare_event_output<std::vector<float>>("PF_pt_reco_ak8_puppi");
+    h_PF_pt_reco_ak8_chs = ctx.declare_event_output<std::vector<float>>("PF_pt_reco_ak8_chs");;
+    h_PF_pt_reco_ak8_puppi_sd = ctx.declare_event_output<std::vector<float>>("PF_pt_reco_ak8_puppi_sd");
+    h_PF_pt_reco_ak8_chs_sd = ctx.declare_event_output<std::vector<float>>("PF_pt_reco_ak8_chs_sd");;
+  }
   
 
 
@@ -230,26 +247,29 @@ bool WriteOutput::process(uhh2::Event & event){
   vector<TopJet>* topjets = event.topjets;
   if(topjets->size() < 1) return false;
 
-  float n_pv = -999.0;
-  float n_trueint_intime = -999.0;
-  float n_trueint_ootimebefore = -999.0;
-  float n_trueint_ootimeafter = -999.0;
-  float n_trueint =  -999.0;
-  
-  if(isMC){
-    n_pv = event.pvs->size();
-    n_trueint_intime = event.genInfo->pileup_NumInteractions_intime();
-    n_trueint_ootimebefore = event.genInfo->pileup_NumInteractions_ootbefore();
-    n_trueint_ootimeafter = event.genInfo->pileup_NumInteractions_ootafter();
-    n_trueint =  event.genInfo->pileup_TrueNumInteractions();
+
+  if(save_jms_jes_study_specific){
+    float n_pv = -999.0;
+    float n_trueint_intime = -999.0;
+    float n_trueint_ootimebefore = -999.0;
+    float n_trueint_ootimeafter = -999.0;
+    float n_trueint =  -999.0;
+    
+    if(isMC){
+      n_pv = event.pvs->size();
+      n_trueint_intime = event.genInfo->pileup_NumInteractions_intime();
+      n_trueint_ootimebefore = event.genInfo->pileup_NumInteractions_ootbefore();
+      n_trueint_ootimeafter = event.genInfo->pileup_NumInteractions_ootafter();
+      n_trueint =  event.genInfo->pileup_TrueNumInteractions();
+    }
+    
+    event.set(h_n_pv, n_pv);
+    event.set(h_n_trueint_intime, n_trueint_intime);
+    event.set(h_n_trueint_ootimebefore, n_trueint_ootimebefore);
+    event.set(h_n_trueint_ootimeafter, n_trueint_ootimeafter);
+    event.set(h_n_trueint, n_trueint);
   }
   
-  event.set(h_n_pv, n_pv);
-  event.set(h_n_trueint_intime, n_trueint_intime);
-  event.set(h_n_trueint_ootimebefore, n_trueint_ootimebefore);
-  event.set(h_n_trueint_ootimeafter, n_trueint_ootimeafter);
-  event.set(h_n_trueint, n_trueint);
-
   MatchingSelection matching_selection = event.get(h_matching_selection);
 
   event.set(h_pdgId_Q1, matching_selection.FlavourQ1() );
@@ -289,7 +309,7 @@ bool WriteOutput::process(uhh2::Event & event){
   double AK8NHF = topjets->at(0).neutralHadronEnergyFraction();
   
   // set variations for MC
-  if(isMC){
+  if(isMC & save_variations){
     for(int i=0; i<Nbins_pt; i++){
       for(int j=0; j<Nbins_eta; j++){
         for(int k=0; k<Nbins_cat; k++){
@@ -406,203 +426,204 @@ bool WriteOutput::process(uhh2::Event & event){
   event.set(h_IsNotMerged, IsNotMerged);
 
   // CHS Puppi comparison stuff
-  const GenTopJet* gen_jet(NULL);
-  if(event.is_valid(handle_gentopjet)) gen_jet = event.get(handle_gentopjet);
-  const TopJet* reco_puppi_jet(NULL);
-  if(event.is_valid(handle_recotopjet)) reco_puppi_jet = event.get(handle_recotopjet);
-  const TopJet* reco_chs_jet(NULL);
-  if(event.is_valid(handle_recotopjet_chs)) reco_chs_jet = event.get(handle_recotopjet_chs);
-
-
-  std::vector<PFParticle> particles_puppi_sd,particles_puppi;
-  std::vector<PFParticle> particles_chs_sd,particles_chs;
-  int n_particles_puppi(-1.0),n_particles_sd_puppi(-1.0);
-  int n_particles_chs(-1.0),n_particles_sd_chs(-1.0);
+  if(save_jms_jes_study_specific){
+    const GenTopJet* gen_jet(NULL);
+    if(event.is_valid(handle_gentopjet)) gen_jet = event.get(handle_gentopjet);
+    const TopJet* reco_puppi_jet(NULL);
+    if(event.is_valid(handle_recotopjet)) reco_puppi_jet = event.get(handle_recotopjet);
+    const TopJet* reco_chs_jet(NULL);
+    if(event.is_valid(handle_recotopjet_chs)) reco_chs_jet = event.get(handle_recotopjet_chs);
 
   
-  float pt_gen_ak8(-1.0),mass_gen_ak8(-1.0),msd_gen_ak8(-1.0);
-  if(gen_jet){
-    pt_gen_ak8 = gen_jet->pt();
-    mass_gen_ak8 = gen_jet->v4().M();
-    msd_gen_ak8 = gen_jet->softdropmass();
-  }
-  event.set(h_pt_gen_ak8,pt_gen_ak8);
-  event.set(h_mass_gen_ak8,mass_gen_ak8);
-  event.set(h_msd_gen_ak8,msd_gen_ak8);
+    std::vector<PFParticle> particles_puppi_sd,particles_puppi;
+    std::vector<PFParticle> particles_chs_sd,particles_chs;
+    int n_particles_puppi(-1.0),n_particles_sd_puppi(-1.0);
+    int n_particles_chs(-1.0),n_particles_sd_chs(-1.0);
 
-  float pt_reco_ak8_puppi(-1.0),mass_reco_ak8_puppi(-1.0),msd_reco_ak8_puppi(-1.0);
-  float pt_reco_ak8_puppi_pf(-1.0),pt_reco_ak8_puppi_pf_sd(-1.0);
-  float jecfactor_puppi(0.),jecfactor_puppi_sd(0.);
-  if(reco_puppi_jet){
-    pt_reco_ak8_puppi = reco_puppi_jet->pt();
-    // mass_reco_ak8_puppi = reco_puppi_jet->v4().M();
-    // msd_reco_ak8_puppi = reco_puppi_jet->softdropmass();
-
-    for(const auto candInd : reco_puppi_jet->pfcand_indexs()){
-      particles_puppi.push_back(allparticles->at(candInd));
+  
+    float pt_gen_ak8(-1.0),mass_gen_ak8(-1.0),msd_gen_ak8(-1.0);
+    if(gen_jet){
+      pt_gen_ak8 = gen_jet->pt();
+      mass_gen_ak8 = gen_jet->v4().M();
+      msd_gen_ak8 = gen_jet->softdropmass();
     }
-    n_particles_puppi = particles_puppi.size();
-    
-    for(auto subjet: reco_puppi_jet->subjets()){
-      for(const auto candInd : subjet.pfcand_indexs()){
-        particles_puppi_sd.push_back(allparticles->at(candInd));
+    event.set(h_pt_gen_ak8,pt_gen_ak8);
+    event.set(h_mass_gen_ak8,mass_gen_ak8);
+    event.set(h_msd_gen_ak8,msd_gen_ak8);
+
+    float pt_reco_ak8_puppi(-1.0),mass_reco_ak8_puppi(-1.0),msd_reco_ak8_puppi(-1.0);
+    float pt_reco_ak8_puppi_pf(-1.0),pt_reco_ak8_puppi_pf_sd(-1.0);
+    float jecfactor_puppi(0.),jecfactor_puppi_sd(0.);
+    if(reco_puppi_jet){
+      pt_reco_ak8_puppi = reco_puppi_jet->pt();
+      // mass_reco_ak8_puppi = reco_puppi_jet->v4().M();
+      // msd_reco_ak8_puppi = reco_puppi_jet->softdropmass();
+
+      for(const auto candInd : reco_puppi_jet->pfcand_indexs()){
+        particles_puppi.push_back(allparticles->at(candInd));
       }
-    }
-    n_particles_sd_puppi = particles_puppi_sd.size();
-
-    LorentzVector nominal_puppi_jet = nominalJet(particles_puppi);
-    LorentzVector nominal_puppi_jet_sd = nominalJet(particles_puppi_sd);
-
-    jecfactor_puppi = softdrop_jec->getJecFactor(event,nominal_puppi_jet);
-    jecfactor_puppi_sd = softdrop_jec->getJecFactor(event,nominal_puppi_jet_sd);
-
-    mass_reco_ak8_puppi = nominal_puppi_jet.M();
-    msd_reco_ak8_puppi = nominal_puppi_jet_sd.M();  
-    pt_reco_ak8_puppi_pf = nominal_puppi_jet.pt();
-    pt_reco_ak8_puppi_pf_sd = nominal_puppi_jet_sd.pt();
-  
-  }
-  event.set(h_pt_reco_ak8_puppi,pt_reco_ak8_puppi);
-
-  event.set(h_pt_pf_reco_ak8_puppi,pt_reco_ak8_puppi_pf);
-  event.set(h_pt_pf_sd_reco_ak8_puppi,pt_reco_ak8_puppi_pf_sd);
-  
-  event.set(h_mass_reco_ak8_puppi,mass_reco_ak8_puppi);
-  event.set(h_msd_reco_ak8_puppi,msd_reco_ak8_puppi);
-
-  event.set(h_n_particles_puppi, n_particles_puppi);
-  event.set(h_n_particles_sd_puppi, n_particles_sd_puppi);
-
-  event.set(h_jecfactor_puppi, jecfactor_puppi);
-  event.set(h_jecfactor_puppi_sd, jecfactor_puppi_sd);
-
-  
-  float pt_reco_ak8_chs(-1.0),mass_reco_ak8_chs(-1.0),msd_reco_ak8_chs(-1.0);
-  float pt_reco_ak8_chs_pf(-1.0),pt_reco_ak8_chs_pf_sd(-1.0);
-  float jecfactor_chs(0.),jecfactor_chs_sd(0.);
-
-  
-  if(reco_chs_jet){
-    pt_reco_ak8_chs = reco_chs_jet->pt();
-    // mass_reco_ak8_chs = reco_chs_jet->v4().M();
-    // msd_reco_ak8_chs = reco_chs_jet->softdropmass();    
-
-    for(const auto candInd : reco_chs_jet->pfcand_indexs()){
-      particles_chs.push_back(allparticles->at(candInd));
-    }
-    n_particles_chs = particles_chs.size();
+      n_particles_puppi = particles_puppi.size();
     
-    for(auto subjet: reco_chs_jet->subjets()){
-      for(const auto candInd : subjet.pfcand_indexs()){
-        particles_chs_sd.push_back(allparticles->at(candInd));
+      for(auto subjet: reco_puppi_jet->subjets()){
+        for(const auto candInd : subjet.pfcand_indexs()){
+          particles_puppi_sd.push_back(allparticles->at(candInd));
+        }
       }
+      n_particles_sd_puppi = particles_puppi_sd.size();
+
+      LorentzVector nominal_puppi_jet = nominalJet(particles_puppi);
+      LorentzVector nominal_puppi_jet_sd = nominalJet(particles_puppi_sd);
+
+      jecfactor_puppi = softdrop_jec->getJecFactor(event,nominal_puppi_jet);
+      jecfactor_puppi_sd = softdrop_jec->getJecFactor(event,nominal_puppi_jet_sd);
+
+      mass_reco_ak8_puppi = nominal_puppi_jet.M();
+      msd_reco_ak8_puppi = nominal_puppi_jet_sd.M();  
+      pt_reco_ak8_puppi_pf = nominal_puppi_jet.pt();
+      pt_reco_ak8_puppi_pf_sd = nominal_puppi_jet_sd.pt();
+  
     }
-    n_particles_sd_chs = particles_chs_sd.size();
+    event.set(h_pt_reco_ak8_puppi,pt_reco_ak8_puppi);
 
-    LorentzVector nominal_chs_jet = nominalJet(particles_chs,false);
-    LorentzVector nominal_chs_jet_sd = nominalJet(particles_chs_sd,false);
+    event.set(h_pt_pf_reco_ak8_puppi,pt_reco_ak8_puppi_pf);
+    event.set(h_pt_pf_sd_reco_ak8_puppi,pt_reco_ak8_puppi_pf_sd);
+  
+    event.set(h_mass_reco_ak8_puppi,mass_reco_ak8_puppi);
+    event.set(h_msd_reco_ak8_puppi,msd_reco_ak8_puppi);
+
+    event.set(h_n_particles_puppi, n_particles_puppi);
+    event.set(h_n_particles_sd_puppi, n_particles_sd_puppi);
+
+    event.set(h_jecfactor_puppi, jecfactor_puppi);
+    event.set(h_jecfactor_puppi_sd, jecfactor_puppi_sd);
+
+  
+    float pt_reco_ak8_chs(-1.0),mass_reco_ak8_chs(-1.0),msd_reco_ak8_chs(-1.0);
+    float pt_reco_ak8_chs_pf(-1.0),pt_reco_ak8_chs_pf_sd(-1.0);
+    float jecfactor_chs(0.),jecfactor_chs_sd(0.);
+
+  
+    if(reco_chs_jet){
+      pt_reco_ak8_chs = reco_chs_jet->pt();
+      // mass_reco_ak8_chs = reco_chs_jet->v4().M();
+      // msd_reco_ak8_chs = reco_chs_jet->softdropmass();    
+
+      for(const auto candInd : reco_chs_jet->pfcand_indexs()){
+        particles_chs.push_back(allparticles->at(candInd));
+      }
+      n_particles_chs = particles_chs.size();
     
-    jecfactor_chs = softdrop_jec_chs->getJecFactor(event,nominal_chs_jet);
-    jecfactor_chs_sd = softdrop_jec_chs->getJecFactor(event,nominal_chs_jet_sd);
+      for(auto subjet: reco_chs_jet->subjets()){
+        for(const auto candInd : subjet.pfcand_indexs()){
+          particles_chs_sd.push_back(allparticles->at(candInd));
+        }
+      }
+      n_particles_sd_chs = particles_chs_sd.size();
 
-    mass_reco_ak8_chs = nominal_chs_jet.M();
-    msd_reco_ak8_chs = nominal_chs_jet_sd.M();  
-    pt_reco_ak8_chs_pf = nominal_chs_jet.pt();
-    pt_reco_ak8_chs_pf_sd = nominal_chs_jet_sd.pt();
-
-  }
-  event.set(h_pt_reco_ak8_chs,pt_reco_ak8_chs);
-
-  event.set(h_pt_pf_reco_ak8_chs,pt_reco_ak8_chs_pf);
-  event.set(h_pt_pf_sd_reco_ak8_chs,pt_reco_ak8_chs_pf_sd);
-  
-  event.set(h_mass_reco_ak8_chs,mass_reco_ak8_chs);
-  event.set(h_msd_reco_ak8_chs,msd_reco_ak8_chs);
-
-  event.set(h_n_particles_chs, n_particles_chs);
-  event.set(h_n_particles_sd_chs, n_particles_sd_chs);
-  
-  event.set(h_jecfactor_chs, jecfactor_chs);
-  event.set(h_jecfactor_chs_sd, jecfactor_chs_sd);
-
-  
-  // std::cout << "puppi particles summary:" << std::endl;
-  // std::cout << "chargedHadrons: " << PFMultiplicity(particles_puppi, PFParticle::EParticleID::eH) << std::endl;
-  // std::cout << "jet chargedHadrons multi: " << reco_puppi_jet->chargedMultiplicity() << std::endl;
-  std::vector<int> PF_multiplicities_reco_ak8_puppi,PF_multiplicities_reco_ak8_chs,PF_multiplicities_reco_ak8_puppi_sd,PF_multiplicities_reco_ak8_chs_sd;
-  std::vector<float> PF_energy_reco_ak8_puppi,PF_energy_reco_ak8_chs,PF_energy_reco_ak8_puppi_sd,PF_energy_reco_ak8_chs_sd;
-  std::vector<float> PF_pt_reco_ak8_puppi,PF_pt_reco_ak8_chs,PF_pt_reco_ak8_puppi_sd,PF_pt_reco_ak8_chs_sd;
+      LorentzVector nominal_chs_jet = nominalJet(particles_chs,false);
+      LorentzVector nominal_chs_jet_sd = nominalJet(particles_chs_sd,false);
     
-  for(unsigned int i=0;i<all_cat.size();i++){
-    PF_multiplicities_reco_ak8_puppi.push_back(PFMultiplicity(particles_puppi, i));
-    PF_multiplicities_reco_ak8_chs.push_back(PFMultiplicity(particles_chs, i));
-    PF_multiplicities_reco_ak8_puppi_sd.push_back(PFMultiplicity(particles_puppi_sd, i));
-    PF_multiplicities_reco_ak8_chs_sd.push_back(PFMultiplicity(particles_chs_sd, i));
+      jecfactor_chs = softdrop_jec_chs->getJecFactor(event,nominal_chs_jet);
+      jecfactor_chs_sd = softdrop_jec_chs->getJecFactor(event,nominal_chs_jet_sd);
+
+      mass_reco_ak8_chs = nominal_chs_jet.M();
+      msd_reco_ak8_chs = nominal_chs_jet_sd.M();  
+      pt_reco_ak8_chs_pf = nominal_chs_jet.pt();
+      pt_reco_ak8_chs_pf_sd = nominal_chs_jet_sd.pt();
+
+    }
+    event.set(h_pt_reco_ak8_chs,pt_reco_ak8_chs);
+
+    event.set(h_pt_pf_reco_ak8_chs,pt_reco_ak8_chs_pf);
+    event.set(h_pt_pf_sd_reco_ak8_chs,pt_reco_ak8_chs_pf_sd);
+  
+    event.set(h_mass_reco_ak8_chs,mass_reco_ak8_chs);
+    event.set(h_msd_reco_ak8_chs,msd_reco_ak8_chs);
+
+    event.set(h_n_particles_chs, n_particles_chs);
+    event.set(h_n_particles_sd_chs, n_particles_sd_chs);
+  
+    event.set(h_jecfactor_chs, jecfactor_chs);
+    event.set(h_jecfactor_chs_sd, jecfactor_chs_sd);
+
+  
+    // std::cout << "puppi particles summary:" << std::endl;
+    // std::cout << "chargedHadrons: " << PFMultiplicity(particles_puppi, PFParticle::EParticleID::eH) << std::endl;
+    // std::cout << "jet chargedHadrons multi: " << reco_puppi_jet->chargedMultiplicity() << std::endl;
+    std::vector<int> PF_multiplicities_reco_ak8_puppi,PF_multiplicities_reco_ak8_chs,PF_multiplicities_reco_ak8_puppi_sd,PF_multiplicities_reco_ak8_chs_sd;
+    std::vector<float> PF_energy_reco_ak8_puppi,PF_energy_reco_ak8_chs,PF_energy_reco_ak8_puppi_sd,PF_energy_reco_ak8_chs_sd;
+    std::vector<float> PF_pt_reco_ak8_puppi,PF_pt_reco_ak8_chs,PF_pt_reco_ak8_puppi_sd,PF_pt_reco_ak8_chs_sd;
     
-    PF_energy_reco_ak8_puppi.push_back(PFEnergy(particles_puppi, i));
-    PF_energy_reco_ak8_chs.push_back(PFEnergy(particles_chs, i));
-    PF_energy_reco_ak8_puppi_sd.push_back(PFEnergy(particles_puppi_sd, i));
-    PF_energy_reco_ak8_chs_sd.push_back(PFEnergy(particles_chs_sd, i));
+    for(unsigned int i=0;i<all_cat.size();i++){
+      PF_multiplicities_reco_ak8_puppi.push_back(PFMultiplicity(particles_puppi, i));
+      PF_multiplicities_reco_ak8_chs.push_back(PFMultiplicity(particles_chs, i));
+      PF_multiplicities_reco_ak8_puppi_sd.push_back(PFMultiplicity(particles_puppi_sd, i));
+      PF_multiplicities_reco_ak8_chs_sd.push_back(PFMultiplicity(particles_chs_sd, i));
     
-    PF_pt_reco_ak8_puppi.push_back(PFTransverseMomentum(particles_puppi, i));
-    PF_pt_reco_ak8_chs.push_back(PFTransverseMomentum(particles_chs, i));
-    PF_pt_reco_ak8_puppi_sd.push_back(PFTransverseMomentum(particles_puppi_sd, i));
-    PF_pt_reco_ak8_chs_sd.push_back(PFTransverseMomentum(particles_chs_sd, i));
-  }
-  event.set(h_PF_multiplicities_reco_ak8_puppi,PF_multiplicities_reco_ak8_puppi);
-  event.set(h_PF_multiplicities_reco_ak8_chs,PF_multiplicities_reco_ak8_chs);
-  event.set(h_PF_multiplicities_reco_ak8_puppi_sd,PF_multiplicities_reco_ak8_puppi_sd);
-  event.set(h_PF_multiplicities_reco_ak8_chs_sd,PF_multiplicities_reco_ak8_chs_sd);
+      PF_energy_reco_ak8_puppi.push_back(PFEnergy(particles_puppi, i));
+      PF_energy_reco_ak8_chs.push_back(PFEnergy(particles_chs, i));
+      PF_energy_reco_ak8_puppi_sd.push_back(PFEnergy(particles_puppi_sd, i));
+      PF_energy_reco_ak8_chs_sd.push_back(PFEnergy(particles_chs_sd, i));
+    
+      PF_pt_reco_ak8_puppi.push_back(PFTransverseMomentum(particles_puppi, i));
+      PF_pt_reco_ak8_chs.push_back(PFTransverseMomentum(particles_chs, i));
+      PF_pt_reco_ak8_puppi_sd.push_back(PFTransverseMomentum(particles_puppi_sd, i));
+      PF_pt_reco_ak8_chs_sd.push_back(PFTransverseMomentum(particles_chs_sd, i));
+    }
+    event.set(h_PF_multiplicities_reco_ak8_puppi,PF_multiplicities_reco_ak8_puppi);
+    event.set(h_PF_multiplicities_reco_ak8_chs,PF_multiplicities_reco_ak8_chs);
+    event.set(h_PF_multiplicities_reco_ak8_puppi_sd,PF_multiplicities_reco_ak8_puppi_sd);
+    event.set(h_PF_multiplicities_reco_ak8_chs_sd,PF_multiplicities_reco_ak8_chs_sd);
   
-  event.set(h_PF_energy_reco_ak8_puppi,PF_energy_reco_ak8_puppi);
-  event.set(h_PF_energy_reco_ak8_chs,PF_energy_reco_ak8_chs);
-  event.set(h_PF_energy_reco_ak8_puppi_sd,PF_energy_reco_ak8_puppi_sd);
-  event.set(h_PF_energy_reco_ak8_chs_sd,PF_energy_reco_ak8_chs_sd);
+    event.set(h_PF_energy_reco_ak8_puppi,PF_energy_reco_ak8_puppi);
+    event.set(h_PF_energy_reco_ak8_chs,PF_energy_reco_ak8_chs);
+    event.set(h_PF_energy_reco_ak8_puppi_sd,PF_energy_reco_ak8_puppi_sd);
+    event.set(h_PF_energy_reco_ak8_chs_sd,PF_energy_reco_ak8_chs_sd);
   
-  event.set(h_PF_pt_reco_ak8_puppi,PF_pt_reco_ak8_puppi);
-  event.set(h_PF_pt_reco_ak8_chs,PF_pt_reco_ak8_chs);
-  event.set(h_PF_pt_reco_ak8_puppi_sd,PF_pt_reco_ak8_puppi_sd);
-  event.set(h_PF_pt_reco_ak8_chs_sd,PF_pt_reco_ak8_chs_sd);
+    event.set(h_PF_pt_reco_ak8_puppi,PF_pt_reco_ak8_puppi);
+    event.set(h_PF_pt_reco_ak8_chs,PF_pt_reco_ak8_chs);
+    event.set(h_PF_pt_reco_ak8_puppi_sd,PF_pt_reco_ak8_puppi_sd);
+    event.set(h_PF_pt_reco_ak8_chs_sd,PF_pt_reco_ak8_chs_sd);
 
   
 
-  // set variations for MC
-  if(isMC){
-    for(int i=0; i<Nbins_pt; i++){
-      for(int j=0; j<Nbins_eta; j++){
-        for(int k=0; k<Nbins_cat; k++){
-          int ptbin = i+1;
-          int etabin = j+1;
-          vector<double> puppi_mass_var = CalculateMJetVariation1(particles_puppi, ptbin, etabin, categories[k]);
-          event.set(h_reco_mass_variations_puppi[i][j][k], puppi_mass_var);
-          vector<double> puppi_msd_var = CalculateMJetVariation1(particles_puppi_sd, ptbin, etabin, categories[k]);
-          event.set(h_reco_msd_variations_puppi[i][j][k], puppi_msd_var);
-          vector<double> puppi_pt_var = CalculatePtVariation(particles_puppi, ptbin, etabin, categories[k]);
-          event.set(h_reco_pt_variations_puppi[i][j][k], puppi_pt_var);
+    // set variations for MC
+    if(isMC){
+      for(int i=0; i<Nbins_pt; i++){
+        for(int j=0; j<Nbins_eta; j++){
+          for(int k=0; k<Nbins_cat; k++){
+            int ptbin = i+1;
+            int etabin = j+1;
+            vector<double> puppi_mass_var = CalculateMJetVariation1(particles_puppi, ptbin, etabin, categories[k]);
+            event.set(h_reco_mass_variations_puppi[i][j][k], puppi_mass_var);
+            vector<double> puppi_msd_var = CalculateMJetVariation1(particles_puppi_sd, ptbin, etabin, categories[k]);
+            event.set(h_reco_msd_variations_puppi[i][j][k], puppi_msd_var);
+            vector<double> puppi_pt_var = CalculatePtVariation(particles_puppi, ptbin, etabin, categories[k]);
+            event.set(h_reco_pt_variations_puppi[i][j][k], puppi_pt_var);
 
-          vector<double> chs_mass_var = CalculateMJetVariation1(particles_chs, ptbin, etabin, categories[k],false);
-          event.set(h_reco_mass_variations_chs[i][j][k], chs_mass_var);
-          vector<double> chs_msd_var = CalculateMJetVariation1(particles_chs_sd, ptbin, etabin, categories[k],false);
-          event.set(h_reco_msd_variations_chs[i][j][k], chs_msd_var);
-          vector<double> chs_pt_var = CalculatePtVariation(particles_chs, ptbin, etabin, categories[k],false);
-          event.set(h_reco_pt_variations_chs[i][j][k], chs_pt_var);
+            vector<double> chs_mass_var = CalculateMJetVariation1(particles_chs, ptbin, etabin, categories[k],false);
+            event.set(h_reco_mass_variations_chs[i][j][k], chs_mass_var);
+            vector<double> chs_msd_var = CalculateMJetVariation1(particles_chs_sd, ptbin, etabin, categories[k],false);
+            event.set(h_reco_msd_variations_chs[i][j][k], chs_msd_var);
+            vector<double> chs_pt_var = CalculatePtVariation(particles_chs, ptbin, etabin, categories[k],false);
+            event.set(h_reco_pt_variations_chs[i][j][k], chs_pt_var);
+          }
         }
       }
     }
+
+    double dr_chs_puppi(-999.);
+    if(reco_chs_jet && reco_puppi_jet) dr_chs_puppi = deltaR(*reco_chs_jet,*reco_puppi_jet);
+    event.set(h_dR_chs_puppi, dr_chs_puppi);
+
+    double dr_gen_puppi(-999.);
+    if(gen_jet && reco_puppi_jet) dr_gen_puppi = deltaR(*gen_jet,*reco_puppi_jet);
+    event.set(h_dR_gen_puppi, dr_gen_puppi);
+
+    double dr_gen_chs(-999.);
+    if(gen_jet && reco_chs_jet) dr_gen_chs = deltaR(*gen_jet,*reco_chs_jet);
+    event.set(h_dR_gen_chs, dr_gen_chs);
   }
-
-  double dr_chs_puppi(-999.);
-  if(reco_chs_jet && reco_puppi_jet) dr_chs_puppi = deltaR(*reco_chs_jet,*reco_puppi_jet);
-  event.set(h_dR_chs_puppi, dr_chs_puppi);
-
-  double dr_gen_puppi(-999.);
-  if(gen_jet && reco_puppi_jet) dr_gen_puppi = deltaR(*gen_jet,*reco_puppi_jet);
-  event.set(h_dR_gen_puppi, dr_gen_puppi);
-
-  double dr_gen_chs(-999.);
-  if(gen_jet && reco_chs_jet) dr_gen_chs = deltaR(*gen_jet,*reco_chs_jet);
-  event.set(h_dR_gen_chs, dr_gen_chs);
-
 
   return true;
 }

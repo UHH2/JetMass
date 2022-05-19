@@ -23,7 +23,7 @@ using namespace uhh2;
 
 class WriteOutput: public uhh2::AnalysisModule {
 public:
-  WriteOutput(uhh2::Context & ctx, const std::string & matching_selection_handlename, const std::string & reco_topjet_handlename, const std::string & reco_topjet_chs_handlename, const std::string & gen_topjet_handlename );
+  WriteOutput(uhh2::Context & ctx, const std::string & matching_selection_handlename, const std::string & reco_topjet_handlename, const std::string & reco_topjet_chs_handlename, const std::string & gen_topjet_handlename, int output_level = 0);
     virtual bool process(uhh2::Event & ) override;
 
 private:
@@ -116,6 +116,8 @@ private:
   std::unique_ptr<StandaloneTopJetCorrector> softdrop_jec,softdrop_jec_chs;
   bool isMC, do_genStudies, is_WSample, is_ZSample, isTTbarSel, isVJetsSel;
 
+  bool save_jms_jes_study_specific,save_variations,save_selection_variables;
+  
   uhh2::Event::Handle<const GenTopJet*> handle_gentopjet;
   uhh2::Event::Handle<const TopJet*> handle_recotopjet,handle_recotopjet_chs;
 
