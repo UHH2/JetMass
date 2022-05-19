@@ -58,11 +58,11 @@
   <!-- <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="41860"> -->
   <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="41528.9954019578">
     <!-- this lumi is taken from recalculation with bricalc (physics normtag and /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions17/13TeV/ReReco/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.txt)-->    
-    <InputData Version="JetHT_RunB_2017v2"                Lumi="1"            Type="DATA" NEventsMax="-1" Cacheable="False"> &DATA_JetHTRun2017B;     <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
-    <InputData Version="JetHT_RunC_2017v2"                Lumi="1"            Type="DATA" NEventsMax="-1" Cacheable="False"> &DATA_JetHTRun2017C;     <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
-    <InputData Version="JetHT_RunD_2017v2"                Lumi="1"            Type="DATA" NEventsMax="-1" Cacheable="False"> &DATA_JetHTRun2017D;     <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
-    <InputData Version="JetHT_RunE_2017v2"                Lumi="1"            Type="DATA" NEventsMax="-1" Cacheable="False"> &DATA_JetHTRun2017E;     <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
-    <InputData Version="JetHT_RunF_2017v2"                Lumi="1"            Type="DATA" NEventsMax="-1" Cacheable="False"> &DATA_JetHTRun2017F;     <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
+    <InputData Version="JetHT_RunB_2017v2"                Lumi="1"            Type="Data" NEventsMax="-1" Cacheable="False"> &DATA_JetHTRun2017B;     <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
+    <InputData Version="JetHT_RunC_2017v2"                Lumi="1"            Type="Data" NEventsMax="-1" Cacheable="False"> &DATA_JetHTRun2017C;     <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
+    <InputData Version="JetHT_RunD_2017v2"                Lumi="1"            Type="Data" NEventsMax="-1" Cacheable="False"> &DATA_JetHTRun2017D;     <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
+    <InputData Version="JetHT_RunE_2017v2"                Lumi="1"            Type="Data" NEventsMax="-1" Cacheable="False"> &DATA_JetHTRun2017E;     <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
+    <InputData Version="JetHT_RunF_2017v2"                Lumi="1"            Type="Data" NEventsMax="-1" Cacheable="False"> &DATA_JetHTRun2017F;     <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
     <InputData Version="QCD_Pt_170to300_buggyPU_2017v2"   Lumi="542.6481002"  Type="MC"   NEventsMax="-1" Cacheable="False"> &QCD_Pt_170to300;        <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
     <InputData Version="QCD_Pt_170to300_ext1_2017v2"      Lumi="542.6481002"  Type="MC"   NEventsMax="-1" Cacheable="False"> &QCD_Pt_170to300_ext1;   <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
     <InputData Version="QCD_Pt_300to470_buggyPU_2017v2"   Lumi="16285.567"    Type="MC"   NEventsMax="-1" Cacheable="False"> &QCD_Pt_300to470;        <InputTree Name="AnalysisTree"/> <OutputTree Name="AnalysisTree"/> </InputData>
@@ -95,8 +95,10 @@
       <Item Name="GridFile" Value="JetMass/Histograms/grid_AllPFFlavours.root" />
       <Item Name="selection" Value="vjets"/>
       <Item Name="doGenStudies" Value="false"/>
-      <Item Name="JMSJESCorrelationStudy" Value="false"/>
 
+      <Item Name="SaveAllJets" Value="false"/>
+      <Item Name="WriteOutputLevel" Value="0"/>
+      
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
       <Item Name="GenParticleCollection"   Value="GenParticles"/>
       <Item Name="ElectronCollection"      Value="slimmedElectronsUSER"/>

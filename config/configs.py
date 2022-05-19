@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/nfs/dust/cms/user/albrechs/miniconda3/envs/coffea/bin/python
 
 import os
 from collections import OrderedDict
@@ -21,7 +21,7 @@ selection_names = {
 test_sample_list = {
     "vjets":{
         "DATA":["JetHT_RunB"],
-        "MC":["WJetsToQQ_HT800toInf"]
+        "MC":["WJetsToQQ_HT800toInf","QCD_HT1000to1500"]
     },
     "ttbar":{
         "DATA":["SingleMuon_RunB"],
@@ -165,7 +165,8 @@ class SFrameConfig(object):
         self.file_split = 50
         self.memory = 4
         self.disk = 4
-
+        self.sframe_batch_workdir = f"workdir_{self.selection}_{self.year}"
+        
     def get_target_lumi(self):
         brilcalc_output = os.path.join(os.environ['CMSSW_BASE'],
                                        "src/UHH2/common/UHH2-data/",
@@ -213,7 +214,7 @@ class SFrameConfig(object):
 
         doctype_string += ('\n\n<!--\n'
                            f'<ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="{self.file_split}" />\n'
-                           f'<ConfigSGE RAM ="{self.memory}" DISK ="{self.disk}" Mail="{self.mail}" Notification="as" Workdir="workdir_{self.selection}_{self.year}"/>\n'
+                           f'<ConfigSGE RAM ="{self.memory}" DISK ="{self.disk}" Mail="{self.mail}" Notification="as" Workdir="{self.sframe_batch_workdir}"/>\n'
                            '-->\n\n')
 
 
@@ -226,7 +227,7 @@ class SFrameConfig(object):
                         element_maker.In(FileName=sample.test_file, Lumi="0.0") if self.test_config else f"&{name};",
                         element_maker.InputTree(Name="AnalysisTree"),
                         element_maker.OutputTree(Name="AnalysisTree"),
-                        Version=f'{name}_{self.year}' + ("_test" if self.test_config else ""), Lumi=str(sample.lumi), Type="Data", NEventsMax="1000" if self.test_config else "-1", Cacheable="False")
+                        Version=f'{name}_{self.year}' + ("_test" if self.test_config else ""), Lumi=str(sample.lumi), Type="DATA", NEventsMax="1000" if self.test_config else "-1", Cacheable="False")
                     for name,sample in self.samples['DATA'].items()
                 ),
                 *(
@@ -243,6 +244,7 @@ class SFrameConfig(object):
                 ),
                 Name="uhh2::AnalysisModuleRunner", OutputDirectory="&OUTdir;",PostFix="",TargetLumi=str(self.target_lumi)),
             JobName=f"{self.selection}Job", OutputLevel="INFO")
+        
         s = tostring(config, pretty_print=True,xml_declaration=True,encoding="UTF-8",doctype=doctype_string).decode("utf-8").encode("utf-8").decode("utf-8")
 
         xml_path = f"{self.config_dir}/{xml_name.replace('.xml','')}.xml"
@@ -265,6 +267,7 @@ if(__name__ == '__main__'):
     parser.add_argument("--sample", default = "vjets", choices = samples )
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--test", action="store_true")
+    parser.add_argument("--ddt", action="store_true")
     
     args = parser.parse_args()
 
@@ -317,15 +320,39 @@ if(__name__ == '__main__'):
     for sample in all_samples:
         for year in all_years:
             print(f"---> creating {'test-' if args.test else ''}config for {sample} {year}")
+
+            config_prefix=""
+            write_output_level = "0"
+            save_all_jets = "false"
+                
             sfconfig = SFrameConfig(sample,year,args.test)
+
+            if(args.ddt):
+                write_output_level = "-2"
+                config_prefix = "ddt_"
+                save_all_jets = "true"
+                sfconfig.output_directory += "ForDDTMaps/"
+
+                sfconfig.sframe_batch_workdir = f"workdir_{sample}_ddt_{year}"
+                if(not os.path.isdir(sfconfig.output_directory)):
+                    os.makedirs(sfconfig.output_directory)
+                    
+                for t in ["DATA","MC"]:
+                    samples_to_remove = []
+                    for s in sfconfig.samples[t].keys():
+                        print(s)
+                        if('QCD' not in s):
+                            samples_to_remove.append(s)
+                    for s in samples_to_remove:
+                        del sfconfig.samples[t][s]
             sfconfig.user_config.update(OrderedDict({
                 **common_user_settings,
                 **OrderedDict({
-                "JMSJESCorrelationStudy":"false",
-                "WriteOutputLevel":"0"
+                    "SaveAllJets":save_all_jets,
+                    "WriteOutputLevel":write_output_level
                 }),
             }))
             sfconfig.file_split = sframe_batch_config[sample]['file_split']
             
             
-            sfconfig.build_xml(f"{sample}_{year}")
+            sfconfig.build_xml(f"{config_prefix}{sample}_{year}")

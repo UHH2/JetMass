@@ -89,7 +89,7 @@
       <Item Name="doGenStudies" Value="false"/>
       <Item Name="doSpikeKiller" Value="true"/>
       <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/>
-      <Item Name="JMSJESCorrelationStudy" Value="false"/>
+      <Item Name="SaveAllJets" Value="false"/>
       <Item Name="WriteOutputLevel" Value="0"/>
     </UserConfig>
   </Cycle>

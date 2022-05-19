@@ -109,8 +109,11 @@
       <Item Name="GridFile" Value="JetMass/Histograms/grid_AllPFFlavours.root" />
       <Item Name="selection" Value="ttbar"/>
       <Item Name="doGenStudies" Value="false"/>
-      <Item Name="JMSJESCorrelationStudy" Value="false"/>
 
+      <Item Name="SaveAllJets" Value="false"/>
+      <Item Name="WriteOutputLevel" Value="0"/>
+
+      
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
       <Item Name="GenParticleCollection"   Value="GenParticles"/>
       <Item Name="ElectronCollection"      Value="slimmedElectronsUSER"/>

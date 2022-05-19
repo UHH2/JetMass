@@ -62,8 +62,8 @@
     <InputData Version="ZJetsToQQ_HT800toInf_UL17" Lumi="726662.9499285689" Type="MC" NEventsMax="-1" Cacheable="False">&ZJetsToQQ_HT800toInf;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="TTToHadronic_UL17" Lumi="194664148.83211976" Type="MC" NEventsMax="-1" Cacheable="False">&TTToHadronic;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="TTToSemiLeptonic_UL17" Lumi="293492084.872678" Type="MC" NEventsMax="-1" Cacheable="False">&TTToSemiLeptonic;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="ST_tW_antitop_5f_inclusiveDecays_UL17" Lumi="5144945.79944212" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_antitop_5f_inclusiveDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="ST_tW_top_5f_inclusiveDecays_UL17" Lumi="5112549.300529986" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_top_5f_inclusiveDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <!-- <InputData Version="ST_tW_antitop_5f_inclusiveDecays_UL17" Lumi="5144945.79944212" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_antitop_5f_inclusiveDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData> -->
+    <!-- <InputData Version="ST_tW_top_5f_inclusiveDecays_UL17" Lumi="5112549.300529986" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_top_5f_inclusiveDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData> -->
     <UserConfig>
       <Item Name="selection" Value="vjets"/>
       <Item Name="pileup_directory_data" Value="common/UHH2-data/UL17/MyDataPileupHistogram_UL17.root"/>
@@ -93,7 +93,7 @@
       <Item Name="doGenStudies" Value="false"/>
       <Item Name="doSpikeKiller" Value="true"/>
       <Item Name="NLOweightsDir" Value="UHHNtupleConverter/NLOweights"/>
-      <Item Name="JMSJESCorrelationStudy" Value="false"/>
+      <Item Name="SaveAllJets" Value="false"/>
       <Item Name="WriteOutputLevel" Value="0"/>
     </UserConfig>
   </Cycle>
