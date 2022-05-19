@@ -20,18 +20,18 @@ selection_names = {
 
 test_sample_list = {
     "vjets":{
-        "DATA":["JetHT_RunB"],
+        "Data":["JetHT_RunB"],
         "MC":["WJetsToQQ_HT800toInf","QCD_HT1000to1500"]
     },
     "ttbar":{
-        "DATA":["SingleMuon_RunB"],
+        "Data":["SingleMuon_RunB"],
         "MC":["TTToHadronic"]
     }    
 }
 
 sample_lists = {
     "vjets":{
-        "DATA":[
+        "Data":[
             "JetHT_RunB",
             "JetHT_RunC",
             "JetHT_RunD",
@@ -56,12 +56,12 @@ sample_lists = {
             "ZJetsToQQ_HT800toInf",           
             "TTToHadronic",
             "TTToSemiLeptonic",
-            "ST_tW_antitop_5f_inclusiveDecays",
-            "ST_tW_top_5f_inclusiveDecays",
+            # "ST_tW_antitop_5f_inclusiveDecays", # those two do not have the jet-constituents
+            # "ST_tW_top_5f_inclusiveDecays",
         ]
     },
     "ttbar":{
-        "DATA":[
+        "Data":[
             "SingleMuon_RunB",
             "SingleMuon_RunC",
             "SingleMuon_RunD",
@@ -182,9 +182,9 @@ class SFrameConfig(object):
     def setup_samples(self,samples,year):
         samples_db = MCSampleValuesHelper()
         self.samples = {
-            "DATA":{
+            "Data":{
                 s:Sample(s,samples_db.get_xml(s,"13TeV",year))
-                for s in samples["DATA"]
+                for s in samples["Data"]
             },
             "MC":{
                 s:Sample(s,samples_db.get_xml(s,"13TeV",year), samples_db.get_lumi(s,"13TeV",year))
@@ -192,7 +192,7 @@ class SFrameConfig(object):
             }
         }
         #clean non-existing xmls (UL16 Data that do not belong to pre- or post-VFP)
-        for t in ["DATA","MC"]:
+        for t in ["Data","MC"]:
             samples_to_remove = []
             for s in self.samples[t].keys():
                 if(self.samples[t][s].xml == None):
@@ -204,7 +204,7 @@ class SFrameConfig(object):
     def build_xml(self,xml_name):
         element_maker = ElementMaker()
 
-        entities = "\n".join([f"<!ENTITY \t {name} \t SYSTEM \t \"{os.path.join(uhh2datasets_path,sample.xml)}\">" for name,sample in self.samples["DATA"].items()])
+        entities = "\n".join([f"<!ENTITY \t {name} \t SYSTEM \t \"{os.path.join(uhh2datasets_path,sample.xml)}\">" for name,sample in self.samples["Data"].items()])
         entities += "\n\n"
         entities += "\n".join([f"<!ENTITY \t {name} \t SYSTEM \t \"{os.path.join(uhh2datasets_path,sample.xml)}\">" for name,sample in self.samples["MC"].items()])
         entities += "\n\n"
@@ -227,8 +227,8 @@ class SFrameConfig(object):
                         element_maker.In(FileName=sample.test_file, Lumi="0.0") if self.test_config else f"&{name};",
                         element_maker.InputTree(Name="AnalysisTree"),
                         element_maker.OutputTree(Name="AnalysisTree"),
-                        Version=f'{name}_{self.year}' + ("_test" if self.test_config else ""), Lumi=str(sample.lumi), Type="DATA", NEventsMax="1000" if self.test_config else "-1", Cacheable="False")
-                    for name,sample in self.samples['DATA'].items()
+                        Version=f'{name}_{self.year}' + ("_test" if self.test_config else ""), Lumi=str(sample.lumi), Type="Data", NEventsMax="1000" if self.test_config else "-1", Cacheable="False")
+                    for name,sample in self.samples['Data'].items()
                 ),
                 *(
                     element_maker.InputData(
@@ -337,7 +337,7 @@ if(__name__ == '__main__'):
                 if(not os.path.isdir(sfconfig.output_directory)):
                     os.makedirs(sfconfig.output_directory)
                     
-                for t in ["DATA","MC"]:
+                for t in ["Data","MC"]:
                     samples_to_remove = []
                     for s in sfconfig.samples[t].keys():
                         print(s)

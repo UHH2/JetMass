@@ -21,8 +21,6 @@
 <!ENTITY 	 ZJetsToQQ_HT800toInf 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL18/ZJetsToQQ_HT-800toInf_CP5_madgraphMLM-pythia8_Summer20UL18_v2.xml">
 <!ENTITY 	 TTToHadronic 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL18/TTToHadronic_CP5_powheg-pythia8_Summer20UL18_v1.xml">
 <!ENTITY 	 TTToSemiLeptonic 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL18/TTToSemiLeptonic_CP5_powheg-pythia8_Summer20UL18_v2.xml">
-<!ENTITY 	 ST_tW_antitop_5f_inclusiveDecays 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL18/ST_tW_antitop_5f_inclusiveDecays_CP5_powheg-pythia8_Summer20UL18_v2.xml">
-<!ENTITY 	 ST_tW_top_5f_inclusiveDecays 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL18/ST_tW_top_5f_inclusiveDecays_CP5_powheg-pythia8_Summer20UL18_v2.xml">
 
 <!ENTITY 	 OUTdir 	 "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/">
 
@@ -58,8 +56,6 @@
     <InputData Version="ZJetsToQQ_HT800toInf_UL18" Lumi="749659.9571800798" Type="MC" NEventsMax="-1" Cacheable="False">&ZJetsToQQ_HT800toInf;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="TTToHadronic_UL18" Lumi="283464035.5169992" Type="MC" NEventsMax="-1" Cacheable="False">&TTToHadronic;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="TTToSemiLeptonic_UL18" Lumi="395620274.2531324" Type="MC" NEventsMax="-1" Cacheable="False">&TTToSemiLeptonic;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="ST_tW_antitop_5f_inclusiveDecays_UL18" Lumi="7026559.400055788" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_antitop_5f_inclusiveDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="ST_tW_top_5f_inclusiveDecays_UL18" Lumi="7200485.489735007" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_top_5f_inclusiveDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <UserConfig>
       <Item Name="selection" Value="vjets"/>
       <Item Name="pileup_directory_data" Value="common/UHH2-data/UL18/MyDataPileupHistogram_UL18.root"/>
