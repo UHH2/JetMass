@@ -1,10 +1,7 @@
 #!/nfs/dust/cms/user/albrechs/miniconda3/envs/coffea/bin/python
-import json
 import awkward as ak
 from coffea.nanoevents import NanoEventsFactory, BaseSchema
 from coffea import processor,hist
-import mplhep as hep
-hep.style.use('CMS')
 import numpy as np
 
 class DDTMapPrep(processor.ProcessorABC):
@@ -13,15 +10,24 @@ class DDTMapPrep(processor.ProcessorABC):
         
         year_axis = hist.Cat("year", "Year")
 
-        pT_ax  = hist.Bin("pt" , "$p_{T}$ [GeV]", 100, 0., 1500.)
-        rho_ax  = hist.Bin("rho" , "$\\rho$ [GeV]", 50, -10., 0.)
-        N2_ax  = hist.Bin("n2" , "N2", 300, -1.5, 1.5)        
+        pT_ax  = hist.Bin("pt" , "$p_{T}$ [GeV]", 150, 0., 1500.)
+        rho_ax  = hist.Bin("rho" , "$\\rho$ [GeV]", 200, -10., 0.)
+        N2_ax  = hist.Bin("n2" , "N2", 200, -1.5, 1.5)        
         
         hists.update({'leadingJet':hist.Hist("Events", year_axis, pT_ax, rho_ax, N2_ax)})
         hists.update({'leadingJet_corrected_pt_mass':hist.Hist("Events", year_axis, pT_ax, rho_ax, N2_ax)})
         hists.update({'leadingJet_corrected_pt':hist.Hist("Events", year_axis, pT_ax, rho_ax, N2_ax)})
 
-        self._hists = processor.dict_accumulator(hists)
+
+                    
+
+        self._hists = processor.dict_accumulator(
+            {
+                "nevents": processor.defaultdict_accumulator(float),
+                "sumw": processor.defaultdict_accumulator(float),
+                "sumw2": processor.defaultdict_accumulator(float),
+                **hists
+            })
 
     @property
     def accumulator(self):
@@ -50,6 +56,11 @@ class DDTMapPrep(processor.ProcessorABC):
         rho_corrected_pt_mass = 2*np.log(mjet/pt)
         out['leadingJet_corrected_pt_mass'].fill(year=year, pt = pt, rho = rho_corrected_pt_mass, n2 = events.N2, weight = events.weight)
 
+
+        out['nevents'][year] += len(events)
+        out['sumw'][year] += ak.sum(events.weight)
+        out['sumw2'][year] += ak.sum(events.weight*events.weight)
+                
         return out
 
     def postprocess(self, accumulator):
@@ -58,21 +69,20 @@ class DDTMapPrep(processor.ProcessorABC):
 if(__name__ == "__main__"):
     from coffea.util import load, save
     import os,glob
-    import argparse
-    from dask.distributed import Client
-    from dask_jobqueue import HTCondorCluster
+    from coffea_util import CoffeaWorkflow
 
-    parser = argparse.ArgumentParser()    
-    parser.add_argument("--selection",default='vjets')
-    parser.add_argument("--chunk",type=int,default=-1)
-    parser.add_argument("--maxchunks",type=int,default=-1)
-    parser.add_argument("--output","-o",type=str,default='qcd_pt_v_rho_v_n2.coffea')
-    parser.add_argument("--debug",action="store_true")
-    parser.add_argument("--years",nargs='+', default=['2017','UL17'])
-    
-    args = parser.parse_args()
+    workflow  = CoffeaWorkflow("DDTMaps")
 
-    path = '/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/workdir_{SELECTION}_{YEAR}/'
+    workflow.parser.add_argument("--output","-o",type=str,default='qcd_pt_v_rho_v_n2.coffea')
+    workflow.parser.add_argument("--years",nargs='+', default=['2017','UL17'])
+
+    args = workflow.parse_args()
+
+    workflow.processor_instance = DDTMapPrep()
+    workflow.processor_schema = BaseSchema
+
+    # path = '/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/workdir_{SELECTION}_{YEAR}/'
+    path = '/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/ForDDTMaps/workdir_{SELECTION}_ddt_{YEAR}/'
 
     sample_pattern = os.path.join(path,'*QCD*.root')
     
@@ -80,35 +90,16 @@ if(__name__ == "__main__"):
 
     for k,v in samples.items():
         print(k,len(v))
-    
-    processor_args = {}
-    if(args.chunk > 0): processor_args['chunksize']=args.chunk
-    if(args.maxchunks > 0): processor_args['maxchunks']=args.maxchunks
 
-    processor_instance = DDTMapPrep()
-
-    output_file = os.path.join(os.getcwd(),args.output)
-
-    
-    cluster = HTCondorCluster(cores=8, memory="24GB", disk="5GB")
-
-    cluster.scale(20)
-    client = Client(cluster)
-    client.wait_for_workers(2)
-    
-    print(f"{client}\n{client.dashboard_link}")
+    output_file_path = os.path.join(os.getcwd(),args.output)
 
     os.chdir(os.environ['TMPDIR'])
-
-    ouput = processor.run_uproot_job(samples,
-                                     treename = "AnalysisTree",
-                                     processor_instance=processor_instance,
-                                     executor = processor.dask_executor,
-                                     executor_args = {
-                                         'client':client,
-                                         'schema':BaseSchema,
-                                     },
-                                     **processor_args
-                                     )
+    workflow.init_dask_htcondor_client(1,10,5)
     
-    save(ouput, output_file)
+    output = workflow.run_uproot_job_dask(samples)
+
+            
+    if(not output_file_path.endswith('.coffea')):
+        output_file_path += '.coffea'
+    
+    save(output, output_file_path)
