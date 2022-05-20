@@ -135,13 +135,20 @@ class JMSTemplates(processor.ProcessorABC):
                 
             }
         }
-        
+
+        self._variations = ['0_0_all', '0_0_chargedH', '0_0_gamma', '0_0_neutralH', '0_0_other']
         for selection in self._selections:
             for region in self._regions[selection].keys():
                 hists.update({
                     f"{selection}_mjet_{region}" : hist.Hist(mJ_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,shift_ax,storage=hist.storage.Weight()),
                 })
-                
+                for variation in self._variations:
+                    hists.update({
+                        f"{selection}_mjet_{region}_{variation}_up" : hist.Hist(mJ_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,shift_ax,storage=hist.storage.Weight()),
+                    })
+                    hists.update({
+                        f"{selection}_mjet_{region}_{variation}_down" : hist.Hist(mJ_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,shift_ax,storage=hist.storage.Weight()),
+                    })
 
         self._hists = lambda:hists#processor.dict_accumulator(hists)
     
@@ -254,6 +261,26 @@ class JMSTemplates(processor.ProcessorABC):
                         mJ = mJ_[smask],
                         weight = events.weight[smask]
                     )
+                    
+                    if(isMC):
+                        for variation in self._variations:
+                            mJVar_ = events[f'mjet_{variation}']
+                            if('mJ' in jec_applied_on):
+                                mJVar_ = mJVar_ * jecfactor
+                            out[f"{selection}_mjet_{region}_{variation}_up"].fill(
+                                dataset=dataset,shift='nominal',
+                                jecAppliedOn=jec_applied_on,
+                                pt = pt_[smask],
+                                mJ = mJVar_[:,0][smask],
+                                weight = events.weight[smask]
+                            )
+                            out[f"{selection}_mjet_{region}_{variation}_down"].fill(
+                                dataset=dataset,shift='nominal',
+                                jecAppliedOn=jec_applied_on,
+                                pt = pt_[smask],
+                                mJ = mJVar_[:,1][smask],
+                                weight = events.weight[smask]
+                            )
             
         return out
 
