@@ -77,27 +77,26 @@ class JMSTemplates(processor.ProcessorABC):
 
 
         self._selections = ['vjets','ttbar']
-        
+
+        #these are selections that are linked as one specifies later in self._regions!
         self._cuts = {
             'vjets':['n2ddt','rhocut'],
             'ttbar':['tau32','tau21']
         }
 
+        #these are sample specific matching criteria
+        #these are handled via 'any' of PackedSelection, so in case of multiple requirements,
+        #be aware, that they are linked with OR!!
         self._matching_mappings = {
-            'vjets':{
-                'WJetsMatched':'isMergedWZ',
-                'WJetsUnmatched':'!isMergedWZ',
-                'ZJetsMatched':'isMergedWZ',
-                'ZJetsUnmatched':'!isMergedWZ',
-            },
-            'ttbar':{
-                "TTbar_semilep_mergedTop":'IsMergedTop',
-                "TTbar_semilep_mergedW":'IsMergedWZ',
-                "TTbar_semilep_mergedQB":'IsMergedQB',
-                "TTbar_semilep_semiMergedTop":'IsMergedWZ || IsMergedQB',
-                "TTbar_semilep_notMerged":'IsNotMerged'
-            }
-            
+            'WJetsMatched':{'IsMergedWZ':1},
+            'WJetsUnmatched':{'IsMergedWZ':0},
+            'ZJetsMatched':{'IsMergedWZ':1},
+            'ZJetsUnmatched':{'IsMergedWZ':0},
+            "TTbar_semilep_mergedTop":{'IsMergedTop':1},
+            "TTbar_semilep_mergedW":{'IsMergedWZ':1},
+            "TTbar_semilep_mergedQB":{'IsMergedQB':1},
+            "TTbar_semilep_semiMergedTop":{'IsMergedWZ':1,'IsMergedQB':1},
+            "TTbar_semilep_notMerged":{'IsNotMerged':1}
         }
 
         #common control-plots
@@ -165,12 +164,28 @@ class JMSTemplates(processor.ProcessorABC):
         dataset = events.metadata['dataset']
 
         isMC = 'data' not in dataset.lower()
+        
+        #evaluate matching criteria and created new masked events dataframe
+        matching_mask = np.ones(len(events), dtype='bool')
+        if(dataset in self._matching_mappings.keys()):
+            matching_selection =  PackedSelection()
+            for branch_name, branch_value in self._matching_mappings[dataset].items():
+                matching_selection.add(branch_name, events[branch_name] == branch_value)
+            #BE AWARE OF THE FOLLOWING OR!!!!
+            matching_mask = matching_selection.any(*self._matching_mappings[dataset].keys())
+        events = events[matching_mask]
 
+        genpt = events.genjetpt
+        if('WJets' in dataset):
+            events.weight = events.weight*self.corrections['W_kfactor'](genpt)*self.corrections[f'W_ewcorr'](genpt)
+        if('ZJets' in dataset):
+            genpt = events.genjetpt
+            events.weight = events.weight*self.corrections['Z_kfactor'](genpt)*self.corrections[f'Z_ewcorr'](genpt)
+
+        
         nevents = len(events)
-
         _true = np.ones(nevents, dtype='bool')
         _false = np.zeros(nevents, dtype='bool')
-
         
         jecfactor = events.jecfactor
         
@@ -270,14 +285,18 @@ if(__name__ == "__main__"):
     if(args.year == '2017'):
         samples['Data'] = samples['DATA']
         del samples['DATA']
+    print(samples)
     if(args.debug):
+        samples = {k:v for k,v in samples.items() if len(v)>0}
         samples = {k:[v[0]] for k,v in samples.items()}
-    samples['WJetsMatched'] = samples['WJets']
-    samples['WJetsUnmatched'] = samples['WJets']
-    del samples['WJets']
-    samples['ZJetsMatched'] = samples['ZJets']
-    samples['ZJetsUnmatched'] = samples['ZJets']
-    del samples['ZJets']
+    if('WJets' in samples):
+        samples['WJetsMatched'] = samples['WJets']
+        samples['WJetsUnmatched'] = samples['WJets']
+        del samples['WJets']
+    if('ZJets' in samples):
+        samples['ZJetsMatched'] = samples['ZJets']
+        samples['ZJetsUnmatched'] = samples['ZJets']
+        del samples['ZJets']
 
     
     for k,v in samples.items():
