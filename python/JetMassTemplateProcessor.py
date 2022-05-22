@@ -30,8 +30,8 @@ class JMSTemplates(processor.ProcessorABC):
         rho_ax  = hist.axis.Regular(100, -10., 0,name="rho" , label=r"$\rho$")
 
         self._pT_fit_ax = {
-            'vjets':hist.axis.Variable(np.array([500, 650, 800, 1200]), name="pt" , label=r"$p_{T}$ [GeV]"),
-            'ttbar':hist.axis.Variable(np.array([200, 300, 400, 500, 650, 100000]), name="pt" , label=r"$p_{T}$ [GeV]"),
+            'vjets':hist.axis.Variable(np.array([500, 650, 800, 1200,np.inf]), name="pt" , label=r"$p_{T}$ [GeV]"),
+            'ttbar':hist.axis.Variable(np.array([200, 300, 400, 500, 650, np.inf]), name="pt" , label=r"$p_{T}$ [GeV]"),
         }
 
         # mJ_ax  = hist.Bin("mJ" , "$m_{SD}$ [GeV]", 50, 0., 500.)
@@ -144,10 +144,10 @@ class JMSTemplates(processor.ProcessorABC):
                 })
                 for variation in self._variations:
                     hists.update({
-                        f"{selection}_mjet_{region}_{variation}_up" : hist.Hist(mJ_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,shift_ax,storage=hist.storage.Weight()),
+                        f"{selection}_mjet_variation_{variation}_{region}__up" : hist.Hist(mJ_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,shift_ax,storage=hist.storage.Weight()),
                     })
                     hists.update({
-                        f"{selection}_mjet_{region}_{variation}_down" : hist.Hist(mJ_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,shift_ax,storage=hist.storage.Weight()),
+                        f"{selection}_mjet_variation_{variation}_{region}__down" : hist.Hist(mJ_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,shift_ax,storage=hist.storage.Weight()),
                     })
 
         self._hists = lambda:hists#processor.dict_accumulator(hists)
@@ -267,14 +267,14 @@ class JMSTemplates(processor.ProcessorABC):
                             mJVar_ = events[f'mjet_{variation}']
                             if('mJ' in jec_applied_on):
                                 mJVar_ = mJVar_ * jecfactor
-                            out[f"{selection}_mjet_{region}_{variation}_up"].fill(
+                            out[f"{selection}_mjet_variation_{variation}_{region}__up"].fill(
                                 dataset=dataset,shift='nominal',
                                 jecAppliedOn=jec_applied_on,
                                 pt = pt_[smask],
                                 mJ = mJVar_[:,0][smask],
                                 weight = events.weight[smask]
                             )
-                            out[f"{selection}_mjet_{region}_{variation}_down"].fill(
+                            out[f"{selection}_mjet_variation_{variation}_{region}__down"].fill(
                                 dataset=dataset,shift='nominal',
                                 jecAppliedOn=jec_applied_on,
                                 pt = pt_[smask],
