@@ -94,9 +94,10 @@ if(__name__ == "__main__"):
     output_file_path = os.path.join(os.getcwd(),args.output)
 
     os.chdir(os.environ['TMPDIR'])
-    workflow.init_dask_htcondor_client(1,10,5)
+    if(args.scaleout > 0 ):
+        workflow.init_dask_htcondor_client(1,10,5)
     
-    output = workflow.run_uproot_job_dask(samples)
+    output = workflow.run(samples)
 
             
     if(not output_file_path.endswith('.coffea')):
