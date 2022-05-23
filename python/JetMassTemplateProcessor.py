@@ -305,17 +305,8 @@ if(__name__ == "__main__"):
 
     sample_pattern = '/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/{SELECTION}Trees/workdir_{SELECTION}_{YEAR}/*{SAMPLE}*.root'
     sample_names = ['Data','WJets','ZJets','QCD']
-    if(args.year == '2017'):
-        sample_names.remove('Data')
-        sample_names.append('DATA')
     samples = {sample:glob.glob(sample_pattern.format(SELECTION=args.selection,YEAR=args.year,SAMPLE=sample)) for sample in sample_names}
-    if(args.year == '2017'):
-        samples['Data'] = samples['DATA']
-        del samples['DATA']
-    print(samples)
-    if(args.debug):
-        samples = {k:v for k,v in samples.items() if len(v)>0}
-        samples = {k:[v[0]] for k,v in samples.items()}
+
     if('WJets' in samples):
         samples['WJetsMatched'] = samples['WJets']
         samples['WJetsUnmatched'] = samples['WJets']
