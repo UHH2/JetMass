@@ -26,6 +26,8 @@ class JMSTemplates(processor.ProcessorABC):
         jec_applied_ax = hist.axis.StrCategory([], name='jecAppliedOn',label='JEC applied on',growth=True)
         mJ_ax  = hist.axis.Regular(50, 0., 500.,name="mJ" , label=r"$m_{SD}$ [GeV]")
         pT_ax  = hist.axis.Regular(300, 0., 3000., name="pt" , label=r"$p_{T}$ [GeV]")
+        eta_ax  = hist.axis.Regular(100, -6.5, 6.5, name="eta" , label=r"$\eta$")
+        phi_ax  = hist.axis.Regular(100, -4, 4, name="phi" , label=r"$\Phi$")
         mJ_fit_ax  = hist.axis.Regular(250, 50., 300.,name="mJ" , label=r"$m_{SD}$ [GeV]")
         rho_ax  = hist.axis.Regular(100, -10., 0,name="rho" , label=r"$\rho$")
 
@@ -103,6 +105,8 @@ class JMSTemplates(processor.ProcessorABC):
         hists.update({
             
             'pt':hist.Hist(pT_ax, dataset_ax, jec_applied_ax,storage=hist.storage.Weight()),
+            'eta':hist.Hist(eta_ax, dataset_ax, storage=hist.storage.Weight()),
+            'phi':hist.Hist(phi_ax, dataset_ax, storage=hist.storage.Weight()),
             # 'pt_raw':hist.Hist(dataset_ax, pT_ax,storage=hist.storage.Weight()),
             'mjet':hist.Hist(mJ_ax, dataset_ax, jec_applied_ax,storage=hist.storage.Weight()),
             # 'mjet_raw':hist.Hist(dataset_ax, mJ_ax,storage=hist.storage.Weight()),
@@ -141,6 +145,9 @@ class JMSTemplates(processor.ProcessorABC):
             for region in self._regions[selection].keys():
                 hists.update({
                     f"{selection}_mjet_{region}" : hist.Hist(mJ_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,shift_ax,storage=hist.storage.Weight()),
+                    f"{selection}_pt_{region}" : hist.Hist(pT_ax,dataset_ax,jec_applied_ax,shift_ax,storage=hist.storage.Weight()),
+                    f"{selection}_eta_{region}" : hist.Hist(eta_ax,dataset_ax ,shift_ax,storage=hist.storage.Weight()),
+                    f"{selection}_rho_{region}" : hist.Hist(rho_ax,dataset_ax,jec_applied_ax,shift_ax,storage=hist.storage.Weight()),
                 })
                 for variation in self._variations:
                     hists.update({
@@ -207,8 +214,13 @@ class JMSTemplates(processor.ProcessorABC):
         rho_corrected_pt = 2*np.log(mjet_raw/pt)
         rho_corrected_mJ = 2*np.log(mjet/pt_raw)
 
+        eta_ = events.eta
+        phi_ = events.phi
+        
         out['pt'].fill(dataset=dataset, jecAppliedOn='pt', pt=pt, weight = events.weight)
         out['pt'].fill(dataset=dataset, jecAppliedOn='none', pt=pt_raw, weight = events.weight)
+        out['eta'].fill(dataset=dataset, eta=eta_, weight = events.weight)
+        out['phi'].fill(dataset=dataset, phi=phi_, weight = events.weight)
         # out['pt_raw'].fill(dataset=dataset, pt=pt_raw)
         out['mjet'].fill(dataset=dataset, jecAppliedOn='mJ', mJ=mjet, weight = events.weight)
         out['mjet'].fill(dataset=dataset, jecAppliedOn='none', mJ=mjet_raw, weight = events.weight)
@@ -261,6 +273,24 @@ class JMSTemplates(processor.ProcessorABC):
                         mJ = mJ_[smask],
                         weight = events.weight[smask]
                     )
+                    out[f"{selection}_pt_{region}"].fill(
+                        dataset=dataset,shift='nominal',
+                        jecAppliedOn=jec_applied_on,
+                        pt = pt_[smask],
+                        weight = events.weight[smask]
+                    )
+                    out[f"{selection}_rho_{region}"].fill(
+                        dataset=dataset,shift='nominal',
+                        jecAppliedOn=jec_applied_on,
+                        rho = rho_[smask],
+                        weight = events.weight[smask]
+                    )
+                    if(jec_applied_on == "none"):
+                        out[f"{selection}_eta_{region}"].fill(
+                            dataset=dataset,shift='nominal',
+                            eta = eta_[smask],
+                            weight = events.weight[smask]
+                        )
                     
                     if(isMC):
                         for variation in self._variations:
