@@ -90,7 +90,9 @@ class CoffeaWorkflow(object):
         if(self.args.debug):
             self.processor_args['maxchunks'] = 1
             self.processor_args['chunksize'] = 1000
-            
+            samples = {k:v for k,v in samples.items() if len(v)>0}
+            samples = {k:[v[0]] for k,v in samples.items()}
+
         if(self.args.scaleout>0 & self._init_dask):
             return self.run_uproot_job_dask(samples)
         else:
