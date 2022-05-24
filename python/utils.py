@@ -31,7 +31,32 @@ def numpy_to_th2(H,x_edges,y_edges,hist_title="",x_title="",y_title="",add_empty
                                             np.array([1.]),
                                             x_taxis,y_taxis)
     return th2
+
+
+def hist_to_th1(H,hist_name=''):
+    x_axis = H.axes[0]
+    values = H.values()
+    variances  = H.variances()
+
     
+    x_taxis = uproot.writing.identify.to_TAxis(
+                                    x_axis.name,x_axis.name,
+                                    len(x_axis.edges[:-1]),
+                                    x_axis.edges[0],x_axis.edges[-1],
+                                    x_axis.edges)
+    
+    if hist_name == '':
+        hist_name = x_axis.name
+
+    th1 = uproot.writing.identify.to_TH1x(hist_name,hist_name,
+                                          values, values.sum(),
+                                          values.sum(),variances.sum(),
+                                          1.,1.,
+                                          variances,
+                                          x_taxis
+    )
+    
+    return th1
 
 def np_2d_hist_bin_value(vals,x,y):
     # x_bin = np.digitize([x],vals[1])[0]
@@ -62,11 +87,8 @@ def np_2d_hist_bin_value(vals,x,y):
 
 def get_bin_indx(values,edges):
     indx = np.digitize(ak.Array(values),edges)-1
-    print(values,indx)
     indx = ak.where(indx==len(edges)-1,len(edges)-2,indx)
-    print(indx)
     indx = ak.where(indx<0,0,indx)    
-    print(indx)
     return indx
 
 def root_th2_bin_value(th2,x,y):
