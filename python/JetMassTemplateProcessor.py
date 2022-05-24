@@ -158,7 +158,10 @@ class JMSTemplates(processor.ProcessorABC):
                         f"{selection}_mjet_variation_{variation}_{region}__down" : hist.Hist(mJ_fit_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,storage=hist.storage.Weight()),
                     })
 
-        self._hists = lambda:hists#processor.dict_accumulator(hists)
+        self._hists = lambda:{**hists,
+                              'nevents':processor.defaultdict_accumulator(float),
+                              'sumw':processor.defaultdict_accumulator(float),
+                              'sumw2':processor.defaultdict_accumulator(float)}#processor.dict_accumulator(hists)
     
     @property
     def accumulator(self):
@@ -174,7 +177,6 @@ class JMSTemplates(processor.ProcessorABC):
     def process(self, events):
         #print(self.accumulator)
         out = self.accumulator()
-
         
         dataset = events.metadata['dataset']
         selection = events.metadata['selection']
@@ -191,6 +193,12 @@ class JMSTemplates(processor.ProcessorABC):
             matching_mask = matching_selection.any(*self._matching_mappings[dataset].keys())
         events = events[matching_mask]
 
+        print(dataset,len(events))
+        out['nevents'][dataset] = len(events)
+        out['sumw'][dataset] = ak.sum(events.weight)
+        out['sumw2'][dataset] = ak.sum(events.weight*events.weight)
+
+        
         genpt = events.genjetpt
         if('WJets' in dataset):
             events.weight = events.weight*self.corrections['W_kfactor'](genpt)*self.corrections[f'W_ewcorr'](genpt)
