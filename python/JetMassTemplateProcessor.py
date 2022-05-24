@@ -144,17 +144,17 @@ class JMSTemplates(processor.ProcessorABC):
         for selection in self._selections:
             for region in self._regions[selection].keys():
                 hists.update({
-                    f"{selection}_mjet_{region}" : hist.Hist(mJ_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,shift_ax,storage=hist.storage.Weight()),
-                    f"{selection}_pt_{region}" : hist.Hist(pT_ax,dataset_ax,jec_applied_ax,shift_ax,storage=hist.storage.Weight()),
-                    f"{selection}_eta_{region}" : hist.Hist(eta_ax,dataset_ax ,shift_ax,storage=hist.storage.Weight()),
-                    f"{selection}_rho_{region}" : hist.Hist(rho_ax,dataset_ax,jec_applied_ax,shift_ax,storage=hist.storage.Weight()),
+                    f"{selection}_mjet_{region}" : hist.Hist(mJ_fit_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,storage=hist.storage.Weight()),
+                    f"{selection}_pt_{region}" : hist.Hist(pT_ax,dataset_ax,jec_applied_ax,storage=hist.storage.Weight()),
+                    f"{selection}_eta_{region}" : hist.Hist(eta_ax,dataset_ax ,storage=hist.storage.Weight()),
+                    f"{selection}_rho_{region}" : hist.Hist(rho_ax,dataset_ax,jec_applied_ax,storage=hist.storage.Weight()),
                 })
                 for variation in self._variations:
                     hists.update({
-                        f"{selection}_mjet_variation_{variation}_{region}__up" : hist.Hist(mJ_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,shift_ax,storage=hist.storage.Weight()),
+                        f"{selection}_mjet_variation_{variation}_{region}__up" : hist.Hist(mJ_fit_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,storage=hist.storage.Weight()),
                     })
                     hists.update({
-                        f"{selection}_mjet_variation_{variation}_{region}__down" : hist.Hist(mJ_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,shift_ax,storage=hist.storage.Weight()),
+                        f"{selection}_mjet_variation_{variation}_{region}__down" : hist.Hist(mJ_fit_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,storage=hist.storage.Weight()),
                     })
 
         self._hists = lambda:hists#processor.dict_accumulator(hists)
@@ -176,7 +176,8 @@ class JMSTemplates(processor.ProcessorABC):
 
         
         dataset = events.metadata['dataset']
-
+        selection = events.metadata['selection']
+        
         isMC = 'data' not in dataset.lower()
         
         #evaluate matching criteria and created new masked events dataframe
@@ -262,56 +263,56 @@ class JMSTemplates(processor.ProcessorABC):
             selections.add("tau21",events.tau21<0.45)
             selections.add("tau32",events.tau32<0.5)
 
-        
-            for selection in self._selections:
-                for region in self._regions[selection].keys():
-                    smask = selections.require(**self._regions[selection][region])
-                    out[f"{selection}_mjet_{region}"].fill(
-                        dataset=dataset,shift='nominal',
-                        jecAppliedOn=jec_applied_on,
-                        pt = pt_[smask],
-                        mJ = mJ_[smask],
+            selection = events.metadata['selection']
+            for region in self._regions[selection].keys():
+                smask = selections.require(**self._regions[selection][region])
+                out[f"{selection}_mjet_{region}"].fill(
+                    dataset=dataset,
+                    jecAppliedOn=jec_applied_on,
+                    pt = pt_[smask],
+                    mJ = mJ_[smask],
+                    weight = events.weight[smask]
+                )
+                out[f"{selection}_pt_{region}"].fill(
+                    dataset=dataset,
+                    jecAppliedOn=jec_applied_on,
+                    pt = pt_[smask],
+                    weight = events.weight[smask]
+                )
+                out[f"{selection}_rho_{region}"].fill(
+                    dataset=dataset,
+                    jecAppliedOn=jec_applied_on,
+                    rho = rho_[smask],
+                    weight = events.weight[smask]
+                )
+                if(jec_applied_on == "none"):
+                    out[f"{selection}_eta_{region}"].fill(
+                        dataset=dataset,
+                        eta = eta_[smask],
                         weight = events.weight[smask]
                     )
-                    out[f"{selection}_pt_{region}"].fill(
-                        dataset=dataset,shift='nominal',
-                        jecAppliedOn=jec_applied_on,
-                        pt = pt_[smask],
-                        weight = events.weight[smask]
-                    )
-                    out[f"{selection}_rho_{region}"].fill(
-                        dataset=dataset,shift='nominal',
-                        jecAppliedOn=jec_applied_on,
-                        rho = rho_[smask],
-                        weight = events.weight[smask]
-                    )
-                    if(jec_applied_on == "none"):
-                        out[f"{selection}_eta_{region}"].fill(
-                            dataset=dataset,shift='nominal',
-                            eta = eta_[smask],
+                    
+                if(isMC):
+                    for variation in self._variations:
+                        mJVar_ = events[f'mjet_{variation}']
+
+                        if('mJ' in jec_applied_on):
+                            mJVar_ = mJVar_ * jecfactor
+                            
+                        out[f"{selection}_mjet_variation_{variation}_{region}__up"].fill(
+                            dataset=dataset,
+                            jecAppliedOn=jec_applied_on,
+                            pt = pt_[smask],
+                            mJ = mJVar_[:,0][smask],
                             weight = events.weight[smask]
                         )
-                    
-                    if(isMC):
-                        for variation in self._variations:
-                            mJVar_ = events[f'mjet_{variation}']
-                            if('mJ' in jec_applied_on):
-                                mJVar_ = mJVar_ * jecfactor
-                            out[f"{selection}_mjet_variation_{variation}_{region}__up"].fill(
-                                dataset=dataset,shift='nominal',
-                                jecAppliedOn=jec_applied_on,
-                                pt = pt_[smask],
-                                mJ = mJVar_[:,0][smask],
-                                weight = events.weight[smask]
-                            )
-                            out[f"{selection}_mjet_variation_{variation}_{region}__down"].fill(
-                                dataset=dataset,shift='nominal',
-                                jecAppliedOn=jec_applied_on,
-                                pt = pt_[smask],
-                                mJ = mJVar_[:,1][smask],
-                                weight = events.weight[smask]
-                            )
-            
+                        out[f"{selection}_mjet_variation_{variation}_{region}__down"].fill(
+                            dataset=dataset,
+                            jecAppliedOn=jec_applied_on,
+                            pt = pt_[smask],
+                            mJ = mJVar_[:,1][smask],
+                            weight = events.weight[smask]
+                        )
         return out
 
     def postprocess(self, accumulator):
@@ -329,36 +330,52 @@ if(__name__ == "__main__"):
     workflow.parser.add_argument("--output","-o",type=str,default='jms_templates.coffea')
     workflow.parser.add_argument("--year", default='2017')
     args = workflow.parse_args()
-
+    
     workflow.processor_instance = JMSTemplates(args.year,args.selection)
     workflow.processor_schema = BaseSchema
 
     sample_pattern = '/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/{SELECTION}Trees/workdir_{SELECTION}_{YEAR}/*{SAMPLE}*.root'
-    sample_names = ['Data','WJets','ZJets','QCD']
-    samples = {sample:glob.glob(sample_pattern.format(SELECTION=args.selection,YEAR=args.year,SAMPLE=sample)) for sample in sample_names}
-
-    if('WJets' in samples):
-        samples['WJetsMatched'] = samples['WJets']
-        samples['WJetsUnmatched'] = samples['WJets']
-        del samples['WJets']
-    if('ZJets' in samples):
-        samples['ZJetsMatched'] = samples['ZJets']
-        samples['ZJetsUnmatched'] = samples['ZJets']
-        del samples['ZJets']
-
+    sample_names = {
+        "vjets":["Data", "WJetsMatched", "WJetsUnmatched", "ZJetsMatched", "ZJetsUnmatched", "TTToHadronic", "TTToSemiLeptonic", "ST_tW_top", "ST_tW_antitop", "QCD"],
+        'ttbar':["Data", "WJets", "DYJets", "TTbar_had", "TTbar_semilep_mergedTop", "TTbar_semilep_mergedW", "TTbar_semilep_mergedQB", "TTbar_semilep_semiMergedTop", "TTbar_semilep_notMerged", "TTbar_dilep", "ST_tch_top", "ST_tch_antitop","ST_tch","ST_tWch_top", "ST_tWch_antitop","ST_tWch", "ST_sch", "QCD"],
+    }
     
-    for k,v in samples.items():
-        print(k,len(v))
+    files = {}    
+    for selection in ['vjets','ttbar']:
+        samples = {
+            sample:glob.glob(sample_pattern.format(
+                SELECTION=selection,
+                YEAR=args.year,
+                SAMPLE=sample.replace('Matched','').replace('Unmatched','')
+            ))
+                   for sample in sample_names[selection]}
+        
+        # if('WJets' in samples):
+        #     samples['WJetsMatched'] = samples['WJets']
+        #     samples['WJetsUnmatched'] = samples['WJets']
+        #     del samples['WJets']
+        # if('ZJets' in samples):
+        #     samples['ZJetsMatched'] = samples['ZJets']
+        #     samples['ZJetsUnmatched'] = samples['ZJets']
+        #     del samples['ZJets']
+
+        
+        for k,v in samples.items():
+            if k not in files:
+                files[k]={'files':[],'treename':'AnalysisTree','metadata':{'selection':selection}}
+            files[k]['files'] += v
+            print(k,len(v))
 
     output_file_path = os.path.join(os.getcwd(),args.output)
     print('changing into /tmp dir')
     os.chdir(os.environ['TMPDIR'])
     if(args.scaleout>0):
         print('init dask client')
-        workflow.init_dask_htcondor_client(1,10,5)
+        workflow.init_dask_htcondor_client(1,4,5)
 
     print('starting coffea runner')
-    output = workflow.run(samples)
+
+    output = workflow.run(files)
 
             
     if(not output_file_path.endswith('.coffea')):

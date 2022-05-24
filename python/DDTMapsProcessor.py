@@ -86,16 +86,16 @@ if(__name__ == "__main__"):
 
     sample_pattern = os.path.join(path,'*QCD*.root')
     
-    samples = {y:glob.glob(sample_pattern.format(SELECTION=args.selection,YEAR=y)) for y in args.years}
+    samples = {y:{'files':glob.glob(sample_pattern.format(SELECTION=args.selection,YEAR=y))} for y in args.years}
 
     for k,v in samples.items():
-        print(k,len(v))
+        print(k,len(v['files']))
 
     output_file_path = os.path.join(os.getcwd(),args.output)
 
     os.chdir(os.environ['TMPDIR'])
     if(args.scaleout > 0 ):
-        workflow.init_dask_htcondor_client(1,10,5)
+        workflow.init_dask_htcondor_client(1,4,5)
     
     output = workflow.run(samples)
 
