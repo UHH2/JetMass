@@ -25,10 +25,11 @@ class JMSTemplates(processor.ProcessorABC):
         shift_ax = hist.axis.StrCategory([], name="shift", growth=True)
         jec_applied_ax = hist.axis.StrCategory([], name='jecAppliedOn',label='JEC applied on',growth=True)
         mJ_ax  = hist.axis.Regular(50, 0., 500.,name="mJ" , label=r"$m_{SD}$ [GeV]")
-        pT_ax  = hist.axis.Regular(300, 0., 3000., name="pt" , label=r"$p_{T}$ [GeV]")
+        pT_ax  = hist.axis.Regular(100, 0., 3000., name="pt" , label=r"$p_{T}$ [GeV]")
         eta_ax  = hist.axis.Regular(100, -6.5, 6.5, name="eta" , label=r"$\eta$")
         phi_ax  = hist.axis.Regular(100, -4, 4, name="phi" , label=r"$\Phi$")
-        mJ_fit_ax  = hist.axis.Regular(250, 50., 300.,name="mJ" , label=r"$m_{SD}$ [GeV]")
+        # mJ_fit_ax  = hist.axis.Regular(250, 50., 300.,name="mJ" , label=r"$m_{SD}$ [GeV]")
+        mJ_fit_ax  = hist.axis.Regular(500, 0., 500.,name="mJ" , label=r"$m_{SD}$ [GeV]")
         rho_ax  = hist.axis.Regular(100, -10., 0,name="rho" , label=r"$\rho$")
 
         self._pT_fit_ax = {
@@ -204,8 +205,10 @@ class JMSTemplates(processor.ProcessorABC):
         
         jecfactor = events.jecfactor
         
-        pt = events.pt
-        pt_raw = pt/jecfactor
+        # pt = events.pt
+        # pt_raw = pt/jecfactor
+        pt_raw = events.pt
+        pt = pt_raw*jecfactor
         
         mjet_raw = events.mjet
         mjet = mjet_raw*jecfactor

@@ -10,9 +10,9 @@ class DDTMapPrep(processor.ProcessorABC):
         
         year_axis = hist.Cat("year", "Year")
 
-        pT_ax  = hist.Bin("pt" , "$p_{T}$ [GeV]", 150, 0., 1500.)
-        rho_ax  = hist.Bin("rho" , "$\\rho$ [GeV]", 200, -10., 0.)
-        N2_ax  = hist.Bin("n2" , "N2", 200, -1.5, 1.5)        
+        pT_ax  = hist.Bin("pt" , "$p_{T}$ [GeV]", 100, 0., 1500.)
+        rho_ax  = hist.Bin("rho" , "$\\rho$ [GeV]", 100, -10., 0.)
+        N2_ax  = hist.Bin("n2" , "N2", 100, 0, 1.5)        
         
         hists.update({'leadingJet':hist.Hist("Events", year_axis, pT_ax, rho_ax, N2_ax)})
         hists.update({'leadingJet_corrected_pt_mass':hist.Hist("Events", year_axis, pT_ax, rho_ax, N2_ax)})
@@ -41,8 +41,10 @@ class DDTMapPrep(processor.ProcessorABC):
         jecfactor = events.jecfactor
         
         
-        pt = events.pt
-        pt_raw = pt/jecfactor
+        # pt = events.pt
+        # pt_raw = pt/jecfactor
+        pt_raw = events.pt
+        pt = pt_raw*jecfactor
         
         mjet_raw = events.mjet
         mjet = mjet_raw*jecfactor
