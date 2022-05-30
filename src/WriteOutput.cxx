@@ -101,8 +101,6 @@ WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selec
   h_pdgId_Q2 = ctx.declare_event_output<int>("pdgIdQ2");
   h_V_pt = ctx.declare_event_output<double>("V_pt");
   
-  h_HT = ctx.declare_event_output<double>("HT");
-
   // h_n_ak8_reco = ctx.declare_event_output<int>("N_ak8_reco");
   // h_n_ak8_gen = ctx.declare_event_output<int>("N_ak8_gen");
   
@@ -381,7 +379,6 @@ bool WriteOutput::process(uhh2::Event & event){
   event.set(h_mgenparticles, m_genparticles);
   event.set(h_genpt, genpt);
 
-  event.set(h_HT,HT);
   
   event.set(h_N2, N2);
   event.set(h_tau32, tau32);

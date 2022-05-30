@@ -93,7 +93,6 @@ private:
   uhh2::Event::Handle<double>h_jerfactor_SD_JEC_up;
   uhh2::Event::Handle<double>h_jerfactor_SD_JEC_down;
 
-  uhh2::Event::Handle<double>h_HT;
   
   uhh2::Event::Handle<double>h_CHF;
   uhh2::Event::Handle<double>h_NHF;
