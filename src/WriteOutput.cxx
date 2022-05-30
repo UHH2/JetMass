@@ -330,11 +330,11 @@ bool WriteOutput::process(uhh2::Event & event){
       }
     }
   }
-  bool IsMergedHiggs = matching_selection.passes_matching(event.candidateJet,MatchingSelection::oIsMergedHiggs);
-  bool IsMergedTop = matching_selection.passes_matching(event.candidateJet,MatchingSelection::oIsMergedTop);
-  bool IsMergedQB  = matching_selection.passes_matching(event.candidateJet,MatchingSelection::oIsMergedQB);
-  bool IsMergedWZ  = matching_selection.passes_matching(event.candidateJet,MatchingSelection::oIsMergedV);
-  bool IsNotMerged = matching_selection.passes_matching(event.candidateJet,MatchingSelection::oIsNotMerged);
+  bool IsMergedHiggs = matching_selection.passes_matching(candidateJet,MatchingSelection::oIsMergedHiggs);
+  bool IsMergedTop = matching_selection.passes_matching(candidateJet,MatchingSelection::oIsMergedTop);
+  bool IsMergedQB  = matching_selection.passes_matching(candidateJet,MatchingSelection::oIsMergedQB);
+  bool IsMergedWZ  = matching_selection.passes_matching(candidateJet,MatchingSelection::oIsMergedV);
+  bool IsNotMerged = matching_selection.passes_matching(candidateJet,MatchingSelection::oIsNotMerged);
 
   // std::cout << "IsMergedTop : IsMergedQB : IsMergedWZ : IsNotMerged"<< std::endl;
   // std::cout << IsMergedTop << " : " << IsMergedQB << " : " << IsMergedWZ << " : " << IsNotMerged<< std::endl;
@@ -343,7 +343,7 @@ bool WriteOutput::process(uhh2::Event & event){
   double genjetpt = -1;
   if(isVJetsSel && (is_WSample || is_ZSample)){
     //get genjet pt for k factors
-    const GenJet * closest_genjet_1 = closestParticle(event.candidateJet, *event.genjets);
+    const GenJet * closest_genjet_1 = closestParticle(candidateJet, *event.genjets);
     const GenJet * closest_genjet_2 = event.topjets->size() > 1 ? closestParticle(event.topjets->at(1), *event.genjets) : closest_genjet_1;
     float gen_pt_1 = closest_genjet_1 ? closest_genjet_1->pt() : -999;
     float gen_pt_2 = closest_genjet_2 ? closest_genjet_2->pt() : -999;
@@ -354,7 +354,7 @@ bool WriteOutput::process(uhh2::Event & event){
 
   if(isMC && do_genStudies){    
     if(event.gentopjets->size()<1)return false;
-    const GenTopJet * matched_gentopjet = closestParticle(event.candidateJet, *event.gentopjets);    
+    const GenTopJet * matched_gentopjet = closestParticle(candidateJet, *event.gentopjets);    
     vector<GenJet> gensubjets = matched_gentopjet->subjets();
     LorentzVector softdrop_genjet;
     for(auto gensubjet: gensubjets){
