@@ -121,22 +121,22 @@ void TopJetCorrections::init(Context & ctx){
 
     tjec_switcher_UL16preVFP.reset(new RunSwitcher(ctx, "UL16preVFP"));
     for (const auto & runItr : runPeriodsUL16preVFP) {
-      tjec_switcher_UL16preVFP->setupRun(runItr, std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_UL16preVFP, tjec_ver_UL16preVFP, tjec_tjet_coll, runItr)));
+      tjec_switcher_UL16preVFP->setupRun(runItr, std::make_shared<GenericTopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_UL16preVFP, tjec_ver_UL16preVFP, tjec_tjet_coll, runItr),recojet_collection));
     }
 
     tjec_switcher_UL16postVFP.reset(new RunSwitcher(ctx, "UL16postVFP"));
     for (const auto & runItr : runPeriodsUL16postVFP) {
-      tjec_switcher_UL16postVFP->setupRun(runItr, std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_UL16postVFP, tjec_ver_UL16postVFP, tjec_tjet_coll, runItr)));
+      tjec_switcher_UL16postVFP->setupRun(runItr, std::make_shared<GenericTopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_UL16postVFP, tjec_ver_UL16postVFP, tjec_tjet_coll, runItr),recojet_collection));
     }
 
     tjec_switcher_UL17.reset(new RunSwitcher(ctx, "UL17"));
     for (const auto & runItr : runPeriods2017) {
-      tjec_switcher_UL17->setupRun(runItr, std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_UL17, tjec_ver_UL17, tjec_tjet_coll, runItr)));
+      tjec_switcher_UL17->setupRun(runItr, std::make_shared<GenericTopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_UL17, tjec_ver_UL17, tjec_tjet_coll, runItr),recojet_collection));
     }
 
     tjec_switcher_UL18.reset(new RunSwitcher(ctx, "UL18"));
     for (const auto & runItr : runPeriods2018) {
-      tjec_switcher_UL18->setupRun(runItr, std::make_shared<TopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_UL18, tjec_ver_UL18, tjec_tjet_coll, runItr)));
+      tjec_switcher_UL18->setupRun(runItr, std::make_shared<GenericTopJetCorrector>(ctx, JERFiles::JECFilesDATA(tjec_tag_UL18, tjec_ver_UL18, tjec_tjet_coll, runItr),recojet_collection));
     }
 
     tjet_corrector_data.reset(new YearSwitcher(ctx));
@@ -144,10 +144,10 @@ void TopJetCorrections::init(Context & ctx){
     tjet_corrector_data->setup2017(tjec_switcher_17);
     tjet_corrector_data->setup2018(tjec_switcher_18);
 
-    tjet_corrector_data->setup2016(tjec_switcher_UL16preVFP);
-    tjet_corrector_data->setup2016(tjec_switcher_UL16postVFP);
-    tjet_corrector_data->setup2017(tjec_switcher_UL17);
-    tjet_corrector_data->setup2018(tjec_switcher_UL18);
+    tjet_corrector_data->setupUL16preVFP(tjec_switcher_UL16preVFP);
+    tjet_corrector_data->setupUL16postVFP(tjec_switcher_UL16postVFP);
+    tjet_corrector_data->setupUL17(tjec_switcher_UL17);
+    tjet_corrector_data->setupUL18(tjec_switcher_UL18);
   }
 }
 
