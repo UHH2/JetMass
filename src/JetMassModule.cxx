@@ -44,6 +44,7 @@
 
 #include "UHH2/common/include/TTbarGen.h"
 #include "UHH2/common/include/PartonHT.h"
+#include "UHH2/common/include/EventVariables.h"
 
 #include <unistd.h>
 
@@ -86,7 +87,8 @@ private:
   std::unique_ptr<AnalysisModule> nlo_weights;
   std::unique_ptr<AnalysisModule> recojet_selector;
   std::unique_ptr<AnalysisModule> genjet_selector;
-
+  std::unique_ptr<AnalysisModule> ht_calculator;
+  
   std::unique_ptr<JetCleaner> ak4cleaner, ak4cleaner15;
   std::unique_ptr<TopJetCleaner> ak8cleaner,ak8cleaner_chs;
   std::unique_ptr<TopJetLeptonDeltaRCleaner> ak8cleaner_dRlep,ak8cleaner_chs_dRlep;
@@ -119,7 +121,8 @@ private:
   uhh2::Event::Handle<int>handle_n_merged_partons_reco_jet;
   uhh2::Event::Handle<int>handle_n_merged_partons_gen_jet;
   
-  uhh2::Event::Handle<double>handle_gen_HT;
+  uhh2::Event::Handle<double>handle_gen_HT,handle_HT;
+  
   uhh2::Event::Handle<TTbarGen>handle_ttbar_gen;
 
   uhh2::Event::Handle<const GenTopJet*> handle_gentopjet,handle_gentopjet_nocut;
@@ -223,6 +226,7 @@ JetMassModule::JetMassModule(Context & ctx){
   std::string ttbargen_handlename("ttbar_gen_system");
 
   std::string genHT_handlename("genHT");
+  std::string HT_handlename("HT");
 
   std::string gentopjet_handlename("gentopjet");
   std::string gentopjet_nocut_handlename("gentopjet_nocut");
@@ -257,6 +261,8 @@ JetMassModule::JetMassModule(Context & ctx){
   handle_gentopjet_matched_V = ctx.get_handle<const GenTopJet*>(gentopjet_matched_V_handlename);
   
   handle_gen_HT = ctx.declare_event_output<double>(genHT_handlename);
+  handle_HT = ctx.declare_event_output<double>(HT_handlename);
+  ht_calculator.reset(new HTCalculator(ctx,jetid,HT_handlename));
   
   //AnalysisModules
   ttgen_producer.reset(new TTbarGenProducer(ctx,ttbargen_handlename,false));
@@ -470,7 +476,9 @@ bool JetMassModule::process(Event & event) {
   
   double genHT(-1.0);
   if(is_mc)genHT = calculateGenJetPtSum(event);
-  event.set(handle_gen_HT,genHT);    
+  event.set(handle_gen_HT,genHT);
+  ht_calculator->process(event);
+  
   if(EXTRAOUT) std::cout << "JetMassModule: ExtraHandles done!" << std::endl;
   
   // Throw away events with NVTX in buggy area for buggy samples
