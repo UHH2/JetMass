@@ -94,19 +94,20 @@ void TriggerHists::fill(const Event & event){
   vector<TopJet>* topjets = event.topjets;
   if(topjets->size() < 1) return;
   
-  auto PFJET320 = event.get_trigger_index("HLT_PFJet320_v*");
-  auto PFJET450 = event.get_trigger_index("HLT_PFJet450_v*");
+  auto PFJET320 = event.get_trigger_index("HLT_PFJet320_v*");//prescale = 20
+  auto PFJET450 = event.get_trigger_index("HLT_PFJet450_v*");//prescale = 1 ff.
   auto PFJET500 = event.get_trigger_index("HLT_PFJet500_v*");		
   auto PFJET550 = event.get_trigger_index("HLT_PFJet550_v*");
+  // std::cout << "550 trigger prescale: " << event.trigger_prescale(PFJET550) << std::endl;
 
   float HT(-1.0f), AK8_PT(-1.0f), AK4_PT(-1.0f);
-  if(event.is_valid(h_ht))ht = event.get(h_ht);
+  if(event.is_valid(h_ht)) HT = event.get(h_ht);
   if(event.topjets->size()>0) AK8_PT = event.topjets->at(0).pt();
   if(event.jets->size()>0) AK4_PT = event.jets->at(0).pt();
 
-  hist("HT")->fill(HT,weight);
-  hist("AK8_PT")->fill(AK8_PT,weight);
-  hist("AK4_PT")->fill(AK4_PT,weight);
+  hist("HT")->Fill(HT,weight);
+  hist("AK8_PT")->Fill(AK8_PT,weight);
+  hist("AK4_PT")->Fill(AK4_PT,weight);
 
   //PFJet320 as reference selection
   if(event.passes_trigger(PFJET320)){
