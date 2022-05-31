@@ -40,6 +40,7 @@
 #include "UHH2/JetMass/include/PFHists.h"
 #include "UHH2/JetMass/include/UnfoldingHists.h"
 #include "UHH2/JetMass/include/JetMassGenHists.h"
+#include "UHH2/JetMass/include/TriggerHists.h"
 #include "UHH2/JetMass/include/JetMassUtils.h"
 
 #include "UHH2/common/include/TTbarGen.h"
@@ -102,6 +103,7 @@ private:
   std::unique_ptr<uhh2::Hists> h_pfhists_200to500, h_pfhists_500to1000, h_pfhists_1000to2000, h_pfhists_2000to3000, h_pfhists_3000to4000, h_pfhists_4000to5000;
   std::unique_ptr<uhh2::Hists> h_pfhists_inclusive, h_pfhists_500to550, h_pfhists_550to600, h_pfhists_600to675, h_pfhists_675to800, h_pfhists_800to1200, h_pfhists_1200toInf;
 
+  std::unique_ptr<uhh2::Hists> h_hlt_eff;
   std::unique_ptr<uhh2::Hists> h_gen_hists_commonmodules,h_gen_hists_gensel;
   std::unique_ptr<uhh2::Hists> h_unfolding_hists, h_unfolding_hists_fine;
   std::unique_ptr<uhh2::Hists> h_unfolding_hists_gensubstructure;
@@ -354,6 +356,8 @@ JetMassModule::JetMassModule(Context & ctx){
   hists.emplace_back(new JetHists(ctx, "JetHists"));
   hists.emplace_back(new TopJetHists(ctx, "TopJetHists"));
 
+  h_hlt_eff.reset(new TriggerHists(ctx, "HLTEffHists");
+  
   h_pfhists_200to500.reset(new PFHists(ctx, "PFHists_200to500"));
   h_pfhists_500to1000.reset(new PFHists(ctx, "PFHists_500to1000"));
   h_pfhists_1000to2000.reset(new PFHists(ctx, "PFHists_1000to2000"));
@@ -546,6 +550,8 @@ bool JetMassModule::process(Event & event) {
     // event.set(handle_gentopjet_matched_V,v_gentopjet);
     nlo_weights->process(event); // now taking pT of V-boson genparticle
   }
+
+  h_hlt_eff->fill(event);
   
   if(event.topjets->size()>0){
     //PFHists
