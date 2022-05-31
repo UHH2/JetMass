@@ -198,7 +198,8 @@ JetMassModule::JetMassModule(Context & ctx){
   common->switch_metcorrection(true);
   common->switch_jetPtSorter();
   common->set_HTjetid(jetid);
-  if(is_mc || isvjetsSel) common->disable_metfilters(); //TODO: remove || isVJets as soon as updated JetHT-samples with correct METFilters are available
+  // if(is_mc || isvjetsSel) common->disable_metfilters(); //TODO: remove || isVJets as soon as updated JetHT-samples with correct MET
+  if(is_mc) common->disable_metfilters(); //TODO: remove || isVJets as soon as updated JetHT-samples with correct METFilters are available
   // impact of disabling metfilters for jetht seems to negligible
   common->init(ctx);
 
@@ -356,106 +357,106 @@ JetMassModule::JetMassModule(Context & ctx){
   hists.emplace_back(new JetHists(ctx, "JetHists"));
   hists.emplace_back(new TopJetHists(ctx, "TopJetHists"));
 
-  h_hlt_eff.reset(new TriggerHists(ctx, "HLTEffHists");
+  h_hlt_eff.reset(new TriggerHists(ctx, "HLTEffHists"));
   
-  h_pfhists_200to500.reset(new PFHists(ctx, "PFHists_200to500"));
-  h_pfhists_500to1000.reset(new PFHists(ctx, "PFHists_500to1000"));
-  h_pfhists_1000to2000.reset(new PFHists(ctx, "PFHists_1000to2000"));
-  h_pfhists_2000to3000.reset(new PFHists(ctx, "PFHists_2000to3000"));
-  h_pfhists_3000to4000.reset(new PFHists(ctx, "PFHists_3000to4000"));
-  h_pfhists_4000to5000.reset(new PFHists(ctx, "PFHists_4000to5000"));
+  // h_pfhists_200to500.reset(new PFHists(ctx, "PFHists_200to500"));
+  // h_pfhists_500to1000.reset(new PFHists(ctx, "PFHists_500to1000"));
+  // h_pfhists_1000to2000.reset(new PFHists(ctx, "PFHists_1000to2000"));
+  // h_pfhists_2000to3000.reset(new PFHists(ctx, "PFHists_2000to3000"));
+  // h_pfhists_3000to4000.reset(new PFHists(ctx, "PFHists_3000to4000"));
+  // h_pfhists_4000to5000.reset(new PFHists(ctx, "PFHists_4000to5000"));
 
-  h_pfhists_inclusive.reset(new PFHists(ctx, "PFHists_inclusive"));
-  h_pfhists_500to550.reset(new PFHists(ctx, "PFHists_500to550"));
-  h_pfhists_550to600.reset(new PFHists(ctx, "PFHists_550to600"));
-  h_pfhists_600to675.reset(new PFHists(ctx, "PFHists_600to675"));
-  h_pfhists_675to800.reset(new PFHists(ctx, "PFHists_675to800"));
-  h_pfhists_800to1200.reset(new PFHists(ctx, "PFHists_800to1200"));
-  h_pfhists_1200toInf.reset(new PFHists(ctx, "PFHists_1200toInf"));
+  // h_pfhists_inclusive.reset(new PFHists(ctx, "PFHists_inclusive"));
+  // h_pfhists_500to550.reset(new PFHists(ctx, "PFHists_500to550"));
+  // h_pfhists_550to600.reset(new PFHists(ctx, "PFHists_550to600"));
+  // h_pfhists_600to675.reset(new PFHists(ctx, "PFHists_600to675"));
+  // h_pfhists_675to800.reset(new PFHists(ctx, "PFHists_675to800"));
+  // h_pfhists_800to1200.reset(new PFHists(ctx, "PFHists_800to1200"));
+  // h_pfhists_1200toInf.reset(new PFHists(ctx, "PFHists_1200toInf"));
 
   h_gen_hists_commonmodules.reset(new JetMassGenHists(ctx,"GenHistsCommonModules",ttbargen_handlename,genHT_handlename));
   h_gen_hists_gensel.reset(new JetMassGenHists(ctx, "GenHistsGenSel",ttbargen_handlename,genHT_handlename));
 
 
-  const std::vector<double> pt_edges = {200.00,300.00,400.00,500.00,650.00,800.00,1200.00};
+  // const std::vector<double> pt_edges = {200.00,300.00,400.00,500.00,650.00,800.00,1200.00};
 
-  const std::vector<double> msd_edges = {50.00,60.00,70.00,80.00,90.00,100.00,110.00,120.00,130.00,140.00,150.00,160.00,170.00,180.00,190.00,200.00,210.00,220.00,230.00,240.00,250.00,260.00,270.00,280.00,290.00,300.00};
+  // const std::vector<double> msd_edges = {50.00,60.00,70.00,80.00,90.00,100.00,110.00,120.00,130.00,140.00,150.00,160.00,170.00,180.00,190.00,200.00,210.00,220.00,230.00,240.00,250.00,260.00,270.00,280.00,290.00,300.00};
 
-  const std::vector<double> pt_edges_fine = {200.00,250.00,300.00,350.00,400.00,450.00,500.00,550.00,600.00,650.00,700.00,750.00,800.00,850.00,900.00,950.00,1000.00,1050.00,1100.00,1150.00,1200.00};
+  // const std::vector<double> pt_edges_fine = {200.00,250.00,300.00,350.00,400.00,450.00,500.00,550.00,600.00,650.00,700.00,750.00,800.00,850.00,900.00,950.00,1000.00,1050.00,1100.00,1150.00,1200.00};
   
-  const std::vector<double> msd_edges_fine = {50.00,55.00,60.00,65.00,70.00,75.00,80.00,85.00,90.00,95.00,100.00,105.00,110.00,115.00,120.00,125.00,130.00,135.00,140.00,145.00,150.00,155.00,160.00,165.00,170.00,175.00,180.00,185.00,190.00,195.00,200.00,205.00,210.00,215.00,220.00,225.00,230.00,235.00,240.00,245.00,250.00,255.00,260.00,265.00,270.00,275.00,280.00,285.00,290.00,295.00,300.00};
+  // const std::vector<double> msd_edges_fine = {50.00,55.00,60.00,65.00,70.00,75.00,80.00,85.00,90.00,95.00,100.00,105.00,110.00,115.00,120.00,125.00,130.00,135.00,140.00,145.00,150.00,155.00,160.00,165.00,170.00,175.00,180.00,185.00,190.00,195.00,200.00,205.00,210.00,215.00,220.00,225.00,230.00,235.00,240.00,245.00,250.00,255.00,260.00,265.00,270.00,275.00,280.00,285.00,290.00,295.00,300.00};
 
-  h_unfolding_hists_sel_part1.reset(new UnfoldingHists(ctx,"unfolding_hists_sel_part1",
-                                             msd_edges,
-                                             pt_edges,
-                                             reco_selection_handlename,
-                                             gen_selection_handlename,
-                                             matching_selection_handlename,
-                                             recotopjet_handlename,
-                                             gentopjet_handlename));
+  // h_unfolding_hists_sel_part1.reset(new UnfoldingHists(ctx,"unfolding_hists_sel_part1",
+  //                                            msd_edges,
+  //                                            pt_edges,
+  //                                            reco_selection_handlename,
+  //                                            gen_selection_handlename,
+  //                                            matching_selection_handlename,
+  //                                            recotopjet_handlename,
+  //                                            gentopjet_handlename));
 
-  h_unfolding_hists_sel_part2.reset(new UnfoldingHists(ctx,"unfolding_hists_sel_part2",
-                                             msd_edges,
-                                             pt_edges,
-                                             reco_selection_handlename,
-                                             gen_selection_handlename,
-                                             matching_selection_handlename,
-                                             recotopjet_handlename,
-                                             gentopjet_handlename));
+  // h_unfolding_hists_sel_part2.reset(new UnfoldingHists(ctx,"unfolding_hists_sel_part2",
+  //                                            msd_edges,
+  //                                            pt_edges,
+  //                                            reco_selection_handlename,
+  //                                            gen_selection_handlename,
+  //                                            matching_selection_handlename,
+  //                                            recotopjet_handlename,
+  //                                            gentopjet_handlename));
 
-  h_unfolding_hists.reset(new UnfoldingHists(ctx,"unfolding_hists",
-                                             msd_edges,
-                                             pt_edges,
-                                             reco_selection_handlename,
-                                             gen_selection_handlename,
-                                             matching_selection_handlename,
-                                             recotopjet_handlename,
-                                             gentopjet_handlename));
+  // h_unfolding_hists.reset(new UnfoldingHists(ctx,"unfolding_hists",
+  //                                            msd_edges,
+  //                                            pt_edges,
+  //                                            reco_selection_handlename,
+  //                                            gen_selection_handlename,
+  //                                            matching_selection_handlename,
+  //                                            recotopjet_handlename,
+  //                                            gentopjet_handlename));
 
-  h_unfolding_hists_rhocut.reset(new UnfoldingHists(ctx,"unfolding_hists_rhocut",
-                                             msd_edges,
-                                             pt_edges,
-                                             reco_selection_handlename,
-                                             gen_selection_handlename,
-                                             matching_selection_handlename,
-                                             recotopjet_handlename,
-                                             gentopjet_handlename));
+  // h_unfolding_hists_rhocut.reset(new UnfoldingHists(ctx,"unfolding_hists_rhocut",
+  //                                            msd_edges,
+  //                                            pt_edges,
+  //                                            reco_selection_handlename,
+  //                                            gen_selection_handlename,
+  //                                            matching_selection_handlename,
+  //                                            recotopjet_handlename,
+  //                                            gentopjet_handlename));
 
-  h_unfolding_hists_gensubstructure.reset(new UnfoldingHists(ctx,"unfolding_hists_gensubstructure",
-                                             msd_edges,
-                                             pt_edges,
-                                             reco_selection_handlename,
-                                             gen_selection_handlename,
-                                             matching_selection_handlename,
-                                             recotopjet_handlename,
-                                             gentopjet_handlename));
+  // h_unfolding_hists_gensubstructure.reset(new UnfoldingHists(ctx,"unfolding_hists_gensubstructure",
+  //                                            msd_edges,
+  //                                            pt_edges,
+  //                                            reco_selection_handlename,
+  //                                            gen_selection_handlename,
+  //                                            matching_selection_handlename,
+  //                                            recotopjet_handlename,
+  //                                            gentopjet_handlename));
 
-  h_unfolding_hists_no_merged_partons.reset(new UnfoldingHists(ctx,"unfolding_hists_no_merged_partons",
-                                             msd_edges,
-                                             pt_edges,
-                                             reco_selection_handlename+"_no_merged_partons",
-                                             gen_selection_handlename+"_no_merged_partons",
-                                             matching_selection_handlename,
-                                             recotopjet_handlename,
-                                             gentopjet_handlename));
+  // h_unfolding_hists_no_merged_partons.reset(new UnfoldingHists(ctx,"unfolding_hists_no_merged_partons",
+  //                                            msd_edges,
+  //                                            pt_edges,
+  //                                            reco_selection_handlename+"_no_merged_partons",
+  //                                            gen_selection_handlename+"_no_merged_partons",
+  //                                            matching_selection_handlename,
+  //                                            recotopjet_handlename,
+  //                                            gentopjet_handlename));
 
-  h_unfolding_hists_no_merged_partons_rhocut.reset(new UnfoldingHists(ctx,"unfolding_hists_no_merged_partons_rhocut",
-                                             msd_edges,
-                                             pt_edges,
-                                             reco_selection_handlename+"_no_merged_partons",
-                                             gen_selection_handlename+"_no_merged_partons",
-                                             matching_selection_handlename,
-                                             recotopjet_handlename,
-                                             gentopjet_handlename));
+  // h_unfolding_hists_no_merged_partons_rhocut.reset(new UnfoldingHists(ctx,"unfolding_hists_no_merged_partons_rhocut",
+  //                                            msd_edges,
+  //                                            pt_edges,
+  //                                            reco_selection_handlename+"_no_merged_partons",
+  //                                            gen_selection_handlename+"_no_merged_partons",
+  //                                            matching_selection_handlename,
+  //                                            recotopjet_handlename,
+  //                                            gentopjet_handlename));
 
-  h_unfolding_hists_fine.reset(new UnfoldingHists(ctx,"unfolding_hists_fine",
-                                                  msd_edges_fine,
-                                                  pt_edges_fine,
-                                                  reco_selection_handlename,
-                                                  gen_selection_handlename,
-                                                  matching_selection_handlename,
-                                                  recotopjet_handlename,
-                                                  gentopjet_handlename));
+  // h_unfolding_hists_fine.reset(new UnfoldingHists(ctx,"unfolding_hists_fine",
+  //                                                 msd_edges_fine,
+  //                                                 pt_edges_fine,
+  //                                                 reco_selection_handlename,
+  //                                                 gen_selection_handlename,
+  //                                                 matching_selection_handlename,
+  //                                                 recotopjet_handlename,
+  //                                                 gentopjet_handlename));
 
   
 
@@ -553,23 +554,23 @@ bool JetMassModule::process(Event & event) {
 
   h_hlt_eff->fill(event);
   
-  if(event.topjets->size()>0){
-    //PFHists
-    float AK8_pt = event.topjets->at(0).pt();
-    h_pfhists_inclusive->fill(event);
-    if(AK8_pt>200 && AK8_pt<500)h_pfhists_200to500->fill(event);
-    if(AK8_pt>500 && AK8_pt<1000)h_pfhists_500to1000->fill(event);
-    if(AK8_pt>1000 && AK8_pt<2000)h_pfhists_1000to2000->fill(event);
-    if(AK8_pt>2000 && AK8_pt<3000)h_pfhists_2000to3000->fill(event);
-    if(AK8_pt>3000 && AK8_pt<4000)h_pfhists_3000to4000->fill(event);
-    if(AK8_pt>4000 && AK8_pt<5000)h_pfhists_4000to5000->fill(event);
-    if(AK8_pt>500 && AK8_pt<550)h_pfhists_500to550->fill(event);
-    if(AK8_pt>550 && AK8_pt<600)h_pfhists_550to600->fill(event);
-    if(AK8_pt>600 && AK8_pt<675)h_pfhists_600to675->fill(event);
-    if(AK8_pt>675 && AK8_pt<800)h_pfhists_675to800->fill(event);
-    if(AK8_pt>800 && AK8_pt<1200)h_pfhists_800to1200->fill(event);
-    if(AK8_pt>1200)h_pfhists_1200toInf->fill(event);
-  }
+  // if(event.topjets->size()>0){
+  //   //PFHists
+  //   float AK8_pt = event.topjets->at(0).pt();
+  //   h_pfhists_inclusive->fill(event);
+  //   if(AK8_pt>200 && AK8_pt<500)h_pfhists_200to500->fill(event);
+  //   if(AK8_pt>500 && AK8_pt<1000)h_pfhists_500to1000->fill(event);
+  //   if(AK8_pt>1000 && AK8_pt<2000)h_pfhists_1000to2000->fill(event);
+  //   if(AK8_pt>2000 && AK8_pt<3000)h_pfhists_2000to3000->fill(event);
+  //   if(AK8_pt>3000 && AK8_pt<4000)h_pfhists_3000to4000->fill(event);
+  //   if(AK8_pt>4000 && AK8_pt<5000)h_pfhists_4000to5000->fill(event);
+  //   if(AK8_pt>500 && AK8_pt<550)h_pfhists_500to550->fill(event);
+  //   if(AK8_pt>550 && AK8_pt<600)h_pfhists_550to600->fill(event);
+  //   if(AK8_pt>600 && AK8_pt<675)h_pfhists_600to675->fill(event);
+  //   if(AK8_pt>675 && AK8_pt<800)h_pfhists_675to800->fill(event);
+  //   if(AK8_pt>800 && AK8_pt<1200)h_pfhists_800to1200->fill(event);
+  //   if(AK8_pt>1200)h_pfhists_1200toInf->fill(event);
+  // }
   
   bool pass_reco_selection_part1 = reco_selection_part1->passes(event);
   bool pass_reco_selection_part2(false);
@@ -697,38 +698,38 @@ bool JetMassModule::process(Event & event) {
 
   //fill first round of unfolding hists with part1 of selections
   //IMPORTANT: setting selection bits before filling UnfoldingHists, since those rely on correct setting of handles!
-  event.set(handle_reco_selection,pass_reco_selection_part1);
-  event.set(handle_gen_selection,pass_gen_selection_part1);
-  h_unfolding_hists_sel_part1->fill(event);
+  // event.set(handle_reco_selection,pass_reco_selection_part1);
+  // event.set(handle_gen_selection,pass_gen_selection_part1);
+  // h_unfolding_hists_sel_part1->fill(event);
 
   
   //fill second round of unfolding hists with part2 of selections
   bool pass_gen_selection = pass_gen_selection_part1 && pass_gen_selection_part2;
-  event.set(handle_reco_selection, pass_reco_selection_part1 && pass_reco_selection_part2 && pass_substructure_cut);
-  event.set(handle_gen_selection, pass_gen_selection);
-  h_unfolding_hists_sel_part2->fill(event);  
-  if(pass_gen_selection) h_gen_hists_gensel->fill(event);
+  // event.set(handle_reco_selection, pass_reco_selection_part1 && pass_reco_selection_part2 && pass_substructure_cut);
+  // event.set(handle_gen_selection, pass_gen_selection);
+  // h_unfolding_hists_sel_part2->fill(event);  
+  // if(pass_gen_selection) h_gen_hists_gensel->fill(event);
 
   //last round of unfolding hists with dR matching
-  event.set(handle_reco_selection, (pass_reco_selection_part1 && pass_substructure_cut && pass_dR_reco_gen));
-  h_unfolding_hists->fill(event);
-  h_unfolding_hists_fine->fill(event);
+  // event.set(handle_reco_selection, (pass_reco_selection_part1 && pass_substructure_cut && pass_dR_reco_gen));
+  // h_unfolding_hists->fill(event);
+  // h_unfolding_hists_fine->fill(event);
 
   event.set(handle_reco_selection, (pass_reco_selection_part1 && pass_reco_selection_part2 && pass_substructure_cut && pass_dR_reco_gen));
-  h_unfolding_hists_rhocut->fill(event);
+  // h_unfolding_hists_rhocut->fill(event);
 
   event.set(handle_gen_selection, pass_gen_selection && pass_gen_substructure);
-  h_unfolding_hists_gensubstructure->fill(event);
+  // h_unfolding_hists_gensubstructure->fill(event);
 
   event.set(handle_reco_selection_no_merged_partons, pass_reco_selection_part1 && pass_substructure_cut && pass_dR_reco_gen && (n_merged_partons_reco_jet==0));
   event.set(handle_gen_selection_no_merged_partons, pass_gen_selection && (n_merged_partons_gen_jet==0));
-  h_unfolding_hists_no_merged_partons->fill(event);
+  // h_unfolding_hists_no_merged_partons->fill(event);
 
   event.set(handle_reco_selection_no_merged_partons, pass_reco_selection_part1 && pass_substructure_cut && pass_reco_selection_part2 && pass_dR_reco_gen && (n_merged_partons_reco_jet==0));
-  h_unfolding_hists_no_merged_partons_rhocut->fill(event);
+  // h_unfolding_hists_no_merged_partons_rhocut->fill(event);
 
   
-  if(EXTRAOUT) std::cout << "JetMassModule: UnfoldingHistFilling done!" << std::endl;
+  // if(EXTRAOUT) std::cout << "JetMassModule: UnfoldingHistFilling done!" << std::endl;
 
   //Write everything used for JetMassCalibration to Tree if first part of reco-selection passes
   // if(pass_reco_selection_part1){  
