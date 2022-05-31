@@ -100,6 +100,9 @@ WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selec
   h_pdgId_Q1 = ctx.declare_event_output<int>("pdgIdQ1");
   h_pdgId_Q2 = ctx.declare_event_output<int>("pdgIdQ2");
   h_V_pt = ctx.declare_event_output<double>("V_pt");
+
+  h_trigger_bits = ctx.declare_event_output<std::vector<bool>>("trigger_bits");
+  trigger_names = {"HLT_PFJet320_v*","HLT_PFJet450_v*","HLT_PFJet500_v*","HLT_PFJet550_v*"};
   
   // h_n_ak8_reco = ctx.declare_event_output<int>("N_ak8_reco");
   // h_n_ak8_gen = ctx.declare_event_output<int>("N_ak8_gen");
@@ -250,6 +253,12 @@ bool WriteOutput::process(uhh2::Event & event){
   vector<TopJet>* topjets = event.topjets;
   if(topjets->size() < 1) return false;
 
+  std::vector<bool> trigger_results = {};
+  for(auto trigger_name: trigger_names){
+    auto trigger_index = event.get_trigger_index(trigger_name);
+    trigger_results.push_back( event.passes_trigger( trigger_index ) );
+  }
+  event.set(h_trigger_bits,trigger_results);
 
   if(save_jms_jes_study_specific){
     float n_pv = -999.0;

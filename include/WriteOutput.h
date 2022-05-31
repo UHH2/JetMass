@@ -47,6 +47,8 @@ private:
   uhh2::Event::Handle<int>h_n_trueint_ootimeafter;
   uhh2::Event::Handle<float>h_n_trueint;
 
+  uhh2::Event::Handle<std::vector<bool>> h_trigger_bits;
+  std::vector<std::string> trigger_names;
 
   uhh2::Event::Handle<double>h_msubjets; // mass of summed v4 of subjets
   uhh2::Event::Handle<double>h_mgensubjets; // mass of summed v4 of subjets
