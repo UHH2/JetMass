@@ -105,11 +105,11 @@ def build_mass_scale_variations(configs, args):
     if(args.separateMassScales):
         separate_mass_scale_setup_dict = {}
         for mass_scale_suffix in mass_scale_setup_dict.keys():
-            separate_mass_scale_setup_dict.update({"W_"+mass_scale_suffix:{"regions":['pass','passW','fail'],'samples':["WJetsMatched","TTbar_semilep_mergedW"]}})
+            separate_mass_scale_setup_dict.update({"W_"+mass_scale_suffix:{"regions":['pass','passW','fail'],'samples':["WJetsMatched","TTToSemiLeptonic_mergedW"]}})
             if any(s in selections for s in ['W','Zbb']):
                 separate_mass_scale_setup_dict.update({"Z_"+mass_scale_suffix:{"regions":['pass','passW','fail'],'samples':["ZJetsMatched"]}})
             if 'top' in selections:
-                separate_mass_scale_setup_dict.update({"top_"+mass_scale_suffix:{"regions":['pass','passW','fail'],'samples':["TTbar_semilep_mergedTop"]}})
+                separate_mass_scale_setup_dict.update({"top_"+mass_scale_suffix:{"regions":['pass','passW','fail'],'samples':["TTToSemiLeptonic_mergedTop"]}})
         mass_scale_setup_dict = separate_mass_scale_setup_dict
 
     #setting up nuisances correspondig to consituent-variation according to categories from grid
@@ -487,17 +487,17 @@ def jet_mass_producer(args,configs):
         #setting effect for tagging eff scale factors
         #top tagging
         if(args.TTbarTaggingEff and config["selection"]=="top"):
-            top_pass_sample = model[channel_name + 'pass']["TTbar_semilep_mergedTop"]
-            top_passW_sample = model[channel_name + 'passW']["TTbar_semilep_mergedTop"]
-            top_fail_sample = model[channel_name + 'fail']["TTbar_semilep_mergedTop"]
+            top_pass_sample = model[channel_name + 'pass']["TTToSemiLeptonic_mergedTop"]
+            top_passW_sample = model[channel_name + 'passW']["TTToSemiLeptonic_mergedTop"]
+            top_fail_sample = model[channel_name + 'fail']["TTToSemiLeptonic_mergedTop"]
             rpf_top_Wfail = top_pass_sample.getExpectation(nominal=True).sum()/(top_passW_sample.getExpectation(nominal=True).sum() + top_fail_sample.getExpectation(nominal=True).sum())
             top_pass_sample.setParamEffect(top_tag_eff,1.0*top_tag_eff)
             top_passW_sample.setParamEffect(top_tag_eff,(1-top_tag_eff)*rpf_top_Wfail + 1.0)
             top_fail_sample.setParamEffect(top_tag_eff,(1-top_tag_eff)*rpf_top_Wfail + 1.0)
             #W tagging
-            W_pass_sample = model[channel_name + 'pass']["TTbar_semilep_mergedW"]
-            W_passW_sample = model[channel_name + 'passW']["TTbar_semilep_mergedW"]
-            W_fail_sample = model[channel_name + 'fail']["TTbar_semilep_mergedW"]
+            W_pass_sample = model[channel_name + 'pass']["TTToSemiLeptonic_mergedW"]
+            W_passW_sample = model[channel_name + 'passW']["TTToSemiLeptonic_mergedW"]
+            W_fail_sample = model[channel_name + 'fail']["TTToSemiLeptonic_mergedW"]
             rpf_W_topfail = W_passW_sample.getExpectation(nominal=True).sum()/(W_pass_sample.getExpectation(nominal=True).sum() + W_fail_sample.getExpectation(nominal=True).sum())
             W_passW_sample.setParamEffect(W_tag_eff,1.0*W_tag_eff)
             W_pass_sample.setParamEffect(W_tag_eff,(1-W_tag_eff)*rpf_W_topfail + 1.0)
