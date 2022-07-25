@@ -642,7 +642,14 @@ if(__name__ == "__main__"):
             error_down = abs(param.getErrorLo())
             
             massScales.append([center,error_up,-error_down])
-        np.save(configs['ModelName']+"/"+configs['ModelName']+'MassScales.npy',np.array(massScales))
+        np.save(configs['ModelName']+"/"+configs['ModelName']+'MassScales.npy',np.array(massScales,dtype=float))
+
+        fit_result_parameters = {}
+        for p in fit_result.floatParsFinal():
+            fit_result_parameters[p.GetName()]=[p.getVal(),p.getErrorHi(),p.getErrorLo()]
+        open(configs['ModelName']+"/"+configs['ModelName']+'fitResult.json','w').write(json.dumps(fit_result_parameters,sort_keys=True,indent=2))
+        
+        
         do_postfit = fit_result.status() <= 3
     except:
         print("fit failed. only plotting prefit distributions from fitDiangnostics (beware weird shape uncertainties)")
