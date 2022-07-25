@@ -4,6 +4,8 @@ import os,argparse,ROOT
 ROOT.gROOT.SetBatch(True)
 ROOT.gStyle.SetOptStat(0)
 
+import sys
+sys.path.append('/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/rhalphalib')
 import rhalphalib as rl
 rl.util.install_roofit_helpers()
 import numpy as np
@@ -18,7 +20,6 @@ def _RooFitResult_massScales(self):
 ROOT.RooFitResult.massScales = _RooFitResult_massScales
 
 
-import sys
 sys.path.append('/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/python')
 import cms_style
 cms_style.extra_text="Preliminary Simulation"
@@ -157,7 +158,7 @@ class CombineWorkflows(object):
         self._method = method_name
         self.combineString = getattr(self,method_name)
         
-    def write_wrapper(self):
+    def write_wrapper(self, append=False):
         global silence
         silence = True
         pathCMSSW = os.path.realpath(self.combineCMSSW)
@@ -166,8 +167,12 @@ class CombineWorkflows(object):
         if(not os.path.isdir(self.modeldir)):
             os.makedirs(self.modeldir)
         wrapper_name = self.modeldir+'/wrapper.sh'
-        with open(wrapper_name,'w') as wrapper:
-            wrapper.write("#!/bin/bash\n")
+
+        append_wrapper = os.path.isfile(wrapper_name) and append
+        
+        with open(wrapper_name, 'a' if append_wrapper else 'w') as wrapper:
+            if(not append_wrapper):
+                wrapper.write("#!/bin/bash\n")
             # wrapper.write("source /cvmfs/cms.cern.ch/cmsset_default.sh\n")
             # wrapper.write("cd "+pathCMSSW+"/src/\n")
             # wrapper.write("eval `scramv1 runtime -sh`\n")
@@ -181,7 +186,7 @@ class CombineWorkflows(object):
         command_string = """#FitDiagnostics Workflow\n"""
         command_string += exec_bash("cd " + self.modeldir + "\n",debug)
         command_string += exec_bash("source build.sh\n",debug)
-        command_string += exec_bash("combine -M FitDiagnostics {WORKSPACE} {POI} --saveShapes {EXTRA} -n ''".format(WORKSPACE=self.workspace,POI=self.POI,EXTRA=self.extraOptions),debug)
+        command_string += exec_bash("combine -M FitDiagnostics {WORKSPACE} {POI} --saveShapes {EXTRA} -n '' --cminDefaultMinimizerStrategy 0".format(WORKSPACE=self.workspace,POI=self.POI,EXTRA=self.extraOptions),debug)
         command_string += exec_bash("PostFitShapesFromWorkspace -w {WORKSPACE} -o {MODELDIR}fit_shapes.root --postfit --sampling -f {MODELDIR}fitDiagnostics.root:fit_s".format(WORKSPACE=self.workspace,MODELDIR=self.modeldir),debug)
         return command_string
 
@@ -282,6 +287,11 @@ class CombineWorkflows(object):
                     
         command_string += exec_bash("cd " + self.modeldir + "\n",debug)
 
+        return command_string
+
+    def FastScan(self,debug=True):
+        command_string = "#FastScan\n"
+        command_string += "combineTool.py -M FastScan -w {WORKSPACE}:w".format(WORKSPACE=self.workspace)
         return command_string
 
 if(__name__=='__main__'):
