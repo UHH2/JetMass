@@ -611,6 +611,8 @@ if(__name__ == "__main__"):
             cw.POI = "r" if use_r_poi else mass_scale_names
             cw.method = args.method
             cw.write_wrapper()
+            cw.method = 'FastScan'
+            cw.write_wrapper(append=True)
         else:
             if(not os.path.isfile(configs['ModelName']+'/wrapper.sh')):
                 import warnings
