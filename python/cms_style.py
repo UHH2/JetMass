@@ -52,11 +52,11 @@ text_padding = 0.1
 additional_text_size = 0.3*font_size_modifier
 additional_text_ypos = 1.0
 extra_right_margin = 0.0
-def draw_lumi(plotpad, lumi = 41.8,do_extra_text=True,out_of_frame = True,do_cms_text=False,private_work=False,parent_pad = None):
+def draw_lumi(plotpad, year='2017', lumi = 41.8,do_extra_text=True,out_of_frame = True,do_cms_text=False,private_work=False,parent_pad = None):
     global additional_text_size
     global additional_text_ypos
     global cms_text
-    lumi_text = "%.1f fb^{-1} (13 TeV)"%float(lumi)
+    lumi_text = "(%s) %.2f fb^{-1} (13 TeV)"%(str(year),float(lumi))
     if private_work:
         extra_text = "____,work_in_progress"
     latex = ROOT.TLatex()
