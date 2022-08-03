@@ -127,9 +127,15 @@ class JMSTemplates(processor.ProcessorABC):
 
         self._regions = {
             'vjets':{
+                # 'inclusive_norho':{'pt500cut':True},
+                # 'pass_norho':{'n2ddt':True,'pt500cut':True},
+                # 'fail_norho':{'n2ddt':False,'pt500cut':True},
                 'inclusive':{'rhocut':True,'pt500cut':True},
                 'pass':{'n2ddt':True,'rhocut':True,'pt500cut':True},
                 'fail':{'n2ddt':False,'rhocut':True,'pt500cut':True},
+                'inclusive_trigger':{'rhocut':True,'pt500cut':True, 'HLT_AK8PFJet450':True},
+                'pass_trigger':{'n2ddt':True,'rhocut':True,'pt500cut':True, 'HLT_AK8PFJet450':True},
+                'fail_trigger':{'n2ddt':False,'rhocut':True,'pt500cut':True, 'HLT_AK8PFJet450':True},
             },
             'ttbar':{
                 'inclusive':{'pt200cut':True},
@@ -161,6 +167,15 @@ class JMSTemplates(processor.ProcessorABC):
                               'nevents':processor.defaultdict_accumulator(float),
                               'sumw':processor.defaultdict_accumulator(float),
                               'sumw2':processor.defaultdict_accumulator(float)}#processor.dict_accumulator(hists)
+
+
+        self._triggerbits = [
+            "HLT_PFJet320_v*","HLT_PFJet400_v*","HLT_PFJet450_v*","HLT_PFJet500_v*","HLT_PFJet550_v*",
+            "HLT_AK8PFJet320_v*","HLT_AK8PFJet400_v*","HLT_AK8PFJet450_v*","HLT_AK8PFJet500_v*","HLT_AK8PFJet550_v*",
+        ]
+
+    def passes_trigger(self, events, trigger_name):
+        return events['trigger_bits'][:,self._triggerbits.index(trigger_name)]
     
     @property
     def accumulator(self):
@@ -279,6 +294,13 @@ class JMSTemplates(processor.ProcessorABC):
             selections.add("tau32",events.tau32<0.5)
 
             selection = events.metadata['selection']
+
+            selections.add("HLT_AK8PFJet450", self.passes_trigger(events, "HLT_AK8PFJet450_v*"))
+            # print(dataset)
+            # print(len(events))
+            # print(ak.sum(selections.require(pt200cut=True)))
+            # print(ak.sum(selections.require(tau32=True)))
+            # print(ak.sum(selections.require(tau21=True)))
             for region in self._regions[selection].keys():
                 smask = selections.require(**self._regions[selection][region])
                 out[f"{selection}_mjet_{region}"].fill(
