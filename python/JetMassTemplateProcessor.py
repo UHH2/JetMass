@@ -16,9 +16,6 @@ class JMSTemplates(processor.ProcessorABC):
     def __init__(self,year="2017"):
         self._year = year
         
-        # dataset_ax = hist.Cat("dataset", "Dataset")
-        # pT_ax  = hist.Bin("pt" , "$p_{T}$ [GeV]", 100, 0., 1500.)
-
         #bins: int, start: float, stop: float, *, name: str = '', label: str = '', 
         dataset_ax = hist.axis.StrCategory([], name="dataset", growth=True)
         shift_ax = hist.axis.StrCategory([], name="shift", growth=True)
@@ -27,7 +24,7 @@ class JMSTemplates(processor.ProcessorABC):
         pT_ax  = hist.axis.Regular(100, 0., 3000., name="pt" , label=r"$p_{T}$ [GeV]")
         eta_ax  = hist.axis.Regular(100, -6.5, 6.5, name="eta" , label=r"$\eta$")
         phi_ax  = hist.axis.Regular(100, -4, 4, name="phi" , label=r"$\Phi$")
-        # mJ_fit_ax  = hist.axis.Regular(250, 50., 300.,name="mJ" , label=r"$m_{SD}$ [GeV]")
+
         mJ_fit_ax  = hist.axis.Regular(500, 0., 500.,name="mJ" , label=r"$m_{SD}$ [GeV]")
         rho_ax  = hist.axis.Regular(100, -10., 0,name="rho" , label=r"$\rho$")
 
@@ -38,7 +35,7 @@ class JMSTemplates(processor.ProcessorABC):
                 'mJgen':hist.axis.Regular(500,0,500, name="mJgen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"),
                 'ptreco':hist.axis.Variable(np.array([500,575,650,725,800,1000,1200,np.inf]), name="ptreco", label=r"$p_{T,\mathrm{reco}}$ [GeV]"),
                 'mJreco':hist.axis.Variable(np.array([0,40,100,300,np.inf]), name="mJreco", label=r"$m_{SD,\mathrm{reco}}$ [GeV]"),
-            }
+            },
             'ttbar':{
                 'ptgen':hist.axis.Variable(np.array([250, 400, 650, np.inf]), name="ptgen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"),
                 'mJgen':hist.axis.Regular(500,0,500, name="mJgen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"),
@@ -51,17 +48,6 @@ class JMSTemplates(processor.ProcessorABC):
             'vjets':hist.axis.Variable(np.array([500, 650, 800, 1200,np.inf]), name="pt" , label=r"$p_{T}$ [GeV]"),
             'ttbar':hist.axis.Variable(np.array([200, 300, 400, 500, 650, np.inf]), name="pt" , label=r"$p_{T}$ [GeV]"),
         }
-
-        # mJ_ax  = hist.Bin("mJ" , "$m_{SD}$ [GeV]", 50, 0., 500.)
-        # dataset_ax = hist.Cat("dataset", "Dataset")
-        # pT_ax  = hist.Bin("pt" , "$p_{T}$ [GeV]", 300, 0., 3000.)
-        # mJ_fit_ax  = hist.Bin("mJ" , "$m_{SD}$ [GeV]", 250, 50., 300.)
-        # rho_ax  = hist.Bin("rho" , "$\\rho$", 100, -10., 0.)
-
-        # self._pT_fit_ax = {
-        #     'vjets':hist.Bin("pt" , "$p_{T}$ [GeV]", np.array([500, 650, 800, 1200])),
-        #     'ttbar':hist.Bin("pt" , "$p_{T}$ [GeV]", np.array([200, 300, 400, 500, 650, 100000])),
-        # }
         
         hists = {}
 
@@ -123,29 +109,14 @@ class JMSTemplates(processor.ProcessorABC):
             'pt':hist.Hist(pT_ax, dataset_ax, jec_applied_ax,storage=hist.storage.Weight()),
             'eta':hist.Hist(eta_ax, dataset_ax, storage=hist.storage.Weight()),
             'phi':hist.Hist(phi_ax, dataset_ax, storage=hist.storage.Weight()),
-            # 'pt_raw':hist.Hist(dataset_ax, pT_ax,storage=hist.storage.Weight()),
             'mjet':hist.Hist(mJ_ax, dataset_ax, jec_applied_ax,storage=hist.storage.Weight()),
-            # 'mjet_raw':hist.Hist(dataset_ax, mJ_ax,storage=hist.storage.Weight()),
             'rho':hist.Hist(rho_ax, dataset_ax, jec_applied_ax,storage=hist.storage.Weight()),
-            # 'rho_raw':hist.Hist(dataset_ax, rho_ax,storage=hist.storage.Weight()),
             'npv':hist.Hist(dataset_ax,hist.axis.Regular(80,0,80,name='npv',label=r'$N_{PV}$'),storage=hist.storage.Weight()),
             'ntrueint':hist.Hist(dataset_ax,hist.axis.Regular(80,0,80,name='ntrueint',label=r'$N_{TrueInt}$'),storage=hist.storage.Weight()),
-
-        # 'pt':hist.Hist("Events",dataset_ax, pT_ax),
-        #     'pt_raw':hist.Hist("Events",dataset_ax, pT_ax),
-        #     'mjet':hist.Hist("Events",dataset_ax, mJ_ax),
-        #     'mjet_raw':hist.Hist("Events",dataset_ax, mJ_ax),
-        #     'rho':hist.Hist("Events",dataset_ax, rho_ax),
-        #     'rho_raw':hist.Hist("Events",dataset_ax, rho_ax),
-        #     'npv':hist.Hist("Events",dataset_ax,hist.axis.Regular(80,0,80,name='npv',label=r'$N_{PV}$')),
-        #     'ntrueint':hist.Hist("Events",dataset_ax,hist.Bin(80,0,80,name='ntrueint',label=r'$N_{TrueInt}$')),
         })
 
         self._regions = {
             'vjets':{
-                # 'inclusive_norho':{'pt500cut':True},
-                # 'pass_norho':{'n2ddt':True,'pt500cut':True},
-                # 'fail_norho':{'n2ddt':False,'pt500cut':True},
                 'inclusive':{'rhocut':True,'pt500cut':True},
                 'pass':{'n2ddt':True,'rhocut':True,'pt500cut':True},
                 'fail':{'n2ddt':False,'rhocut':True,'pt500cut':True},
@@ -167,11 +138,22 @@ class JMSTemplates(processor.ProcessorABC):
             for region in self._regions[selection].keys():
                 hists.update({
                     f"{selection}_mjet_{region}" : hist.Hist(mJ_fit_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax, storage=hist.storage.Weight()),
-                    f"{selection}_mjet_unfolding_{region}" : hist.Hist(mJ_fit_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax, mJ_gen_ax, pt_gen_ax, storage=hist.storage.Weight()),
                     f"{selection}_pt_{region}" : hist.Hist(pT_ax,dataset_ax,jec_applied_ax,storage=hist.storage.Weight()),
                     f"{selection}_eta_{region}" : hist.Hist(eta_ax,dataset_ax ,storage=hist.storage.Weight()),
                     f"{selection}_rho_{region}" : hist.Hist(rho_ax,dataset_ax,jec_applied_ax,storage=hist.storage.Weight()),
                 })
+
+                hists.update({
+                    f"{selection}_mjet_unfolding_{region}" : hist.Hist(
+                        self._unfolding_ax[selection]['mJgen'],
+                        self._unfolding_ax[selection]['ptgen'],
+                        self._unfolding_ax[selection]['mJreco'],
+                        self._unfolding_ax[selection]['ptreco'],
+                        dataset_ax,
+                        jec_applied_ax,
+                        storage=hist.storage.Weight()),
+                })
+                
                 for variation in self._variations:
                     hists.update({
                         f"{selection}_mjet_{variation}_variation_{region}__up" : hist.Hist(mJ_fit_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,storage=hist.storage.Weight()),
@@ -206,7 +188,6 @@ class JMSTemplates(processor.ProcessorABC):
         return accumulator
     
     def process(self, events):
-        #print(self.accumulator)
         out = self.accumulator()
         
         dataset = events.metadata['dataset']
@@ -216,18 +197,17 @@ class JMSTemplates(processor.ProcessorABC):
         
         #evaluate matching criteria and created new masked events dataframe
         matching_mask = np.ones(len(events), dtype='bool')
-        print(dataset)
+
         if(dataset in self._matching_mappings.keys()):
-            print('applying matching')
+
             matching_selection =  PackedSelection()
             for branch_name, branch_value in self._matching_mappings[dataset].items():
-                print(branch_name,branch_value)
+
                 matching_selection.add(branch_name, events[branch_name] == branch_value)
             #BE AWARE OF THE FOLLOWING OR!!!!
             matching_mask = matching_selection.any(*self._matching_mappings[dataset].keys())
         events = events[matching_mask]
 
-        # print(dataset,len(events))
         out['nevents'][dataset] = len(events)
         out['sumw'][dataset] = ak.sum(events.weight)
         out['sumw2'][dataset] = ak.sum(events.weight*events.weight)
@@ -249,8 +229,6 @@ class JMSTemplates(processor.ProcessorABC):
         
         jecfactor = events.jecfactor
         
-        # pt = events.pt
-        # pt_raw = pt/jecfactor
         pt_raw = events.pt
         pt = pt_raw*jecfactor
 
@@ -274,22 +252,18 @@ class JMSTemplates(processor.ProcessorABC):
         out['pt'].fill(dataset=dataset, jecAppliedOn='none', pt=pt_raw, weight = events.weight)
         out['eta'].fill(dataset=dataset, eta=eta_, weight = events.weight)
         out['phi'].fill(dataset=dataset, phi=phi_, weight = events.weight)
-        # out['pt_raw'].fill(dataset=dataset, pt=pt_raw)
         out['mjet'].fill(dataset=dataset, jecAppliedOn='mJ', mJ=mjet, weight = events.weight)
         out['mjet'].fill(dataset=dataset, jecAppliedOn='none', mJ=mjet_raw, weight = events.weight)
-        # out['mjet_raw'].fill(dataset=dataset, mJ=mjet_raw)
         out['rho'].fill(dataset=dataset,jecAppliedOn='pt&mJ', rho=rho, weight = events.weight)
         out['rho'].fill(dataset=dataset,jecAppliedOn='pt', rho=rho_corrected_pt, weight = events.weight)
         out['rho'].fill(dataset=dataset,jecAppliedOn='mJ', rho=rho_corrected_mJ, weight = events.weight)
         out['rho'].fill(dataset=dataset,jecAppliedOn='none', rho=rho_raw, weight = events.weight)
-        # out['rho_raw'].fill(dataset=dataset, rho=rho_raw)
 
         out['npv'].fill(dataset=dataset,npv = events.n_pv, weight = events.weight)
         if(isMC):
             out['ntrueint'].fill(dataset=dataset,ntrueint = events.n_trueint, weight = events.weight)
 
         
-        # ddb = events["MIDeepDoubleBHbbprob"]/(events["MIDeepDoubleBHbbprob"]+events["MIDeepDoubleBQCDprob"])
         for jec_applied_on in ['none','pt','pt&mJ']:
             selections = PackedSelection()
             pt_ = pt_raw
@@ -321,24 +295,20 @@ class JMSTemplates(processor.ProcessorABC):
             selection = events.metadata['selection']
 
             selections.add("HLT_AK8PFJet450", self.passes_trigger(events, "HLT_AK8PFJet450_v*"))
-            # print(dataset)
-            # print(len(events))
-            # print(ak.sum(selections.require(pt200cut=True)))
-            # print(ak.sum(selections.require(tau32=True)))
-            # print(ak.sum(selections.require(tau21=True)))
+
             for region in self._regions[selection].keys():
-                smask = selections.require(**self._regions[selection][region])
-                # print(selection,region,dataset,ak.sum(smask))
                 smask_unfolding = selections.require(**self._regions[selection][region],unfolding=True)
                 out[f"{selection}_mjet_unfolding_{region}"].fill(
+                    ptreco = pt_[smask_unfolding],
+                    mJreco = mJ_[smask_unfolding],
+                    ptgen = ptgen_[smask_unfolding],
+                    mJgen = mJgen_[smask_unfolding],
                     dataset = dataset,
                     jecAppliedOn = jec_applied_on,
-                    pt = pt_[smask_unfolding],
-                    mJ = mJ_[smask_unfolding],
-                    mJgen = mJgen_[smask_unfolding],
-                    ptgen = ptgen_[smask_unfolding],
                     weight = events.weight[smask_unfolding]
                 )
+
+                smask = selections.require(**self._regions[selection][region])
                 
                 out[f"{selection}_mjet_{region}"].fill(
                     dataset=dataset,
@@ -427,21 +397,11 @@ if(__name__ == "__main__"):
             sample:glob.glob(sample_pattern.format(
                 SELECTION=selection,
                 YEAR=args.year,
-                # SAMPLE=sample.replace('Matched','').replace('Unmatched','')
                 SAMPLE=parent_samplename(sample)
             ))
                    for sample in sample_names[selection]}
         
-        # if('WJets' in samples):
-        #     samples['WJetsMatched'] = samples['WJets']
-        #     samples['WJetsUnmatched'] = samples['WJets']
-        #     del samples['WJets']
-        # if('ZJets' in samples):
-        #     samples['ZJetsMatched'] = samples['ZJets']
-        #     samples['ZJetsUnmatched'] = samples['ZJets']
-        #     del samples['ZJets']
 
-        
         for k,v in samples.items():
             if k not in files:
                 files[f'{selection}_{k}']={'files':[],'treename':'AnalysisTree','metadata':{'selection':selection}}
