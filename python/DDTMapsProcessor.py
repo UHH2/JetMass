@@ -2,6 +2,8 @@
 import awkward as ak
 from coffea.nanoevents import NanoEventsFactory, BaseSchema
 from coffea import processor,hist
+from coffea.analysis_tools import PackedSelection
+
 import numpy as np
 
 class DDTMapPrep(processor.ProcessorABC):
@@ -10,8 +12,8 @@ class DDTMapPrep(processor.ProcessorABC):
         
         year_axis = hist.Cat("year", "Year")
 
-        pT_ax  = hist.Bin("pt" , "$p_{T}$ [GeV]", 100, 0., 1500.)
-        rho_ax  = hist.Bin("rho" , "$\\rho$ [GeV]", 100, -10., 0.)
+        pT_ax  = hist.Bin("pt" , "$p_{T}$ [GeV]", 500, 0., 5000.)
+        rho_ax  = hist.Bin("rho" , "$\\rho$ [GeV]", 300, -10., 0.)
         N2_ax  = hist.Bin("n2" , "N2", 100, 0, 1.5)        
         
         hists.update({'leadingJet':hist.Hist("Events", year_axis, pT_ax, rho_ax, N2_ax)})
@@ -37,6 +39,14 @@ class DDTMapPrep(processor.ProcessorABC):
         out = self.accumulator.identity()
         
         year = events.metadata['dataset']
+
+        selection = PackedSelection()
+        selection.add('cleaner',
+                      (events.pt>170)
+                      & (abs(events.eta)<2.4)
+                      )
+
+        events = events[selection.require(cleaner=True)]
         
         jecfactor = events.jecfactor
         
@@ -97,7 +107,7 @@ if(__name__ == "__main__"):
 
     os.chdir(os.environ['TMPDIR'])
     if(args.scaleout > 0 ):
-        workflow.init_dask_htcondor_client(1,4,5)
+        workflow.init_dask_htcondor_client(1,10,5)
     
     output = workflow.run(samples)
 
