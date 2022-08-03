@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from __future__ import print_function
 import UHH2.JetMass.plotter as plotter
 import ROOT,os
@@ -52,7 +53,7 @@ reverse_stacking = False
 #plotter.legend_on_extern_canvas = True
 plotter.draw_extra_text = False
 
-def plot_mass(selection,mass_name,hist_file_path,output_dir="test",binning="CMS",logY=False,signal_mc=[]):
+def plot_mass(selection,mass_name,hist_file_path,output_dir="test",binning="CMS",logY=False,signal_mc=[],scaleQCD=True):
     f_hists = ROOT.TFile(hist_file_path,"READ")
     ROOT.TH1.AddDirectory(0)
 
@@ -75,7 +76,7 @@ def plot_mass(selection,mass_name,hist_file_path,output_dir="test",binning="CMS"
             for region in regions:
                 legend_entries = []
                 hist_dir = selection+'_%s__'+mass_name+'_'+pt_bin+("" if nbjet_bin == "" else "_"+nbjet_bin)+('_'+region if len(region)>0 else '')
-                h_data,mc_hists = plotter.get_hists(f_hists,plotter.mc_samples[selection],hist_dir,selection)
+                h_data,mc_hists = plotter.get_hists(f_hists,plotter.mc_samples[selection],hist_dir,selection,scaleQCD=scaleQCD)
                 h_data.GetXaxis().SetTitle("m_{SD}")
                 bkg_stack = ROOT.THStack()
                 for sample in plotter.mc_samples[selection]:
@@ -100,12 +101,29 @@ if(__name__ == '__main__'):
      
     # hist_file = "../macros/Histograms_oneScale_JER_0p005_MIDDB_0p7.root"
     # hist_file = "../macros/Histograms_TopPtReweighting_NBjets.root"
-    hist_file = "../macros/Histograms_fixTopReweighting_ddb0p91.root"
+    import argparse
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--year',default='2017',choices=['2017','UL17'])
+    parser.add_argument('--origQCDScale',action='store_true')
+    parser.add_argument('--input','-i',default='templates_2017_1d.root')
+
+    args = parser.parse_args()
+    
+    
+
+    plotter.year = args.year
+    # hist_file = "../macros/Histograms_%s.root"%args.year
+    hist_file = args.input
+    print(hist_file)
 
     # for selection in ['top','W']:
-    for selection in ['top','W','Zbb']:
+    # for selection in ['top','W','Zbb']:
     # for selection in ['Zbb']:
-        plot_mass(selection,'mjet',hist_file,'../Plots/templates_FSP21/',binning="CMS")
+    for selection in ['W','top']:
+        print(selection,hist_file)
+        plot_mass(selection,'mjet',hist_file,'../Plots/%s_coffea%s/'%(args.input.replace('.root',''),'_originalQCDScale' if args.origQCDScale else ''),binning="CMS",scaleQCD=not args.origQCDScale)
     # for selection in ['W']:
     #     plot_mass(selection,'mjet',hist_file,'../Plots/templates',binning="CMS")
     # hist_file = "../macros/Histograms.root"
