@@ -36,11 +36,11 @@ binning_dict ={
     # "CMS":{'top':np.linspace(50,200,16),'W':np.linspace(0,500,101),'WfromTop':np.linspace(0,300,61)}
     # "CMS":{'top':np.linspace(50,300,51),'W':np.linspace(50,200,16),'WfromTop':np.linspace(0,300,61)}
     "CMS":{'top':np.linspace(50,300,51),'W':np.linspace(50,300,51),'Zbb':np.linspace(50,300,51)}
+    # "CMS":{'top':np.linspace(0,500,11),'W':np.linspace(0,500,11),'Zbb':np.linspace(0,500,11)}
     # "CMS":{'top':np.linspace(50,300,26),'W':np.linspace(50,200,16),'WfromTop':np.linspace(0,300,61)}
 }
 
 rebin = True
-scaleQCD=True
 
 colors = {
     'QCD':867,
@@ -83,6 +83,11 @@ colors = {
     'TTbar_semilep_mergedQB':634,
     'TTbar_semilep_semiMergedTop':634,
     'TTbar_semilep_notMerged':635,
+
+    'TTToSemiLeptonic_mergedTop':ROOT.kRed,
+    'TTToSemiLeptonic_mergedW':798,
+    'TTToSemiLeptonic_mergedQB':792,
+
     'TTbarNonSemiLep':804,
     'TTbarMergedTop':ROOT.kRed,
     'TTbarMergedW':798,
@@ -143,6 +148,12 @@ legend_names = {
     'TTbar_semilep_mergedQB':"t#bar{t} (semi-leptonic) (mergedQB)",
     'TTbar_semilep_semiMergedTop':"t#bar{t} (semi-leptonic) (semi merged)",
     'TTbar_semilep_notMerged':"t#bar{t} (semi-leptonic) (not merged)",
+    'TTToSemiLeptonic_mergedTop':"t#bar{t} (fully merged)",
+    'TTToSemiLeptonic_mergedW':"t#bar{t} (merged W)",
+    'TTToSemiLeptonic_mergedQB':"t#bar{t} (mergedQB)",
+    'TTToSemiLeptonic_semiMergedTop':"t#bar{t} (semi merged)",
+    'TTToSemiLeptonic_notMerged':"t#bar{t} (not merged)",
+    'TTTo2L2Nu':"t#bar{t} (di-leptonic)",
     'TTbarNonSemiLep':"t#bar{t} (hadronic & di-leptonic)",
     'TTbarMergedTop':"t#bar{t} (fully merged)",
     'TTbarMergedW':"t#bar{t} (merged W)",
@@ -159,7 +170,8 @@ samples = {
     "W":["QCD","ST_tW_top","ST_tW_antitop","TTToSemiLeptonic","TTToHadronic", "ZJetsUnmatched","ZJetsMatched", "WJetsUnmatched","WJetsMatched"],
     "Zbb":["QCD","ST_tW_top","ST_tW_antitop","TTToSemiLeptonic","TTToHadronic", "ZJetsUnmatched","ZJetsMatched", "WJetsUnmatched","WJetsMatched"],
     "WfromTop":["QCD", "ST_sch", "ST_tch","ST_tWch", "DYJets", "WJets", "TTbar_had","TTbar_dilep", "TTbar_semilep"],
-    "top":["QCD", "ST_sch", "ST_tch","ST_tWch", "DYJets", "WJets", "TTbar_had","TTbar_dilep", "TTbar_semilep_mergedTop", "TTbar_semilep_mergedW", "TTbar_semilep_mergedQB", "TTbar_semilep_notMerged"],
+    # "top":["QCD", "ST_sch", "ST_tch","ST_tWch", "DYJets", "WJets", "TTbar_had","TTbar_dilep", "TTbar_semilep_mergedTop", "TTbar_semilep_mergedW", "TTbar_semilep_mergedQB", "TTbar_semilep_notMerged"],
+    "top":["QCD","ST_s", "ST_t","ST_tW", "DYJets", "WJets", "TTToHadronic","TTTo2L2Nu", "TTToSemiLeptonic_mergedTop", "TTToSemiLeptonic_mergedW", "TTToSemiLeptonic_mergedQB", "TTToSemiLeptonic_semiMergedTop", "TTToSemiLeptonic_notMerged" ]
 }
 # "TTbar_semilep_semiMergedTop"
 
@@ -169,7 +181,7 @@ mc_samples = {
     "WfromTop":["other_ttbar", "WJets", "ST", "TTbar"],
     # "top":["other_ttbar", "WJets", "ST", "TTbar"],
     # "top":["other_ttbar", "WJets", "ST", "TTbarNonSemiLep","TTbar_semilep_notMerged", "TTbar_semilep_mergedQB","TTbar_semilep_mergedW", "TTbar_semilep_mergedTop" ],
-    "top":["other_ttbar", "WJets", "ST","TTbarNotMerged", "TTbarMergedQB","TTbarMergedW", "TTbarMergedTop" ],
+    "top":["other_ttbar", "WJets", "ST","TTbarNotMerged", "TTToSemiLeptonic_mergedQB","TTToSemiLeptonic_mergedW", "TTToSemiLeptonic_mergedTop" ],
 }
 
 merged_hists={
@@ -186,15 +198,23 @@ merged_hists={
     # "TTbarNonSemiLep":["TTbar_had","TTbar_dilep"],
     # "TTbarNotMerged":["TTbar_had","TTbar_dilep","TTbar_semilep_notMerged",'TT_Mtt_notMerged'],
 
-    'TTbarMergedTop':['TTbar_semilep_mergedTop'],
-    'TTbarMergedW':['TTbar_semilep_mergedW'],
-    'TTbarMergedQB':['TTbar_semilep_mergedQB'],
-    "TTbarNonSemiLep":["TTbar_had","TTbar_dilep"],
-    "TTbarNotMerged":["TTbar_had","TTbar_dilep","TTbar_semilep_notMerged"],
+    # 'TTbarMergedTop':['TTbar_semilep_mergedTop'],
+    # 'TTbarMergedW':['TTbar_semilep_mergedW'],
+    # 'TTbarMergedQB':['TTbar_semilep_mergedQB'],
+    # "TTbarNonSemiLep":["TTbar_had","TTbar_dilep"],
+    # "TTbarNotMerged":["TTbar_had","TTbar_dilep","TTbar_semilep_notMerged"],
 
-    "ST":["ST_sch", "ST_tch","ST_tWch"],
+    'TTbarMergedTop':['TTToSemiLeptonic_mergedTop'],
+    'TTbarMergedW':['TTToSemiLeptonic_mergedW'],
+    'TTbarMergedQB':['TTToSemiLeptonic_mergedQB'],
+    "TTbarNonSemiLep":["TTToHadronic","TTTo2l2Nu"],
+    "TTbarNotMerged":["TTToHadronic","TTTo2l2Nu","TTToSemiLeptonic_notMerged"],
+
+    # "ST":["ST_sch", "ST_tch","ST_tWch"],
+    "ST":["ST_s", "ST_t","ST_tW"],
     "other_ttbar":["QCD","DYJets"],
-    "other_vjets":["ST_tW_top","ST_tW_antitop","TTToSemiLeptonic","TTToHadronic"]
+    # "other_vjets":["ST_tW_top","ST_tW_antitop","TTToSemiLeptonic","TTToHadronic"]
+    "other_vjets":["TTToSemiLeptonic","TTToHadronic"]
     
 }
 
@@ -262,6 +282,11 @@ nbjet_bins_tex_dict = {
     "Nbjeteq0":"N_{b-tag outside AK8} = 0",
     "Nbjetgt0":"N_{b-tag outside AK8} > 0",
 }
+lumis = {
+    '2017':41528.9954019578/1000.,
+    'UL17':41479.68052876168/1000.,
+}
+
 
 obs_draw_option = 'PE1X0'
 draw_option = 'H'
@@ -270,13 +295,12 @@ ratio_draw_options='PE1X0'
 obs_line_color=1
 obs_marker_style=8
 obs_marker_size=0.5
-
+year = '2017'
 extra_text="Preliminary"
 lumi_text_padding = 0.4
 additional_text_padding = 0.4
 additional_text_size_modifier=1.0
 draw_extra_text=True
-luminosity = 41.8
 private_work = False
 
 ratio_plot = True
@@ -304,11 +328,11 @@ x_range = [None,None]
 YRangeUser = all(list(map(lambda a: a is not None ,y_range)))
 XRangeUser = all(list(map(lambda a: a is not None ,x_range)))                
 
-def get_hists(f_hists, samples, hist_dir='_%s_mjet_inclusive_pass',selection='top',pseudo_data=False,include_merged_hists = True):
+def get_hists(f_hists, samples, hist_dir='_%s_mjet_inclusive_pass',selection='top',pseudo_data=False,include_merged_hists = True,scaleQCD=True):
     # print(f_hists, samples, hist_dir,selection)
     hists = []
     hist_dir = selection+hist_dir if (hist_dir[0] == '_') else hist_dir
-    print(hist_dir)
+    #print(hist_dir)
     new_binning = None
     if(rebin):
         new_binning = binning_dict['CMS'].get(selection,None)
@@ -352,7 +376,7 @@ def get_hists(f_hists, samples, hist_dir='_%s_mjet_inclusive_pass',selection='to
     
     for sample in samples:
         this_hist = None
-        print(sample, hist_dir)
+        #print(sample, hist_dir)
         if(sample in merged_hists and include_merged_hists):
             for subsample in merged_hists[sample]:
                 try:
@@ -366,10 +390,15 @@ def get_hists(f_hists, samples, hist_dir='_%s_mjet_inclusive_pass',selection='to
                     this_hist.SetTitle(this_hist.GetTitle().replace(subsample,sample))
                     this_hist.SetName(this_hist.GetName().replace(subsample,sample))
                 else:
+                    #print(sample,subsample,this_subhist.GetNbinsX())
                     this_hist.Add(this_subhist.Clone())
-        else:                
-            this_hist = f_hists.Get(str(hist_dir%sample)).Clone()
-
+        else:
+            try:
+                this_hist = f_hists.Get(str(hist_dir%sample)).Clone()
+            except:
+                print("Did not find hist ",hist_dir%sample)
+                continue
+        
         if(new_binning is not None):
             this_hist = this_hist.Rebin(len(new_binning)-1,"",new_binning)
             this_hist.GetYaxis().SetTitle("Events / %i GeV"%(int(new_binning[1]-new_binning[0])))
@@ -426,7 +455,7 @@ def plot_data_mc(h_data=None,h_mc=None,plot_title="",out_dir=None,legend_entries
     cms_style.text_padding = lumi_text_padding
     #cms_style.text_padding = lumi_text_padding
         
-    cms_style.draw_lumi(plotpad, lumi = luminosity,do_extra_text=draw_extra_text,out_of_frame = True,do_cms_text=draw_extra_text,private_work = private_work)
+    cms_style.draw_lumi(plotpad, year=year, lumi = lumis[year],do_extra_text=draw_extra_text,out_of_frame = True,do_cms_text=draw_extra_text,private_work = private_work)
     plotpad.cd()
 
     bkg_err = None
@@ -655,7 +684,8 @@ def plot_data_mc(h_data=None,h_mc=None,plot_title="",out_dir=None,legend_entries
     plotpad.RedrawAxis()
     c.RedrawAxis()
     if(out_dir is not None):
-        c.SaveAs(out_dir+'/'+plot_title.replace(" ","_")+'.pdf')
+        for file_ext in ['.pdf','.png']:
+            c.SaveAs(out_dir+'/'+plot_title.replace(" ","_")+file_ext)
         # c.SaveAs(out_dir+'/'+plot_title.replace(" ","_")+'.png')
     return (c,(plotpad,ratiopad,additional_pad),plot_title.replace(" ","_")+'.pdf')
 
