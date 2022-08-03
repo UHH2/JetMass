@@ -13,10 +13,9 @@ ddtmaps_path = '/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_
 kfactor_path = '/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/NLOweights/'
 
 class JMSTemplates(processor.ProcessorABC):
-    def __init__(self,year="2017", selection = 'vjets'):
+    def __init__(self,year="2017"):
         self._year = year
-        self._selection = selection
-
+        
         # dataset_ax = hist.Cat("dataset", "Dataset")
         # pT_ax  = hist.Bin("pt" , "$p_{T}$ [GeV]", 100, 0., 1500.)
 
@@ -91,15 +90,15 @@ class JMSTemplates(processor.ProcessorABC):
         #these are handled via 'any' of PackedSelection, so in case of multiple requirements,
         #be aware, that they are linked with OR!!
         self._matching_mappings = {
-            'WJetsMatched':{'IsMergedWZ':1},
-            'WJetsUnmatched':{'IsMergedWZ':0},
-            'ZJetsMatched':{'IsMergedWZ':1},
-            'ZJetsUnmatched':{'IsMergedWZ':0},
-            "TTbar_semilep_mergedTop":{'IsMergedTop':1},
-            "TTbar_semilep_mergedW":{'IsMergedWZ':1},
-            "TTbar_semilep_mergedQB":{'IsMergedQB':1},
-            "TTbar_semilep_semiMergedTop":{'IsMergedWZ':1,'IsMergedQB':1},
-            "TTbar_semilep_notMerged":{'IsNotMerged':1}
+            'vjets_WJetsMatched':{'IsMergedWZ':1},
+            'vjets_WJetsUnmatched':{'IsMergedWZ':0},
+            'vjets_ZJetsMatched':{'IsMergedWZ':1},
+            'vjets_ZJetsUnmatched':{'IsMergedWZ':0},
+            "ttbar_TTToSemiLeptonic_mergedTop":{'IsMergedTop':1},
+            "ttbar_TTToSemiLeptonic_mergedW":{'IsMergedWZ':1},
+            "ttbar_TTToSemiLeptonic_mergedQB":{'IsMergedQB':1},
+            "ttbar_TTToSemiLeptonic_semiMergedTop":{'IsMergedWZ':1,'IsMergedQB':1},
+            "ttbar_TTToSemiLeptonic_notMerged":{'IsNotMerged':1}
         }
 
         #common control-plots
@@ -152,10 +151,10 @@ class JMSTemplates(processor.ProcessorABC):
                 })
                 for variation in self._variations:
                     hists.update({
-                        f"{selection}_mjet_variation_{variation}_{region}__up" : hist.Hist(mJ_fit_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,storage=hist.storage.Weight()),
+                        f"{selection}_mjet_{variation}_variation_{region}__up" : hist.Hist(mJ_fit_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,storage=hist.storage.Weight()),
                     })
                     hists.update({
-                        f"{selection}_mjet_variation_{variation}_{region}__down" : hist.Hist(mJ_fit_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,storage=hist.storage.Weight()),
+                        f"{selection}_mjet_{variation}_variation_{region}__down" : hist.Hist(mJ_fit_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,storage=hist.storage.Weight()),
                     })
 
         self._hists = lambda:{**hists,
@@ -168,7 +167,7 @@ class JMSTemplates(processor.ProcessorABC):
         return self._hists
 
     def n2ddt(self,pt,rho,n2,corrected='none'):
-        quantile =self._n2ddtmaps[corrected](rho,pt)
+        quantile = self._n2ddtmaps[corrected](rho,pt)
         return n2 - quantile
 
     def postprocess(self, accumulator):
@@ -185,26 +184,31 @@ class JMSTemplates(processor.ProcessorABC):
         
         #evaluate matching criteria and created new masked events dataframe
         matching_mask = np.ones(len(events), dtype='bool')
+        print(dataset)
         if(dataset in self._matching_mappings.keys()):
+            print('applying matching')
             matching_selection =  PackedSelection()
             for branch_name, branch_value in self._matching_mappings[dataset].items():
+                print(branch_name,branch_value)
                 matching_selection.add(branch_name, events[branch_name] == branch_value)
             #BE AWARE OF THE FOLLOWING OR!!!!
             matching_mask = matching_selection.any(*self._matching_mappings[dataset].keys())
         events = events[matching_mask]
 
-        print(dataset,len(events))
+        # print(dataset,len(events))
         out['nevents'][dataset] = len(events)
         out['sumw'][dataset] = ak.sum(events.weight)
         out['sumw2'][dataset] = ak.sum(events.weight*events.weight)
 
-        
-        genpt = events.genjetpt
-        if('WJets' in dataset):
-            events.weight = events.weight*self.corrections['W_kfactor'](genpt)*self.corrections[f'W_ewcorr'](genpt)
-        if('ZJets' in dataset):
-            genpt = events.genjetpt
-            events.weight = events.weight*self.corrections['Z_kfactor'](genpt)*self.corrections[f'Z_ewcorr'](genpt)
+        #right now its commented since i apply the kfactor when making the flat tree in UHH2
+        # genpt = events.genjetpt
+        # vpt = events.V_pt
+        # if('WJets' in dataset):
+        #     events.weight = events.weight/self.corrections['W_kfactor'](genpt)*self.corrections[f'W_ewcorr'](vpt)
+        #     events.weight = events.weight*self.corrections['W_kfactor'](genpt)*self.corrections[f'W_ewcorr'](genpt)
+        # if('ZJets' in dataset):
+        #     events.weight = events.weight/self.corrections['Z_kfactor'](genpt)*self.corrections[f'Z_ewcorr'](vpt)
+        #     events.weight = events.weight*self.corrections['Z_kfactor'](genpt)*self.corrections[f'Z_ewcorr'](genpt)
 
         
         nevents = len(events)
@@ -248,7 +252,7 @@ class JMSTemplates(processor.ProcessorABC):
             out['ntrueint'].fill(dataset=dataset,ntrueint = events.n_trueint, weight = events.weight)
 
         
-        ddb = events["MIDeepDoubleBHbbprob"]/(events["MIDeepDoubleBHbbprob"]+events["MIDeepDoubleBQCDprob"])
+        # ddb = events["MIDeepDoubleBHbbprob"]/(events["MIDeepDoubleBHbbprob"]+events["MIDeepDoubleBQCDprob"])
         for jec_applied_on in ['none','pt','pt&mJ']:
             selections = PackedSelection()
             pt_ = pt_raw
@@ -310,14 +314,14 @@ class JMSTemplates(processor.ProcessorABC):
                         if('mJ' in jec_applied_on):
                             mJVar_ = mJVar_ * jecfactor
                             
-                        out[f"{selection}_mjet_variation_{variation}_{region}__up"].fill(
+                        out[f"{selection}_mjet_{variation}_variation_{region}__up"].fill(
                             dataset=dataset,
                             jecAppliedOn=jec_applied_on,
                             pt = pt_[smask],
                             mJ = mJVar_[:,0][smask],
                             weight = events.weight[smask]
                         )
-                        out[f"{selection}_mjet_variation_{variation}_{region}__down"].fill(
+                        out[f"{selection}_mjet_{variation}_variation_{region}__down"].fill(
                             dataset=dataset,
                             jecAppliedOn=jec_applied_on,
                             pt = pt_[smask],
@@ -340,24 +344,32 @@ if(__name__ == "__main__"):
 
     workflow.parser.add_argument("--output","-o",type=str,default='jms_templates.coffea')
     workflow.parser.add_argument("--year", default='2017')
+    workflow.parser.add_argument("--maxfiles", type=int,default=-1)
+    
     args = workflow.parse_args()
     
-    workflow.processor_instance = JMSTemplates(args.year,args.selection)
+    workflow.processor_instance = JMSTemplates(args.year)
     workflow.processor_schema = BaseSchema
 
     sample_pattern = '/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/{SELECTION}Trees/workdir_{SELECTION}_{YEAR}/*{SAMPLE}*.root'
     sample_names = {
-        "vjets":["Data", "WJetsMatched", "WJetsUnmatched", "ZJetsMatched", "ZJetsUnmatched", "TTToHadronic", "TTToSemiLeptonic", "ST_tW_top", "ST_tW_antitop", "QCD"],
-        'ttbar':["Data", "WJets", "DYJets", "TTbar_had", "TTbar_semilep_mergedTop", "TTbar_semilep_mergedW", "TTbar_semilep_mergedQB", "TTbar_semilep_semiMergedTop", "TTbar_semilep_notMerged", "TTbar_dilep", "ST_tch_top", "ST_tch_antitop","ST_tch","ST_tWch_top", "ST_tWch_antitop","ST_tWch", "ST_sch", "QCD"],
+        "vjets":["Data", "WJets", "WJetsMatched", "WJetsUnmatched", "ZJets", "ZJetsMatched", "ZJetsUnmatched", "TTToHadronic", "TTToSemiLeptonic", "ST_tW_top", "ST_tW_antitop", "QCD"],
+        # "vjets":["Data.JetHT_RunB","Data.JetHT_RunC","Data.JetHT_RunD","Data.JetHT_RunE","Data.JetHT_RunF",],
+        'ttbar':["Data", "WJets", "DYJets", "TTToHadronic", "TTToSemiLeptonic", "TTToSemiLeptonic_mergedTop", "TTToSemiLeptonic_mergedW", "TTToSemiLeptonic_mergedQB", "TTToSemiLeptonic_semiMergedTop", "TTToSemiLeptonic_notMerged", "TTTo2L2Nu", "ST_t","ST_tW", "ST_s", "QCD"],
     }
     
     files = {}    
     for selection in ['vjets','ttbar']:
+        parent_samplename = lambda s:min([s.replace(l,'') for l in
+                                          ['Matched','Unmatched','_mergedTop','_mergedW','_mergedQB','_semiMergedTop','notMerged']
+                                          ],key=len)
+
         samples = {
             sample:glob.glob(sample_pattern.format(
                 SELECTION=selection,
                 YEAR=args.year,
-                SAMPLE=sample.replace('Matched','').replace('Unmatched','')
+                # SAMPLE=sample.replace('Matched','').replace('Unmatched','')
+                SAMPLE=parent_samplename(sample)
             ))
                    for sample in sample_names[selection]}
         
@@ -373,9 +385,12 @@ if(__name__ == "__main__"):
         
         for k,v in samples.items():
             if k not in files:
-                files[k]={'files':[],'treename':'AnalysisTree','metadata':{'selection':selection}}
-            files[k]['files'] += v
-            print(k,len(v))
+                files[f'{selection}_{k}']={'files':[],'treename':'AnalysisTree','metadata':{'selection':selection}}
+            if(args.maxfiles>0):
+                files[f'{selection}_{k}']['files'] += v[:args.maxfiles]
+            else:
+                files[f'{selection}_{k}']['files'] += v
+            print(f'{selection}_{k}',len(files[f'{selection}_{k}']['files']))
 
     output_file_path = os.path.join(os.getcwd(),args.output)
     print('changing into /tmp dir')
