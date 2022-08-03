@@ -1,7 +1,7 @@
 #!/nfs/dust/cms/user/albrechs/miniconda3/envs/coffea/bin/python
 
 from coffea.util import load,save
-def flatten_templates(hists,hist_name,samples,jec_applied_on='pt&mJ'):
+def flatten_templates(hists,hist_name,samples,jec_applied_on='pt&mJ',legacy_hist_name_pattern=''):
     hist_axes = hists[hist_name].axes
     templates = {}
         
@@ -14,20 +14,96 @@ def flatten_templates(hists,hist_name,samples,jec_applied_on='pt&mJ'):
             pt_bin_name = pt_bin_name.replace('.0','')
             pt_bin_name = pt_bin_name.replace('inf','Inf')
         for sample in samples:
+            #print(sample,hist_axes['dataset'])
             if(sample not in hist_axes['dataset']):
                 continue
             if(sample == 'Data' and 'variation' in hist_name):
                 continue
-            legacy_hist_name = hist_name.replace('vjets_',f'W_{sample}__')
+            legacy_hist_name = legacy_hist_name_pattern
+            legacy_hist_name = legacy_hist_name.replace('vjets_',f'W_{sample}__')
+            legacy_hist_name = legacy_hist_name.replace('vjets_','')
             legacy_hist_name = legacy_hist_name.replace('ttbar_',f'top_{sample}__')
-            legacy_hist_name = legacy_hist_name.replace('variation','')
-            legacy_hist_name = legacy_hist_name.replace('mjet_',f'mjet_{pt_bin_name}_')
-            if(pt_inclusive):
-                h_ = hists[hist_name][:,::sum,sample,jec_applied_on]
-            else:
-                h_ = hists[hist_name][:,pt_bin,sample,jec_applied_on]
+            legacy_hist_name = legacy_hist_name.replace('ttbar_','')
+            # legacy_hist_name = legacy_hist_name.replace('ttbar_',f'top_{sample}__')
+            # legacy_hist_name = legacy_hist_name.replace('variation_',f'{pt_bin_name}_')
+            legacy_hist_name = legacy_hist_name.replace('PTBIN',pt_bin_name)
+            #print(legacy_hist_name)
+            
+            hist_id_dict = {
+                'pt':sum if pt_inclusive else pt_bin,
+                'dataset':sample,
+                'jecAppliedOn':jec_applied_on,
+            }
+            h_ = hists[hist_name][hist_id_dict]
             
             templates[legacy_hist_name] = h_
+    return templates
+
+# def make_unfolding_templates(hists,f'{selection}_mjet_unfolding_{region}',samples=samples, jec_applied_on=args.JEC,legacy_hist_name_pattern=f'{selection}_mjet_PTBIN_GENBIN_{region}')
+def make_unfolding_templates(hists,hist_name,samples, jec_applied_on='pt&mJ',legacy_hist_name_pattern=''):
+    templates={}
+    hist_axes = hists[hist_name].axes
+
+    pt_gen_edges = hist_axes['ptgen'].edges
+    msd_gen_edges = hist_axes['mJgen'].edges
+
+    #templates for fit
+    for pt_bin in range(len(hist_axes['pt'].edges)):
+        pt_inclusive = pt_bin==len(hist_axes['pt'].edges)-1
+        if(pt_inclusive):
+            pt_bin_name = 'inclusive'
+        else:
+            pt_bin_name = f"{hist_axes['pt'].edges[pt_bin]}to{hist_axes['pt'].edges[pt_bin+1]}"
+            pt_bin_name = pt_bin_name.replace('.0','')
+            pt_bin_name = pt_bin_name.replace('inf','Inf')
+
+        for sample in samples:
+            #print(sample,hist_axes['dataset'])
+            if(sample not in hist_axes['dataset']):
+                continue
+            for iptgen in range(len(pt_gen_edges)-1):
+                for imsdgen in range(len(msd_gen_edges)-1):
+
+                    gen_bin_name = f"ptgen{iptgen}_msdgen{imsdgen}"
+                    
+                    legacy_hist_name = legacy_hist_name_pattern
+                    legacy_hist_name = legacy_hist_name.replace('vjets_',f'W_{sample}_{gen_bin_name}__')
+                    legacy_hist_name = legacy_hist_name.replace('vjets_','')
+                    legacy_hist_name = legacy_hist_name.replace('ttbar_',f'top_{sample}_{gen_bin_name}__')
+                    legacy_hist_name = legacy_hist_name.replace('ttbar_','')
+                    legacy_hist_name = legacy_hist_name.replace('PTBIN',pt_bin_name)
+                    
+                    
+                    hist_id_dict = {
+                        'pt':sum if pt_inclusive else pt_bin,
+                        'dataset':sample,
+                        'jecAppliedOn':jec_applied_on,
+                        'mJgen':imsdgen,
+                        'ptgen':iptgen,
+                    }
+                    h_ = hists[hist_name][hist_id_dict]
+                
+            
+                    templates[legacy_hist_name] = h_
+
+                
+        # truth templates
+    for iptgen in range(len(pt_gen_edges)-1):
+        for sample in samples:
+            hist_id_dict = {
+                'pt':sum,
+                'mJ':sum,
+                'dataset':sample,
+                'jecAppliedOn':jec_applied_on,
+                'ptgen':iptgen
+            }
+            
+            h_ = hists[hist_name][hist_id_dict]
+            truth_hist_name = hist_name
+            truth_hist_name = truth_hist_name.replace("unfolding",f"ptgen{iptgen}")
+            templates[truth_hist_name] = h_
+            
+    
     return templates
 
 
@@ -40,6 +116,7 @@ if(__name__ == "__main__"):
     parser.add_argument("--input","-i",default="templates_2017.coffea")
     parser.add_argument("--output","-o",default="templates_1d_2017")
     parser.add_argument("--JEC",default = "pt&mJ", choices=['none','pt','pt&mJ'])
+    parser.add_argument("--unfolding",action="store_true")
     
     args = parser.parse_args()
     
@@ -48,22 +125,30 @@ if(__name__ == "__main__"):
     selections = {
         'vjets':{
             'regions':['inclusive','pass','fail'],
-            'samples':['Data','WJetsMatched','WJetsUnmatched','ZJetsMatched','ZJetsUnmatched','QCD'],
+            'samples':['Data',"QCD","WJets","WJetsUnmatched","WJetsMatched","ZJets","ZJetsUnmatched","ZJetsMatched","TTToHadronic","TTToSemiLeptonic","ST_tW_top","ST_tW_antitop"],
+            'signal_samples':["WJets","ZJets"]
         },
         'ttbar':{
             'regions':['inclusive','pass','passW','fail'],
-            'samples':[],
+            'samples':["Data", "WJets", "DYJets", "TTToHadronic", "TTToSemiLeptonic", "TTToSemiLeptonic_mergedTop", "TTToSemiLeptonic_mergedW", "TTToSemiLeptonic_mergedQB", "TTToSemiLeptonic_semiMergedTop", "TTToSemiLeptonic_notMerged", "TTTo2L2Nu", "ST_t","ST_tW", "ST_s", "QCD"],
+            'signal_samples':[ "TTToSemiLeptonic"],
         }
     }
     print(f'flattening templates and saving to ROOT from {args.input}')
     templates = {}
     for selection in selections.keys():
-        samples = selections[selection]['samples']
+        samples = [f'{selection}_{s}' for s in selections[selection]['samples']]
+        signal_samples = [f'{selection}_{s}' for s in selections[selection]['signal_samples']]
         for region in selections[selection]['regions']:
-            templates.update(flatten_templates(hists,f'{selection}_mjet_{region}',samples=samples, jec_applied_on=args.JEC))
+
+
+            templates.update(flatten_templates(hists,f'{selection}_mjet_{region}',samples=samples, jec_applied_on=args.JEC,legacy_hist_name_pattern=f'{selection}_mjet_PTBIN_{region}'))
             for variation in ['all','chargedH','neutralH','gamma','other']:
-                templates.update(flatten_templates(hists,f'{selection}_mjet_variation_0_0_{variation}_{region}__up',samples=samples, jec_applied_on=args.JEC))
-                templates.update(flatten_templates(hists,f'{selection}_mjet_variation_0_0_{variation}_{region}__down',samples=samples, jec_applied_on=args.JEC))
+                templates.update(flatten_templates(hists,f'{selection}_mjet_0_0_{variation}_variation_{region}__up',samples=samples, jec_applied_on=args.JEC,legacy_hist_name_pattern=f'{selection}_mjet_0_0_{variation}_PTBIN_{region}__up'))
+                templates.update(flatten_templates(hists,f'{selection}_mjet_0_0_{variation}_variation_{region}__down',samples=samples, jec_applied_on=args.JEC,legacy_hist_name_pattern=f'{selection}_mjet_0_0_{variation}_PTBIN_{region}__down'))
+            if(args.unfolding):
+                templates.update(make_unfolding_templates(hists,f'{selection}_mjet_unfolding_{region}',samples=signal_samples, jec_applied_on=args.JEC,legacy_hist_name_pattern=f'{selection}_mjet_PTBIN_{region}'))
+
     save(templates,f"{args.output}.coffea")
     fout = uproot.recreate(f"{args.output}.root")
     for hist_name,H in templates.items():
