@@ -1,0 +1,50 @@
+{
+  "ModelName":"TTBarUL17",
+  "gridHistFileName":"../Histograms/grid_oneScale.root",
+  "histLocation":"../python/templates_UL17_1d.root",
+  "massScaleFactor":2.0,
+  "TTToTaggingEff":"True",
+  "pt_edges":[200,300,400,500,650],
+  "pTdependentMassScale":"True",
+  "separateMassScales":"False",
+  "VaryOnlySignal":"False",
+  "binning":[50,300,5],
+  "channels":{
+    "TopPt200":{
+      "selection":"top",
+      "pt_bin":"200to300",
+      "samples":["QCD", "ST_s", "ST_t","ST_tW", "DYJets", "WJets", "TTToHadronic","TTTo2L2Nu", "TTToSemiLeptonic_mergedTop", "TTToSemiLeptonic_mergedW", "TTToSemiLeptonic_mergedQB",  "TTToSemiLeptonic_notMerged"],
+      "NormUnc":{"QCD":2.0, "DYJets":2.0, "ST":1.23, "WJets":1.19, "TTTo":1.05},
+      "signal":["TTToSemiLeptonic_mergedTop", "TTToSemiLeptonic_mergedW"],
+      "obs":"Data",
+      "regions":["pass","passW","fail"]
+    },
+    "TopPt300":{
+      "selection":"top",
+      "pt_bin":"300to400",
+      "samples":["QCD", "ST_s", "ST_t","ST_tW", "DYJets", "WJets", "TTToHadronic","TTTo2L2Nu", "TTToSemiLeptonic_mergedTop", "TTToSemiLeptonic_mergedW", "TTToSemiLeptonic_mergedQB",  "TTToSemiLeptonic_notMerged"],
+      "NormUnc":{"QCD":2.0, "DYJets":2.0, "ST":1.23, "WJets":1.19, "TTTo":1.05},
+      "signal":["TTToSemiLeptonic_mergedTop", "TTToSemiLeptonic_mergedW"],
+      "obs":"Data",
+      "regions":["pass","passW","fail"]
+    },
+    "TopPt400":{
+      "selection":"top",
+      "pt_bin":"400to500",
+      "samples":["QCD", "ST_s", "ST_t","ST_tW", "DYJets", "WJets", "TTToHadronic","TTTo2L2Nu", "TTToSemiLeptonic_mergedTop", "TTToSemiLeptonic_mergedW", "TTToSemiLeptonic_mergedQB",  "TTToSemiLeptonic_notMerged"],
+      "NormUnc":{"QCD":2.0, "DYJets":2.0, "ST":1.23, "WJets":1.19, "TTTo":1.05},
+      "signal":["TTToSemiLeptonic_mergedTop", "TTToSemiLeptonic_mergedW"],
+      "obs":"Data",
+      "regions":["pass","passW","fail"]
+    },
+    "TopPt500":{
+      "selection":"top",
+      "pt_bin":"500to650",
+      "samples":["QCD", "ST_s", "ST_t","ST_tW", "DYJets", "WJets", "TTToHadronic","TTTo2L2Nu", "TTToSemiLeptonic_mergedTop", "TTToSemiLeptonic_mergedW", "TTToSemiLeptonic_mergedQB",  "TTToSemiLeptonic_notMerged"],
+      "NormUnc":{"QCD":2.0, "DYJets":2.0, "ST":1.23, "WJets":1.19, "TTTo":1.05},
+      "signal":["TTToSemiLeptonic_mergedTop", "TTToSemiLeptonic_mergedW"],
+      "obs":"Data",
+      "regions":["pass","passW","fail"]
+    }
+  }
+}
