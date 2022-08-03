@@ -31,6 +31,22 @@ class JMSTemplates(processor.ProcessorABC):
         mJ_fit_ax  = hist.axis.Regular(500, 0., 500.,name="mJ" , label=r"$m_{SD}$ [GeV]")
         rho_ax  = hist.axis.Regular(100, -10., 0,name="rho" , label=r"$\rho$")
 
+
+        self._unfolding_ax ={
+            'vjets':{
+                'ptgen':hist.axis.Variable(np.array([550, 650, 800, 1200,np.inf]), name="ptgen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"),
+                'mJgen':hist.axis.Regular(500,0,500, name="mJgen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"),
+                'ptreco':hist.axis.Variable(np.array([500,575,650,725,800,1000,1200,np.inf]), name="ptreco", label=r"$p_{T,\mathrm{reco}}$ [GeV]"),
+                'mJreco':hist.axis.Variable(np.array([0,40,100,300,np.inf]), name="mJreco", label=r"$m_{SD,\mathrm{reco}}$ [GeV]"),
+            }
+            'ttbar':{
+                'ptgen':hist.axis.Variable(np.array([250, 400, 650, np.inf]), name="ptgen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"),
+                'mJgen':hist.axis.Regular(500,0,500, name="mJgen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"),
+                'ptreco':hist.axis.Variable(np.array([200, 300, 400, 500, 650, np.inf]), name="ptreco", label=r"$p_{T,\mathrm{reco}}$ [GeV]"),
+                'mJreco':hist.axis.Variable(np.array([0,40,100,300,np.inf]), name="mJreco", label=r"$m_{SD,\mathrm{reco}}$ [GeV]"),
+            }
+        }
+        
         self._pT_fit_ax = {
             'vjets':hist.axis.Variable(np.array([500, 650, 800, 1200,np.inf]), name="pt" , label=r"$p_{T}$ [GeV]"),
             'ttbar':hist.axis.Variable(np.array([200, 300, 400, 500, 650, np.inf]), name="pt" , label=r"$p_{T}$ [GeV]"),
@@ -150,7 +166,8 @@ class JMSTemplates(processor.ProcessorABC):
         for selection in self._selections:
             for region in self._regions[selection].keys():
                 hists.update({
-                    f"{selection}_mjet_{region}" : hist.Hist(mJ_fit_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax,storage=hist.storage.Weight()),
+                    f"{selection}_mjet_{region}" : hist.Hist(mJ_fit_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax, storage=hist.storage.Weight()),
+                    f"{selection}_mjet_unfolding_{region}" : hist.Hist(mJ_fit_ax,self._pT_fit_ax[selection],dataset_ax,jec_applied_ax, mJ_gen_ax, pt_gen_ax, storage=hist.storage.Weight()),
                     f"{selection}_pt_{region}" : hist.Hist(pT_ax,dataset_ax,jec_applied_ax,storage=hist.storage.Weight()),
                     f"{selection}_eta_{region}" : hist.Hist(eta_ax,dataset_ax ,storage=hist.storage.Weight()),
                     f"{selection}_rho_{region}" : hist.Hist(rho_ax,dataset_ax,jec_applied_ax,storage=hist.storage.Weight()),
@@ -236,9 +253,13 @@ class JMSTemplates(processor.ProcessorABC):
         # pt_raw = pt/jecfactor
         pt_raw = events.pt
         pt = pt_raw*jecfactor
+
+        ptgen_ = events.pt_gen_ak8
         
         mjet_raw = events.mjet
         mjet = mjet_raw*jecfactor
+
+        mJgen_ = events.msd_gen_ak8
         
         rho = 2*np.log(mjet/pt)
         rho_raw = 2*np.log(mjet_raw/pt_raw)
@@ -247,6 +268,7 @@ class JMSTemplates(processor.ProcessorABC):
 
         eta_ = events.eta
         phi_ = events.phi
+
         
         out['pt'].fill(dataset=dataset, jecAppliedOn='pt', pt=pt, weight = events.weight)
         out['pt'].fill(dataset=dataset, jecAppliedOn='none', pt=pt_raw, weight = events.weight)
@@ -278,6 +300,7 @@ class JMSTemplates(processor.ProcessorABC):
                 mJ_ = mjet
 
             rho_ = 2*np.log(mJ_/pt_)
+
             
             selections.add("pt500cut",(pt_>500))
             selections.add("pt200cut",(pt_>200))
@@ -293,6 +316,8 @@ class JMSTemplates(processor.ProcessorABC):
             selections.add("tau21",events.tau21<0.45)
             selections.add("tau32",events.tau32<0.5)
 
+            selections.add("unfolding", (events.pass_reco_selection==1) & (events.pass_gen_selection==1))
+            
             selection = events.metadata['selection']
 
             selections.add("HLT_AK8PFJet450", self.passes_trigger(events, "HLT_AK8PFJet450_v*"))
@@ -303,6 +328,18 @@ class JMSTemplates(processor.ProcessorABC):
             # print(ak.sum(selections.require(tau21=True)))
             for region in self._regions[selection].keys():
                 smask = selections.require(**self._regions[selection][region])
+                # print(selection,region,dataset,ak.sum(smask))
+                smask_unfolding = selections.require(**self._regions[selection][region],unfolding=True)
+                out[f"{selection}_mjet_unfolding_{region}"].fill(
+                    dataset = dataset,
+                    jecAppliedOn = jec_applied_on,
+                    pt = pt_[smask_unfolding],
+                    mJ = mJ_[smask_unfolding],
+                    mJgen = mJgen_[smask_unfolding],
+                    ptgen = ptgen_[smask_unfolding],
+                    weight = events.weight[smask_unfolding]
+                )
+                
                 out[f"{selection}_mjet_{region}"].fill(
                     dataset=dataset,
                     jecAppliedOn=jec_applied_on,
