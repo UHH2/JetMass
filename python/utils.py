@@ -35,13 +35,14 @@ def numpy_to_th2(H,x_edges,y_edges,hist_title="",x_title="",y_title="",add_empty
 
 def hist_to_th1(H,hist_name=''):
     x_axis = H.axes[0]
-    values = H.values()
-    variances  = H.variances()
+    #take values and variances from hist and 'fill' under- and overflow bins
+    values = np.concatenate(([0.],H.values(),[0.])) 
+    variances  = np.concatenate(([0.],H.variances(),[0.]))
 
     
     x_taxis = uproot.writing.identify.to_TAxis(
                                     x_axis.name,x_axis.name,
-                                    len(x_axis.edges[:-1]),
+                                    len(x_axis.edges)-1,
                                     x_axis.edges[0],x_axis.edges[-1],
                                     x_axis.edges)
     
@@ -54,7 +55,7 @@ def hist_to_th1(H,hist_name=''):
                                           1.,1.,
                                           variances,
                                           x_taxis
-    )
+                                          )    
     
     return th1
 
