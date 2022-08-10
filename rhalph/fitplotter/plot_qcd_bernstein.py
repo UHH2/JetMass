@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.special import binom
 from pylab import pcolor, show, colorbar, xticks, yticks
 from pylab import *
-sys.path.append('/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/python/')
+sys.path.append('/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/python/')
 import plotter,cms_style
 
 
@@ -91,7 +91,8 @@ def plot_qcd_fail_parameters(config={'ModelName':'WMassModel'}):
     th2_qcd_params.GetZaxis().SetTitle("qcdparam")
     th2_qcd_params.Draw('colztext')
     cms_style.draw_lumi(c, 41.8,do_extra_text=False,out_of_frame = True,do_cms_text=False ,private_work=False)
-    c.SaveAs(out_dir+'qcdparams.pdf')
+    for file_ext in ['.pdf','.png']:
+        c.SaveAs(out_dir+'qcdparams'+file_ext)
 
 def plot_qcd_bernstein3D(config, parameter_suffix='params'):
     order = tuple(config.get('InitialQCDFitOrders',[2,2])) if parameter_suffix == 'MCtempl' else tuple(config.get('BernsteinOrders',[2,2])) 
@@ -254,7 +255,8 @@ def plot_qcd_bernstein(config={'ModelName':'WMassModel'},do_3d_plot=True):
         cms_style.setup_hist(th2_map)
         th2_map.SetMarkerSize(1)
         th2_map.Draw('textcolz')
-        c.SaveAs(out_dir+"TF_th2%s.pdf"%(('' if parameter_suffix == 'params' else '_'+parameter_suffix)+config.get('TFSuffix','')))
+        for file_ext in ['.pdf','.png']:
+            c.SaveAs(out_dir+"TF_th2%s"%(('' if parameter_suffix == 'params' else '_'+parameter_suffix)+config.get('TFSuffix','')) + file_ext)
 
         #MATPLOTLIB 2D
         plt.switch_backend('agg')

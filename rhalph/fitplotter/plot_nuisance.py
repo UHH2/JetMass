@@ -111,7 +111,8 @@ def plot_mass_scale_nuisances(config):
     g.SetMarkerStyle(8)
     g.SetMarkerSize(1)
     g.Draw("P SAME")
-    c.SaveAs(config['ModelName']+'/plots/JetMassScale_Nuisance.pdf')
+    for file_ext in ['.pdf','.png']:
+        c.SaveAs(config['ModelName']+'/plots/JetMassScale_Nuisance'+file_ext)
 
 
 

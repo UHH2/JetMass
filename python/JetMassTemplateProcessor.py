@@ -32,7 +32,7 @@ class JMSTemplates(processor.ProcessorABC):
         self._unfolding_ax ={
             'vjets':{
                 'ptgen':hist.axis.Variable(np.array([550, 650, 800, 1200,np.inf]), name="ptgen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"),
-                'mJgen':hist.axis.Regular(500,0,500, name="mJgen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"),
+                'mJgen':hist.axis.Regular(100,0,500, name="mJgen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"),
                 'ptreco':hist.axis.Variable(np.array([500,575,650,725,800,1000,1200,np.inf]), name="ptreco", label=r"$p_{T,\mathrm{reco}}$ [GeV]"),
                 'mJreco':hist.axis.Variable(np.array([0,40,100,300,np.inf]), name="mJreco", label=r"$m_{SD,\mathrm{reco}}$ [GeV]"),
             },
