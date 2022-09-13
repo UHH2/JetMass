@@ -31,16 +31,16 @@ class JMSTemplates(processor.ProcessorABC):
 
         self._unfolding_ax ={
             'vjets':{
-                'ptgen':hist.axis.Variable(np.array([550, 650, 800, 1200,np.inf]), name="ptgen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"),
-                'mJgen':hist.axis.Regular(100,0,500, name="mJgen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"),
-                'ptreco':hist.axis.Variable(np.array([500,575,650,725,800,1000,1200,np.inf]), name="ptreco", label=r"$p_{T,\mathrm{reco}}$ [GeV]"),
-                'mJreco':hist.axis.Variable(np.array([0,40,100,300,np.inf]), name="mJreco", label=r"$m_{SD,\mathrm{reco}}$ [GeV]"),
+                'ptgen':hist.axis.Variable(np.array([0,550, 650, 800, 1200,np.inf]), name="ptgen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"),
+                'mJgen':hist.axis.Variable(np.array([0,50. ,  60. ,  89. , 177.5, 209. , 244. , 281.5, 299.5, np.inf]), name="mJgen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"),
+                'ptreco':hist.axis.Variable(np.array([500,550,650,725,800,1000,1200,np.inf]), name="ptreco", label=r"$p_{T,\mathrm{reco}}$ [GeV]"),
+                'mJreco':hist.axis.Variable(np.array([ 50.,  55.,  60.,  74.5 ,  89., 133.25, 177.5 , 193.25, 209., 226.5, 244., 262.75, 281.5, 290.5, 299.5]), name="mJreco", label=r"$m_{SD,\mathrm{reco}}$ [GeV]"),
             },
             'ttbar':{
-                'ptgen':hist.axis.Variable(np.array([250, 400, 650, np.inf]), name="ptgen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"),
-                'mJgen':hist.axis.Regular(500,0,500, name="mJgen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"),
+                'ptgen':hist.axis.Variable(np.array([0,250, 400, 650, np.inf]), name="ptgen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"),
+                'mJgen':hist.axis.Variable(np.array([0,55,65,72.5,80,87.5,95,110,125,150,180,220,np.inf]), name="mJgen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"),
                 'ptreco':hist.axis.Variable(np.array([200, 300, 400, 500, 650, np.inf]), name="ptreco", label=r"$p_{T,\mathrm{reco}}$ [GeV]"),
-                'mJreco':hist.axis.Variable(np.array([0,40,100,300,np.inf]), name="mJreco", label=r"$m_{SD,\mathrm{reco}}$ [GeV]"),
+                'mJreco':hist.axis.Regular(500,0,500, name="mJreco", label=r"$m_{SD,\mathrm{reco}}$ [GeV]"),
             }
         }
         
@@ -264,7 +264,8 @@ class JMSTemplates(processor.ProcessorABC):
             out['ntrueint'].fill(dataset=dataset,ntrueint = events.n_trueint, weight = events.weight)
 
         
-        for jec_applied_on in ['none','pt','pt&mJ']:
+        # for jec_applied_on in ['none','pt','pt&mJ']:
+        for jec_applied_on in ['pt','pt&mJ']:
             selections = PackedSelection()
             pt_ = pt_raw
             if('pt' in jec_applied_on):
@@ -380,7 +381,8 @@ if(__name__ == "__main__"):
     workflow.processor_instance = JMSTemplates(args.year)
     workflow.processor_schema = BaseSchema
 
-    sample_pattern = '/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/{SELECTION}Trees/workdir_{SELECTION}_{YEAR}/*{SAMPLE}*.root'
+    # sample_pattern = '/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/{SELECTION}Trees/workdir_{SELECTION}_{YEAR}/*{SAMPLE}*.root'
+    sample_pattern = '/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/{SELECTION}Trees/no_jetid/workdir_{SELECTION}_{YEAR}/*{SAMPLE}*.root'
     sample_names = {
         "vjets":["Data", "WJets", "WJetsMatched", "WJetsUnmatched", "ZJets", "ZJetsMatched", "ZJetsUnmatched", "TTToHadronic", "TTToSemiLeptonic", "ST_tW_top", "ST_tW_antitop", "QCD"],
         # "vjets":["Data.JetHT_RunB","Data.JetHT_RunC","Data.JetHT_RunD","Data.JetHT_RunE","Data.JetHT_RunF",],
@@ -416,7 +418,10 @@ if(__name__ == "__main__"):
     os.chdir(os.environ['TMPDIR'])
     if(args.scaleout>0):
         print('init dask client')
-        workflow.init_dask_htcondor_client(1,4,5)
+        # if(workflow.args.debug):
+        #     workflow.init_dask_local_client()
+        # else:
+        workflow.init_dask_htcondor_client(1,8,5)
 
     print('starting coffea runner')
 

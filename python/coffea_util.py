@@ -29,6 +29,15 @@ class CoffeaWorkflow(object):
     def parse_args(self):
         self.args = self.parser.parse_args()
         return self.args
+
+
+    def init_dask_local_client(self):
+        if(self._init_dask):
+            print(f'{bcolors.WARNING}WARNING: You did already initialize a dask HTC client!{bcolors.ENDC}')
+            return
+        from dask.distributed import Client
+        self.client = Client()
+        self._init_dask = True
         
     def init_dask_htcondor_client(self, cores = 8, memory = 24, disk = 5):
         if(self._init_dask):
