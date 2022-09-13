@@ -52,7 +52,9 @@ def plot_qcd_fail_parameters(config={'ModelName':'WMassModel'}):
     
     nbins = int(np.floor((max_msd-min_msd)/binwidth))
     msd_bin_edges = np.linspace(min_msd, nbins*binwidth+min_msd, nbins+1)
-    pt_bin_edges = np.array([500.,550.,600.,675.,800.,1200.])
+
+    
+    pt_bin_edges = np.array(config.get('pt_edges',[500.,550.,600.,675.,800.,1200.]))
 
     result = ROOT.TFile(config['ModelName']+"/fitDiagnostics.root","READ").Get("fit_s")
     args = result.floatParsFinal()

@@ -1,6 +1,6 @@
 import os,sys
 import ROOT
-sys.path.append('/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/python/')
+sys.path.append('/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/python/')
 import plotter,cms_style
 cms_style.cms_style()
 
@@ -35,7 +35,7 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_roo
         binning = config.get('binning',[50,300,26])
         plotter.yTitle = "Events / %i GeV"%binning[2]
         # plotter.yTitle = "Events / %i GeV"%config['binning'][channel['selection']][2]
-        print('plotting', channel_str)
+        #print('plotting', channel_str)
         backgrounds = list(map(lambda bg: 'qcd' if ('QCD' in bg and "QcdEstimation" in channel and channel["QcdEstimation"]=="True") else bg ,plotter.mc_samples[channel['selection']]))
         if(use_config_samples):
             backgrounds = [bg.replace("QCD","qcd") for bg in channel['samples']]
@@ -44,15 +44,35 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_roo
             for suffix in PrePostFit:
                 hist_dir = (channel_str + region + '_' + suffix +'/%s') if do_postfit else ('shapes_prefit/'+channel_str+region+'/%s')
                 plotter.rebin = False               
-                h_obs,fit_shapes = plotter.get_hists(f_shapes,backgrounds,hist_dir)
-                print(fit_shapes)
+                h_obs,fit_shapes = plotter.get_hists(f_shapes,backgrounds,hist_dir, scaleQCD=False, selection=channel['selection'])
+                #print(fit_shapes)
                 # h_obs.GetXaxis().SetTitle('m_{SD} [GeV]')
                 legend_entries=[]
+                sample_counts = {}
                 for sample, h in fit_shapes.items():
-                    h.SetFillColorAlpha(plotter.colors.get(sample),.8)
+                    sample_name = sample
+                    legend_suffix = ''
+                    import re
+                    genbin_pattern = re.compile('(?P<sample_name>[A-Za-z_]*)_ptgen(?P<ptgenbin>[0-9]+)_msdgen(?P<msdgenbin>[0-9]+)')
+                    genbins = None
+                    if genbin_pattern.match(sample):
+                        regex_result = genbin_pattern.match(sample).groupdict()
+                        sample_name = regex_result['sample_name']
+                        genbins = (int(regex_result['ptgenbin']),int(regex_result['msdgenbin']))
+                    if 'onegenbin' in sample:
+                        sample_name = sample.replace("_onegenbin","")
+                    if sample_name not in sample_counts:
+                        sample_counts[sample_name] = 0
+                    else:
+                        sample_counts[sample_name] += 1
+                    h.SetLineColor(plotter.colors.get(sample_name))
+                    h.SetFillColorAlpha(plotter.colors.get(sample_name),.8)
+                    if(genbins is not None):
+                        h.SetFillColorAlpha(plotter.colors.get(sample_name) + sample_counts[sample_name],.8)
+                        # h.SetLineColor(plotter.colors.get(sample_name) + sample_counts[sample_name])
+                        legend_suffix = ' (ptgen%i_msdgen%i)'%genbins
                     # h.SetLineColorAlpha(plotter.colors.get(sample),.8)
-                    h.SetLineColor(plotter.colors.get(sample))
-                    legend_entries.append((h,plotter.legend_names.get(sample),'f'))
+                    legend_entries.append((h,plotter.legend_names.get(sample_name)+legend_suffix,'f'))
                 
                 additional_hists=[]
                 if(plot_total_sig_bkg):
