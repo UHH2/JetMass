@@ -182,6 +182,35 @@ class CombineWorkflows(object):
         silence = False
 
 
+    def unfolding(self, debug=True):
+        command_string =  """#Unfolding Workflow\n"""
+        command_string += exec_bash("cd " + self.modeldir + "\n",debug)
+        import json
+        configs = json.load(open(self.modeldir+'/config.json','r'))
+
+        bin_signal_strenght_constructor = "[1,-5,5]"
+        
+        regions_mapping = " ".join(["{NAME}={NAME}.txt".format(NAME=channel_name+region_name) for channel_name,channel_config in configs['channels'].items() for region_name in channel_config['regions']])
+        command_string += exec_bash("combineCards.py {REGIONS} > {DATACARD} \n".format(REGIONS=regions_mapping,DATACARD=self.workspace.replace(".root",".txt")),debug)
+        
+        unfolding_bins = configs['unfolding_bins']
+        # genbins = ["ptgen%i_msdgen%i"%(iptgen,imsdgen) for iptgen in range(len(unfolding_bins['ptgen'])-1) for imsdgen in range(len(unfolding_bins['msdgen'])-1)]
+        genbins = configs['genbins']
+        POMAPS = " ".join(["--PO map='.*{GENBIN}.*:r_{GENBIN}{PARCONSTRUCT}'".format(GENBIN=genbin,PARCONSTRUCT=bin_signal_strenght_constructor) for genbin in genbins])
+        
+        command_string += exec_bash("text2workspace.py -m 0 --X-allow-no-background -o {WORKSPACE} {DATACARD} -P HiggsAnalysis.CombinedLimit.PhysicsModel:multiSignalModel {POMAPS}\n".format(WORKSPACE=self.workspace,DATACARD=self.workspace.replace('.root','.txt'),POMAPS=POMAPS),debug)
+
+        poi_defaults = ",".join(["r_{GENBIN}=1".format(GENBIN=genbin) for genbin in genbins])
+        command_string += exec_bash("combine -M MultiDimFit --setParameters={PARAMETERS} -t -1 -m 0 {WORKSPACE} -n .Asimov \n".format(PARAMETERS=poi_defaults, WORKSPACE=self.workspace),debug)
+        command_string += exec_bash("combine -M MultiDimFit --setParameters={PARAMETERS}  -m 0 {WORKSPACE} -n .Data \n".format(PARAMETERS=poi_defaults, WORKSPACE=self.workspace),debug)
+
+
+        poi_string = '--redefineSignalPOIs '+",".join(["r_{GENBIN}".format(GENBIN=genbin) for genbin in genbins])
+        command_string += exec_bash("combine -M FitDiagnostics {WORKSPACE} {POI} --setParameters={POIDEFAULTS} --saveShapes -n '' --cminDefaultMinimizerStrategy 0".format(WORKSPACE=self.workspace,POI=poi_string, POIDEFAULTS=poi_defaults),debug)
+        command_string += exec_bash("PostFitShapesFromWorkspace -w {WORKSPACE} -o {MODELDIR}fit_shapes.root --postfit --sampling -f {MODELDIR}fitDiagnostics.root:fit_s".format(WORKSPACE=self.workspace,MODELDIR=self.modeldir),debug)
+        
+        return command_string
+        
     def diagnostics(self, debug=True):
         command_string = """#FitDiagnostics Workflow\n"""
         command_string += exec_bash("cd " + self.modeldir + "\n",debug)
@@ -292,6 +321,11 @@ class CombineWorkflows(object):
     def FastScan(self,debug=True):
         command_string = "#FastScan\n"
         command_string += "combineTool.py -M FastScan -w {WORKSPACE}:w".format(WORKSPACE=self.workspace)
+        return command_string
+    
+    def FastScanMassScales(self,debug=True):
+        command_string = "#FastScan\n"
+        command_string += "combineTool.py -M FastScan -w {WORKSPACE}:w --match massScale".format(WORKSPACE=self.workspace)
         return command_string
 
 if(__name__=='__main__'):

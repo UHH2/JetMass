@@ -337,6 +337,22 @@ def jet_mass_producer(args,configs):
     #setting up rhalphalib roofit model
     model = rl.Model(model_name)
 
+    if(args.unfolding):
+        for channel_name, config in channels.items():
+            #Signal sample division in genbins
+            from copy import deepcopy
+            signal_samples = deepcopy(config['signal'])
+            unfolding_bins = configs['unfolding_bins']
+            genbins = ['onegenbin'] if args.one_bin else ["ptgen%i_msdgen%i"%(iptgen,imsdgen) for iptgen in range(len(unfolding_bins['ptgen'])-1) for imsdgen in range(len(unfolding_bins['msdgen'])-1)]
+            configs['genbins']=genbins
+            for signal_sample in signal_samples:
+                config['samples'].remove(signal_sample)
+                config['signal'].remove(signal_sample)
+                for genbin in genbins:
+                    sample_genbin_name = "{SAMPLE}_{GENBIN}".format(SAMPLE=signal_sample,GENBIN=genbin)
+                    config['samples'].append(sample_genbin_name)
+                    config['signal'].append(sample_genbin_name)
+
     #setting up nuisances for systematic uncertainties
     if(args.verbose>0):
         print('CMS_lumi', 'lnN')
@@ -361,7 +377,9 @@ def jet_mass_producer(args,configs):
                     if name in v[0].name:
                         nuisance_par = v
                 if norm_unc>0 and name in sample and  sample not in norm_nuisances:
+                    print(sample)
                     norm_nuisances.update({sample:nuisance_par})
+    print(norm_nuisances)
 
     # tagging eff sf for ttbar semileptonic samples
     
@@ -385,6 +403,22 @@ def jet_mass_producer(args,configs):
             print('getting template of variable:',variable)
             print('samples:',samples)
             print('regions:',regions)
+        # #Signal sample division in genbins
+        # if(args.unfolding):
+        #     from copy import deepcopy
+        #     signal_samples = deepcopy(config['signal'])
+        #     for signal_sample in signal_samples:
+        #         samples.remove(signal_sample)
+        #         config['signal'].remove(signal_sample)                
+        #         unfolding_bins = configs['unfolding_bins']
+        #         genbins = ['onegenbin'] if args.one_bin else ["ptgen%i_msdgen%i"%(iptgen,imsdgen) for iptgen in range(len(unfolding_bins['ptgen'])-1) for imsdgen in range(len(unfolding_bins['msdgen'])-1)]
+        #         configs['genbins']=genbins
+        #         for genbin in genbins:
+        #             sample_genbin_name = "{SAMPLE}_{GENBIN}".format(SAMPLE=signal_sample,GENBIN=genbin)
+        #             samples.append(sample_genbin_name)
+        #             config['signal'].append(sample_genbin_name)
+        #             # samples.append()
+            
 
         for region in regions:
             additional_bin = config.get('additional_bin','')
@@ -417,6 +451,9 @@ def jet_mass_producer(args,configs):
                 for grid_nuisance_dict, x, y, category in grid_nuisances:
                     for grid_nuisance_name in grid_nuisance_dict.keys():
 
+                        if(args.unfolding):
+                            continue
+                        
                         #this should strictly not be necessary
                         if(sample.sampletype != rl.Sample.SIGNAL and args.VaryOnlySignal):
                             continue
@@ -459,7 +496,8 @@ def jet_mass_producer(args,configs):
                     if(not args.noNormUnc):
                         if sample_name in norm_nuisances.keys():
                             sample.setParamEffect(norm_nuisances[sample_name][0],norm_nuisances[sample_name][1])
-                    
+
+                
                 ch.addSample(sample)
 
             PseudoData = 'Pseudo' in configs and len(configs['Pseudo'])>0
@@ -562,6 +600,8 @@ def jet_mass_producer(args,configs):
 if(__name__ == "__main__"):
     import json,argparse
     import fitplotter
+    from CombineWorkflows import CombineWorkflows
+
     parser = argparse.ArgumentParser()
     parser.add_argument("config", type=str, help="path to json with config")
     parser.add_argument('--justplots',action='store_true', help='just make plots.')
@@ -581,14 +621,27 @@ if(__name__ == "__main__"):
     parser.add_argument('--method',type=str,default='diagnostics')
     parser.add_argument('--combineOptions',type=str,help="string with additional cli-options passed to combine",default="")
     parser.add_argument('--verbose',type=int,default=-1)
+    parser.add_argument('--unfolding',action='store_true')
+    parser.add_argument('--one-bin',action='store_true')
+    
     
     args = parser.parse_args()
     
     try:
-        configs = json.load(open(args.config))
+        if args.config.endswith(".json"):
+            configs = json.load(open(args.config))
+        else:
+            execfile(args.config)
+        existing_config = configs['ModelName']+'/config.json'
+        if(os.path.isfile(existing_config)):
+            use_existing_config = (raw_input("There already is a directory corresponding to this config. Do you want to load the existing config? [Y/N]").lower() == "y")
+            if(use_existing_config):
+                configs = json.load(open(existing_config))
+        
     except IndexError:
         print("You must specify a configuration JSON!")
         sys.exit(0)
+
     configs['ModelName'] = configs['ModelName']+str(args.job_index)
 
     args.TTbarTaggingEff = configs.get("TTbarTaggingEff","True") == "True"
@@ -599,20 +652,25 @@ if(__name__ == "__main__"):
     if(not args.justplots):
         jet_mass_producer(args,configs)
         open(configs['ModelName']+'/config.json','w').write(json.dumps(configs,sort_keys=False,indent=2))
-        use_r_poi = args.defaultPOI or args.noMassScales
+        use_r_poi = (args.defaultPOI or args.noMassScales) and (not args.unfolding)
         if not args.customCombineWrapper:
-            _,mass_scale_names = build_mass_scale_variations(configs,args)
-            from CombineWorkflows import CombineWorkflows
-            cw = CombineWorkflows()
-            # cw.workspace = configs['ModelName']+'/'+configs['ModelName']+'_combined.root'
-            cw.workspace = configs['ModelName']+'/model_combined.root'
-            cw.extraOptions = "--freezeParameters r --preFitValue 0 " + args.combineOptions
-            cw.POIRange = (-100,100)
-            cw.POI = "r" if use_r_poi else mass_scale_names
-            cw.method = args.method
-            cw.write_wrapper()
-            cw.method = 'FastScan'
-            cw.write_wrapper(append=True)
+            if(args.unfolding):
+                cw = CombineWorkflows()
+                cw.workspace = configs['ModelName']+'/model_combined.root'
+                cw.method = 'unfolding'
+                cw.write_wrapper()
+            else:
+                _,mass_scale_names = build_mass_scale_variations(configs,args)
+                cw = CombineWorkflows()
+                # cw.workspace = configs['ModelName']+'/'+configs['ModelName']+'_combined.root'
+                cw.workspace = configs['ModelName']+'/model_combined.root'
+                cw.extraOptions = "--freezeParameters r --preFitValue 0 " + args.combineOptions
+                cw.POIRange = (-100,100)
+                cw.POI = "r" if use_r_poi else mass_scale_names
+                cw.method = args.method
+                cw.write_wrapper()
+                cw.method = 'FastScanMassScales'
+                cw.write_wrapper(append=True)
         else:
             if(not os.path.isfile(configs['ModelName']+'/wrapper.sh')):
                 import warnings
@@ -633,22 +691,23 @@ if(__name__ == "__main__"):
     try:
         fit_diagnostics = ROOT.TFile(configs['ModelName']+'/fitDiagnostics.root',"READ")
         fit_result = fit_diagnostics.Get("fit_s")
-        massScales = []
-        fitargs = fit_diagnostics.Get("fit_s").floatParsFinal()
-        for name in build_mass_scale_variations(configs, args)[1]:
-            param = fitargs.find(name)
-            center = param.getValV()
-            error_up = abs(param.getErrorHi())
-            error_down = abs(param.getErrorLo())
-            
-            massScales.append([center,error_up,-error_down])
-        np.save(configs['ModelName']+"/"+configs['ModelName']+'MassScales.npy',np.array(massScales,dtype=float))
 
         fit_result_parameters = {}
         for p in fit_result.floatParsFinal():
             fit_result_parameters[p.GetName()]=[p.getVal(),p.getErrorHi(),p.getErrorLo()]
         open(configs['ModelName']+"/"+configs['ModelName']+'fitResult.json','w').write(json.dumps(fit_result_parameters,sort_keys=True,indent=2))
         
+        if(not args.unfolding):
+            massScales = []
+            fitargs = fit_diagnostics.Get("fit_s").floatParsFinal()
+            for name in build_mass_scale_variations(configs, args)[1]:
+                param = fitargs.find(name)
+                center = param.getValV()
+                error_up = abs(param.getErrorHi())
+                error_down = abs(param.getErrorLo())
+            
+                massScales.append([center,error_up,-error_down])
+            np.save(configs['ModelName']+"/"+configs['ModelName']+'MassScales.npy',np.array(massScales,dtype=float))
         
         do_postfit = fit_result.status() <= 3
     except:
@@ -656,9 +715,9 @@ if(__name__ == "__main__"):
         
         do_postfit = False
     if(not args.skipTemplatePlots):
-        fitplotter.plot_fit_result(configs,plot_total_sig_bkg = False,do_postfit=do_postfit)
-        fitplotter.plot_fit_result(configs,logY=True,plot_total_sig_bkg = False,do_postfit=do_postfit)
-    if(do_postfit and not args.noMassScales):
+        fitplotter.plot_fit_result(configs,plot_total_sig_bkg = False,do_postfit=do_postfit, use_config_samples=args.unfolding)
+        fitplotter.plot_fit_result(configs,logY=True,plot_total_sig_bkg = False,do_postfit=do_postfit, use_config_samples=args.unfolding)
+    if(do_postfit and not args.noMassScales and not args.unfolding):
         fitplotter.plot_mass_scale_nuisances(configs)
     
     qcd_estimation_channels = {k:v for k,v in configs['channels'].items() if "QcdEstimation" in v and v["QcdEstimation"]=="True"}
