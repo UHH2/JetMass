@@ -117,6 +117,9 @@ private:
   uhh2::Event::Handle<bool>handle_reco_selection;
   uhh2::Event::Handle<bool>handle_gen_selection;
 
+  uhh2::Event::Handle<float>handle_dR_reco_gen;
+  uhh2::Event::Handle<bool>handle_jetpfid;
+
   uhh2::Event::Handle<bool>handle_reco_selection_no_merged_partons;
   uhh2::Event::Handle<bool>handle_gen_selection_no_merged_partons;
 
@@ -135,6 +138,9 @@ private:
   uhh2::Event::Handle<std::vector<TopJet>> handle_chs_jets;
   uhh2::Event::Handle<std::vector<GenTopJet>> handle_sd_gen_jets;
 
+  TopJetId jetpfid;
+
+  
 };
 
 
@@ -178,6 +184,7 @@ JetMassModule::JetMassModule(Context & ctx){
 
   JetId jetid = AndId<Jet>(JetPFID(JetPFID::WP_TIGHT_CHS), PtEtaCut(30.0, 2.4));
 
+  jetpfid = JetPFID(JetPFID::WP_TIGHT_PUPPI);
 
   if(is_buggyPU){
     TString pu_file_path = (TString) ctx.get("dataset_version");
@@ -223,6 +230,9 @@ JetMassModule::JetMassModule(Context & ctx){
   std::string reco_selection_handlename("pass_reco_selection");
   std::string gen_selection_handlename("pass_gen_selection");
 
+  std::string dR_reco_gen_handlename("dR_reco_gen");
+  std::string jetpfid_handlename("jetpfid");
+  
   std::string n_merged_partons_reco_jet_handlename("n_merged_partons_reco_jet");
   std::string n_merged_partons_gen_jet_handlename("n_merged_partons_gen_jet");
 
@@ -249,6 +259,9 @@ JetMassModule::JetMassModule(Context & ctx){
   handle_reco_selection = ctx.declare_event_output<bool>(reco_selection_handlename);
   handle_gen_selection = ctx.declare_event_output<bool>(gen_selection_handlename);
 
+  handle_dR_reco_gen = ctx.declare_event_output<float>(dR_reco_gen_handlename);
+  handle_jetpfid = ctx.declare_event_output<bool>(jetpfid_handlename);
+    
   handle_reco_selection_no_merged_partons = ctx.declare_event_output<bool>(reco_selection_handlename+"_no_merged_partons");
   handle_gen_selection_no_merged_partons = ctx.declare_event_output<bool>(gen_selection_handlename+"_no_merged_partons");
 
@@ -652,24 +665,31 @@ bool JetMassModule::process(Event & event) {
   
   //set reco selection to fail if topjet-gentopjet matching within R/2=0.4 fails.  
   bool pass_dR_reco_gen(true),pass_gen_substructure(false);
+  float dR_reco_gen(-1.0);
   if( (pass_gen_selection_part1 && pass_reco_selection_part1 )){
     double dR(numeric_limits<double>::infinity());
     if(event.is_valid(handle_gentopjet) && event.is_valid(handle_recotopjet)){
       const GenTopJet* genjet = event.get(handle_gentopjet);
       const TopJet* recojet = event.get(handle_recotopjet);
-      dR = deltaR(*genjet,*recojet);
+      dR_reco_gen = deltaR(*genjet,*recojet);
       pass_gen_substructure = (safe_tau21(genjet) < 0.45) & (safe_tau32(genjet)>0.5);
       
     }
     if(dR > 0.4) pass_dR_reco_gen = false;
   }
-
-
+  event.set(handle_dR_reco_gen,dR_reco_gen);
+  
+   
+  bool passing_jetpfid(true);
+ 
   int n_merged_partons_reco_jet(-1),n_merged_partons_gen_jet(-1);
   if(event.is_valid(handle_recotopjet)){
     const TopJet* recojet = event.get(handle_recotopjet);
     n_merged_partons_reco_jet = matching_selection.n_merged_partons(*recojet);
+    passing_jetpfid = jetpfid(*recojet,event);
   }
+
+  event.set(handle_jetpfid, passing_jetpfid);
   
   if(event.is_valid(handle_gentopjet)){
     const GenTopJet* genjet = event.get(handle_gentopjet);
@@ -704,7 +724,7 @@ bool JetMassModule::process(Event & event) {
 
   
   //fill second round of unfolding hists with part2 of selections
-  bool pass_gen_selection = pass_gen_selection_part1 && pass_gen_selection_part2;
+  bool pass_gen_selection = pass_gen_selection_part1; // keep part 2 out since it is empty at the moment anyway! && pass_gen_selection_part2;
   // event.set(handle_reco_selection, pass_reco_selection_part1 && pass_reco_selection_part2 && pass_substructure_cut);
   // event.set(handle_gen_selection, pass_gen_selection);
   // h_unfolding_hists_sel_part2->fill(event);  
@@ -715,10 +735,11 @@ bool JetMassModule::process(Event & event) {
   // h_unfolding_hists->fill(event);
   // h_unfolding_hists_fine->fill(event);
 
-  event.set(handle_reco_selection, (pass_reco_selection_part1 && pass_reco_selection_part2 && pass_substructure_cut && pass_dR_reco_gen));
+  // event.set(handle_reco_selection, (pass_reco_selection_part1 && pass_reco_selection_part2 && pass_substructure_cut && pass_dR_reco_gen));
+  event.set(handle_reco_selection, pass_reco_selection_part1 );
   // h_unfolding_hists_rhocut->fill(event);
 
-  event.set(handle_gen_selection, pass_gen_selection && pass_gen_substructure);
+  event.set(handle_gen_selection, pass_gen_selection);// && pass_gen_substructure);
   // h_unfolding_hists_gensubstructure->fill(event);
 
   event.set(handle_reco_selection_no_merged_partons, pass_reco_selection_part1 && pass_substructure_cut && pass_dR_reco_gen && (n_merged_partons_reco_jet==0));
