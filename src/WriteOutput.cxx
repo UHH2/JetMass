@@ -270,20 +270,19 @@ bool WriteOutput::process(uhh2::Event & event){
   event.set(h_trigger_bits,trigger_results);
 
   if(save_jms_jes_study_specific){
-    float n_pv = -999.0;
+    float n_pv = event.pvs->size();
     float n_trueint_intime = -999.0;
     float n_trueint_ootimebefore = -999.0;
     float n_trueint_ootimeafter = -999.0;
     float n_trueint =  -999.0;
     
     if(isMC){
-      n_pv = event.pvs->size();
       n_trueint_intime = event.genInfo->pileup_NumInteractions_intime();
       n_trueint_ootimebefore = event.genInfo->pileup_NumInteractions_ootbefore();
       n_trueint_ootimeafter = event.genInfo->pileup_NumInteractions_ootafter();
       n_trueint =  event.genInfo->pileup_TrueNumInteractions();
     }
-    
+
     event.set(h_n_pv, n_pv);
     event.set(h_n_trueint_intime, n_trueint_intime);
     event.set(h_n_trueint_ootimebefore, n_trueint_ootimebefore);
