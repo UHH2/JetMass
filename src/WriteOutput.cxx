@@ -78,7 +78,7 @@ WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selec
   h_mgenparticles = ctx.declare_event_output<double>("mgenparticles");
   h_genpt = ctx.declare_event_output<double>("genpt");  
   h_weight = ctx.declare_event_output<double>("weight");
-  h_genjetpt = ctx.declare_event_output<double>("genjetpt");
+  // h_genjetpt = ctx.declare_event_output<double>("genjetpt");
   h_jecfactor = ctx.declare_event_output<double>("jecfactor");
   h_jecfactor_SD = ctx.declare_event_output<double>("jecfactor_SD");
 
@@ -365,16 +365,16 @@ bool WriteOutput::process(uhh2::Event & event){
   // std::cout << "IsMergedTop : IsMergedQB : IsMergedWZ : IsNotMerged"<< std::endl;
   // std::cout << IsMergedTop << " : " << IsMergedQB << " : " << IsMergedWZ << " : " << IsNotMerged<< std::endl;
   
-  // V matching
-  double genjetpt = -1;
-  if(isVJetsSel && (is_WSample || is_ZSample)){
-    //get genjet pt for k factors
-    const GenJet * closest_genjet_1 = closestParticle(candidateJet, *event.genjets);
-    const GenJet * closest_genjet_2 = event.topjets->size() > 1 ? closestParticle(event.topjets->at(1), *event.genjets) : closest_genjet_1;
-    float gen_pt_1 = closest_genjet_1 ? closest_genjet_1->pt() : -999;
-    float gen_pt_2 = closest_genjet_2 ? closest_genjet_2->pt() : -999;
-    genjetpt = IsMergedWZ ? gen_pt_1 : gen_pt_2;
-  }
+  // // V matching
+  // double genjetpt = -1;
+  // if(isVJetsSel && (is_WSample || is_ZSample)){
+  //   //get genjet pt for k factors
+  //   const GenJet * closest_genjet_1 = closestParticle(candidateJet, *event.genjets);
+  //   const GenJet * closest_genjet_2 = event.topjets->size() > 1 ? closestParticle(event.topjets->at(1), *event.genjets) : closest_genjet_1;
+  //   float gen_pt_1 = closest_genjet_1 ? closest_genjet_1->pt() : -999;
+  //   float gen_pt_2 = closest_genjet_2 ? closest_genjet_2->pt() : -999;
+  //   genjetpt = IsMergedWZ ? gen_pt_1 : gen_pt_2;
+  // }
 
   float genpt,m_genparticles,m_gensubjets;
 
@@ -442,8 +442,9 @@ bool WriteOutput::process(uhh2::Event & event){
   event.set(h_NextraMBtagDR1p0, countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_MEDIUM),1.0));
   event.set(h_NextraTBtagDR1p0, countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_TIGHT),1.0));
 
+  //std::cout << "weight stored in tree: " << event.weight << std::endl;
   event.set(h_weight, event.weight);
-  event.set(h_genjetpt, genjetpt);
+  // event.set(h_genjetpt, genjetpt);
   event.set(h_jecfactor, jecfactor);
   event.set(h_jecfactor_SD, jecfactor_SD);
 
