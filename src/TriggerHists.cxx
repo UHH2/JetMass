@@ -98,7 +98,6 @@ void TriggerHists::fill(const Event & event){
   auto PFJET450 = event.get_trigger_index("HLT_PFJet450_v*");//prescale = 1 ff.
   auto PFJET500 = event.get_trigger_index("HLT_PFJet500_v*");		
   auto PFJET550 = event.get_trigger_index("HLT_PFJet550_v*");
-  // std::cout << "550 trigger prescale: " << event.trigger_prescale(PFJET550) << std::endl;
 
   float HT(-1.0f), AK8_PT(-1.0f), AK4_PT(-1.0f);
   if(event.is_valid(h_ht)) HT = event.get(h_ht);
