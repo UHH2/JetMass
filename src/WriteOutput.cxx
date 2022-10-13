@@ -40,6 +40,12 @@ WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selec
   h_eta = ctx.declare_event_output<double>("eta");
   h_phi = ctx.declare_event_output<double>("phi");
   h_mass = ctx.declare_event_output<double>("mass");
+
+  h_pt_1 = ctx.declare_event_output<double>("pt_1");
+  h_eta_1 = ctx.declare_event_output<double>("eta_1");
+  h_phi_1 = ctx.declare_event_output<double>("phi_1");
+  h_mass_1 = ctx.declare_event_output<double>("mass_1");
+  h_jecfactor_1 = ctx.declare_event_output<double>("jecfactor_1");
   
   h_N2 = ctx.declare_event_output<double>("N2");
   h_tau32 = ctx.declare_event_output<double>("tau32");
@@ -315,6 +321,19 @@ bool WriteOutput::process(uhh2::Event & event){
   double jecfactor_SD = softdrop_jec->getJecFactor(event,softdrop_jet_raw);
   double mjet_SD = candidateJet.softdropmass();
 
+  // std::cout << std::endl;
+  // std::cout << "mass: \t" << mass << std::endl;
+  // std::cout << "mjet: \t" << mjet << std::endl;
+  // std::cout << "mjet_SD: \t" << mjet_SD << std::endl;
+  // std::cout << "mass*jec: \t" << mass*jecfactor << std::endl;
+  // std::cout << "mjet*jec: \t" << mjet*jecfactor << std::endl;
+  // std::cout << "mjet_SD*jec_SD: \t" << mjet_SD*jecfactor_SD << std::endl;
+
+  // std::cout << "pt: \t" << pt << std::endl;
+  // std::cout << "pt_SD: \t" << softdrop_jet_raw.pt() << std::endl;
+  // std::cout << "pt*jec: \t" << pt*jecfactor << std::endl;
+  // std::cout << "pt_SD*jec_SD: \t" << softdrop_jet_raw.pt()*jecfactor_SD << std::endl;
+
   // double deepboost_WvsQCD = candidateJet.btag_DeepBoosted_WvsQCD();
   double tau32 = 0;
   if(candidateJet.tau2() > 0) tau32 = candidateJet.tau3()/candidateJet.tau2();
@@ -375,15 +394,29 @@ bool WriteOutput::process(uhh2::Event & event){
     m_genparticles = -1.;
   }
   
-  event.set(h_pt, pt);
+  event.set(h_pt, pt);//v4().pt() * jec_factor_raw
   event.set(h_eta, eta);
   event.set(h_phi, phi);
-  event.set(h_mass, mass);
-  event.set(h_mjet, mjet);
+  event.set(h_mass, mass); //v4().M() * jec_factor_raw
+  event.set(h_mjet, mjet); //sum(particles).v4().M() * jec_factor_raw -> should be identical to softdropmass
   
   event.set(h_msubjets, softdrop_jet_raw.M());
-  event.set(h_mjet_SD,mjet_SD);
+  event.set(h_mjet_SD,mjet_SD); // softdropmass from userfloat taken from MINIAOD, not 100% identical to mjet, probably due to precisions in MINIAOD userfloats? 
 
+  float pt_1(-999.9),eta_1(-999.9),phi_1(-999.9),mass_1(-999.9),jecfactor_1(-999.9);
+  if(event.topjets->size()>1){
+    pt_1 = event.topjets->at(1).v4().Pt()*event.topjets->at(1).JEC_factor_raw();
+    eta_1 = event.topjets->at(1).v4().Eta();
+    phi_1 = event.topjets->at(1).v4().Phi();
+    mass_1 = event.topjets->at(1).v4().M()*event.topjets->at(1).JEC_factor_raw();
+    jecfactor_1 = 1.0/event.topjets->at(1).JEC_factor_raw();  
+  }
+  event.set(h_pt_1, pt_1);//v4().pt() * jec_factor_raw
+  event.set(h_eta_1, eta_1);
+  event.set(h_phi_1, phi_1);
+  event.set(h_mass_1, mass_1); //v4().M() * jec_factor_raw
+  event.set(h_jecfactor_1, jecfactor_1);
+  
   event.set(h_mgensubjets, m_gensubjets);
   event.set(h_mgenparticles, m_genparticles);
   event.set(h_genpt, genpt);
@@ -467,6 +500,8 @@ bool WriteOutput::process(uhh2::Event & event){
       mass_gen_ak8 = gen_jet->v4().M();
       msd_gen_ak8 = gen_jet->softdropmass();
     }
+    // std::cout << "mass_gen: \t" << mass_gen_ak8 << std::endl;
+    // std::cout << "msd_gen: \t" << msd_gen_ak8 << std::endl;
     event.set(h_pt_gen_ak8,pt_gen_ak8);
     event.set(h_mass_gen_ak8,mass_gen_ak8);
     event.set(h_msd_gen_ak8,msd_gen_ak8);

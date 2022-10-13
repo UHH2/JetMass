@@ -79,6 +79,12 @@ private:
   uhh2::Event::Handle<double>h_eta;
   uhh2::Event::Handle<double>h_phi;
   uhh2::Event::Handle<double>h_mass;
+
+  uhh2::Event::Handle<double>h_pt_1;
+  uhh2::Event::Handle<double>h_eta_1;
+  uhh2::Event::Handle<double>h_phi_1;
+  uhh2::Event::Handle<double>h_mass_1;
+  uhh2::Event::Handle<double>h_jecfactor_1;
   
   uhh2::Event::Handle<double>h_pt_AK4,h_genpt_AK4;
   uhh2::Event::Handle<double>h_N2;
