@@ -29,11 +29,11 @@ private:
 
 class NLOWeights: public uhh2::AnalysisModule{
 public:
-  NLOWeights(uhh2::Context & ctx, const std::string & genjet_handlename="gentopjet");
+  NLOWeights(uhh2::Context & ctx, const std::string & boson_pt_handlename="V_pt");
   virtual bool process(uhh2::Event & event) override;
   
 private:
-  uhh2::Event::Handle<const GenTopJet*> genjet_handle;  
+  uhh2::Event::Handle<double> boson_pt_handle;  
   TH1F *h_kfactor, *h_ewcorr;
   bool apply_nloweights;
 };

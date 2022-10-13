@@ -88,14 +88,12 @@ bool JetSelector<GenTopJet>::process(uhh2::Event & event){
 }
 
 
-NLOWeights::NLOWeights(uhh2::Context & ctx, const std::string & genjet_handlename){
+NLOWeights::NLOWeights(uhh2::Context & ctx, const std::string & boson_pt_handlename){
   TString version = ctx.get("dataset_version");
   TString selection = ctx.get("selection");
   apply_nloweights = false;
   if(selection == "vjets" && (version.Contains("WJets") || version.Contains("ZJets")) ){
-    // genjet_handle = ctx.get_handle<const GenTopJet*>(genjet_handlename);
-    // recojet_handle = ctx.get_handle<const TopJet*>(recojet_handlename);
-    
+    boson_pt_handle = ctx.get_handle<double>(boson_pt_handlename);
     std::string NLOWeightsFilename =  "JetMass/NLOweights" + (std::string)(version.Contains("W") ? "/WJets" : "/ZJets") + "Corr.root";
     
     TFile * NLOWeightsFile = new TFile(locate_file(NLOWeightsFilename).c_str());
@@ -109,18 +107,9 @@ NLOWeights::NLOWeights(uhh2::Context & ctx, const std::string & genjet_handlenam
 bool NLOWeights::process(uhh2::Event & event){
   if(!apply_nloweights) return false;
 
-  // if(!event.is_valid(genjet_handle))throw std::runtime_error("NLOWeights: genjet handle is invalid!");
-  // const GenTopJet *genjet(NULL);
-  // genjet = event.get(genjet_handle);
-  // if(genjet == nullptr)throw std::runtime_error("NLOWeights: genjet from handle is nullptr! ");
-
-  // float genjetpt = genjet->pt();
-  // double kfactor_pt = genjetpt;
-  // double ewk_pt = genjetpt;
-
-  const Particle gen_V_particle = event.genparticles->at(get_V_index(*event.genparticles));
-  float boson_pt = gen_V_particle.pt();
-  double kfactor_pt = boson_pt;
+  if(!event.is_valid(boson_pt_handle))throw std::runtime_error("NLOWeights: boson pt handle is invalid!");
+  double boson_pt = event.get(boson_pt_handle);
+  double kfactor_pt = boson_pt;  
   double ewk_pt = boson_pt;
   
   if( kfactor_pt > 3000 ) kfactor_pt = 2800;
@@ -137,7 +126,6 @@ bool NLOWeights::process(uhh2::Event & event){
   
   float w_ew= h_ewcorr->GetBinContent(ewk_bin);
   float nlo_weight = w * w_ew;
-  
   event.weight *= nlo_weight;
 
   return true;
