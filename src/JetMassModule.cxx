@@ -132,7 +132,7 @@ private:
 
   uhh2::Event::Handle<const GenTopJet*> handle_gentopjet,handle_gentopjet_nocut;
   uhh2::Event::Handle<const TopJet*> handle_recotopjet,handle_recotopjet_chs;
-  uhh2::Event::Handle<const GenTopJet*> handle_gentopjet_matched_V;
+  uhh2::Event::Handle<double> handle_genjetpt;
   uhh2::Event::Handle<MatchingSelection> handle_matching_selection;
 
   uhh2::Event::Handle<std::vector<TopJet>> handle_chs_jets;
@@ -151,6 +151,8 @@ JetMassModule::JetMassModule(Context & ctx){
   version = ctx.get("dataset_version");
   is_mc = ctx.get("dataset_type") == "MC";
   is_QCD = ctx.get("dataset_version").find("QCD") != std::string::npos;
+  is_WSample = ctx.get("dataset_version").find("WJets") != std::string::npos;
+  is_ZSample = ctx.get("dataset_version").find("ZJets") != std::string::npos;
   is_buggyPU = ctx.get("dataset_version").find("buggyPU") != std::string::npos;
   std::cout << "This sample has "<< (is_buggyPU ? "buggyPU" : "normalPU") << std::endl;
 
@@ -170,8 +172,9 @@ JetMassModule::JetMassModule(Context & ctx){
   matching_selection_producer.reset(new MatchingSelectionProducer(ctx, matching_selection_handlename));
   handle_matching_selection = ctx.get_handle<MatchingSelection>(matching_selection_handlename);
 
-  std::string gentopjet_matched_V_handlename("gentopjet_matched_V");
-  nlo_weights.reset(new NLOWeights(ctx,gentopjet_matched_V_handlename));
+  std::string genjetpt_handlename("genjetpt");
+  // std::string V_pt_handlename("V_pt");
+  nlo_weights.reset(new NLOWeights(ctx,genjetpt_handlename));
   
   do_genStudies = string2bool(ctx.get("doGenStudies", "true"));
   
@@ -274,8 +277,8 @@ JetMassModule::JetMassModule(Context & ctx){
   handle_recotopjet = ctx.get_handle<const TopJet*>(recotopjet_handlename);
   handle_recotopjet_chs = ctx.get_handle<const TopJet*>(recotopjet_chs_handlename);
 
-  handle_gentopjet_matched_V = ctx.get_handle<const GenTopJet*>(gentopjet_matched_V_handlename);
-  
+  // handle_V_pt = ctx.declare_event_output<double>(V_pt_handlename);
+  handle_genjetpt = ctx.declare_event_output<double>(genjetpt_handlename);
   handle_gen_HT = ctx.declare_event_output<double>(genHT_handlename);
   handle_HT = ctx.declare_event_output<double>(HT_handlename);
   ht_calculator.reset(new HTCalculator(ctx,jetid,HT_handlename));
@@ -551,6 +554,7 @@ bool JetMassModule::process(Event & event) {
   }
   if(EXTRAOUT) std::cout << "JetMassModule: Cleaner done!" << std::endl;
 
+  double genjetpt = -1;
   if(is_mc){
     //find gen(top)jet from gen V boson and save it to handle for use in nloweight application
     // const Particle gen_V_particle = event.genparticles->at(get_V_index(*event.genparticles));
@@ -562,8 +566,23 @@ bool JetMassModule::process(Event & event) {
     // std::cout << "genV jets pt: " << (v_gentopjet?v_gentopjet->pt():-1.0) << " " << (v_genjet?v_genjet->pt():-1.0) <<" " << gen_V_particle.pt() << std::endl; 
     // std::cout << "genV jets mass: " << v_gentopjet->softdropmass() << " " << v_genjet->v4().M() <<" " << gen_V_particle.v4().M() << std::endl; 
     // event.set(handle_gentopjet_matched_V,v_gentopjet);
-    nlo_weights->process(event); // now taking pT of V-boson genparticle
+    // const Particle gen_V_particle = event.genparticles->at(get_V_index(*event.genparticles));
+    // float boson_pt = gen_V_particle.pt();
+    // event.set(handle_V_pt, boson_pt);
+    if(isvjetsSel && (is_WSample || is_ZSample)){
+      if(event.topjets->size()>0){
+        //get genjet pt for k factors
+        const GenJet * closest_genjet_1 = closestParticle(event.topjets->at(0), *event.genjets);
+        const GenJet * closest_genjet_2 = event.topjets->size() > 1 ? closestParticle(event.topjets->at(1), *event.genjets) : closest_genjet_1;
+        float gen_pt_1 = closest_genjet_1 ? closest_genjet_1->pt() : -999;
+        float gen_pt_2 = closest_genjet_2 ? closest_genjet_2->pt() : -999;
+        genjetpt = matching_selection.passes_matching(event.topjets->at(0), MatchingSelection::oIsMergedV)? gen_pt_1 : gen_pt_2;
+      }
+    }
   }
+  event.set(handle_genjetpt, genjetpt);
+
+  if(is_mc) nlo_weights->process(event); // now taking pT of V-boson genparticle
 
   h_hlt_eff->fill(event);
   
