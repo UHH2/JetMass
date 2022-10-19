@@ -60,7 +60,7 @@ def plot_mass(selection,mass_name,hist_file_path,output_dir="test",binning="CMS"
     if(not os.path.exists(output_dir)):
         os.makedirs(output_dir)
 
-    pt_bins = plotter.pt_bins_dict[selection]
+    pt_bins = plotter.pt_bins_dict[selection]['jms']
     nbjet_bins = plotter.nbjet_bins_dict[selection]
     pt_bins_str=[plotter.pt_bins_tex_dict[pt_bin] for pt_bin in pt_bins]
     new_binning = plotter.binning_dict[binning][selection]
