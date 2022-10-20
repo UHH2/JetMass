@@ -292,6 +292,10 @@ class JMSExtractor(object):
                     columns = 3
                     rows = ceil(n_pt_bins/columns)
                     grid = f.add_gridspec(rows, columns, hspace=0.3)
+                    grid_overlap = f.add_gridspec(1, 1)
+                    cms_label_ax = f.add_subplot(grid_overlap[0])
+                    cms_label_ax.axis("off")
+                    cms_label(cms_label_ax)
 
                     for ipt in range(n_pt_bins):
                         ax_ipt = f.add_subplot(grid[ipt])
@@ -324,6 +328,7 @@ class JMSExtractor(object):
                         fit_results[fit_variable].append(
                             fit_result[0][-1]['popt'][-2] if len(fit_result[0]) > 0 else -999.
                         )
+
                     f.savefig(f"{grooming}_{jec}_{fit_variable}_control_plots.pdf", bbox_inches="tight")
                 self.jms_from_mc[f"response_{grooming}_{jec}"] = \
                     np.array(fit_results['response'])
