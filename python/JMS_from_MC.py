@@ -128,10 +128,7 @@ def iterative_fit(h: hist.Hist,
             ax.plot(x_fine, fit_func(x_fine, *popt),
                     label=f'fit {i} mean={popt[2]:.2f}')
     if plot:
-        ax.legend()
-        hep.yscale_legend()
         ax.set_xlim(*fit_results[0]['xlim'])
-        # ax.set_xlim(75,95)
     return fit_results, ax
 
 
@@ -139,6 +136,7 @@ class JMSExtractor(object):
 
     def __init__(self, tree_file):
         self.tree = tree_file
+        self.fs = 18
 
     @property
     def tree(self):
@@ -178,11 +176,8 @@ class JMSExtractor(object):
     def pt_binning(self):
         del self._pt_binning
 
-    def pt_reco_tex_str(self):
-        return [r'$%.0f < p_{T} \leq %.0f$ GeV' % (pt_low, pt_high)
-                for pt_low, pt_high in zip(
-                        self.pt_binning[:-1],
-                        self.pt_binning[1:])]
+    def pt_reco_tex_str(self, i):
+        return r'$%.0f < p_{T,\mathrm{reco}} \leq %.0f$ GeV' % (self.pt_binning[:-1][i], self.pt_binning[1:][i])
 
     def construct_hists(self, groomed=True, JEC=True):
         m_min = 30
@@ -250,7 +245,7 @@ class JMSExtractor(object):
                          ax=ax, label=hlabel,
                          density=True)
 
-        ax.legend(loc='upper left', fontsize=18)
+        ax.legend(loc='upper left', fontsize=self.fs)
         cms_label(ax)
         ax.set_xlabel(r"$m_{SD,\mathrm{reco}}/m_{SD,\mathrm{gen}}$")
         ax.set_ylabel(r"$\Delta N / N$")
@@ -263,7 +258,7 @@ class JMSExtractor(object):
                          ax=ax, label='reco'+hlabel)
         hep.histplot(self.hists['g_jec'][0][{**pt_id, 'msd_reco': sum}],
                      ax=ax, label='gen')
-        ax.legend(loc='upper left', fontsize=18)
+        ax.legend(loc='upper left', fontsize=self.fs)
         cms_label(ax)
         ax.set_xlabel(r"$m_{SD}$ [GeV]")
         ax.set_ylabel(r"Events/$\Delta m_{SD}$")
@@ -275,7 +270,11 @@ class JMSExtractor(object):
         groomings = ['u', 'g']
         jecs = ['jec', 'nojec']
         fit_variables = ['mean_reco', 'mean_gen', 'response']
-
+        xlabels = {
+            'mean_reco': r'$m_{SD,\mathrm{reco}}$',
+            'mean_gen': r'$m_{SD,\mathrm{gen}}$',
+            'response': r'$m_{SD,\mathrm{reco}}/m_{SD,\mathrm{gen}}$',
+        }
         fitfunc_dict = {'means_reco': gauss,
                         'means_gen': gauss,
                         'response': gauss
@@ -289,10 +288,10 @@ class JMSExtractor(object):
                 n_pt_bins = h_[0].axes['pt_reco'].size
                 fit_results = {var: [] for var in fit_variables}
                 for fit_variable in fit_variables:
-                    f = plt.figure(figsize=(20, 10))
+                    f = plt.figure(figsize=(20, 12))
                     columns = 3
                     rows = ceil(n_pt_bins/columns)
-                    grid = f.add_gridspec(rows, columns)
+                    grid = f.add_gridspec(rows, columns, hspace=0.3)
 
                     for ipt in range(n_pt_bins):
                         ax_ipt = f.add_subplot(grid[ipt])
@@ -302,7 +301,7 @@ class JMSExtractor(object):
                                 h_[0][{'pt_reco': ipt,
                                        'msd_gen': sum}],
                                 iterations,
-                                fit_func=fitfunc_dict['meansq_reco'],
+                                fit_func=fitfunc_dict['means_reco'],
                                 plot=ax_ipt
                             )
                         elif (fit_variable == 'mean_gen'):
@@ -317,15 +316,20 @@ class JMSExtractor(object):
                                 iterations,
                                 fit_func=fitfunc_dict['response'],
                                 plot=ax_ipt)
+                        ax_ipt.text(ax_ipt.get_xlim()[1]*0.6, ax_ipt.get_ylim()[1]*0.8,
+                                    self.pt_reco_tex_str(ipt), fontsize=self.fs-4)
+                        ax_ipt.set_xlabel(xlabels[fit_variable])
+                        ax_ipt.legend(loc='upper left', fontsize=self.fs-3)
 
                         fit_results[fit_variable].append(
-                            fit_result[0]['popt'][-2]
+                            fit_result[0][-1]['popt'][-2] if len(fit_result[0]) > 0 else -999.
                         )
-
+                    f.savefig(f"{grooming}_{jec}_{fit_variable}_control_plots.pdf", bbox_inches="tight")
                 self.jms_from_mc[f"response_{grooming}_{jec}"] = \
-                    np.array(fit_result['response'])
+                    np.array(fit_results['response'])
                 self.jms_from_mc[f"means_{grooming}_{jec}"] = \
-                    np.array(fit_result['response']) / np.array(fit_result['response'])
+                    np.array(fit_results['response']) / np.array(fit_results['response'])
+        return
 
 
 if __name__ == '__main__':
@@ -340,3 +344,5 @@ if __name__ == '__main__':
     print('making control plots')
     # wjets_jms_extractor.save_control_plots('test')
     wjets_jms_extractor.extract_jms()
+    q = __import__("functools").partial(__import__("os")._exit, 0)  # FIXME
+    __import__("IPython").embed()  # FIXME
