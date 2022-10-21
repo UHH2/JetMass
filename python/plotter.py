@@ -359,12 +359,12 @@ XRangeUser = all(list(map(lambda a: a is not None, x_range)))
 
 
 def get_hists(f_hists,
-              samples: list[str],
-              hist_dir: str = '_%s_mjet_inclusive_pass',
-              selection: str = 'top',
-              pseudo_data: bool = False,
-              include_merged_hists: bool = True,
-              scaleQCD: bool = True):
+              samples,
+              hist_dir='_%s_mjet_inclusive_pass',
+              selection='top',
+              pseudo_data=False,
+              include_merged_hists=True,
+              scaleQCD=True):
     # print(f_hists, samples, hist_dir,selection)
     hist_dir = selection+hist_dir if (hist_dir[0] == '_') else hist_dir
     # print(hist_dir)
@@ -463,16 +463,16 @@ def get_hists(f_hists,
     return (h_data, mc_hists)
 
 
-def plot_data_mc(h_data: ROOT.TH1 = None,
-                 h_mc: list = None,
-                 plot_title: str = "",
-                 out_dir: str = None,
-                 legend_entries: list[str] = [],
-                 additional_text: str = "",
-                 signal_mc: list = [],
-                 additional_hists: list = [],
-                 additional_data: list = [],
-                 cutflow: bool = False
+def plot_data_mc(h_data=None,
+                 h_mc=None,
+                 plot_title="",
+                 out_dir=None,
+                 legend_entries=[],
+                 additional_text="",
+                 signal_mc=[],
+                 additional_hists=[],
+                 additional_data=[],
+                 cutflow=False
                  ):
 
     cms_style.bottom_right_margin_modifier = 1.5 if cutflow else 1.0

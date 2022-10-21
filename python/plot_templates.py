@@ -3,8 +3,6 @@ from __future__ import print_function
 import UHH2.JetMass.plotter as plotter
 import ROOT
 import os
-from typing import Union
-from collections.abc import Iterable
 
 response_samples = {
     "W": ["ST_tW_top", "ST_tW_antitop", "TTToSemiLeptonic", "TTToHadronic",  "ZJetsUnmatched", "ZJetsMatched",
@@ -56,14 +54,14 @@ reverse_stacking = False
 plotter.draw_extra_text = False
 
 
-def plot_mass(selection: str,
-              mass_name: str,
-              hist_file_path: str,
-              output_dir: str = "test",
-              binning: Union[str, Iterable] = "CMS",
-              logY: bool = False,
-              signal_mc: list = [],
-              scaleQCD: bool = True):
+def plot_mass(selection,
+              mass_name,
+              hist_file_path,
+              output_dir="test",
+              binning="CMS",
+              logY=False,
+              signal_mc=[],
+              scaleQCD=True):
 
     f_hists = ROOT.TFile(hist_file_path, "READ")
     ROOT.TH1.AddDirectory(0)

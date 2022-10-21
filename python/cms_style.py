@@ -55,12 +55,12 @@ extra_right_margin = 0.0
 
 
 def draw_lumi(plotpad,
-              year: str = '2017',
-              lumi: float = 41.8,
-              do_extra_text: bool = True,
-              out_of_frame: bool = True,
-              do_cms_text: bool = False,
-              private_work: bool = False,
+              year='2017',
+              lumi=41.8,
+              do_extra_text=True,
+              out_of_frame=True,
+              do_cms_text=False,
+              private_work=False,
               parent_pad=None):
     global additional_text_size
     global additional_text_ypos
@@ -255,7 +255,7 @@ def setup_add_hist(addHist):
     addHist.GetXaxis().SetNdivisions(506)
 
 
-def setup_pads(c, logY: bool = False):
+def setup_pads(c, logY=False):
     global yplot, yratio, yadd
     if (additional_pad):
         yplot = 0.6

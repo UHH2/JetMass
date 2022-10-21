@@ -6,10 +6,10 @@ import UHH2.JetMass.plotter as plotter
 
 def plot_template_variations(c_name,
                              c_grid,
-                             file_name: str = '../macros/Histograms.root',
-                             selection: str = 'top',
-                             output_dir: str = 'template_variations',
-                             variation: int = 1
+                             file_name='../macros/Histograms.root',
+                             selection='top',
+                             output_dir='template_variations',
+                             variation=1
                              ):
     f_hists = ROOT.TFile(file_name, 'READ')
     if (not os.path.exists(output_dir)):
@@ -182,9 +182,9 @@ def build_asymmerrors(hists):
 
 def plot_variation_envelope(c_name,
                             c_grid,
-                            file_name: str = '../macros/Histograms.root',
-                            selection: str = 'top',
-                            output_dir: str = 'template_variations_envelope'):
+                            file_name='../macros/Histograms.root',
+                            selection='top',
+                            output_dir='template_variations_envelope'):
     f_hists = ROOT.TFile(file_name, 'READ')
     if (not os.path.exists(output_dir)):
         os.makedirs(output_dir)
