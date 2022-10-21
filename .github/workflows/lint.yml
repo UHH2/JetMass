@@ -1,11 +1,10 @@
 name: flake8
 
 on:
-  pull_request:
-    branches:
-    - master
   workflow_dispatch:
-
+  pull_request:
+  push:
+  
 jobs:
   linter:
     name: flake8 linter
