@@ -5,6 +5,7 @@ from coffea import processor
 from coffea.nanoevents import BaseSchema
 from coffea.analysis_tools import PackedSelection
 import coffea.lookup_tools
+import correctionlib
 import hist
 from coffea.util import save
 import os
@@ -124,20 +125,7 @@ class JMSTemplates(processor.ProcessorABC):
             for jec_applied_on in ["none", "pt", "pt&mJ"]
         }
 
-        self.mjet_reco_correction = coffea.lookup_tools.dense_lookup.dense_lookup(
-            np.array(
-                [
-                    0.93103448,
-                    0.91011236,
-                    0.93103448,
-                    0.95294118,
-                    0.95294118,
-                    0.97590361,
-                    0.95294118,
-                ]
-            ),
-            np.array([500.0, 550.0, 650.0, 725.0, 800.0, 1000.0, 1200.0, np.inf]),
-        )
+        self.mjet_reco_correction = correctionlib.CorrectionSet.from_file("jms_corrections_quadratic_47e3e54d1c.json")
 
         # get some corrections and pack them into dense_lookups
         corrections_extractor = coffea.lookup_tools.extractor()
@@ -490,10 +478,14 @@ class JMSTemplates(processor.ProcessorABC):
                 smask_unfolding = selections.require(
                     **self._regions[selection][region], unfolding=True, jetpfid=True
                 )
+                msd_correction = self.mjet_reco_correction[('response_'
+                                                            'g_'
+                                                            "jec" if "mJ" in jec_applied_on else "nojec"
+                                                            )](pt_[smask_unfolding]) if selection == "vjets" else 1.0,
+
                 out[f"{selection}_mjet_unfolding_{region}"].fill(
                     ptreco=pt_[smask_unfolding],
-                    mJreco=mJ_[smask_unfolding]
-                    * self.mjet_reco_correction(pt_[smask_unfolding]),
+                    mJreco=mJ_[smask_unfolding] * msd_correction,
                     ptgen=ptgen_[smask_unfolding],
                     mJgen=mJgen_[smask_unfolding],
                     dataset=dataset,
