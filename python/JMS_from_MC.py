@@ -9,9 +9,16 @@ from math import ceil
 from scipy.optimize import curve_fit
 from scipy.stats import moyal
 import logging
-from typing import Union, Callable
+from typing import Union, Callable, List
+from typing_extensions import Literal
 import mplhep as hep
 import matplotlib as mpl
+from scipy.stats import chisquare
+from scipy.stats import kstest
+import correctionlib.convert
+import correctionlib.schemav2 as cs
+from hashlib import sha512
+import argparse
 
 hep.style.use("CMS")
 mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
@@ -59,6 +66,78 @@ def landau_gauss(x, p0, p1, x0, sigma):
     return p0 + p1 * np.exp(-((x - x0) ** 2) / (2 * sigma**2)) * moyal.pdf(
         x, x0, sigma
     )
+
+
+def GOF(obs, fit, ndof):
+    chi2, pval = chisquare(obs, fit, ndof)
+    kstest_result = kstest(obs, fit)
+    print(f"chi2/ndof = {chi2}/{ndof} = {chi2/ndof}")
+    print(f"p-val from chi2: {pval}")
+    print(kstest_result)
+    return kstest_result.pvalue, pval
+
+
+class JMSFitter(object):
+    def __init__(self, x, xerr, ax, poly_dim=2):
+        self.x = x
+        self.xerr = xerr
+        self.ax = ax
+        self.jms_artists = []
+        self.fit_artists = []
+        self.fit_results = []
+        self.jms_names = []
+        self.poly_dim = poly_dim
+
+    def fit_jms(self, obs):
+
+        jms_corr, fit_diag = correctionlib.convert.ndpolyfit(
+            points=[self.x],
+            values=obs,
+            weights=np.ones_like(self.x),
+            varnames=["pt"],
+            degree=(self.poly_dim,),
+        )
+        return (jms_corr, fit_diag)
+
+    def add_jms(self, name, obs, label):
+        self.jms_names.append(name)
+
+        ndof = len(obs) - (self.poly_dim + 1)
+        self.fit_results.append(self.fit_jms(obs))
+
+        def corr_eval(pt):
+            return self.fit_results[-1][0].to_evaluator().evaluate(pt)
+
+        ks_result = GOF(obs, corr_eval(self.x), ndof)
+        pt = np.linspace(500, 1200, 300)
+
+        self.jms_artists.append(
+            self.ax.errorbar(
+                self.x,
+                obs,
+                xerr=self.xerr,
+                linestyle="",
+                marker="*",
+                label=(
+                    label
+                    + " | KS p-val: "
+                    + str(round(ks_result[0], 2))
+                    + r"| $\chi^2$ p-val: "
+                    + str(round(ks_result[1], 2))
+                ),
+            )
+        )
+
+        color = self.jms_artists[-1][0].get_color()
+
+        self.fit_artists.append(self.ax.plot(pt, corr_eval(pt), color=color))
+
+    def export(self):
+        corrections = []
+        for ifit in range(len(self.fit_results)):
+            self.fit_results[ifit][0].name = self.jms_names[ifit]
+            corrections.append(self.fit_results[ifit][0])
+        return corrections
 
 
 def find_bin(arr, x):
@@ -147,6 +226,14 @@ class JMSExtractor(object):
     def __init__(self, tree_file):
         self.tree = tree_file
         self.fs = 18
+        self.groomings = ["g", "u"]
+        self.plot_dir = "."
+        self.tex_alias = {
+            "jec": "(JEC)",
+            "nojec": "(no JEC)",
+            "g": "groomed",
+            "u": "ungroomed",
+        }
 
     @property
     def tree(self):
@@ -197,6 +284,16 @@ class JMSExtractor(object):
             self.pt_binning[:-1][i],
             self.pt_binning[1:][i],
         )
+
+    @property
+    def plot_dir(self):
+        return self._plot_dir
+
+    @plot_dir.setter
+    def plot_dir(self, path):
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        self._plot_dir = path
 
     def construct_hists(self, groomed=True, JEC=True):
         m_min = 30
@@ -250,15 +347,11 @@ class JMSExtractor(object):
             for jec in ["jec", "nojec"]
         }
 
-    def save_control_plots(self, out_directory="."):
-        if not os.path.isdir(out_directory):
-            os.makedirs(out_directory)
-
+    def save_control_plots(self):
         groomed_jec_combinations = {
-            "g_jec": "groomed (JEC)",
-            "g_nojec": "groomed (no JEC)",
-            "u_jec": "ungroomed (JEC)",
-            "u_nojec": "ungroomed (no JEC)",
+            f"{grooming}_{jec}": f"{self.tex_alias[grooming]} {self.tex_alias[jec]}"
+            for grooming in self.groomings
+            for jec in ["jec", "nojec"]
         }
 
         # plot msd responses
@@ -271,7 +364,7 @@ class JMSExtractor(object):
         cms_label(ax)
         ax.set_xlabel(r"$m_{SD,\mathrm{reco}}/m_{SD,\mathrm{gen}}$")
         ax.set_ylabel(r"$\Delta N / N$")
-        f.savefig(f"{out_directory}/msd_responses.pdf", bbox_inches="tight")
+        f.savefig(f"{self.plot_dir}/msd_responses.pdf", bbox_inches="tight")
 
         # plot msd distributions
         f, ax = fax()
@@ -288,11 +381,10 @@ class JMSExtractor(object):
         cms_label(ax)
         ax.set_xlabel(r"$m_{SD}$ [GeV]")
         ax.set_ylabel(r"Events/$\Delta m_{SD}$")
-        f.savefig(f"{out_directory}/msd_distributions.pdf", bbox_inches="tight")
+        f.savefig(f"{self.plot_dir}/msd_distributions.pdf", bbox_inches="tight")
 
     def extract_jms(self):
 
-        groomings = ["u", "g"]
         jecs = ["jec", "nojec"]
         fit_variables = ["mean_reco", "mean_gen", "response"]
         xlabels = {
@@ -304,7 +396,7 @@ class JMSExtractor(object):
 
         self.jms_from_mc = {}
         iterations = 2
-        for grooming in groomings:
+        for grooming in self.groomings:
             for jec in jecs:
                 h_ = self.hists[f"{grooming}_{jec}"]
                 n_pt_bins = h_[0].axes["pt_reco"].size
@@ -359,44 +451,44 @@ class JMSExtractor(object):
                         )
 
                     f.savefig(
-                        f"{grooming}_{jec}_{fit_variable}_control_plots.pdf",
+                        f"{self.plot_dir}/{grooming}_{jec}_{fit_variable}_control_plots.pdf",
                         bbox_inches="tight",
                     )
                 self.jms_from_mc[f"response_{grooming}_{jec}"] = np.array(
                     fit_results["response"]
                 )
                 self.jms_from_mc[f"means_{grooming}_{jec}"] = np.array(
-                    fit_results["response"]
-                ) / np.array(fit_results["response"])
+                    fit_results["mean_reco"]
+                ) / np.array(fit_results["mean_gen"])
         return
 
     def plot_extracted_jms(self):
-        for grooming in ["g", "u"]:
-            f, ax = fax(15, 9)
+        for grooming in self.groomings:
+            f, ax = fax(12, 9)
 
             ax.errorbar(
-                self.pt_centers,
+                self.pt_centers(),
                 self.jms_from_mc[f"means_{grooming}_jec"],
-                xerr=self.pt_widths,
+                xerr=self.pt_widths(),
                 label="dividing means jec",
             )
             ax.errorbar(
-                self.pt_centers,
+                self.pt_centers(),
                 self.jms_from_mc[f"means_{grooming}_nojec"],
-                xerr=self.pt_widths,
+                xerr=self.pt_widths(),
                 label="dividing means nojec",
             )
 
             ax.errorbar(
-                self.pt_centers,
+                self.pt_centers(),
                 self.jms_from_mc[f"response_{grooming}_jec"],
-                xerr=self.pt_widths,
+                xerr=self.pt_widths(),
                 label="fitting response jec",
             )
             ax.errorbar(
-                self.pt_centers,
+                self.pt_centers(),
                 self.jms_from_mc[f"response_{grooming}_nojec"],
-                xerr=self.pt_widths,
+                xerr=self.pt_widths(),
                 label="fitting response nojec",
             )
 
@@ -407,21 +499,71 @@ class JMSExtractor(object):
             ax.set_xlabel(r"$p_{T,\mathrm{reco}}$ [GeV]")
             ax.plot(ax.get_xlim(), [1.0, 1.0], "k--", alpha=0.6)
             cms_label(ax)
-            f.savefig(f"{grooming_text}_extracted_jms.pdf", bbox_inches="tight")
+            f.savefig(
+                f"{self.plot_dir}/{grooming}_extracted_jms.pdf", bbox_inches="tight"
+            )
+
+    def create_corrections(
+            self,
+            methods: List[Literal["means", "response"]] = ["means", "response"],
+            jecs: List[Literal["jec", "nojec"]] = ["jec", "nojec"],
+            poly_dim: int = 2
+    ):
+        corrections = []
+        for grooming in self.groomings:
+            grooming_text = "groomed" if grooming == "g" else "ungroomed"
+            f, ax = fax(12, 9)
+            jms_fits = JMSFitter(self.pt_centers(), self.pt_widths(), ax, poly_dim=poly_dim)
+            for method in methods:
+                for jec in jecs:
+                    jms_name = f"{method}_{grooming}_{jec}"
+                    jms_fits.add_jms(
+                        jms_name,
+                        self.jms_from_mc[jms_name],
+                        (method + " " + grooming_text + " " + self.tex_alias[jec]),
+                    )
+            ax.legend()
+            cms_label(ax)
+            ax.set_ylim(0.8, 1.4)
+            ax.set_xlabel(r"$p_{T,\mathrm{reco}}$ [GeV]")
+            ax.set_ylabel(f"JMS of {grooming_text} jet mass")
+            f.savefig(f"{self.plot_dir}/{grooming}_fitted_jms.pdf", bbox_inches="tight")
+            corrections += jms_fits.export()
+        return corrections
 
 
 if __name__ == "__main__":
 
-    print("loading WJets Tree")
-    wjets_jms_extractor = JMSExtractor("WJetsToQQ_tinyTree.parquet")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ndpoly", type=int, default=2, help="degree of polynomial used for fitting the JMS")
+    parser.add_argument("--output-suffix", type=str, default="quadratic",
+                        help="descriptive suffix used both for jms-correctionset json and control-plot directory.")
 
+    args = parser.parse_args()
+
+    wjets_jms_extractor = JMSExtractor("WJetsToQQ_tinyTree.parquet")
+    wjets_jms_extractor.plot_dir = f"jms_from_mc_plots_{args.output_suffix}"
     wjets_jms_extractor.pt_binning = np.array([500, 550, 650, 725, 800, 1000, 1200])
     print("set pt binning to", wjets_jms_extractor.pt_binning)
     print("constructing and filling hists")
     wjets_jms_extractor.create_hist_dict()
     print("making control plots")
-    # wjets_jms_extractor.save_control_plots('test')
+    wjets_jms_extractor.save_control_plots()
     wjets_jms_extractor.extract_jms()
     wjets_jms_extractor.plot_extracted_jms()
-    q = __import__("functools").partial(__import__("os")._exit, 0)  # FIXME
-    __import__("IPython").embed()  # FIXME
+    corrections = wjets_jms_extractor.create_corrections(poly_dim=args.ndpoly)
+    correction_set = cs.CorrectionSet(
+        schema_version=2,
+        description=(
+            "pT-reco dependent reco-msd corrections derived on groomed (g),"
+            "ungroomed (u) mass as well as with (jec) and without (nojec)"
+            "applying the JEC on the jet mass."
+        ),
+        corrections=corrections,
+    )
+
+    corrections_set_json = correction_set.json(exclude_unset=True)
+    sha512sum = sha512(corrections_set_json.encode("utf-8")).hexdigest()
+    fname = f"jms_corrections_{args.output_suffix}_{sha512sum[-10:]}.json"
+    with open(fname, "w") as fout:
+        fout.write(corrections_set_json)
