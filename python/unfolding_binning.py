@@ -314,9 +314,20 @@ class BinOptimizer(object):
 if __name__ == "__main__":
     import awkward as ak
     import numpy as np
+    import argparse
 
-    sel_events_tree_fname = "WJetsToQQ_tinyTree.parquet"
-    events_sel = ak.from_parquet(sel_events_tree_fname)
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--input", "-i", type='str', default="WJetsToQQ_tinyTree.parquet")
+    parser.add_argument("--optimze",
+                        nargs="+",
+                        choices=["pt", "mjet", "mjetSimpleCorr", "mjetCorr", "all", "menu"],
+                        default="menu"
+                        )
+    parser.add_argument("--threshold","-t",)
+    args = parser.parse_args()
+
+    events_sel = ak.from_parquet(args.input)
 
     events_sel["pt_raw"] = events_sel.Jets.pt[:, 0]
     events_sel["pt"] = events_sel.pt_raw * events_sel.jecfactor[:, 0]
@@ -364,84 +375,96 @@ if __name__ == "__main__":
     # mjet binning
     initial_mjet_binning = np.arange(30, 300, 0.5)
 
-    unfolding_plotter_mjet = Unfolding1DPlotter("mjet")
-    save_plot(
-        unfolding_plotter_mjet.plot_migration_metric(initial_mjet_binning, events_sel, w=9, h=9),
-        "mjet_metrics.pdf",
-    )
-    save_plot(
-        unfolding_plotter_mjet.plot_migration_matrix(initial_mjet_binning, initial_mjet_binning, events_sel, w=9, h=9),
-        "mjet_migration_matrix.pdf",
-    )
-    save_plot(
-        unfolding_plotter_mjet.plot_distributions(initial_mjet_binning, initial_mjet_binning, events_sel, w=9, h=9),
-        "mjet_distributions.pdf",
-    )
+    # unfolding_plotter_mjet = Unfolding1DPlotter("mjet")
+    # save_plot(
+    #     unfolding_plotter_mjet.plot_migration_metric(initial_mjet_binning, events_sel, w=9, h=9),
+    #     "mjet_metrics.pdf",
+    # )
+    # save_plot(
+    #     unfolding_plotter_mjet.plot_migration_matrix(initial_mjet_binning, initial_mjet_binning, events_sel, w=9, h=9),
+    #     "mjet_migration_matrix.pdf",
+    # )
+    # save_plot(
+    #     unfolding_plotter_mjet.plot_distributions(initial_mjet_binning, initial_mjet_binning, events_sel, w=9, h=9),
+    #     "mjet_distributions.pdf",
+    # )
 
-    unfolding_plotter_mjet.plot_migration_metric_nbins_comparison(30, 300, events_sel, [100, 50, 25])[0].savefig(
-        "mjet_metrics_nbins_comparison.pdf"
-    )
+    # unfolding_plotter_mjet.plot_migration_metric_nbins_comparison(30, 300, events_sel, [100, 50, 25])[0].savefig(
+    #     "mjet_metrics_nbins_comparison.pdf"
+    # )
 
     mjet_bin_optimizer = BinOptimizer(events_sel, initial_mjet_binning, threshold, variable="mjet", plot_dir=plot_dir)
 
-    optimized_mjet_binning = mjet_bin_optimizer.optimize_binning(bin_merger="bidirectional", split_value=85.0)
-    save_plot(
-        unfolding_plotter_mjet.plot_migration_metric(optimized_mjet_binning, events_sel, w=9, h=9),
-        "mjet_metrics_optimized.pdf",
-    )
-    save_plot(
-        unfolding_plotter_mjet.plot_migration_matrix(
-            reco_binning(optimized_mjet_binning),
-            optimized_mjet_binning,
-            events_sel,
-            w=9,
-            h=9,
-        ),
-        "mjet_migration_matrix_optimized.pdf",
-    )
-    print(pt_reco_binning)
-    for ipt in range(len(pt_reco_binning[:3]) - 1):
-        pt_low_str, pt_high_str = map(lambda b: str(b).replace(".0", ""), pt_reco_binning[ipt:ipt+2])
-        pt_low, pt_high = pt_reco_binning[ipt:ipt+2]
+    # optimized_mjet_binning = mjet_bin_optimizer.optimize_binning(bin_merger="bidirectional", split_value=85.0)
+    # save_plot(
+    #     unfolding_plotter_mjet.plot_migration_metric(optimized_mjet_binning, events_sel, w=9, h=9),
+    #     "mjet_metrics_optimized.pdf",
+    # )
+    # save_plot(
+    #     unfolding_plotter_mjet.plot_migration_matrix(
+    #         reco_binning(optimized_mjet_binning),
+    #         optimized_mjet_binning,
+    #         events_sel,
+    #         w=9,
+    #         h=9,
+    #     ),
+    #     "mjet_migration_matrix_optimized.pdf",
+    # )
+    # print(pt_reco_binning)
+    # for ipt in range(len(pt_reco_binning[:3]) - 1):
+    #     pt_low_str, pt_high_str = map(lambda b: str(b).replace(".0", ""), pt_reco_binning[ipt:ipt+2])
+    #     pt_low, pt_high = pt_reco_binning[ipt:ipt+2]
 
-        events_pt_bin = events_sel[(events_sel.pt >= pt_low) & (events_sel.pt < pt_high)]
-        pt_bin_optimized_bins, pt_bin_optimization_plot = mjet_bin_optimizer.optimize_binning(
-            events_pt_bin, bin_merger="bidirectional", split_value=85.0, plots=True
-        )
-        pt_bin_optimization_plot[1][1].set_title(
-            r"$%s \leq p_T^\mathrm{reco} < %s~$GeV" % (pt_low_str, pt_high_str), fontsize=24
-        )
-        save_plot(pt_bin_optimization_plot, f"mjet_binning_optization_ptbin_{pt_low_str}_{pt_high_str}.pdf")
+    #     events_pt_bin = events_sel[(events_sel.pt >= pt_low) & (events_sel.pt < pt_high)]
+    #     pt_bin_optimized_bins, pt_bin_optimization_plot = mjet_bin_optimizer.optimize_binning(
+    #         events_pt_bin, bin_merger="bidirectional", split_value=85.0, plots=True
+    #     )
+    #     pt_bin_optimization_plot[1][1].set_title(
+    #         r"$%s \leq p_T^\mathrm{reco} < %s~$GeV" % (pt_low_str, pt_high_str), fontsize=24
+    #     )
+    #     save_plot(pt_bin_optimization_plot, f"mjet_binning_optization_ptbin_{pt_low_str}_{pt_high_str}.pdf")
 
-    mjet_bin_optimizer.optimization_pt_scan(
-        pt_reco_binning[3:5],
-        "mjet_binning",
-        events_sel,
-        # bin_merger="bidirectional",
-        # split_value=85.0
-    )
+    # mjet_bin_optimizer.optimization_pt_scan(
+    #     pt_reco_binning[3:5],
+    #     "mjet_binning",
+    #     events_sel,
+    #     # bin_merger="bidirectional",
+    #     # split_value=85.0
+    # )
 
-    simple_pt_dependent_msd_corr = np.array(
-        [0.89010989, 0.91011236, 0.93103448, 0.95294118, 0.95294118, 0.97590361, 0.95294118]
-    )
+    # simple_pt_dependent_msd_corr = np.array(
+    #     [0.89010989, 0.91011236, 0.93103448, 0.95294118, 0.95294118, 0.97590361, 0.95294118]
+    # )
 
-    mjet_bin_optimizer.optimization_pt_scan(
-        pt_reco_binning[2:4],
-        "mjet_binning_simple_msdcorr",
-        events_sel,
-        # bin_merger="bidirectional",
-        # split_value=85.0
-        mjet_reco_correction=simple_pt_dependent_msd_corr[2:4],
-    )
+    # mjet_bin_optimizer.optimization_pt_scan(
+    #     pt_reco_binning[2:4],
+    #     "mjet_binning_simple_msdcorr",
+    #     events_sel,
+    #     # bin_merger="bidirectional",
+    #     # split_value=85.0
+    #     mjet_reco_correction=simple_pt_dependent_msd_corr[2:4],
+    # )
 
     polynomial_msd_correction_set = correctionlib.CorrectionSet.from_file("jms_corrections_quadratic_47e3e54d1c.json")
 
     def polynomial_msd_corr(pt):
-        return polynomial_msd_correction_set["response_g_jec"].evaluate(pt)
+        return 1./polynomial_msd_correction_set["response_g_jec"].evaluate(pt)
 
     mjet_bin_optimizer.optimization_pt_scan(
         pt_reco_binning[2:4],
-        "mjet_binning_polynomial_msdcorr",
+        "mjet_binning_polynomial_response_msdcorr",
+        events_sel,
+        # bin_merger="bidirectional",
+        # split_value=85.0
+        mjet_reco_correction=polynomial_msd_corr,
+    )
+
+    def polynomial_msd_corr(pt):
+        return 1./polynomial_msd_correction_set["means_g_jec"].evaluate(pt)
+
+    mjet_bin_optimizer.optimization_pt_scan(
+        pt_reco_binning[2:4],
+        "mjet_binning_polynomial_means_msdcorr",
         events_sel,
         # bin_merger="bidirectional",
         # split_value=85.0
