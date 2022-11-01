@@ -214,7 +214,8 @@ def setup_edges(x: np.ndarray, y: np.ndarray, nth_subtick: int = 1):
     return edges
 
 
-def plot_migration_matrix(h2d: hist.Hist, zlog: bool = False):
+def plot_migration_matrix(h2d_hist: hist.Hist, zlog: bool = False, output_name: str = "migration_matrix.pdf"):
+    h2d = h2d_hist.to_numpy()
     gen_pt_edges = h2d[1]
     gen_pt_edges[-1] = 2 * gen_pt_edges[-2] - gen_pt_edges[-3]
     gen_msd_edges = h2d[2]
@@ -296,7 +297,46 @@ def plot_migration_matrix(h2d: hist.Hist, zlog: bool = False):
     ax.text(0.05 * x_shape, 0.9 * y_shape, r"$W$(qq)+jets")
     fig.tight_layout()
     plt.savefig(
-        "migration_matrix_final_binning.pdf",
+        output_name,
         bbox_inches="tight",
         pad_inches=0.01,
     )
+
+
+if __name__ == "__main__":
+
+    events_sel = ak.from_parquet("WJetsToQQ_tinyTree.parquet")
+
+    events_sel["pt_raw"] = events_sel.Jets.pt[:, 0]
+    events_sel["pt"] = events_sel.pt_raw * events_sel.jecfactor[:, 0]
+    events_sel["ptgen"] = events_sel.pt_gen_ak8
+    events_sel["mjet_raw"] = events_sel.mjet
+    events_sel["mjet"] = events_sel.mjet_raw * events_sel.jecfactor[:, 0]
+    events_sel["mjetgen"] = events_sel.msd_gen_ak8
+    events_sel["rho"] = 2 * np.log(events_sel.mjet / events_sel.pt)
+    events_sel["rhogen"] = 2 * np.log(events_sel.mjetgen / events_sel.ptgen)
+
+    h_2d = hist.Hist(
+        hist.axis.Variable(np.array([0, 650, 800, 1200, np.inf]), name="ptgen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"),
+        hist.axis.Variable(
+            np.array([0, 48.0, 67.0, 81.0, 92.5, 134.5, np.inf]), name="mJgen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"
+        ),
+        hist.axis.Variable(
+            np.array([500, 575, 650, 725, 800, 1000, 1200, np.inf]), name="ptreco", label=r"$p_{T,\mathrm{reco}}$ [GeV]"
+        ),
+        hist.axis.Regular(54, 30.0, 300.0, name="mJreco", label=r"$m_{SD,\mathrm{reco}}$ [GeV]"),
+        storage=hist.storage.Weight(),
+    )
+
+    h_2d.fill(
+        **{
+            'ptgen': events_sel.ptgen,
+            'ptreco': events_sel.pt,
+            'mJgen': events_sel.mjetgen,
+            'mJreco': events_sel.mjet,
+            'weight': events_sel.weight
+        }
+    )
+
+    
+    
