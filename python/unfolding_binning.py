@@ -456,7 +456,8 @@ if __name__ == "__main__":
             "mjet_distributions.pdf",
         )
 
-        unfolding_plotter_mjet.plot_migration_metric_nbins_comparison(30, 300, events_sel, [100, 50, 25])[0].savefig(
+        save_plot(
+            unfolding_plotter_mjet.plot_migration_metric_nbins_comparison(30, 300, events_sel, [100, 50, 25]),
             "mjet_metrics_nbins_comparison.pdf"
         )
 

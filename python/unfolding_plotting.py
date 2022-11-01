@@ -338,5 +338,4 @@ if __name__ == "__main__":
         }
     )
 
-    
-    
+    plot_migration_matrix(h_2d, zlog=True, output_name="unfolding_binning_plots/migration_matrix_final_binning.pdf")
