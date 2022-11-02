@@ -221,6 +221,7 @@ class BinOptimizer(object):
         events: ak.Array = None,
         mjet_reco_correction: Union[float, Callable] = 1.0,
         flow=False,
+        grid: bool = True,
     ):
         if events is None:
             events = self.events
@@ -242,11 +243,15 @@ class BinOptimizer(object):
         )
 
         # setup figure, grid and first subplots
-        f = plt.figure(figsize=(18, 18))
-        grid = f.add_gridspec(3, 2, hspace=0.3, height_ratios=[1, 1, 0.05])
-        bottom_grid = f.add_gridspec(3, 2, hspace=0.4, height_ratios=[1, 1, 0.05])
-        ax01 = f.add_subplot(grid[0])
-        ax02 = f.add_subplot(grid[1])
+        if grid:
+            f = plt.figure(figsize=(18, 18))
+            grid = f.add_gridspec(3, 2, hspace=0.3, height_ratios=[1, 1, 0.05])
+            bottom_grid = f.add_gridspec(3, 2, hspace=0.4, height_ratios=[1, 1, 0.05])
+            ax01 = f.add_subplot(grid[0])
+            ax02 = f.add_subplot(grid[1])
+        else:
+            (f1, ax1), (f2, ax2), (f01, ax01), (f02, ax02) = tuple(unfolding_plotting.fax() for i in range(4))
+            f = [f1, f2, f01, f02]
 
         # plot stability and purity
         hep.histplot(
@@ -289,14 +294,14 @@ class BinOptimizer(object):
         )
         if isinstance(mjet_reco_correction, float) and mjet_reco_correction != 1.0:
             ax02.text(
-                2 / 3 * ax02.get_xlim()[1],
+                1 / 3 * ax02.get_xlim()[1],
                 ax02.get_ylim()[1] / 2,
                 r"$m_{SD}$ corr. = %.2f" % mjet_reco_correction,
                 fontsize=18,
             )
         if isinstance(mjet_reco_correction, Callable):
             ax02.text(
-                2 / 3 * ax02.get_xlim()[1],
+                1 / 3 * ax02.get_xlim()[1],
                 ax02.get_ylim()[1] / 2,
                 r"polynominal $m_{SD}$ corr $f(p_T)$",
                 fontsize=18,
