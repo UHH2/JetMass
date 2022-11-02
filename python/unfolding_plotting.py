@@ -214,7 +214,12 @@ def setup_edges(x: np.ndarray, y: np.ndarray, nth_subtick: int = 1):
     return edges
 
 
-def plot_migration_matrix(h2d_hist: hist.Hist, zlog: bool = False, output_name: str = "migration_matrix.pdf"):
+def plot_migration_matrix(
+        h2d_hist: hist.Hist,
+        zlog: bool = False,
+        output_name: str = "migration_matrix.pdf",
+        extratext: str = "",
+):
     h2d = h2d_hist.to_numpy()
     gen_pt_edges = h2d[1]
     gen_pt_edges[-1] = 2 * gen_pt_edges[-2] - gen_pt_edges[-3]
@@ -254,18 +259,65 @@ def plot_migration_matrix(h2d_hist: hist.Hist, zlog: bool = False, output_name: 
     ax.invert_yaxis()
     ax_pt_detector.invert_yaxis()
 
+    n_reco_bins = len(reco_msd_edges) - 1
+    n_gen_bins = len(gen_msd_edges) - 1
+    draw_diagonal = n_reco_bins == n_gen_bins
+
+    def diagonal_line(ax, starting_bin, ending_bin):
+        ax.plot(
+            [
+                starting_bin[0] * n_gen_bins,
+                (ending_bin[0] + 1) * n_gen_bins,
+            ],
+            [
+                starting_bin[1] * n_reco_bins,
+                (ending_bin[1] + 1) * n_reco_bins,
+            ],
+            "k--",
+            alpha=0.6,
+        )
+
     for i in range(1, len(reco_pt_edges) - 1):
         min_ = 0
         max_ = len(edges_generator)
         span = len(reco_msd_edges) - 1
         span_arr = [span * i, span * i]
         ax.plot([min_, max_], span_arr, "k--", alpha=0.6)
-    for i in range(1, len(gen_pt_edges) - 1):
-        min_ = 0
-        max_ = len(edges_detector)
-        span = len(gen_msd_edges) - 1
-        span_arr = [span * i, span * i]
-        ax.plot(span_arr, [min_, max_], "k--", alpha=0.6)
+        if draw_diagonal:
+            i_0 = 0
+            j_0 = i
+            max_diff_i = len(gen_pt_edges) - 2 - i_0
+            max_diff_j = len(reco_pt_edges) - 2 - j_0
+            if max_diff_i < max_diff_j:
+                i_f = len(gen_pt_edges) - 2
+                j_f = j_0 - i_0 + i_f
+            else:
+                j_f = len(reco_pt_edges) - 2
+                i_f = i_0 - j_0 + j_f
+            diagonal_line(ax, (i_0, j_0), (i_f, j_f))
+
+    for i in range(0, len(gen_pt_edges) - 1):
+        # horizontal lines
+        if i > 0:
+            min_ = 0
+            max_ = len(edges_detector)
+            span = len(gen_msd_edges) - 1
+            span_arr = [span * i, span * i]
+            ax.plot(span_arr, [min_, max_], "k--", alpha=0.6)
+
+        if draw_diagonal:
+            # diagonal lines lower half
+            i_0 = i
+            j_0 = 0
+            max_diff_i = len(gen_pt_edges) - 2 - i_0
+            max_diff_j = len(reco_pt_edges) - 2 - j_0
+            if max_diff_i < max_diff_j:
+                i_f = len(gen_pt_edges) - 2
+                j_f = j_0 - i_0 + i_f
+            else:
+                j_f = len(reco_pt_edges) - 2
+                i_f = i_0 - j_0 + j_f
+            diagonal_line(ax, (i_0, j_0), (i_f, j_f))
 
     generator_labels[-1] = r"$\infty$"
     ax.set_xticks(msd_tick_position_generator)
@@ -295,6 +347,7 @@ def plot_migration_matrix(h2d_hist: hist.Hist, zlog: bool = False, output_name: 
 
     hep.cms.text("Simulation, Work in progress", ax=ax, fontsize=23, pad=0.03)
     ax.text(0.05 * x_shape, 0.9 * y_shape, r"$W$(qq)+jets")
+    ax.text(0.05 * x_shape, 0.85 * y_shape, extratext)
     fig.tight_layout()
     plt.savefig(
         output_name,
@@ -304,7 +357,7 @@ def plot_migration_matrix(h2d_hist: hist.Hist, zlog: bool = False, output_name: 
 
 
 if __name__ == "__main__":
-
+    import correctionlib
     events_sel = ak.from_parquet("WJetsToQQ_tinyTree.parquet")
 
     events_sel["pt_raw"] = events_sel.Jets.pt[:, 0]
@@ -316,26 +369,94 @@ if __name__ == "__main__":
     events_sel["rho"] = 2 * np.log(events_sel.mjet / events_sel.pt)
     events_sel["rhogen"] = 2 * np.log(events_sel.mjetgen / events_sel.ptgen)
 
+    polynomial_msd_correction_set = correctionlib.CorrectionSet.from_file(
+        "jms_corrections_quadratic_47e3e54d1c.json"
+    )
+
+    pt_reco_ax = hist.axis.Variable(
+        np.array([500, 575, 650, 725, 800, 1000, 1200, np.inf]), name="ptreco", label=r"$p_{T,\mathrm{reco}}$ [GeV]"
+    )
+
+    # with correction on msd reco
+    for correction in [True, False]:
+
+        def msd_corr(pt):
+            if correction:
+                return 1.0 / polynomial_msd_correction_set["response_g_jec"].evaluate(pt)
+            else:
+                return 1.0
+
+        correction_str = "_msdcorrected" if correction else ""
+        h_2d_fine = hist.Hist(
+            hist.axis.Variable(
+                np.array([0, 650, 800, 1200, np.inf]), name="ptgen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"
+            ),
+            hist.axis.Regular(54, 30.0, 300.0, name="mJgen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"),
+            pt_reco_ax,
+            hist.axis.Regular(54, 30.0, 300.0, name="mJreco", label=r"$m_{SD,\mathrm{reco}}$ [GeV]"),
+            storage=hist.storage.Weight(),
+        )
+
+        h_2d_fine.fill(
+            **{
+                "ptgen": events_sel.ptgen,
+                "ptreco": events_sel.pt,
+                "mJgen": events_sel.mjetgen,
+                "mJreco": events_sel.mjet * msd_corr(events_sel.pt),
+                "weight": events_sel.weight,
+            }
+        )
+
+        plot_migration_matrix(
+            h_2d_fine,
+            zlog=True,
+            extratext="msd corrected" if correction else "",
+            output_name=f"unfolding_binning_plots/migration_matrix_fine_binning{correction_str}.pdf",
+        )
+
+    def msd_corr(pt):
+        return 1.0 / polynomial_msd_correction_set["response_g_jec"].evaluate(pt)
+
+    # final choice of binning
+    mjetgen_binning = np.array([0.0, 44.5, 68.0, 80.5, 92.0, 132.5, 300])
+    # mjetgen_binning = np.array([0, 48.0, 67.0, 81.0, 92.5, 134.5, np.inf])
+
     h_2d = hist.Hist(
         hist.axis.Variable(np.array([0, 650, 800, 1200, np.inf]), name="ptgen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"),
-        hist.axis.Variable(
-            np.array([0, 48.0, 67.0, 81.0, 92.5, 134.5, np.inf]), name="mJgen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"
-        ),
-        hist.axis.Variable(
-            np.array([500, 575, 650, 725, 800, 1000, 1200, np.inf]), name="ptreco", label=r"$p_{T,\mathrm{reco}}$ [GeV]"
-        ),
+        hist.axis.Variable(mjetgen_binning, name="mJgen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"),
+        pt_reco_ax,
         hist.axis.Regular(54, 30.0, 300.0, name="mJreco", label=r"$m_{SD,\mathrm{reco}}$ [GeV]"),
         storage=hist.storage.Weight(),
     )
 
     h_2d.fill(
         **{
-            'ptgen': events_sel.ptgen,
-            'ptreco': events_sel.pt,
-            'mJgen': events_sel.mjetgen,
-            'mJreco': events_sel.mjet,
-            'weight': events_sel.weight
+            "ptgen": events_sel.ptgen,
+            "ptreco": events_sel.pt,
+            "mJgen": events_sel.mjetgen,
+            "mJreco": events_sel.mjet * msd_corr(events_sel.pt),
+            "weight": events_sel.weight,
         }
     )
 
     plot_migration_matrix(h_2d, zlog=True, output_name="unfolding_binning_plots/migration_matrix_final_binning.pdf")
+
+    unfolding_1d_plotter = Unfolding1DPlotter("mjet", msd_corr)
+    for pt_low, pt_high in pt_reco_ax:
+        pt_low_str, pt_high_str = map(lambda b: str(b).replace(".0", ""), [pt_low, pt_high])
+        f, ax = unfolding_1d_plotter.plot_migration_metric(
+            mjetgen_binning,
+            events_sel[(events_sel.pt >= pt_low) & (events_sel.pt < pt_high)],
+            threshold=0.5,
+        )
+        ax.text(
+            1 / 3 * ax.get_xlim()[1],
+            2 / 3 * ax.get_ylim()[1],
+            r"$%s \leq p_T^\mathrm{reco} < %s$" % (pt_low_str, pt_high_str),
+            fontsize=18,
+        )
+        ax.set_ylim(0.0, 1.0)
+        f.savefig(
+            "unfolding_binning_plots/" + "migration_metric_final_binning_pt" + f"{pt_low_str}To{pt_high_str}.pdf",
+            bbox_inches="tight",
+        )
