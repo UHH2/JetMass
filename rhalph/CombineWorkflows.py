@@ -60,10 +60,6 @@ def get_parameters(args, query, workspace):
 rMIN = -1.5
 rMAX = 1.5
 
-# for py2 and py3 compatibility checks
-if sys.version_info[0] >= 3:
-    unicode = str
-
 
 class CombineWorkflows(object):
     def __init__(self):
@@ -203,7 +199,7 @@ class CombineWorkflows(object):
 
         configs = json.load(open(self.modeldir + "/config.json", "r"))
 
-        bin_signal_strenght_constructor = "[1,0.5,1.5]"
+        bin_signal_strenght_constructor = "[1,0.0,2.0]"
 
         regions_mapping = " ".join(
             [
