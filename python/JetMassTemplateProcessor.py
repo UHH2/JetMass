@@ -44,7 +44,7 @@ class JMSTemplates(processor.ProcessorABC):
                     label=r"$p_{T,\mathrm{gen}}$ [GeV]",
                 ),
                 "mJgen": hist.axis.Variable(
-                    np.array([0, 48.0, 67.0, 81.0, 92.5, 134.5, np.inf]),
+                    np.array([0.0, 44.5, 68.0, 80.5, 92.0, 132.5, np.inf]),
                     name="mJgen",
                     label=r"$m_{SD,\mathrm{gen}}$ [GeV]",
                 ),
@@ -478,11 +478,13 @@ class JMSTemplates(processor.ProcessorABC):
                 smask_unfolding = selections.require(
                     **self._regions[selection][region], unfolding=True, jetpfid=True
                 )
-                msd_correction = self.mjet_reco_correction[('response_'
-                                                            'g_'
-                                                            "jec" if "mJ" in jec_applied_on else "nojec"
-                                                            )](pt_[smask_unfolding]) if selection == "vjets" else 1.0,
-
+                msd_correction = (
+                    self.mjet_reco_correction[("response_" "g_" "jec" if "mJ" in jec_applied_on else "nojec")](
+                        pt_[smask_unfolding]
+                    )
+                    if selection == "vjets"
+                    else ak.ones_like(pt_[smask_unfolding]),
+                )
                 out[f"{selection}_mjet_unfolding_{region}"].fill(
                     ptreco=pt_[smask_unfolding],
                     mJreco=mJ_[smask_unfolding] * msd_correction,
