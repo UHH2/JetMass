@@ -358,6 +358,7 @@ def plot_migration_matrix(
 
 if __name__ == "__main__":
     import correctionlib
+    import os
     events_sel = ak.from_parquet("WJetsToQQ_tinyTree.parquet")
 
     events_sel["pt_raw"] = events_sel.Jets.pt[:, 0]
@@ -413,6 +414,14 @@ if __name__ == "__main__":
             extratext="msd corrected" if correction else "",
             output_name=f"unfolding_binning_plots/migration_matrix_fine_binning{correction_str}.pdf",
         )
+
+    cmd = (
+        "convert -delay 100 "
+        + "unfolding_binning_plots/migration_matrix_fine_binning.pdf "
+        + "unfolding_binning_plots/migration_matrix_fine_binning_msdcorrected.pdf "
+        + "unfolding_binning_plots/migration_matrix_fine_binning.gif"
+    )
+    os.system(cmd)
 
     def msd_corr(pt):
         return 1.0 / polynomial_msd_correction_set["response_g_jec"].evaluate(pt)
