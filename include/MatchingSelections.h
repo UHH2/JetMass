@@ -32,6 +32,9 @@ public:
   int FlavourQ1() const;
   int FlavourQ2() const;
 
+  double dR_Q1(const FlavorParticle &probe_jet);
+  double dR_Q2(const FlavorParticle &probe_jet);
+
   int n_merged_partons(const FlavorParticle &probe_jet, float radius = 0.8);
 
   const GenParticle * get_genV(){return &genV;};
