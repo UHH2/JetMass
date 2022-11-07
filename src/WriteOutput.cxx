@@ -64,6 +64,58 @@ WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selec
   h_MIDeepDoubleBHbbprob = ctx.declare_event_output<double>("MIDeepDoubleBHbbprob");
   h_MIDeepDoubleBQCDprob = ctx.declare_event_output<double>("MIDeepDoubleBQCDprob");
 
+  //ParticleNet Handles
+  
+  
+  //raw scores of ParticleNet tagger
+  h_btag_ParticleNetJetTags_probTbcq = ctx.declare_event_output<double>("ParticleNet_probTbcq");
+  h_btag_ParticleNetJetTags_probTbqq = ctx.declare_event_output<double>("ParticleNet_probTbqq");
+  h_btag_ParticleNetJetTags_probTbc = ctx.declare_event_output<double>("ParticleNet_probTbc");
+  h_btag_ParticleNetJetTags_probTbq = ctx.declare_event_output<double>("ParticleNet_probTbq");
+  h_btag_ParticleNetJetTags_probTbel = ctx.declare_event_output<double>("ParticleNet_probTbel");
+  h_btag_ParticleNetJetTags_probTbmu = ctx.declare_event_output<double>("ParticleNet_probTbmu");
+  h_btag_ParticleNetJetTags_probTbta = ctx.declare_event_output<double>("ParticleNet_probTbta");
+  h_btag_ParticleNetJetTags_probWcq = ctx.declare_event_output<double>("ParticleNet_probWcq");
+  h_btag_ParticleNetJetTags_probWqq = ctx.declare_event_output<double>("ParticleNet_probWqq");
+  h_btag_ParticleNetJetTags_probZbb = ctx.declare_event_output<double>("ParticleNet_probZbb");
+  h_btag_ParticleNetJetTags_probZcc = ctx.declare_event_output<double>("ParticleNet_probZcc");
+  h_btag_ParticleNetJetTags_probZqq = ctx.declare_event_output<double>("ParticleNet_probZqq");
+  h_btag_ParticleNetJetTags_probHbb = ctx.declare_event_output<double>("ParticleNet_probHbb");
+  h_btag_ParticleNetJetTags_probHcc = ctx.declare_event_output<double>("ParticleNet_probHcc");
+  h_btag_ParticleNetJetTags_probHqqqq = ctx.declare_event_output<double>("ParticleNet_probHqqqq");
+  h_btag_ParticleNetJetTags_probQCDbb = ctx.declare_event_output<double>("ParticleNet_probQCDbb");
+  h_btag_ParticleNetJetTags_probQCDcc = ctx.declare_event_output<double>("ParticleNet_probQCDcc");
+  h_btag_ParticleNetJetTags_probQCDb = ctx.declare_event_output<double>("ParticleNet_probQCDb");
+  h_btag_ParticleNetJetTags_probQCDc = ctx.declare_event_output<double>("ParticleNet_probQCDc");
+  h_btag_ParticleNetJetTags_probQCDothers = ctx.declare_event_output<double>("ParticleNet_probQCDothers");
+  h_btag_ParticleNetJetTags_probQCD = ctx.declare_event_output<double>("ParticleNet_probQCD");
+
+  //binary scores of ParticleNet, see https://github.com/cms-sw/cmssw/blob/master/RecoBTag/ONNXRuntime/python/pfParticleNetDiscriminatorsJetTags_cfi.py
+  h_btag_ParticleNetDiscriminatorsJetTags_TvsQCD = ctx.declare_event_output<double>("ParticleNetDiscriminators_TvsQCD");
+  h_btag_ParticleNetDiscriminatorsJetTags_WvsQCD = ctx.declare_event_output<double>("ParticleNetDiscriminators_WvsQCD");
+  h_btag_ParticleNetDiscriminatorsJetTags_ZvsQCD = ctx.declare_event_output<double>("ParticleNetDiscriminators_ZvsQCD");
+  h_btag_ParticleNetDiscriminatorsJetTags_ZbbvsQCD = ctx.declare_event_output<double>("ParticleNetDiscriminators_ZbbvsQCD");
+  h_btag_ParticleNetDiscriminatorsJetTags_HbbvsQCD = ctx.declare_event_output<double>("ParticleNetDiscriminators_HbbvsQCD");
+  h_btag_ParticleNetDiscriminatorsJetTags_HccvsQCD = ctx.declare_event_output<double>("ParticleNetDiscriminators_HccvsQCD");
+  h_btag_ParticleNetDiscriminatorsJetTags_H4qvsQCD = ctx.declare_event_output<double>("ParticleNetDiscriminators_H4qvsQCD");
+  h_btag_MassDecorrelatedParticleNetJetTags_probXbb = ctx.declare_event_output<double>("ParticleNetMD_probXbb");
+  h_btag_MassDecorrelatedParticleNetJetTags_probXcc = ctx.declare_event_output<double>("ParticleNetMD_probXcc");
+  h_btag_MassDecorrelatedParticleNetJetTags_probXqq = ctx.declare_event_output<double>("ParticleNetMD_probXqq");
+  h_btag_MassDecorrelatedParticleNetJetTags_probQCDbb = ctx.declare_event_output<double>("ParticleNetMD_probQCDbb");
+  h_btag_MassDecorrelatedParticleNetJetTags_probQCDcc = ctx.declare_event_output<double>("ParticleNetMD_probQCDcc");
+  h_btag_MassDecorrelatedParticleNetJetTags_probQCDb = ctx.declare_event_output<double>("ParticleNetMD_probQCDb");
+  h_btag_MassDecorrelatedParticleNetJetTags_probQCDc = ctx.declare_event_output<double>("ParticleNetMD_probQCDc");
+  h_btag_MassDecorrelatedParticleNetJetTags_probQCDothers = ctx.declare_event_output<double>("ParticleNetMD_probQCDothers");
+  h_btag_MassDecorrelatedParticleNetJetTags_probQCD = ctx.declare_event_output<double>("ParticleNetMD_probQCD");
+
+  //binary scores of mass decorrelated ParticleNet tagger, see https://github.com/cms-sw/cmssw/blob/master/RecoBTag/ONNXRuntime/python/pfMassDecorrelatedParticleNetDiscriminatorsJetTags_cfi.py
+  h_btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XbbvsQCD = ctx.declare_event_output<double>("ParticleNetMDDiscriminators_XbbvsQCD");
+  h_btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XccvsQCD = ctx.declare_event_output<double>("ParticleNetMDDiscriminators_XccvsQCD");
+  h_btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XqqvsQCD = ctx.declare_event_output<double>("ParticleNetMDDiscriminators_XqqvsQCD");
+
+  //mass from ParticleNet mass regression
+  h_ParticleNetMassRegressionJetTags_mass = ctx.declare_event_output<double>("ParticleNetMassRegression_mass");
+
   
   h_NextraMBtagDR0p8 = ctx.declare_event_output<int>("NextraMBtagDR0p8");
   h_NextraTBtagDR0p8 = ctx.declare_event_output<int>("NextraTBtagDR0p8");
@@ -439,6 +491,61 @@ bool WriteOutput::process(uhh2::Event & event){
   event.set(h_MIDeepDoubleBHbbprob, candidateJet.btag_MassIndependentDeepDoubleBvLJet_probHbb());
   event.set(h_MIDeepDoubleBQCDprob, candidateJet.btag_MassIndependentDeepDoubleBvLJet_probQCD());
 
+    //raw scores of ParticleNet tagger
+  event.set(h_btag_ParticleNetJetTags_probTbcq, candidateJet.btag_ParticleNetJetTags_probTbcq());
+  event.set(h_btag_ParticleNetJetTags_probTbqq, candidateJet.btag_ParticleNetJetTags_probTbqq());
+  event.set(h_btag_ParticleNetJetTags_probTbc, candidateJet.btag_ParticleNetJetTags_probTbc());
+  event.set(h_btag_ParticleNetJetTags_probTbq, candidateJet.btag_ParticleNetJetTags_probTbq());
+  event.set(h_btag_ParticleNetJetTags_probTbel, candidateJet.btag_ParticleNetJetTags_probTbel());
+  event.set(h_btag_ParticleNetJetTags_probTbmu, candidateJet.btag_ParticleNetJetTags_probTbmu());
+  event.set(h_btag_ParticleNetJetTags_probTbta, candidateJet.btag_ParticleNetJetTags_probTbta());
+  event.set(h_btag_ParticleNetJetTags_probWcq, candidateJet.btag_ParticleNetJetTags_probWcq());
+  event.set(h_btag_ParticleNetJetTags_probWqq, candidateJet.btag_ParticleNetJetTags_probWqq());
+  event.set(h_btag_ParticleNetJetTags_probZbb, candidateJet.btag_ParticleNetJetTags_probZbb());
+  event.set(h_btag_ParticleNetJetTags_probZcc, candidateJet.btag_ParticleNetJetTags_probZcc());
+  event.set(h_btag_ParticleNetJetTags_probZqq, candidateJet.btag_ParticleNetJetTags_probZqq());
+  event.set(h_btag_ParticleNetJetTags_probHbb, candidateJet.btag_ParticleNetJetTags_probHbb());
+  event.set(h_btag_ParticleNetJetTags_probHcc, candidateJet.btag_ParticleNetJetTags_probHcc());
+  event.set(h_btag_ParticleNetJetTags_probHqqqq, candidateJet.btag_ParticleNetJetTags_probHqqqq());
+  event.set(h_btag_ParticleNetJetTags_probQCDbb, candidateJet.btag_ParticleNetJetTags_probQCDbb());
+  event.set(h_btag_ParticleNetJetTags_probQCDcc, candidateJet.btag_ParticleNetJetTags_probQCDcc());
+  event.set(h_btag_ParticleNetJetTags_probQCDb, candidateJet.btag_ParticleNetJetTags_probQCDb());
+  event.set(h_btag_ParticleNetJetTags_probQCDc, candidateJet.btag_ParticleNetJetTags_probQCDc());
+  event.set(h_btag_ParticleNetJetTags_probQCDothers, candidateJet.btag_ParticleNetJetTags_probQCDothers());
+  event.set(h_btag_ParticleNetJetTags_probQCD, candidateJet.btag_ParticleNetJetTags_probQCD());
+  
+  //binary scores of ParticleNet, see https://github.com/cms-sw/cmssw/blob/master/RecoBTag/ONNXRuntime/python/pfParticleNetDiscriminatorsJetTags_cfi.py
+  event.set(h_btag_ParticleNetDiscriminatorsJetTags_TvsQCD, candidateJet.btag_ParticleNetDiscriminatorsJetTags_TvsQCD());
+  event.set(h_btag_ParticleNetDiscriminatorsJetTags_WvsQCD, candidateJet.btag_ParticleNetDiscriminatorsJetTags_WvsQCD());
+  event.set(h_btag_ParticleNetDiscriminatorsJetTags_ZvsQCD, candidateJet.btag_ParticleNetDiscriminatorsJetTags_ZvsQCD());
+  event.set(h_btag_ParticleNetDiscriminatorsJetTags_ZbbvsQCD, candidateJet.btag_ParticleNetDiscriminatorsJetTags_ZbbvsQCD());
+  event.set(h_btag_ParticleNetDiscriminatorsJetTags_HbbvsQCD, candidateJet.btag_ParticleNetDiscriminatorsJetTags_HbbvsQCD());
+  event.set(h_btag_ParticleNetDiscriminatorsJetTags_HccvsQCD, candidateJet.btag_ParticleNetDiscriminatorsJetTags_HccvsQCD());
+  event.set(h_btag_ParticleNetDiscriminatorsJetTags_H4qvsQCD, candidateJet.btag_ParticleNetDiscriminatorsJetTags_H4qvsQCD());
+  
+  //raw scores of mass decorrelated ParticleNet tagger
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probXbb, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probXbb());
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probXcc, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probXcc());
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probXqq, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probXqq());
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCDbb, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCDbb());
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCDcc, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCDcc());
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCDb, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCDb());
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCDc, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCDc());
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCDothers, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCDothers());
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCD, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCD());
+
+  //binary scores of mass decorrelated ParticleNet tagger, see https://github.com/cms-sw/cmssw/blob/master/RecoBTag/ONNXRuntime/python/pfMassDecorrelatedParticleNetDiscriminatorsJetTags_cfi.py
+  event.set(h_btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XbbvsQCD, candidateJet.btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XbbvsQCD());
+  event.set(h_btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XccvsQCD, candidateJet.btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XccvsQCD());
+  event.set(h_btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XqqvsQCD, candidateJet.btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XqqvsQCD());
+
+  //mass from ParticleNet mass regression
+  event.set(h_ParticleNetMassRegressionJetTags_mass, candidateJet.ParticleNetMassRegressionJetTags_mass());
+
+  
+
+
+  
   event.set(h_NextraMBtagDR0p8, countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_MEDIUM),0.8));
   event.set(h_NextraTBtagDR0p8, countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_TIGHT),0.8));
   event.set(h_NextraMBtagDR1p0, countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_MEDIUM),1.0));
