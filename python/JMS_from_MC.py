@@ -20,6 +20,18 @@ import correctionlib.schemav2 as cs
 from hashlib import sha512
 import argparse
 
+mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
+    color=[
+        "#e66101",
+        "#fdb863",
+        "#5e3c99",
+        "#b2abd2",
+        "#a6cee3",
+        "#1f78b4",
+        "#b2df8a",
+        "#33a02c",
+    ]
+)
 hep.style.use("CMS")
 logger = logging.getLogger(__name__)
 
@@ -75,18 +87,6 @@ class JMSFitter(object):
         self.fit_results = []
         self.jms_names = []
         self.poly_dim = poly_dim
-        mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
-            color=[
-                "#e66101",
-                "#fdb863",
-                "#5e3c99",
-                "#b2abd2",
-                "#a6cee3",
-                "#1f78b4",
-                "#b2df8a",
-                "#33a02c",
-            ]
-        )
 
     def fit_jms(self, obs):
 
