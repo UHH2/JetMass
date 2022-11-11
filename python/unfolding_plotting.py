@@ -376,7 +376,7 @@ if __name__ == "__main__":
     events_sel["rhogen"] = 2 * np.log(events_sel.mjetgen / events_sel.ptgen)
 
     polynomial_msd_correction_set = correctionlib.CorrectionSet.from_file(
-        "jms_corrections_quadratic_47e3e54d1c.json"
+        "jms_corrections_quadratic_c5faf7f77e.json"
     )
 
     pt_reco_ax = hist.axis.Variable(
@@ -432,8 +432,12 @@ if __name__ == "__main__":
         return 1.0 / polynomial_msd_correction_set["response_g_jec"].evaluate(pt)
 
     # final choice of binning
-    mjetgen_binning = np.array([0.0, 44.5, 68.0, 80.5, 92.0, 132.5, 300])
+    # old binning
     # mjetgen_binning = np.array([0, 48.0, 67.0, 81.0, 92.5, 134.5, np.inf])
+    # old bininng from optimization on fail region
+    # optimization on pass region in 575 < pT < 650 (response_g_jec JMS factor)
+    # mjetgen_binning = np.array([0.0, 44.5, 68.0, 80.5, 92.0, 132.5, 300])
+    mjetgen_binning = np.array([0., 70., 80.5, 89.5, 300.0])
 
     h_2d = hist.Hist(
         hist.axis.Variable(np.array([0, 650, 800, 1200, np.inf]), name="ptgen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"),

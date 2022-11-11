@@ -413,8 +413,8 @@ if __name__ == "__main__":
     def save_plot(fax, outname):
         fax[0].savefig((plot_dir + "/" + outname), bbox_inches="tight")
 
-    pt_gen_binning = np.array([0, 550, 650, 800, 1200])  # , np.inf])
-    pt_reco_binning = np.array([500, 550, 650, 725, 800, 1000, 1200, np.inf])
+    pt_gen_binning = np.array([0, 575, 650, 800, 1200])  # , np.inf])
+    pt_reco_binning = np.array([500, 575, 650, 725, 800, 1000, 1200, np.inf])
 
     # pt binning
     if "pt" in args.optimize:
@@ -526,7 +526,7 @@ if __name__ == "__main__":
         logger.info(logging_styles["red_bold_underline"]("optimize mjet binning (\"advanced\" correction (response))"))
 
         polynomial_msd_correction_set = correctionlib.CorrectionSet.from_file(
-            "jms_corrections_quadratic_47e3e54d1c.json"
+            "jms_corrections_quadratic_c5faf7f77e.json"
         )
 
         # optimization with dedicated JMS from MC (response)
