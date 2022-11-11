@@ -2,11 +2,12 @@
 from __future__ import print_function
 import sys
 import os
-import rhalphalib as rl
 import numpy as np
 import ROOT
 from ROOT import gSystem
+
 sys.path.append(os.getcwd()+'/rhalphalib/')
+import rhalphalib as rl
 rl.util.install_roofit_helpers()
 
 
