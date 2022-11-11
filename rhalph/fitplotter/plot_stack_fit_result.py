@@ -4,6 +4,64 @@ sys.path.append('/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6
 import plotter,cms_style
 cms_style.cms_style()
 
+genbin_colors_hex=[
+    #diverging color-scheme
+    # "#a50026",
+    # "#d73027",
+    # "#f46d43",
+    # "#fdae61",
+    # "#fee090",
+    
+    
+    # "#e0f3f8",
+    # "#abd9e9",
+    # "#74add1",
+    # "#4575b4",
+    # "#313695",
+
+    # "#40004b",
+    # "#762a83",
+    # "#9970ab",
+    # "#c2a5cf",
+    # "#e7d4e8",
+
+    # "#d9f0d3",
+    # "#a6dba0",
+    # "#5aae61",
+    # "#1b7837",
+    # "#00441b",
+
+
+    #sequential colo-scheme
+    '#fee6ce',
+    '#fdd0a2',
+    '#fdae6b',
+    '#fd8d3c',
+    '#f16913',
+    '#d94801',
+    '#a63603',
+    '#7f2704',
+
+    '#efedf5',
+    '#dadaeb',
+    '#bcbddc',
+    '#9e9ac8',
+    '#807dba',
+    '#6a51a3',
+    '#54278f',
+    '#3f007d',
+
+    '#e5f5e0',
+    '#c7e9c0',
+    '#a1d99b',
+    '#74c476',
+    '#41ab5d',
+    '#238b45',
+    '#006d2c',
+    '#00441b',
+]
+genbin_TColors = [ROOT.TColor.GetColor(c) for c in genbin_colors_hex]
+
 def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_root="fit_shapes.root",plot_total_sig_bkg=True,do_postfit=True,use_config_samples=False): 
     print('opening file',config['ModelName']+"/"+fit_shapes_root)
     fit_shapes_root = "fit_shapes.root" if do_postfit else "fitDiagnostics.root"
@@ -68,7 +126,8 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_roo
                     h.SetLineColor(plotter.colors.get(sample_name))
                     h.SetFillColorAlpha(plotter.colors.get(sample_name),.8)
                     if(genbins is not None):
-                        h.SetFillColorAlpha(plotter.colors.get(sample_name) + sample_counts[sample_name],.8)
+                        # h.SetFillColorAlpha(plotter.colors.get(sample_name) + sample_counts[sample_name],.8)
+                        h.SetFillColorAlpha(genbin_TColors[sample_counts[sample_name]],.8)
                         # h.SetLineColor(plotter.colors.get(sample_name) + sample_counts[sample_name])
                         legend_suffix = ' (ptgen%i_msdgen%i)'%genbins
                     # h.SetLineColorAlpha(plotter.colors.get(sample),.8)
