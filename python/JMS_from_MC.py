@@ -298,7 +298,7 @@ class JMSExtractor(object):
 
     def construct_hists(self, groomed=True, JEC=True):
         m_min = 30
-        m_max = 200
+        m_max = 300
         n_bins = 2 * (m_max - m_min)
 
         h = hist.Hist(
