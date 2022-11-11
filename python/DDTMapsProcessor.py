@@ -1,4 +1,4 @@
-#!/nfs/dust/cms/user/albrechs/miniconda3/envs/coffea/bin/python
+#!/usr/bin/env coffea_python.sh
 import awkward as ak
 from coffea.nanoevents import BaseSchema
 from coffea import processor, hist
@@ -59,8 +59,10 @@ class DDTMapPrep(processor.ProcessorABC):
 
         selection = PackedSelection()
         selection.add("cleaner", (events.pt > 170) & (abs(events.eta) < 2.4))
+        selection.add("jetpfid", events.jetpfid == 1)
+        selection.add("trigger", events['trigger_bits'][:, 7] == 1)
 
-        events = events[selection.require(cleaner=True)]
+        events = events[selection.require(cleaner=True, jetpfid=True, trigger=True)]
 
         jecfactor = events.jecfactor
 
@@ -107,7 +109,7 @@ if __name__ == "__main__":
     workflow.parser.add_argument(
         "--output", "-o", type=str, default="qcd_pt_v_rho_v_n2.coffea"
     )
-    workflow.parser.add_argument("--years", nargs="+", default=["2017", "UL17"])
+    workflow.parser.add_argument("--years", nargs="+", default=["UL17"])
 
     args = workflow.parse_args()
 
