@@ -361,6 +361,7 @@ def plot_migration_matrix_old(
         pad_inches=0.01,
     )
 
+
 def finite_edges(axis):
     edges = axis.edges
     if edges[-1] == np.inf:
@@ -377,9 +378,10 @@ def unrolled_edge_positions(edges, n_bins_super):
     )
     return unrolled_positions
 
+
 def plot_migration_matrix(
-    migmat: hist.Hist, 
-    outname: str, 
+    migmat: hist.Hist,
+    outname: str,
     r_gen=1.0,
     extratext: str = "",
 ):
@@ -536,7 +538,7 @@ if __name__ == "__main__":
 
         plot_migration_matrix(
             h_2d_fine,
-            #zlog=True,
+            # zlog=True,
             extratext="msd corrected" if correction else "",
             outname=f"{workdir}/unfolding_binning_plots/migration_matrix_fine_binning{correction_str}.pdf",
         )
@@ -579,8 +581,8 @@ if __name__ == "__main__":
     )
 
     plot_migration_matrix(
-        h_2d, 
-        #zlog=True, 
+        h_2d,
+        # zlog=True,
         outname=f"{workdir}/unfolding_binning_plots/migration_matrix_final_binning.pdf"
     )
 
@@ -600,6 +602,8 @@ if __name__ == "__main__":
         )
         ax.set_ylim(0.0, 1.0)
         f.savefig(
-            f"{workdir}/unfolding_binning_plots/" + "migration_metric_final_binning_pt" + f"{pt_low_str}To{pt_high_str}.pdf",
+            f"{workdir}/unfolding_binning_plots/"
+            + "migration_metric_final_binning_pt"
+            + f"{pt_low_str}To{pt_high_str}.pdf",
             bbox_inches="tight",
         )
