@@ -19,11 +19,17 @@ int get_V_index(std::vector<GenParticle> particles);
 template<typename GenericTopJet>
 class JetSelector: public uhh2::AnalysisModule{
 public:
-  explicit JetSelector(uhh2::Context & ctx, const std::string & jet_handlename):jet_handle(ctx.get_handle<const GenericTopJet*>(jet_handlename)){};
+  explicit JetSelector(uhh2::Context & ctx, const std::string & jet_handlename, const std::string & matching_selection_handlename=""):
+    jet_handle(ctx.get_handle<const GenericTopJet*>(jet_handlename)),
+    matching_selection_handle(ctx.get_handle<MatchingSelection>(matching_selection_handlename)){
+    v_matching = (ctx.get("dataset_version").find("WJets") != std::string::npos ) && (ctx.get("selection").find("vjets") != std::string::npos);
+  };
   virtual bool process(uhh2::Event & event) override;
   
 private:
   uhh2::Event::Handle<const GenericTopJet*> jet_handle;
+  uhh2::Event::Handle<MatchingSelection> matching_selection_handle;
+  bool v_matching;
 };
 
 

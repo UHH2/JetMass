@@ -288,7 +288,7 @@ JetMassModule::JetMassModule(Context & ctx){
   
   topPtReweighting.reset(new TopPtReweight(ctx, 0.0615, -0.0005,"","",true));
 
-  recojet_selector.reset(new JetSelector<TopJet>(ctx,recotopjet_handlename));
+  recojet_selector.reset(new JetSelector<TopJet>(ctx,recotopjet_handlename, matching_selection_handlename));
   genjet_selector.reset(new JetSelector<GenTopJet>(ctx,gentopjet_handlename));
 
   // AK8 JEC/JER
