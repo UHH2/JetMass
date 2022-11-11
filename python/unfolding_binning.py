@@ -318,8 +318,13 @@ class BinOptimizer(object):
         cax1 = f.add_subplot(bottom_grid[4])
         cax2 = f.add_subplot(bottom_grid[5])
         migmat_mjet_arr, bins_x, bins_y = migmat_initial.to_numpy()
-        migmat_mjet_genax_normed = (migmat_mjet_arr.T / np.sum(migmat_mjet_arr.T, axis=1)[:, None]).T
-        migmat_mjet_recoax_normed = migmat_mjet_arr / np.sum(migmat_mjet_arr, axis=1)[:, None]
+
+        migmat_mjet_genax_normed = unfolding_plotting.safe_div(
+            migmat_mjet_arr.T, np.sum(migmat_mjet_arr.T, axis=1)[:, None]
+        ).T
+        migmat_mjet_recoax_normed = unfolding_plotting.safe_div(
+            migmat_mjet_arr, np.sum(migmat_mjet_arr, axis=1)[:, None]
+        )
 
         sns.heatmap(migmat_mjet_genax_normed.T, ax=ax1, norm=LogNorm(), cbar=False)
         f.colorbar(ax1.get_children()[0], cax=cax1, orientation="horizontal")

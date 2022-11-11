@@ -30,6 +30,11 @@ def fax(w=9, h=9):
     return plt.subplots(figsize=(w, h))
 
 
+def safe_div(a, b):
+    return np.divide(a, b, out=np.zeros_like(a), where=b != 0)
+    # return np.divide(a, b, where=b != 0)
+
+
 def migration_metric(h: hist.Hist, axis_name: str = "pt_reco", flow: bool = False):
     axes = [a.name for a in h.axes]
     if axis_name not in axes:
@@ -44,7 +49,7 @@ def migration_metric(h: hist.Hist, axis_name: str = "pt_reco", flow: bool = Fals
     main_dim_max_bin = len(metric_bin_edges) - 1 - (2 if flow else 0)  # -1 for last edge and -2 for uflow oflow
     second_dim_max_bin = len(other_dim_edges) - 1 - (2 if flow else 0)
 
-    renormed_mat = mat / np.sum(mat, axis=1)[:, None]
+    renormed_mat = safe_div(mat, np.sum(mat, axis=1)[:, None])
 
     for bin_ind in range(main_dim_max_bin):
         bin_ind_x = bin_ind
