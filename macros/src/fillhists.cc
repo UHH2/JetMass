@@ -14,8 +14,8 @@ TFile* outputFile;
 vector<TString> handlenames;
 TH2F* ddtmap;
 TH1F *h_kfactor, *h_ewcorr;
-std::string NLOWeightsDir = "../../UHHNtupleConverter/NLOweights";
-bool apply_jec = false;
+std::string NLOWeightsDir = "..//NLOweights";
+bool apply_jec = true;
 bool apply_jer = false;
 
 // TString output_directory="../Histograms/";
@@ -51,15 +51,17 @@ int main(int argc, char* argv[]){
     n_jobs = atoi(argv[3]);
   }
 
-  TString scaleStudy = "oneScale";  
+  TString scaleStudy = "AllPFFlavours";  
   // TString scaleStudy = "PF_flavours";  
   read_grid("../Histograms/grid_"+scaleStudy+".root");
   // read_grid("../Histograms/grid.root");
-
+  TString year = "2017";
+  
   // read in ddtmap here
-  TString ddtMapFile = "../Histograms/ddtmaps/QCD_2017_PFMass_smooth_gaus4p00sigma.root";
-  TString ddtMapName = "N2_v_pT_v_rho_0p05_smooth_gaus4p00sigma_maps_cleaner_PFMass";
+  // TString ddtMapFile = "../Histograms/ddtmaps/QCD_2017_PFMass_smooth_gaus4p00sigma.root";
   // TString ddtMapName = "N2_v_pT_v_rho_0p1_smooth_gaus4p00sigma_maps_cleaner_PFMass";
+  TString ddtMapFile = "../Histograms/ddtmaps.root";
+  TString ddtMapName = "n2ddt_map_"+year+"_smooth_4_0p05";
 
   TFile * mapFile = new TFile(ddtMapFile);
   ddtmap = (TH2F*)mapFile->Get(ddtMapName);
@@ -76,9 +78,9 @@ int main(int argc, char* argv[]){
   //this macro will attempt to create a TChain using the following histdirs+processes as patterns to any matching root-file. (no need to hadd root files resulting from sframe-batch)
   // TString histdir_W = "../Histograms/VJets/scaleStudy/"+scaleStudy+"/workdir_Vqq_scaleStudy/";
   // TString histdir_top = "../Histograms/TTBar/scaleStudy/"+scaleStudy+"/workdir_Top_scaleStudy/";
-  TString histdir_W = "../Histograms/VJets/workdir_Vqq_jets_PreSel_0p005Variation/";
+  TString histdir_W = "../Output/vjetsTrees/workdir_vjets_"+year+"/";
   // TString histdir_W = "../Histograms/VJets/noExtraBTagCounter/workdir_Vqq_jets_PreSel_0p005Variation/";
-  TString histdir_top = "../Histograms/TTBar/workdir_Top_PreSel_0p005Variation/";
+  TString histdir_top = "../Output/ttbarTrees/workdir_ttbar_"+year+"/";
 
   vector<TString> processes_W = {"Data", "WJetsMatched", "WJetsUnmatched", "ZJetsMatched", "ZJetsUnmatched", "TTToHadronic", "TTToSemiLeptonic", "ST_tW_top", "ST_tW_antitop", "QCD"};
   // vector<TString> processes_top = {"Data", "WJets", "DYJets", "TTbar_mergedTop", "TTbar_mergedW", "TTbar_mergedQB", "TTbar_semiMergedTop", "TTbar_notMerged", "ST_tch_top", "ST_tch_antitop","ST_tch","ST_tWch_top", "ST_tWch_antitop","ST_tWch", "ST_sch", "QCD"};
@@ -341,9 +343,10 @@ void fill_hists_WZ(TString dir, TString process, int job_index = 1 , int n_jobs 
 
   TString process_file_name = TString(process);
   TString process_file_pattern = dir;
-  
-  process_file_name.ReplaceAll("Matched","").ReplaceAll("Unmatched","").ReplaceAll("Data","DATA");
 
+  process_file_name.ReplaceAll("Matched","").ReplaceAll("Unmatched","");//.ReplaceAll("Data","DATA");
+  // if(process_file_pattern.Contains("2017"))process_file_name.ReplaceAll("Data","DATA");
+  
   if( skimmed_Trees.count( process_file_name ) > 0 ){
     process_file_pattern += skimmed_Trees[process_file_name];
   }else{
@@ -578,8 +581,9 @@ void fill_hists_WZ(TString dir, TString process, int job_index = 1 , int n_jobs 
     double correction = 1.0;    
     if(apply_jec){
       correction *= jecfactor;
-    }else{//if we don't want jec applied we have to undo this for the jet pt here:
-      pt /= jecfactor;
+      pt *= jecfactor;
+    // }else{//if we don't want jec applied we have to undo this for the jet pt here:
+      // pt /= jecfactor;
     }
     if((process.Contains("W") || process.Contains("Z")) && !process.Contains("tW")){
       double kfactor = derive_kfactor(genjet_V_pt);
@@ -735,7 +739,7 @@ void read_grid(TString gfilename){
 
 float getN2ddt(double n2, double pt, double mass){
   bool pass = false;
-
+  if(n2<0)return n2;
 // deriving bin for pt and rho
   int pt_bin = ddtmap->GetYaxis()->FindFixBin(pt);
   if(pt_bin > ddtmap->GetYaxis()->GetNbins()){
