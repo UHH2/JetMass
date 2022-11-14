@@ -25,6 +25,7 @@ test_sample_list = {
 sample_lists = {
     "vjets": {
         "Data": [
+            "JetHT_RunA",
             "JetHT_RunB",
             "JetHT_RunC",
             "JetHT_RunD",
