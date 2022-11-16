@@ -1,4 +1,4 @@
-#!/nfs/dust/cms/user/albrechs/miniconda3/envs/coffea/bin/python
+#!/usr/bin/env pythonJMS.sh
 
 from coffea.util import load, save
 

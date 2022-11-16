@@ -1,4 +1,4 @@
-#!/usr/bin/env coffea_python.sh
+#!/usr/bin/env pythonJMS.sh
 import uproot
 import coffea.lookup_tools
 from coffea.nanoevents.methods import vector

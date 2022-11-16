@@ -1,4 +1,4 @@
-#!/nfs/dust/cms/user/albrechs/miniconda3/envs/coffea/bin/python
+#!/usr/bin/env pythonJMS.sh
 import awkward as ak
 import numpy as np
 from coffea import processor

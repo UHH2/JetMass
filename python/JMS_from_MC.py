@@ -1,4 +1,4 @@
-#!/nfs/dust/cms/user/albrechs/python/coffea/bin/python3
+#!/usr/bin/env pythonJMS.sh
 import awkward as ak
 import numpy as np
 import matplotlib.pyplot as plt

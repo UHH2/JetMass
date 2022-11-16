@@ -1,3 +1,4 @@
+#!/usr/bin/env pythonJMS.sh
 import hist
 import numpy as np
 import seaborn as sns

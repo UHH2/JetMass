@@ -1,4 +1,4 @@
-#!/usr/bin/env coffea_python.sh
+#!/usr/bin/env pythonJMS.sh
 from simple_term_menu import TerminalMenu
 
 
@@ -87,6 +87,7 @@ class DataCardParser(object):
             print(print_string)
         return print_string
 
+
 if __name__ == "__main__":
     import argparse
 
@@ -104,7 +105,7 @@ if __name__ == "__main__":
     main_menu_cursor_style = ("fg_green", "bold")
     main_menu_style = ("bg_red", "fg_green")
     main_menu_exit = False
-    
+
     inspector_menu = TerminalMenu(
         inspector_options,
         # multi_select=True,
@@ -115,7 +116,7 @@ if __name__ == "__main__":
         menu_highlight_style=main_menu_style,
         cycle_cursor=True,
     )
-    
+
     channel_options = datacard.datacard["process_lines"][0] + ["back"]
     channel_menu = TerminalMenu(
         channel_options,
@@ -142,4 +143,3 @@ if __name__ == "__main__":
 
         if menu_choice == "exit":
             exit_ = True
-                

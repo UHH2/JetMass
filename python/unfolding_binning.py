@@ -1,3 +1,4 @@
+#!/usr/bin/env pythonJMS.sh
 import awkward as ak
 import numpy as np
 import hist

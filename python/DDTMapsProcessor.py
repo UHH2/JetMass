@@ -1,4 +1,4 @@
-#!/usr/bin/env coffea_python.sh
+#!/usr/bin/env pythonJMS.sh
 import awkward as ak
 from coffea.nanoevents import BaseSchema
 from coffea import processor, hist
