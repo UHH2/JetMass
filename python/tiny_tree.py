@@ -90,6 +90,7 @@ def load_tree(
 def apply_selection(
         events: ak.Array,
         selection: str = "vjets",
+        year: str = "UL17"
 ):
 
     if selection == "vjets":
@@ -99,7 +100,6 @@ def apply_selection(
         )
 
         n2ddtmap = np.load(ddtmaps_path, allow_pickle=True).item()
-        year = 'UL17'
         corrected_str = '_corrected_pt_mass'
 
         n2ddt_LOT = coffea.lookup_tools.dense_lookup.dense_lookup(
@@ -154,10 +154,15 @@ def dump_tiny_tree(output_name: str, events: ak.Array):
 
 
 if __name__ == "__main__":
+    import sys
+    if len(sys.argv) != 2:
+        print("Usage: ./tiny_tree.py <year> (UL17,UL18,UL16preVFP,UL16postVFP)")
+        exit(-1)
+    year = sys.argv[1]
 
     preselection_tree = load_tree(
-        dirname="/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/workdir_vjets_UL17/",
+        dirname=f"/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/workdir_vjets_{year}/",
         fname_pattern="*WJetsToQQ*.root",
     )
-    selection_tree = apply_selection(preselection_tree, "vjets")
-    dump_tiny_tree("WJetsToQQ_tinyTree.parquet", selection_tree)
+    selection_tree = apply_selection(preselection_tree, "vjets", year=year)
+    dump_tiny_tree(f"WJetsToQQ_tinyTree_{year}.parquet", selection_tree)
