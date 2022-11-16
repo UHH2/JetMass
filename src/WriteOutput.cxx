@@ -159,7 +159,7 @@ WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selec
   h_pdgId_Q2 = ctx.declare_event_output<int>("pdgIdQ2");
   h_V_pt = ctx.declare_event_output<double>("V_pt");
 
-  h_trigger_bits = ctx.declare_event_output<std::vector<bool>>("trigger_bits");
+  h_trigger_bits = ctx.declare_event_output<std::vector<int>>("trigger_bits");
   trigger_names = {
     "HLT_PFJet320_v*","HLT_PFJet400_v*","HLT_PFJet450_v*","HLT_PFJet500_v*","HLT_PFJet550_v*",
     "HLT_AK8PFJet320_v*","HLT_AK8PFJet400_v*","HLT_AK8PFJet450_v*","HLT_AK8PFJet500_v*","HLT_AK8PFJet550_v*",
@@ -314,10 +314,15 @@ bool WriteOutput::process(uhh2::Event & event){
   vector<TopJet>* topjets = event.topjets;
   if(topjets->size() < 1) return false;
 
-  std::vector<bool> trigger_results = {};
+  std::vector<int> trigger_results = {};
   for(auto trigger_name: trigger_names){
     auto trigger_index = event.get_trigger_index(trigger_name);
-    trigger_results.push_back( event.passes_trigger( trigger_index ) );
+    // check if trigger actually exists for this run (write -1 if not)
+    if ( event.lookup_trigger_index( trigger_index ) ) {
+      trigger_results.push_back( event.passes_trigger( trigger_index ) );
+    }else{
+      trigger_results.push_back(-1);
+    }
   }
   event.set(h_trigger_bits,trigger_results);
 
