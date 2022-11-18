@@ -18,7 +18,7 @@ configs = {
     "pt_edges": [500.0, 575.0, 650.0, 725.0, 800.0, 1000.0, 1200.0],
     "unfolding_bins": {  # including overflow and underflow bin! those will be treated as background
         "ptgen": [0, 650, 800, 1200, "Inf"],
-        "msdgen": [0.0, 44.5, 68.0, 80.5, 92.0, 132.5, "Inf"],
+        "msdgen": [0.0, 70., 80.5, 89.5, "Inf"],
     },
     "channels": OrderedDict(
         [
