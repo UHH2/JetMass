@@ -468,8 +468,6 @@ def jet_mass_producer(args, configs):
                     config["signal"].append(sample_genbin_name)
 
     # setting up nuisances for systematic uncertainties
-    if args.verbose > 0:
-        print("CMS_lumi", "lnN")
     lumi = rl.NuisanceParameter("CMS_lumi", "lnN")
     lumi_effect = 1.027
     pt_bins_for_jmr_nuisances = list(configs["channels"].keys())
@@ -494,9 +492,7 @@ def jet_mass_producer(args, configs):
                     if name in v[0].name:
                         nuisance_par = v
                 if norm_unc > 0 and name in sample and sample not in norm_nuisances:
-                    print(sample)
                     norm_nuisances.update({sample: nuisance_par})
-    print(norm_nuisances)
 
     # tagging eff sf for ttbar semileptonic samples
 
@@ -519,31 +515,6 @@ def jet_mass_producer(args, configs):
             print("getting template of variable:", variable)
             print("samples:", samples)
             print("regions:", regions)
-
-        # # Signal sample division in genbins
-        # if args.unfolding:
-        #     from copy import deepcopy
-
-        #     signal_samples = deepcopy(config["signal"])
-        #     for signal_sample in signal_samples:
-        #         samples.remove(signal_sample)
-        #         config["signal"].remove(signal_sample)
-        #         unfolding_bins = configs["unfolding_bins"]
-        #         genbins = (
-        #             ["onegenbin"]
-        #             if args.one_bin
-        #             else [
-        #                 "ptgen%i_msdgen%i" % (iptgen, imsdgen)
-        #                 for iptgen in range(len(unfolding_bins["ptgen"]) - 1)
-        #                 for imsdgen in range(len(unfolding_bins["msdgen"]) - 1)
-        #             ]
-        #         )
-        #         configs["genbins"] = genbins
-        #         for genbin in genbins:
-        #             sample_genbin_name = "{SAMPLE}_{GENBIN}".format(SAMPLE=signal_sample, GENBIN=genbin)
-        #             samples.append(sample_genbin_name)
-        #             config["signal"].append(sample_genbin_name)
-        #             # samples.append()
 
         for region in regions:
             additional_bin = config.get("additional_bin", "")
@@ -576,49 +547,52 @@ def jet_mass_producer(args, configs):
                 # setup actual rhalphalib sample
                 sample = rl.TemplateSample(ch.name + "_" + sample_name, sample_type, sample_hist)
 
-                # setting effects of constituent variation nuisances (up/down)
-                for grid_nuisance_dict, x, y, category in grid_nuisances:
-                    for grid_nuisance_name in grid_nuisance_dict.keys():
+                # if we want to use massScales in fit, we add the actual ParamEffect to NuisanceParamters,
+                # this will get them rendered into the workspace.
+                do_mass_scale_nuisances = (not args.noMassScales) and (not args.noNuisances) and (not args.unfolding)
 
-                        if args.unfolding:
-                            continue
+                if do_mass_scale_nuisances:
+                    # setting effects of constituent variation nuisances (up/down)
+                    for grid_nuisance_dict, x, y, category in grid_nuisances:
+                        for grid_nuisance_name in grid_nuisance_dict.keys():
 
-                        # this should strictly not be necessary
-                        if sample.sampletype != rl.Sample.SIGNAL and args.VaryOnlySignal:
-                            continue
+                            if args.unfolding:
+                                continue
 
-                        # at this point this just decides to skip massScale based on pT bin since
-                        # mass_scale_substring hold just info about pT bin
-                        mass_scale_substring = (
-                            "PT" + channel_name.split("Pt")[-1] if args.pTdependetMassScale else "inclusive"
-                        )
-                        if mass_scale_substring not in grid_nuisance_name:
-                            continue
+                            # this should strictly not be necessary
+                            if sample.sampletype != rl.Sample.SIGNAL and args.VaryOnlySignal:
+                                continue
 
-                        # getting rhalphalib paramter from setup_dict
-                        grid_nuisance = grid_nuisance_dict[grid_nuisance_name]["nuisance"]
+                            # at this point this just decides to skip massScale based on pT bin since
+                            # mass_scale_substring hold just info about pT bin
+                            mass_scale_substring = (
+                                "PT" + channel_name.split("Pt")[-1] if args.pTdependetMassScale else "inclusive"
+                            )
+                            if mass_scale_substring not in grid_nuisance_name:
+                                continue
 
-                        # getting and "applying" info on which region and sample the respective massScale shoud act on
-                        application_info = grid_nuisance_dict[grid_nuisance_name]["application_info"]
-                        if sample_name not in application_info["samples"] and application_info["samples"] not in [
-                            "all",
-                            "signal",
-                        ]:
-                            continue
-                        if region not in application_info["regions"]:
-                            continue
+                            # getting rhalphalib paramter from setup_dict
+                            grid_nuisance = grid_nuisance_dict[grid_nuisance_name]["nuisance"]
 
-                        # getting hists with up/down varaition for Parameter Effect
-                        hist_up = get_hist(
-                            hist_dir % (sample_name, str(x) + "_" + str(y) + "_" + category + "_") + "__up"
-                        )
-                        hist_down = get_hist(
-                            hist_dir % (sample_name, str(x) + "_" + str(y) + "_" + category + "_") + "__down"
-                        )
+                            # getting and "applying" info on which region and sample
+                            # the respective massScale shoud act on
+                            application_info = grid_nuisance_dict[grid_nuisance_name]["application_info"]
+                            if sample_name not in application_info["samples"] and application_info["samples"] not in [
+                                    "all",
+                                    "signal",
+                            ]:
+                                continue
+                            if region not in application_info["regions"]:
+                                continue
 
-                        # if we want to use massScales in fit, we add the actual ParamEffect to NuisanceParamters,
-                        # this will get them rendered into the workspace.
-                        if not args.noMassScales and not args.noNuisances:
+                            # getting hists with up/down varaition for Parameter Effect
+                            hist_up = get_hist(
+                                hist_dir % (sample_name, str(x) + "_" + str(y) + "_" + category + "_") + "__up"
+                            )
+                            hist_down = get_hist(
+                                hist_dir % (sample_name, str(x) + "_" + str(y) + "_" + category + "_") + "__down"
+                            )
+
                             sample.setParamEffect(
                                 grid_nuisance, hist_up, hist_down, scale=configs.get("massScaleFactor", 1.0)
                             )
@@ -866,8 +840,9 @@ if __name__ == "__main__":
                 cw.POI = "r" if use_r_poi else mass_scale_names
                 cw.method = args.method
                 cw.write_wrapper()
-                cw.method = "FastScanMassScales"
-                cw.write_wrapper(append=True)
+                if not use_r_poi:
+                    cw.method = "FastScanMassScales"
+                    cw.write_wrapper(append=True)
         else:
             if not os.path.isfile(configs["ModelName"] + "/wrapper.sh"):
                 import warnings
