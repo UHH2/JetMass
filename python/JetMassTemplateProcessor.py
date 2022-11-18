@@ -44,7 +44,7 @@ class JMSTemplates(processor.ProcessorABC):
                     label=r"$p_{T,\mathrm{gen}}$ [GeV]",
                 ),
                 "mJgen": hist.axis.Variable(
-                    np.array([0.0, 44.5, 68.0, 80.5, 92.0, 132.5, np.inf]),
+                    np.array([0.0, 70., 80.5, 89.5, np.inf]),
                     name="mJgen",
                     label=r"$m_{SD,\mathrm{gen}}$ [GeV]",
                 ),
@@ -69,7 +69,7 @@ class JMSTemplates(processor.ProcessorABC):
                 ),
                 "mJgen": hist.axis.Variable(
                     np.array(
-                        [0, 55, 65, 72.5, 80, 87.5, 95, 110, 125, 150, 180, 220, np.inf]
+                        [0, 55, 80, 87.5,  np.inf]
                     ),
                     name="mJgen",
                     label=r"$m_{SD,\mathrm{gen}}$ [GeV]",
@@ -125,7 +125,10 @@ class JMSTemplates(processor.ProcessorABC):
             for jec_applied_on in ["none", "pt", "pt&mJ"]
         }
 
-        self.mjet_reco_correction = correctionlib.CorrectionSet.from_file("jms_corrections_quadratic_47e3e54d1c.json")
+        self.mjet_reco_correction = correctionlib.CorrectionSet.from_file(
+            "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/python/"
+            + "jms_corrections_quadratic_b4d48f9d75.json"
+        )
 
         # get some corrections and pack them into dense_lookups
         corrections_extractor = coffea.lookup_tools.extractor()
@@ -471,20 +474,21 @@ class JMSTemplates(processor.ProcessorABC):
             selection = events.metadata["selection"]
 
             selections.add(
-                "HLT_AK8PFJet450", self.passes_trigger(events, "HLT_AK8PFJet450_v*")
+                # "HLT_AK8PFJet450", self.passes_trigger(events, "HLT_AK8PFJet450_v*")
+                "HLT_AK8PFJet450", ak.ones_like(events.pt, dtype=bool)
             )
 
             for region in self._regions[selection].keys():
-                smask_unfolding = selections.require(
-                    **self._regions[selection][region], unfolding=True, jetpfid=True
-                )
+                smask_unfolding = selections.require(**self._regions[selection][region], unfolding=True, jetpfid=True)
+                corrector = self.mjet_reco_correction[
+                    "response_g_" + ("jec" if "mJ" in jec_applied_on else "nojec") + f"_{self._year}"
+                ]
                 msd_correction = (
-                    self.mjet_reco_correction[("response_" "g_" "jec" if "mJ" in jec_applied_on else "nojec")](
-                        pt_[smask_unfolding]
-                    )
+                    corrector.evaluate(pt_[smask_unfolding])
                     if selection == "vjets"
-                    else ak.ones_like(pt_[smask_unfolding]),
+                    else 1.0  # ak.ones_like(pt_[smask_unfolding])
                 )
+
                 out[f"{selection}_mjet_unfolding_{region}"].fill(
                     ptreco=pt_[smask_unfolding],
                     mJreco=mJ_[smask_unfolding] * msd_correction,
@@ -495,9 +499,7 @@ class JMSTemplates(processor.ProcessorABC):
                     weight=events.weight[smask_unfolding],
                 )
 
-                smask = selections.require(
-                    **self._regions[selection][region], jetpfid=True
-                )
+                smask = selections.require(**self._regions[selection][region], jetpfid=True)
 
                 out[f"{selection}_mjet_{region}"].fill(
                     dataset=dataset,
@@ -519,9 +521,7 @@ class JMSTemplates(processor.ProcessorABC):
                     weight=events.weight[smask],
                 )
                 if jec_applied_on == "none":
-                    out[f"{selection}_eta_{region}"].fill(
-                        dataset=dataset, eta=eta_[smask], weight=events.weight[smask]
-                    )
+                    out[f"{selection}_eta_{region}"].fill(dataset=dataset, eta=eta_[smask], weight=events.weight[smask])
 
                 if isMC:
                     for variation in self._variations:
@@ -530,18 +530,14 @@ class JMSTemplates(processor.ProcessorABC):
                         if "mJ" in jec_applied_on:
                             mJVar_ = mJVar_ * jecfactor
 
-                        out[
-                            f"{selection}_mjet_{variation}_variation_{region}__up"
-                        ].fill(
+                        out[f"{selection}_mjet_{variation}_variation_{region}__up"].fill(
                             dataset=dataset,
                             jecAppliedOn=jec_applied_on,
                             pt=pt_[smask],
                             mJ=mJVar_[:, 0][smask],
                             weight=events.weight[smask],
                         )
-                        out[
-                            f"{selection}_mjet_{variation}_variation_{region}__down"
-                        ].fill(
+                        out[f"{selection}_mjet_{variation}_variation_{region}__down"].fill(
                             dataset=dataset,
                             jecAppliedOn=jec_applied_on,
                             pt=pt_[smask],
@@ -554,10 +550,8 @@ class JMSTemplates(processor.ProcessorABC):
 if __name__ == "__main__":
     workflow = CoffeaWorkflow("JMSTemplates")
 
-    workflow.parser.add_argument(
-        "--output", "-o", type=str, default="jms_templates.coffea"
-    )
-    workflow.parser.add_argument("--year", default="2017")
+    workflow.parser.add_argument("--output", "-o", type=str, default="jms_templates.coffea")
+    workflow.parser.add_argument("--year", default="UL17")
     workflow.parser.add_argument("--maxfiles", type=int, default=-1)
 
     args = workflow.parse_args()
@@ -566,8 +560,7 @@ if __name__ == "__main__":
     workflow.processor_schema = BaseSchema
 
     sample_pattern = (
-        "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/"
-        "{SELECTION}Trees/workdir_{SELECTION}_{YEAR}/*{SAMPLE}*.root"
+        "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/{SELECTION}Trees/workdir_{SELECTION}_{YEAR}/*{SAMPLE}*.root"
     )
     sample_names = {
         "vjets": [
@@ -611,13 +604,13 @@ if __name__ == "__main__":
                 [
                     s.replace(child_samplename_suffix, "")
                     for child_samplename_suffix in [
-                            "Matched",
-                            "Unmatched",
-                            "_mergedTop",
-                            "_mergedW",
-                            "_mergedQB",
-                            "_semiMergedTop",
-                            "notMerged",
+                        "Matched",
+                        "Unmatched",
+                        "_mergedTop",
+                        "_mergedW",
+                        "_mergedQB",
+                        "_semiMergedTop",
+                        "notMerged",
                     ]
                 ],
                 key=len,
