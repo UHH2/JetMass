@@ -199,7 +199,7 @@ class CombineWorkflows(object):
 
         configs = json.load(open(self.modeldir + "/config.json", "r"))
 
-        bin_signal_strenght_constructor = "[1,0.0,2.0]"
+        bin_signal_strenght_constructor = "[1,0.1,10.0]"
 
         regions_mapping = " ".join(
             [
