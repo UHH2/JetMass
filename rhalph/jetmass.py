@@ -391,16 +391,10 @@ def jet_mass_producer(args, configs):
 
                 # if we want to use massScales in fit, we add the actual ParamEffect to NuisanceParamters,
                 # this will get them rendered into the workspace.
-                do_mass_scale_nuisances = (not args.noMassScales) and (not args.noNuisances) and (not args.unfolding)
-
-                if do_mass_scale_nuisances:
+                if args.massScales:
                     # setting effects of constituent variation nuisances (up/down)
                     for grid_nuisance_dict, x, y, category in grid_nuisances:
                         for grid_nuisance_name in grid_nuisance_dict.keys():
-
-                            if args.unfolding:
-                                continue
-
                             # this should strictly not be necessary
                             if sample.sampletype != rl.Sample.SIGNAL and args.VaryOnlySignal:
                                 continue
@@ -615,8 +609,6 @@ if __name__ == "__main__":
     parser.add_argument("--build", action="store_true", help="just build workspace for combine")
     parser.add_argument("--job_index", default="", type=str)
     parser.add_argument("--minimalModel", action="store_true")
-    parser.add_argument("--noMassScales", action="store_true")
-    parser.add_argument("--defaultPOI", action="store_true")
     parser.add_argument("--skipTemplatePlots", action="store_true")
     parser.add_argument("--customCombineWrapper", action="store_true")
     parser.add_argument("--noNuisances", action="store_true")
@@ -625,15 +617,20 @@ if __name__ == "__main__":
     parser.add_argument("--noNormUnc", action="store_true")
     parser.add_argument("--skipExtArgRender", action="store_true")
     parser.add_argument("--seed", type=str, default="42")
-    parser.add_argument("--method", type=str, default="diagnostics")
     parser.add_argument(
         "--combineOptions", type=str, help="string with additional cli-options passed to combine", default=""
     )
     parser.add_argument("--verbose", type=int, default=-1)
-    parser.add_argument("--unfolding", action="store_true")
-    parser.add_argument("--one-bin", action="store_true")
+
+    parser.add_argument("--mode", default="jms", choices=["unfolding", "jms", "default"],
+                        help="choose what fit should be run. 'unfolding' performs MaxLik. unfolding, jms measures "
+                        "JetMassScale variations,'default' measures signal cross section.")
 
     args = parser.parse_args()
+
+    args.unfolding = args.mode == "unfolding"
+    args.massScales = args.mode == "jms"
+    args.defaultPOI = args.mode == "default"
 
     try:
         if args.config.endswith(".json"):
@@ -666,7 +663,6 @@ if __name__ == "__main__":
     if not args.justplots:
         jet_mass_producer(args, configs)
         open(configs["ModelName"] + "/config.json", "w").write(json.dumps(configs, sort_keys=False, indent=2))
-        use_r_poi = (args.defaultPOI or args.noMassScales) and (not args.unfolding)
         if not args.customCombineWrapper:
             if args.unfolding:
                 cw = CombineWorkflows()
@@ -674,22 +670,23 @@ if __name__ == "__main__":
                 cw.method = "unfolding"
                 cw.write_wrapper()
             else:
-                _, mass_scale_names = build_mass_scale_variations(configs, args)
                 cw = CombineWorkflows()
-                # cw.workspace = configs['ModelName']+'/'+configs['ModelName']+'_combined.root'
                 cw.workspace = configs["ModelName"] + "/model_combined.root"
-                cw.extraOptions = "--freezeParameters r --preFitValue 0 " + args.combineOptions
-                cw.POIRange = (-100, 100)
-                cw.POI = "r" if use_r_poi else mass_scale_names
-                cw.method = args.method
+                cw.extraOptions = args.combineOptions
+                if args.massScales:
+                    cw.extraOptions += " --freezeParameters r --preFitValue 0"
+                    cw.POIRange = (-100, 100)
+                if args.defaultPOI:
+                    cw.POIRange = (0.01, 100.0)
+                cw.POI = "r" if args.defaultPOI else build_mass_scale_variations(configs, args)[1]
+                cw.method = "diagnostics"
                 cw.write_wrapper()
-                if not use_r_poi:
+                if args.massScales:
                     cw.method = "FastScanMassScales"
                     cw.write_wrapper(append=True)
         else:
             if not os.path.isfile(configs["ModelName"] + "/wrapper.sh"):
                 import warnings
-
                 warnings.warn(
                     (
                         "\033[93mYou used the option --CustomCombineWrapper,"
@@ -726,7 +723,7 @@ if __name__ == "__main__":
             json.dumps(fit_result_parameters, sort_keys=True, indent=2)
         )
 
-        if not args.unfolding:
+        if args.massScales:
             massScales = []
             fitargs = fit_diagnostics.Get("fit_s").floatParsFinal()
             for name in build_mass_scale_variations(configs, args)[1]:
@@ -752,7 +749,7 @@ if __name__ == "__main__":
         fitplotter.plot_fit_result(
             configs, logY=True, plot_total_sig_bkg=False, do_postfit=do_postfit, use_config_samples=args.unfolding
         )
-    if do_postfit and not args.noMassScales and not args.unfolding:
+    if do_postfit and args.massScales:
         fitplotter.plot_mass_scale_nuisances(configs)
 
     qcd_estimation_channels = {
