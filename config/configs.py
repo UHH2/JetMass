@@ -105,6 +105,12 @@ sample_lists = {
     },
 }
 
+for selection in sample_lists.keys():
+    for isample, sample in enumerate(sample_lists[selection]["Data"]):
+        sample_lists[selection]["Data"][isample] = sample.replace("Run", "Recount_Run")
+
+    for isample, sample in enumerate(test_sample_list[selection]["Data"]):
+        test_sample_list[selection]["Data"][isample] = sample.replace("Run", "Recount_Run")
 
 lumi_files = {
     # "UL16":"Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON_normtag.root",
@@ -124,7 +130,9 @@ class Sample(object):
             self.test_file = None
         else:
             xml_ = [
-                line for line in open(os.path.join(uhh2datasets_path, xml), "r").read().split("\n") if ".root" in line
+                line
+                for line in open(os.path.join(uhh2datasets_path, xml), "r").read().split("\n")
+                if (".root" in line) and ("EMPTY" not in line)
             ]
             self.test_file = xml_[0].split('"')[1]
 
@@ -365,7 +373,7 @@ if __name__ == "__main__":
                 for t in ["Data", "MC"]:
                     samples_to_remove = []
                     for s in sfconfig.samples[t].keys():
-                        print(s)
+                        # print(s)
                         if "QCD" not in s:
                             samples_to_remove.append(s)
                     for s in samples_to_remove:
