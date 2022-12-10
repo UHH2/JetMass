@@ -1,6 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE JobConfiguration PUBLIC "" "JobConfig.dtd" [
 <!ENTITY 	 SingleMuon_Recount_RunF 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data-recount/UL16postVFP/SingleMuon_Run2016F-UL2016_MiniAODv2-v2.xml">
+<!ENTITY 	 SingleMuon_Recount_RunG 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data-recount/UL16postVFP/SingleMuon_Run2016G-UL2016_MiniAODv2-v2.xml">
+<!ENTITY 	 SingleMuon_Recount_RunH 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data-recount/UL16postVFP/SingleMuon_Run2016H-UL2016_MiniAODv2-v2.xml">
 
 <!ENTITY 	 TTToHadronic 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/TTToHadronic_CP5_powheg-pythia8_Summer20UL16_v1.xml">
 <!ENTITY 	 TTToSemiLeptonic 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/TTToSemiLeptonic_CP5_powheg-pythia8_Summer20UL16_v1.xml">
@@ -54,6 +56,8 @@
   <Package Name="SUHH2JetMass.par"/>
   <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="16626.734093195286">
     <InputData Version="SingleMuon_Recount_RunF_UL16postVFP" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_Recount_RunF;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="SingleMuon_Recount_RunG_UL16postVFP" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_Recount_RunG;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="SingleMuon_Recount_RunH_UL16postVFP" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_Recount_RunH;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="TTToHadronic_UL16postVFP" Lumi="88489755.86739273" Type="MC" NEventsMax="-1" Cacheable="False">&TTToHadronic;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="TTToSemiLeptonic_UL16postVFP" Lumi="117575358.67690803" Type="MC" NEventsMax="-1" Cacheable="False">&TTToSemiLeptonic;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="TTTo2L2Nu_UL16postVFP" Lumi="35403476.33555009" Type="MC" NEventsMax="-1" Cacheable="False">&TTTo2L2Nu;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>

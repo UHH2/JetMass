@@ -31,6 +31,8 @@ sample_lists = {
             "JetHT_RunD",
             "JetHT_RunE",
             "JetHT_RunF",
+            "JetHT_RunG",
+            "JetHT_RunH",
         ],
         "MC": [
             "QCD_HT50to100",
@@ -63,6 +65,8 @@ sample_lists = {
             "SingleMuon_RunD",
             "SingleMuon_RunE",
             "SingleMuon_RunF",
+            "SingleMuon_RunG",
+            "SingleMuon_RunH",
         ],
         "MC": [
             "TTToHadronic",
