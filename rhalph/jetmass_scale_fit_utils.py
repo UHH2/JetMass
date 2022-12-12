@@ -2,6 +2,7 @@ import ROOT
 from ROOT import gSystem
 import numpy as np
 import rhalphalib as rl
+ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 
 def scale_lumi(hist, lumiscale):
