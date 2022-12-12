@@ -4,9 +4,9 @@ import sys
 import os
 import numpy as np
 import ROOT
+ROOT.PyConfig.IgnoreCommandLineOptions = True
 from jetmass_scale_fit_utils import scale_lumi, build_pseudo, build_mass_scale_variations
 import rhalphalib as rl
-
 rl.util.install_roofit_helpers()
 
 
@@ -391,7 +391,7 @@ def jet_mass_producer(args, configs):
 
                 # if we want to use massScales in fit, we add the actual ParamEffect to NuisanceParamters,
                 # this will get them rendered into the workspace.
-                if args.massScales:
+                if args.massScales or True:
                     # setting effects of constituent variation nuisances (up/down)
                     for grid_nuisance_dict, x, y, category in grid_nuisances:
                         for grid_nuisance_name in grid_nuisance_dict.keys():
@@ -622,7 +622,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--verbose", type=int, default=-1)
 
-    parser.add_argument("--mode", default="jms", choices=["unfolding", "jms", "default"],
+    parser.add_argument("-M", "--mode", default="default", choices=["unfolding", "jms", "default"],
                         help="choose what fit should be run. 'unfolding' performs MaxLik. unfolding, jms measures "
                         "JetMassScale variations,'default' measures signal cross section.")
 
