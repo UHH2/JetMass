@@ -142,8 +142,6 @@ def plot_qcd_bernstein(config={'ModelName':'WMassModel'},do_3d_plot=True):
     pt_min = pt_edges[0]
     pt_max = pt_edges[-1]
     
-    rho_min = -6.
-    rho_max = -2.1
 
     # pt_bins = np.array([500,550,600,675,800,1200],dtype="f")
     pt_bins = np.array(pt_edges,dtype="f")
@@ -156,6 +154,11 @@ def plot_qcd_bernstein(config={'ModelName':'WMassModel'},do_3d_plot=True):
         max_msd = w_binning[1]
         binwidth = w_binning[2]
     
+    # rho_min = -6.
+    rho_min = 2*np.log(min_msd/pt_max)
+    rho_max = -2.1
+
+
     nbins = int(np.floor((max_msd-min_msd)/binwidth))
     msd_bins = np.linspace(min_msd, nbins*binwidth+min_msd, nbins+1)
     msd_bins = msd_bins.astype("f")
@@ -271,6 +274,7 @@ def plot_qcd_bernstein(config={'ModelName':'WMassModel'},do_3d_plot=True):
         masked_bernstein_map = np.ma.array(bernstein_map, mask=~valid_rho_bins)
         levels = np.linspace(np.min(masked_bernstein_map)-0.01, np.max(masked_bernstein_map)+0.01, 500)
         plt_cont = ax.contourf(msd_pts, pt_pts, masked_bernstein_map, levels=levels, cmap="rainbow")
+        
         z_bar = figure.colorbar(plt_cont,format='%.2f')
         z_bar.set_label(r'TF',rotation=270,labelpad=15)
         for f_type in ['.pdf','.png']:

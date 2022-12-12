@@ -82,9 +82,10 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_roo
     plotter.logY = logY
     plotter.additional_text_size_modifier = 1.5
     plotter.draw_extra_text = True
-    plotter.luminosity = config.get('Luminosity',41.8)
+    plotter.year = config.get("year", "2017")
     plotter.legend_bbox = (0.60,0.2,0.9,0.6)
-
+    # plotter.y_range_ratio = [0.8,1.2]
+    
     pseudo_data_info = config.get('Pseudo',[])
     if(len(pseudo_data_info)>0 and 'lumiScale' in pseudo_data_info[0]):
             lumiScale = float(pseudo_data_info[0].split(':')[-1])
@@ -93,10 +94,19 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_roo
         binning = config.get('binning',[50,300,26])
         plotter.yTitle = "Events / %i GeV"%binning[2]
         # plotter.yTitle = "Events / %i GeV"%config['binning'][channel['selection']][2]
-        #print('plotting', channel_str)
-        backgrounds = list(map(lambda bg: 'qcd' if ('QCD' in bg and "QcdEstimation" in channel and channel["QcdEstimation"]=="True") else bg ,plotter.mc_samples[channel['selection']]))
-        if(use_config_samples):
-            backgrounds = [bg.replace("QCD","qcd") for bg in channel['samples']]
+        backgrounds = list(
+            map(
+                lambda bg: "qcd"
+                if ("QCD" in bg and "QcdEstimation" in channel and channel["QcdEstimation"] == "True")
+                else bg,
+                plotter.mc_samples[channel["selection"]],
+            )
+        )
+        if use_config_samples:
+            backgrounds = [bg.replace("QCD", "qcd") for bg in channel['samples']]
+            for signal in channel["signal"]:
+                backgrounds.remove(signal)
+                backgrounds.append(signal)
         regions = channel['regions'] if 'regions' in channel else [""]
         for region in regions:
             for suffix in PrePostFit:
@@ -123,6 +133,7 @@ def plot_fit_result(config={'ModelName':'WMassModel'},logY=False, fit_shapes_roo
                         sample_counts[sample_name] = 0
                     else:
                         sample_counts[sample_name] += 1
+                    print(sample_name)
                     h.SetLineColor(plotter.colors.get(sample_name))
                     h.SetFillColorAlpha(plotter.colors.get(sample_name),.8)
                     if(genbins is not None):
