@@ -145,8 +145,13 @@ def jet_mass_producer(args, configs):
             pt_bins[:-1] + 0.3 * np.diff(pt_bins), msd_bins[:-1] + 0.5 * np.diff(msd_bins), indexing="ij"
         )
         rhopts = 2 * np.log(msdpts / ptpts)
-        ptscaled = (ptpts - 500.0) / (1200.0 - 500.0)
-        rhoscaled = (rhopts - (-6)) / ((-2.1) - (-6))
+        ptscaled = (ptpts - pt_bins[0]) / (pt_bins[-1] - pt_bins[0])
+
+        # remove lower bound on rho, since we removed it also from selection
+        # for now we do this by simply setting rho_min to bounds specified by pt and mass bound
+        rho_min = 2*np.log(msd_bins[0]/pt_bins[-1])
+        rho_max = -2.1
+        rhoscaled = (rhopts - (rho_min)) / ((rho_max) - (rho_min))
         validbins = (rhoscaled >= 0) & (rhoscaled <= 1)
         rhoscaled[~validbins] = 1  # we will mask these out later
 
