@@ -197,6 +197,27 @@ if __name__ == "__main__":
             # 'signal_samples':["WJets","WJetsMatched","ZJets"]
             "signal_samples": ["WJetsMatched"],
         },
+        "ttbar": {
+            "regions": ["inclusive", "pass", "passW", "fail"],
+            "samples": [
+                "Data",
+                "WJets",
+                "DYJets",
+                "TTToHadronic",
+                "TTToSemiLeptonic",
+                "TTToSemiLeptonic_mergedTop",
+                "TTToSemiLeptonic_mergedW",
+                "TTToSemiLeptonic_mergedQB",
+                "TTToSemiLeptonic_semiMergedTop",
+                "TTToSemiLeptonic_notMerged",
+                "TTTo2L2Nu",
+                "ST_t",
+                "ST_tW",
+                "ST_s",
+                "QCD",
+            ],
+            "signal_samples": ["TTToSemiLeptonic_mergedW"],
+        },
     }
     print(f"flattening templates and saving to ROOT from {args.input}")
     templates = {}
