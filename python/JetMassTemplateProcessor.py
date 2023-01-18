@@ -127,7 +127,7 @@ class JMSTemplates(processor.ProcessorABC):
 
         self.mjet_reco_correction = correctionlib.CorrectionSet.from_file(
             "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/python/"
-            + "jms_corrections_quadratic_b4d48f9d75.json"
+            + "jms_corrections_quadratic_40c365c4ab.json"
         )
 
         # get some corrections and pack them into dense_lookups

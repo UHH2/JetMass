@@ -13,6 +13,7 @@ import seaborn as sns
 from matplotlib.colors import LogNorm
 import unfolding_plotting
 import correctionlib
+import os
 
 hep.style.use("CMS")
 
@@ -353,6 +354,7 @@ if __name__ == "__main__":
     import numpy as np
     import argparse
     import logging
+    import re
 
     parser = argparse.ArgumentParser()
 
@@ -363,6 +365,11 @@ if __name__ == "__main__":
     parser.add_argument("--threshold", "-t", type=float, default=0.5)
     parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()
+
+    year = "UL17"
+    year_re = re.search("(UL)*(20)*1[678]{1}(preVFP|postVFP)*", args.input)
+    if year_re:
+        year = year_re.group()
 
     logFormatter = logging.Formatter("%(asctime)s %(funcName)s %(message)s")
     logger = logging.getLogger()
@@ -410,6 +417,9 @@ if __name__ == "__main__":
     threshold_str = str(args.threshold).replace(".", "p")
 
     plot_dir = "unfolding_binning_plots"
+
+    if not os.path.exists(plot_dir):
+        os.makedirs(plot_dir)
 
     def save_plot(fax, outname):
         fax[0].savefig((plot_dir + "/" + outname), bbox_inches="tight")
@@ -527,12 +537,12 @@ if __name__ == "__main__":
         logger.info(logging_styles["red_bold_underline"]("optimize mjet binning (\"advanced\" correction (response))"))
 
         polynomial_msd_correction_set = correctionlib.CorrectionSet.from_file(
-            "jms_corrections_quadratic_c5faf7f77e.json"
+            "jms_corrections_quadratic_40c365c4ab.json"
         )
 
         # optimization with dedicated JMS from MC (response)
         def polynomial_msd_corr_response(pt):
-            return 1.0 / polynomial_msd_correction_set["response_g_jec"].evaluate(pt)
+            return 1.0 / polynomial_msd_correction_set[f"response_g_jec_{year}"].evaluate(pt)
 
         # sequential bin merging
         logger.info(logging_styles["orange_bold"]("pt-scan sequential"))
@@ -560,7 +570,7 @@ if __name__ == "__main__":
 
         # optimization with dedicated JMS from MC (response)
         def polynomial_msd_corr_means(pt):
-            return 1.0 / polynomial_msd_correction_set["means_g_jec"].evaluate(pt)
+            return 1.0 / polynomial_msd_correction_set[f"means_g_jec_{year}"].evaluate(pt)
 
         # sequential bin merging
         logger.info(logging_styles["orange_bold"]("pt-scan sequential"))

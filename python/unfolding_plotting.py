@@ -485,10 +485,16 @@ def plot_migration_matrix(
 if __name__ == "__main__":
     import correctionlib
     import os
+    import sys
+
+    if len(sys.argv) != 2:
+        print("Usage: ./unfolding_plotting.py <year> (UL16preVFP, UL17, UL18)")
+        exit(-1)
+    year = sys.argv[1]
 
     workdir = "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/python"
 
-    events_sel = ak.from_parquet(f"{workdir}/WJetsToQQ_tinyTree.parquet")
+    events_sel = ak.from_parquet(f"{workdir}/WJetsToQQ_tinyTree_{year}.parquet")
 
     events_sel["pt_raw"] = events_sel.Jets.pt[:, 0]
     events_sel["pt"] = events_sel.pt_raw * events_sel.jecfactor[:, 0]
@@ -500,7 +506,7 @@ if __name__ == "__main__":
     events_sel["rhogen"] = 2 * np.log(events_sel.mjetgen / events_sel.ptgen)
 
     polynomial_msd_correction_set = correctionlib.CorrectionSet.from_file(
-        f"{workdir}/jms_corrections_quadratic_c5faf7f77e.json"
+        f"{workdir}/jms_corrections_quadratic_40c365c4ab.json"
     )
 
     pt_reco_ax = hist.axis.Variable(
@@ -512,7 +518,7 @@ if __name__ == "__main__":
 
         def msd_corr(pt):
             if correction:
-                return 1.0 / polynomial_msd_correction_set["response_g_jec"].evaluate(pt)
+                return 1.0 / polynomial_msd_correction_set[f"response_g_jec_{year}"].evaluate(pt)
             else:
                 return 1.0
 
@@ -541,19 +547,19 @@ if __name__ == "__main__":
             h_2d_fine,
             # zlog=True,
             extratext="msd corrected" if correction else "",
-            outname=f"{workdir}/unfolding_binning_plots/migration_matrix_fine_binning{correction_str}.pdf",
+            outname=f"{workdir}/unfolding_binning_plots/migration_matrix_fine_binning_{year}{correction_str}.pdf",
         )
 
     cmd = (
         "convert -delay 100 "
-        + f"{workdir}/unfolding_binning_plots/migration_matrix_fine_binning.pdf "
-        + f"{workdir}/unfolding_binning_plots/migration_matrix_fine_binning_msdcorrected.pdf "
-        + f"{workdir}/unfolding_binning_plots/migration_matrix_fine_binning.gif"
+        + f"{workdir}/unfolding_binning_plots/migration_matrix_fine_binning_{year}.pdf "
+        + f"{workdir}/unfolding_binning_plots/migration_matrix_fine_binning_{year}_msdcorrected.pdf "
+        + f"{workdir}/unfolding_binning_plots/migration_matrix_fine_binning_{year}.gif"
     )
     os.system(cmd)
 
     def msd_corr(pt):
-        return 1.0 / polynomial_msd_correction_set["response_g_jec"].evaluate(pt)
+        return 1.0 / polynomial_msd_correction_set[f"response_g_jec_{year}"].evaluate(pt)
 
     # final choice of binning
     # old binning
@@ -584,7 +590,7 @@ if __name__ == "__main__":
     plot_migration_matrix(
         h_2d,
         # zlog=True,
-        outname=f"{workdir}/unfolding_binning_plots/migration_matrix_final_binning.pdf"
+        outname=f"{workdir}/unfolding_binning_plots/migration_matrix_final_binning_{year}.pdf"
     )
 
     unfolding_1d_plotter = Unfolding1DPlotter("mjet", msd_corr)
@@ -604,7 +610,7 @@ if __name__ == "__main__":
         ax.set_ylim(0.0, 1.0)
         f.savefig(
             f"{workdir}/unfolding_binning_plots/"
-            + "migration_metric_final_binning_pt"
+            + f"migration_metric_final_binning_{year}_pt"
             + f"{pt_low_str}To{pt_high_str}.pdf",
             bbox_inches="tight",
         )
