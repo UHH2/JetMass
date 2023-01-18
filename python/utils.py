@@ -44,22 +44,39 @@ def numpy_to_th2(
 
 
 def hist_to_th1(H, hist_name=""):
-    x_axis = H.axes[0]
+    __from_numpy = isinstance(H, tuple) and isinstance(H[0], np.ndarray)
+
+    x_axis_edges = None
+    x_axis_name = ""
+    if __from_numpy:
+        x_axis_edges = H[1]
+    else:
+        x_axis_edges = H.axes[0]
+        x_axis_name = H.axes[0].name
+
     # take values and variances from hist and 'fill' under- and overflow bins
-    values = np.concatenate(([0.0], H.values(), [0.0]))
-    variances = np.concatenate(([0.0], H.variances(), [0.0]))
+    values, variances = None, None
+    if __from_numpy:
+        values = H[0]
+        variances = np.zeros_like(H[0])
+    else:
+        values = H.values()
+        variances = H.variances()
+
+    values = np.concatenate(([0.0], values, [0.0]))
+    variances = np.concatenate(([0.0], variances, [0.0]))
 
     x_taxis = uproot.writing.identify.to_TAxis(
-        x_axis.name,
-        x_axis.name,
-        len(x_axis.edges) - 1,
-        x_axis.edges[0],
-        x_axis.edges[-1],
-        x_axis.edges,
+        x_axis_name,
+        x_axis_name,
+        len(x_axis_edges) - 1,
+        x_axis_edges[0],
+        x_axis_edges[-1],
+        x_axis_edges,
     )
 
     if hist_name == "":
-        hist_name = x_axis.name
+        hist_name = x_axis_name
 
     th1 = uproot.writing.identify.to_TH1x(
         hist_name,
