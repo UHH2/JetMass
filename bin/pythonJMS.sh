@@ -25,4 +25,15 @@ VENVPYTHON=/nfs/dust/cms/user/albrechs/python/coffea/bin/python
 # sometimes CMSSW appends to LD_LIBRARY_PATH and breaks local python3 install. 
 # in case LD_LIBRARY is needed inside py3 venv execution we "rename" it here
 export LD_LIBRARY_PATH_BACKUP=$LD_LIBRARY_PATH
-env -u LD_LIBRARY_PATH "$VENVPYTHON" "$@"
+
+# some users/machines @ desy would like to source the grid-ui util scripts to make voms etc. available
+# this breaks python3 since PYTHONPATH then prefers python2.7 libs. repeat the same for PYTHONPATH:
+export PYTHON_PATH_BACKUP=$PYTHON_PATH
+
+mode=${1:default}
+
+if [ $mode = "-i" ]; then
+  env -u LD_LIBRARY_PATH -u PYTHONPATH "$VENVPYTHON" -c "q = __import__(\"functools\").partial(__import__(\"os\")._exit, 0);__import__(\"IPython\").embed()"
+else
+  env -u LD_LIBRARY_PATH -u PYTHONPATH "$VENVPYTHON" "$@"
+fi
