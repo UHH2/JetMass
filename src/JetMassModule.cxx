@@ -83,6 +83,7 @@ private:
   std::unique_ptr<AnalysisModule> topPtReweighting;
   std::unique_ptr<MCLargeWeightKiller> mcSpikeKiller;
   std::unique_ptr<TopJetCorrections> topjetCorr,topjetCorr_chs;
+  std::unique_ptr<StandaloneTopJetCorrector> topjet_jec_ev;
   std::unique_ptr<AnalysisModule>ttgen_producer;  
   std::unique_ptr<AnalysisModule> matching_selection_producer;
   std::unique_ptr<AnalysisModule> nlo_weights, nlo_weights_UL;
@@ -137,6 +138,11 @@ private:
 
   uhh2::Event::Handle<std::vector<TopJet>> handle_chs_jets;
   uhh2::Event::Handle<std::vector<GenTopJet>> handle_sd_gen_jets;
+
+  //systweights
+
+  //JEC factors
+  uhh2::Event::Handle<double> handle_jecfactor_nominal, handle_jecfactor_up, handle_jecfactor_down;
 
   TopJetId jetpfid;
 
@@ -283,6 +289,10 @@ JetMassModule::JetMassModule(Context & ctx){
   handle_gen_HT = ctx.declare_event_output<double>(genHT_handlename);
   handle_HT = ctx.declare_event_output<double>(HT_handlename);
   ht_calculator.reset(new HTCalculator(ctx,jetid,HT_handlename));
+
+  handle_jecfactor_nominal = ctx.declare_event_output<double>("jecfactor_nominal");
+  handle_jecfactor_up = ctx.declare_event_output<double>("jecfactor_up");
+  handle_jecfactor_down = ctx.declare_event_output<double>("jecfactor_down");
   
   //AnalysisModules
   ttgen_producer.reset(new TTbarGenProducer(ctx,ttbargen_handlename,false));
@@ -296,6 +306,7 @@ JetMassModule::JetMassModule(Context & ctx){
   topjetCorr.reset(new TopJetCorrections());
   topjetCorr->init(ctx);
   topjetCorr->disable_jersmear();
+  topjet_jec_ev.reset(new StandaloneTopJetCorrector(ctx, "AK8PFPuppi"));
 
   // AK8 CHS JEC/JER
   topjetCorr_chs.reset(new TopJetCorrections(chs_jets_collection));
@@ -324,7 +335,9 @@ JetMassModule::JetMassModule(Context & ctx){
   reco_selection_part2.reset(new AndSelection(ctx,"reco_selection_part2"));
   if(isttbarSel){
     reco_selection_part1->add<TriggerSelection>("Trigger selection","HLT_Mu50_v*");
-    reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 200 GeV", 1,-1,TopJetId(PtEtaCut(200.,100000.)));
+    // reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 200 GeV", 1,-1,TopJetId(PtEtaCut(200.,100000.)));
+    reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1", 1);
+    reco_selection_part1->add<TopJetPtCut>("p_{T, AK8} #geq 200 GeV", ctx, 200);
     reco_selection_part1->add<NMuonSelection>("N_{#mu} #geq 1", 1,1);
     reco_selection_part1->add<NElectronSelection>("N_{e} = 0", 0,0);
     reco_selection_part1->add<METCut>("MET > 50 GeV", 50.,100000.);
@@ -335,7 +348,9 @@ JetMassModule::JetMassModule(Context & ctx){
   }else if(isvjetsSel){
     reco_selection_part1->add<NElectronSelection>("ele-veto",0,0);
     reco_selection_part1->add<NMuonSelection>("muon-veto",0,0);
-    reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 500 GeV", 1,-1,TopJetId(PtEtaCut(500.,100000.)));
+    // reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 500 GeV", 1,-1,TopJetId(PtEtaCut(500.,100000.)));
+    reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1", 1);
+    reco_selection_part1->add<TopJetPtCut>("p_{T, AK8} #geq 500 GeV", ctx, 500);
     // reco_selection_part1->add<HTCut>("H_{T} > 1000 GeV",ctx, 1000.); 
 
     // reco_selection_part2->add<JetIdSelection<TopJet>>("selected jet - p_{T} > 500 GeV", ctx, TopJetId(PtEtaCut(500.,100000.)) ,recotopjet_handlename);
@@ -606,6 +621,15 @@ bool JetMassModule::process(Event & event) {
   //   if(AK8_pt>800 && AK8_pt<1200)h_pfhists_800to1200->fill(event);
   //   if(AK8_pt>1200)h_pfhists_1200toInf->fill(event);
   // }
+  float jecfactor_standalone_nominal(-1.),jecfactor_standalone_up(-1.),jecfactor_standalone_down(-1.);
+  if(event.topjets->size() >0){
+    jecfactor_standalone_nominal = topjet_jec_ev->getJecFactor(event, event.topjets->at(0), 0);
+    jecfactor_standalone_up = topjet_jec_ev->getJecFactor(event, event.topjets->at(0), +1);
+    jecfactor_standalone_down = topjet_jec_ev->getJecFactor(event, event.topjets->at(0), -1);
+  }
+  event.set(handle_jecfactor_nominal, jecfactor_standalone_nominal);
+  event.set(handle_jecfactor_up, jecfactor_standalone_up);
+  event.set(handle_jecfactor_down, jecfactor_standalone_down);
   
   bool pass_reco_selection_part1 = reco_selection_part1->passes(event);
   bool pass_reco_selection_part2(false);
