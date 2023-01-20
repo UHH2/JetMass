@@ -9,6 +9,8 @@
 #include "UHH2/common/include/Utils.h"
 #include "UHH2/common/include/TriggerSelection.h"
 
+#include <cmath>
+
 using namespace uhh2;
 using namespace std;
 
@@ -255,14 +257,18 @@ StandaloneTopJetCorrector::StandaloneTopJetCorrector(uhh2::Context& ctx, std::st
   jec_data_files["UL18"] = jec_data_files_UL18;
     
   std::vector<JetCorrectorParameters> jec_pars_mc;
-  for(const auto & filename: jec_mc_files.find(short_year)->second){
+  for(const auto & filename: jec_mc_files.find(year_str)->second){
     jec_pars_mc.emplace_back(locate_file(filename));
   }      
   jet_corrector["MC"] = std::make_unique<FactorizedJetCorrector>(jec_pars_mc);
 
-  for (const auto runPeriod : year2runPeriods(short_year)) {
+  TString unc_file = jec_mc_files.find(year_str)->second.at(0);
+  unc_file.ReplaceAll("L1FastJet","UncertaintySources");
+  jec_uncertainty = new JetCorrectionUncertainty(* new JetCorrectorParameters(locate_file(unc_file.Data()), "Total"));
+
+  for (const auto runPeriod : year2runPeriods(year_str)) {
     std::vector<JetCorrectorParameters> jec_pars_data;
-    auto run_files_map = jec_data_files[short_year];
+    auto run_files_map = jec_data_files[year_str];
     for(const auto & filename: run_files_map.find(runPeriod)->second){
       jec_pars_data.emplace_back(locate_file(filename));
     }            
@@ -278,12 +284,17 @@ StandaloneTopJetCorrector::StandaloneTopJetCorrector(uhh2::Context& ctx, std::st
     {"UL17",TopJetCorrections::tjer_tag_UL17},
     {"UL18",TopJetCorrections::tjer_tag_UL18}
   };
-  res_sf_= JME::JetResolutionScaleFactor(locate_file(JERFiles::JERPathStringMC(jer_tag[short_year],tjec_tjet_coll,"SF")));
-  resolution_ = JME::JetResolution(locate_file(JERFiles::JERPathStringMC(jer_tag[short_year],tjec_tjet_coll,"PtResolution")));
+  res_sf_= JME::JetResolutionScaleFactor(locate_file(JERFiles::JERPathStringMC(jer_tag[year_str],tjec_tjet_coll,"SF")));
+  resolution_ = JME::JetResolution(locate_file(JERFiles::JERPathStringMC(jer_tag[year_str],tjec_tjet_coll,"PtResolution")));
   
 }
 
-float StandaloneTopJetCorrector::getJecFactor(const uhh2::Event & event, LorentzVector topjet){
+float StandaloneTopJetCorrector::getJecFactor(const uhh2::Event & event, TopJet topjet, int direction){
+  LorentzVector topjet_raw = topjet.v4()*topjet.JEC_factor_raw();
+  return getJecFactor(event, topjet_raw, direction);
+}
+
+float StandaloneTopJetCorrector::getJecFactor(const uhh2::Event & event, LorentzVector topjet, int direction){
   std::string period;  
   if(is_mc){
     period="MC";
@@ -316,8 +327,29 @@ float StandaloneTopJetCorrector::getJecFactor(const uhh2::Event & event, Lorentz
 
   auto correction_factors = jet_corrector[period]->getSubCorrections();
   
+  //nominal jec factor
+  float jec_factor = correction_factors.back();
+  LorentzVector jet_v4_corrected = topjet * jec_factor;
   
-  return correction_factors.back();
+  if(direction!=0){
+    double pt = jet_v4_corrected.Pt();
+    double eta = jet_v4_corrected.Eta();
+    if (!(pt<5. || fabs(eta)>5.)) {
+
+      jec_uncertainty->setJetEta(eta);
+      jec_uncertainty->setJetPt(pt);
+
+      double unc = 0.;
+      if (direction == 1){
+        unc = jec_uncertainty->getUncertainty(true);
+        jec_factor *= (1 + fabs(unc));
+      } else if (direction == -1){
+        unc = jec_uncertainty->getUncertainty(false);
+        jec_factor *= (1 - fabs(unc));
+      }
+    }
+  }
+  return jec_factor;
 }
 
 float StandaloneTopJetCorrector::getJERSmearingFactor(const uhh2::Event &event, Particle topjet, int direction,float jec_factor){
