@@ -25,6 +25,46 @@ bool RhoCut<GenericTopJet>::passes(const uhh2::Event &event){
   return ( rho < rho_max ) && ( rho > rho_min);
 }
 
+TopJetPtCut::TopJetPtCut(uhh2::Context & ctx, float pt_min_, float pt_max_):
+  pt_min(pt_min_), pt_max(pt_max_){
+  h_jecfactor_nominal = ctx.get_handle<double>("jecfactor_nominal");
+  h_jecfactor_up = ctx.get_handle<double>("jecfactor_up");
+  h_jecfactor_down = ctx.get_handle<double>("jecfactor_down");
+}
+
+bool TopJetPtCut::passes(const Event & event){
+  if(event.topjets->size()==0) return false;
+  float jecfactor_nominal = 1./event.topjets->at(0).JEC_factor_raw();
+  LorentzVector leadingjet = event.topjets->at(0).v4();
+  LorentzVector leadingjet_raw = event.topjets->at(0).v4()/jecfactor_nominal;
+
+  if(leadingjet.pt() < pt_min) return false;
+  if(leadingjet.pt() > pt_max) return false;
+
+  if(event.is_valid(h_jecfactor_nominal)){
+    float jecfactor_nominal_standalone = event.get(h_jecfactor_nominal);
+    if( fabs(jecfactor_nominal-jecfactor_nominal_standalone)/jecfactor_nominal > 0.001 ){
+      std::cout << "ATTENTION: jecfactor and jecfactor_nominal from standalone jet corrector differ when performing pt cut!!!"<< std::endl;
+      std::cout << "jec from generic corrector: " << jecfactor_nominal << std::endl;
+      std::cout << "jec from standalone corrector: " << jecfactor_nominal_standalone << std::endl;
+      return false;
+    }
+  }
+  if(event.is_valid(h_jecfactor_up)){
+    float jecfactor_up = event.get(h_jecfactor_up);
+    float pt = (leadingjet_raw * jecfactor_up).pt();
+    if( pt < pt_min) return false;
+    if( pt > pt_max) return false;
+  }
+
+  if(event.is_valid(h_jecfactor_down)){
+    float jecfactor_down = event.get(h_jecfactor_down);
+    float pt = (leadingjet_raw * jecfactor_down).pt();
+    if( pt < pt_min) return false;
+    if( pt > pt_max) return false;
+  }
+}
+
 MassCut::MassCut(){}
 
 bool MassCut::passes(const Event & event){
