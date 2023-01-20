@@ -109,14 +109,14 @@ bool JetSelector<GenTopJet>::process(uhh2::Event & event){
 }
 
 
-NLOWeights::NLOWeights(uhh2::Context & ctx, const std::string & boson_pt_handlename){
+NLOWeights::NLOWeights(uhh2::Context & ctx, const std::string & boson_pt_handlename, bool isUL){
   TString version = ctx.get("dataset_version");
   TString selection = ctx.get("selection");
   apply_nloweights = false;
   if(selection == "vjets" && (version.Contains("WJets") || version.Contains("ZJets")) ){
     boson_pt_handle = ctx.get_handle<double>(boson_pt_handlename);
-    std::string NLOWeightsFilename =  "JetMass/NLOweights" + (std::string)(version.Contains("W") ? "/WJets" : "/ZJets") + "Corr.root";
-    
+    std::string NLOWeightsFilename =  "JetMass/NLOweights" + (std::string)(version.Contains("W") ? "/WJets" : "/ZJets") + "Corr"+ (std::string)(isUL ? "UL" : "") +".root";
+    std::cout << "Getting NLOWeights from " << NLOWeightsFilename << std::endl;
     TFile * NLOWeightsFile = new TFile(locate_file(NLOWeightsFilename).c_str());
     h_kfactor = (TH1F*) NLOWeightsFile->Get("kfactor");
     h_ewcorr = (TH1F*) NLOWeightsFile->Get("ewcorr");

@@ -35,7 +35,7 @@ private:
 
 class NLOWeights: public uhh2::AnalysisModule{
 public:
-  NLOWeights(uhh2::Context & ctx, const std::string & boson_pt_handlename="V_pt");
+  NLOWeights(uhh2::Context & ctx, const std::string & boson_pt_handlename="V_pt", bool isUL=false);
   virtual bool process(uhh2::Event & event) override;
   
 private:
