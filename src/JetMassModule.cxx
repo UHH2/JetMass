@@ -68,7 +68,7 @@ public:
 
 private:
   TString version;
-  bool is_mc, is_QCD, matchV, is_WSample, is_ZSample, is_buggyPU;
+  bool is_mc, is_QCD, matchV, is_WSample, is_ZSample, is_buggyPU, isUL;
   bool isttbarSel = false;
   bool isvjetsSel = false;
   bool do_genStudies = false;
@@ -85,7 +85,7 @@ private:
   std::unique_ptr<TopJetCorrections> topjetCorr,topjetCorr_chs;
   std::unique_ptr<AnalysisModule>ttgen_producer;  
   std::unique_ptr<AnalysisModule> matching_selection_producer;
-  std::unique_ptr<AnalysisModule> nlo_weights;
+  std::unique_ptr<AnalysisModule> nlo_weights, nlo_weights_UL;
   std::unique_ptr<AnalysisModule> recojet_selector;
   std::unique_ptr<AnalysisModule> genjet_selector;
   std::unique_ptr<AnalysisModule> ht_calculator;
@@ -132,7 +132,7 @@ private:
 
   uhh2::Event::Handle<const GenTopJet*> handle_gentopjet,handle_gentopjet_nocut;
   uhh2::Event::Handle<const TopJet*> handle_recotopjet,handle_recotopjet_chs;
-  uhh2::Event::Handle<double> handle_genjetpt;
+  uhh2::Event::Handle<double> handle_genjetpt, handle_V_pt;
   uhh2::Event::Handle<MatchingSelection> handle_matching_selection;
 
   uhh2::Event::Handle<std::vector<TopJet>> handle_chs_jets;
@@ -150,6 +150,7 @@ JetMassModule::JetMassModule(Context & ctx){
   // Set some boolians
   version = ctx.get("dataset_version");
   is_mc = ctx.get("dataset_type") == "MC";
+  isUL = is_UL(extract_year(ctx));
   is_QCD = ctx.get("dataset_version").find("QCD") != std::string::npos;
   is_WSample = ctx.get("dataset_version").find("WJets") != std::string::npos;
   is_ZSample = ctx.get("dataset_version").find("ZJets") != std::string::npos;
@@ -173,9 +174,9 @@ JetMassModule::JetMassModule(Context & ctx){
   handle_matching_selection = ctx.get_handle<MatchingSelection>(matching_selection_handlename);
 
   std::string genjetpt_handlename("genjetpt");
-  // std::string V_pt_handlename("V_pt");
   nlo_weights.reset(new NLOWeights(ctx,genjetpt_handlename));
-  
+  std::string V_pt_handlename("V_pt");
+  nlo_weights_UL.reset(new NLOWeights(ctx,V_pt_handlename,true));
   do_genStudies = string2bool(ctx.get("doGenStudies", "true"));
   
   // common modules
@@ -277,7 +278,7 @@ JetMassModule::JetMassModule(Context & ctx){
   handle_recotopjet = ctx.get_handle<const TopJet*>(recotopjet_handlename);
   handle_recotopjet_chs = ctx.get_handle<const TopJet*>(recotopjet_chs_handlename);
 
-  // handle_V_pt = ctx.declare_event_output<double>(V_pt_handlename);
+  handle_V_pt = ctx.declare_event_output<double>(V_pt_handlename);
   handle_genjetpt = ctx.declare_event_output<double>(genjetpt_handlename);
   handle_gen_HT = ctx.declare_event_output<double>(genHT_handlename);
   handle_HT = ctx.declare_event_output<double>(HT_handlename);
@@ -554,7 +555,7 @@ bool JetMassModule::process(Event & event) {
   }
   if(EXTRAOUT) std::cout << "JetMassModule: Cleaner done!" << std::endl;
 
-  double genjetpt = -1;
+  double genjetpt(-1.0), bosonpt(-1.0);
   if(is_mc){
     //find gen(top)jet from gen V boson and save it to handle for use in nloweight application
     // const Particle gen_V_particle = event.genparticles->at(get_V_index(*event.genparticles));
@@ -566,10 +567,9 @@ bool JetMassModule::process(Event & event) {
     // std::cout << "genV jets pt: " << (v_gentopjet?v_gentopjet->pt():-1.0) << " " << (v_genjet?v_genjet->pt():-1.0) <<" " << gen_V_particle.pt() << std::endl; 
     // std::cout << "genV jets mass: " << v_gentopjet->softdropmass() << " " << v_genjet->v4().M() <<" " << gen_V_particle.v4().M() << std::endl; 
     // event.set(handle_gentopjet_matched_V,v_gentopjet);
-    // const Particle gen_V_particle = event.genparticles->at(get_V_index(*event.genparticles));
-    // float boson_pt = gen_V_particle.pt();
-    // event.set(handle_V_pt, boson_pt);
     if(isvjetsSel && (is_WSample || is_ZSample)){
+      const Particle gen_V_particle = event.genparticles->at(get_V_index(*event.genparticles));
+      bosonpt = gen_V_particle.pt();
       if(event.topjets->size()>0){
         //get genjet pt for k factors
         const GenJet * closest_genjet_1 = closestParticle(event.topjets->at(0), *event.genjets);
@@ -580,10 +580,13 @@ bool JetMassModule::process(Event & event) {
       }
     }
   }
+  event.set(handle_V_pt, bosonpt);
   event.set(handle_genjetpt, genjetpt);
 
-  if(is_mc) nlo_weights->process(event); // now taking pT of V-boson genparticle
-
+  if(is_mc){
+    if(isUL) nlo_weights_UL->process(event);
+    else nlo_weights->process(event);
+  }
   h_hlt_eff->fill(event);
   
   // if(event.topjets->size()>0){
