@@ -44,10 +44,10 @@ template class RhoCut<GenTopJet>;
 
 class TopJetPtCut: public uhh2::Selection{
 public:
-  TopJetPtCut(uhh2::Context & ctx, float pt_min_ = 0., float pt_max_=infinity);
+  TopJetPtCut(uhh2::Context & ctx, float pt_min_ = 0.);
   virtual bool passes(const uhh2::Event &event) override;
 private:
-  float pt_min, pt_max;
+  float pt_min;
   uhh2::Event::Handle<double> h_jecfactor_nominal, h_jecfactor_up, h_jecfactor_down;
 };
 
