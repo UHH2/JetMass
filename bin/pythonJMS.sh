@@ -30,8 +30,7 @@ export LD_LIBRARY_PATH_BACKUP=$LD_LIBRARY_PATH
 # this breaks python3 since PYTHONPATH then prefers python2.7 libs. repeat the same for PYTHONPATH:
 export PYTHON_PATH_BACKUP=$PYTHON_PATH
 
-mode=${1:default}
-
+mode=${1:-default}
 if [ $mode = "-i" ]; then
   env -u LD_LIBRARY_PATH -u PYTHONPATH "$VENVPYTHON" -c "q = __import__(\"functools\").partial(__import__(\"os\")._exit, 0);__import__(\"IPython\").embed()"
 else
