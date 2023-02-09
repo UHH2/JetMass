@@ -51,7 +51,7 @@ def hist_to_th1(H, hist_name=""):
     if __from_numpy:
         x_axis_edges = H[1]
     else:
-        x_axis_edges = H.axes[0]
+        x_axis_edges = H.axes[0].edges
         x_axis_name = H.axes[0].name
 
     # take values and variances from hist and 'fill' under- and overflow bins
