@@ -1,13 +1,15 @@
 #!/usr/bin/env pythonJMS.sh
-
 from coffea.util import load, save
+import os
 
 
 def flatten_templates(
-    hists, hist_name, samples, jec_applied_on="pt&mJ", legacy_hist_name_pattern=""
+        hists, hist_name, samples, jec_applied_on="pt&mJ", legacy_hist_name_pattern="",
+        eta_region='inclusive'
 ):
     hist_axes = hists[hist_name].axes
     templates = {}
+    eta_regions = {"barrel": 0, "endcap": 1, "inclusive": sum}
 
     for pt_bin in range(len(hist_axes["pt"].edges)):
         pt_inclusive = pt_bin == len(hist_axes["pt"].edges) - 1
@@ -40,6 +42,9 @@ def flatten_templates(
                 "dataset": sample,
                 "jecAppliedOn": jec_applied_on,
             }
+            # TODO remove ones variation hists also have eta bins!
+            if "abs_eta_regions" in [ax.name for ax in hist_axes]:
+                hist_id_dict["abs_eta_regions"] = eta_regions[eta_region]
             h_ = hists[hist_name][hist_id_dict]
 
             templates[legacy_hist_name] = h_
@@ -171,6 +176,7 @@ if __name__ == "__main__":
     parser.add_argument("--input", "-i", default="templates_2017.coffea")
     parser.add_argument("--output", "-o", default="templates_1d_2017")
     parser.add_argument("--JEC", default="pt&mJ", choices=["none", "pt", "pt&mJ"])
+    parser.add_argument("--eta", default="inclusive", choices=["inclusive", "barrel", "endcap"])
     parser.add_argument("--unfolding", action="store_true")
 
     args = parser.parse_args()
@@ -247,6 +253,7 @@ if __name__ == "__main__":
                         samples=samples,
                         jec_applied_on=args.JEC,
                         legacy_hist_name_pattern=f"{selection}_mjet_PTBIN_{region}",
+                        eta_region=args.eta
                     )
                 )
                 for variation in ["all", "chargedH", "neutralH", "gamma", "other"]:
@@ -257,6 +264,7 @@ if __name__ == "__main__":
                             samples=samples,
                             jec_applied_on=args.JEC,
                             legacy_hist_name_pattern=f"{selection}_mjet_0_0_{variation}_PTBIN_{region}__up",
+                            eta_region=args.eta
                         )
                     )
                     templates.update(
@@ -266,9 +274,12 @@ if __name__ == "__main__":
                             samples=samples,
                             jec_applied_on=args.JEC,
                             legacy_hist_name_pattern=f"{selection}_mjet_0_0_{variation}_PTBIN_{region}__down",
+                            eta_region=args.eta
                         )
                     )
 
+    if not os.path.exists(os.path.dirname(args.output)):
+        os.makedirs(os.path.dirname(args.output))
     save(templates, f"{args.output}.coffea")
     fout = uproot.recreate(f"{args.output}.root")
     for hist_name, H in templates.items():
