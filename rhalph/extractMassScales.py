@@ -149,12 +149,16 @@ class FitResults:
 
 if __name__ == "__main__":
     import argparse
+    import glob
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--fits", nargs="+", default=[], help="List of fits (separated by spaces).", required=True)
     parser.add_argument("--fit-peaks", action="store_true")
     parser.add_argument("-o", "--output", default="fitResults.json")
     args = parser.parse_args()
+
+    if args.fits == ["all"]:
+        args.fits = glob.glob("*/config.json")
     configs = [(fit_dir if "config.json" else f"{fit_dir}/config.json") for fit_dir in args.fits]
 
     all_results = {}

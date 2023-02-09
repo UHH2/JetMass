@@ -18,17 +18,22 @@ kfactor_path = f"{jetmass_path}/NLOweights/"
 
 
 class JMSTemplates(processor.ProcessorABC):
-    def __init__(self, year="2017"):
+    def __init__(self, year="2017", jec="nominal"):
         self._year = year
+        self._jec = jec
 
         dataset_ax = hist.axis.StrCategory([], name="dataset", growth=True)
         # shift_ax = hist.axis.StrCategory([], name="shift", growth=True)
         jec_applied_ax = hist.axis.StrCategory(
             [], name="jecAppliedOn", label="JEC applied on", growth=True
         )
+        # jec_ax = hist.axis.StrCategory(
+        #     ["raw", "pt", "pt_up", "pt_down","pt_","pt_mJ_up", "down"], name="JEC", label="JEC"
+        # )
         mJ_ax = hist.axis.Regular(50, 0.0, 500.0, name="mJ", label=r"$m_{SD}$ [GeV]")
         pT_ax = hist.axis.Regular(100, 0.0, 3000.0, name="pt", label=r"$p_{T}$ [GeV]")
         eta_ax = hist.axis.Regular(100, -6.5, 6.5, name="eta", label=r"$\eta$")
+        eta_regions_ax = hist.axis.Variable([0, 1.3, 2.5], name="abs_eta_regions", label=r"$|\eta|$")
         phi_ax = hist.axis.Regular(100, -4, 4, name="phi", label=r"$\Phi$")
 
         mJ_fit_ax = hist.axis.Regular(
@@ -242,6 +247,23 @@ class JMSTemplates(processor.ProcessorABC):
                             self._pT_fit_ax[selection],
                             dataset_ax,
                             jec_applied_ax,
+                            eta_regions_ax,
+                            storage=hist.storage.Weight(),
+                        ),
+                        f"{selection}_mjet_{region}_jec_up": hist.Hist(
+                            mJ_fit_ax,
+                            self._pT_fit_ax[selection],
+                            dataset_ax,
+                            jec_applied_ax,
+                            eta_regions_ax,
+                            storage=hist.storage.Weight(),
+                        ),
+                        f"{selection}_mjet_{region}_jec_down": hist.Hist(
+                            mJ_fit_ax,
+                            self._pT_fit_ax[selection],
+                            dataset_ax,
+                            jec_applied_ax,
+                            eta_regions_ax,
                             storage=hist.storage.Weight(),
                         ),
                         f"{selection}_pt_{region}": hist.Hist(
@@ -257,6 +279,15 @@ class JMSTemplates(processor.ProcessorABC):
                             rho_ax,
                             dataset_ax,
                             jec_applied_ax,
+                            storage=hist.storage.Weight(),
+                        ),
+                        f"{selection}_mjet_v_jecfactor_{region}": hist.Hist(
+                            mJ_ax,
+                            eta_regions_ax,
+                            hist.axis.Regular(
+                                300, 0, 3, name="jecfactor", label="jecfactor",
+                            ),
+                            dataset_ax,
                             storage=hist.storage.Weight(),
                         ),
                     }
@@ -282,6 +313,7 @@ class JMSTemplates(processor.ProcessorABC):
                             f"{selection}_mjet_{variation}_variation_{region}__up": hist.Hist(
                                 mJ_fit_ax,
                                 self._pT_fit_ax[selection],
+                                eta_regions_ax,
                                 dataset_ax,
                                 jec_applied_ax,
                                 storage=hist.storage.Weight(),
@@ -294,6 +326,7 @@ class JMSTemplates(processor.ProcessorABC):
                             f"{selection}_mjet_{variation}_variation_{region}__down": hist.Hist(
                                 mJ_fit_ax,
                                 self._pT_fit_ax[selection],
+                                eta_regions_ax,
                                 dataset_ax,
                                 jec_applied_ax,
                                 storage=hist.storage.Weight(),
@@ -372,7 +405,15 @@ class JMSTemplates(processor.ProcessorABC):
         #     events.weight = events.weight/self.corrections['Z_kfactor'](genpt)*self.corrections[f'Z_ewcorr'](vpt)
         #     events.weight = events.weight*self.corrections['Z_kfactor'](genpt)*self.corrections[f'Z_ewcorr'](genpt)
 
-        jecfactor = events.jecfactor
+        jecfactors = {
+            "nominal": events.jecfactor,
+            "up": events.jecfactor_up,
+            "down": events.jecfactor_down,
+        }
+        if "data" in dataset.lower():
+            jecfactor = jecfactors["nominal"]
+        else:
+            jecfactor = jecfactors[self._jec]
 
         pt_raw = events.pt
         pt = pt_raw * jecfactor
@@ -505,22 +546,35 @@ class JMSTemplates(processor.ProcessorABC):
                     dataset=dataset,
                     jecAppliedOn=jec_applied_on,
                     pt=pt_[smask],
+                    abs_eta_regions=np.abs(eta_[smask]),
                     mJ=mJ_[smask],
                     weight=events.weight[smask],
                 )
+
                 out[f"{selection}_pt_{region}"].fill(
                     dataset=dataset,
                     jecAppliedOn=jec_applied_on,
                     pt=pt_[smask],
                     weight=events.weight[smask],
                 )
+
                 out[f"{selection}_rho_{region}"].fill(
                     dataset=dataset,
                     jecAppliedOn=jec_applied_on,
                     rho=rho_[smask],
                     weight=events.weight[smask],
                 )
-                if jec_applied_on == "none":
+
+                if jec_applied_on == "pt":
+                    out[f"{selection}_mjet_v_jecfactor_{region}"].fill(
+                        dataset=dataset,
+                        mJ=mJ_[smask],
+                        abs_eta_regions=np.abs(eta_[smask]),
+                        jecfactor=jecfactor[smask],
+                        weight=events.weight[smask]
+                    )
+
+                if jec_applied_on == "pt":
                     out[f"{selection}_eta_{region}"].fill(dataset=dataset, eta=eta_[smask], weight=events.weight[smask])
 
                 if isMC:
@@ -535,6 +589,7 @@ class JMSTemplates(processor.ProcessorABC):
                             jecAppliedOn=jec_applied_on,
                             pt=pt_[smask],
                             mJ=mJVar_[:, 0][smask],
+                            abs_eta_regions=np.abs(eta_[smask]),
                             weight=events.weight[smask],
                         )
                         out[f"{selection}_mjet_{variation}_variation_{region}__down"].fill(
@@ -542,6 +597,7 @@ class JMSTemplates(processor.ProcessorABC):
                             jecAppliedOn=jec_applied_on,
                             pt=pt_[smask],
                             mJ=mJVar_[:, 1][smask],
+                            abs_eta_regions=np.abs(eta_[smask]),
                             weight=events.weight[smask],
                         )
         return out
@@ -552,11 +608,12 @@ if __name__ == "__main__":
 
     workflow.parser.add_argument("--output", "-o", type=str, default="jms_templates.coffea")
     workflow.parser.add_argument("--year", default="UL17")
+    workflow.parser.add_argument("--JEC", default="nominal")
     workflow.parser.add_argument("--maxfiles", type=int, default=-1)
 
     args = workflow.parse_args()
 
-    workflow.processor_instance = JMSTemplates(args.year)
+    workflow.processor_instance = JMSTemplates(args.year, args.JEC)
     workflow.processor_schema = BaseSchema
 
     sample_pattern = (
