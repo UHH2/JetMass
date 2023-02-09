@@ -271,7 +271,7 @@ class CombineWorkflows(object):
         #     debug,
         # )
         command_string += exec_bash(
-            "PostFitShapesFromWorkspace -w {WORKSPACE} -o {MODELDIR}fit_shapes.root --postfit --sampling "
+            "PostFitShapesFromWorkspace -w {WORKSPACE} --output {MODELDIR}fit_shapes.root --postfit --sampling "
             "-f {MODELDIR}fitDiagnostics.root:fit_s".format(
                 WORKSPACE=self.workspace, MODELDIR=self.modeldir
             ),
@@ -292,7 +292,7 @@ class CombineWorkflows(object):
             debug,
         )
         command_string += exec_bash(
-            "PostFitShapesFromWorkspace -w {WORKSPACE} -o {MODELDIR}fit_shapes.root --postfit "
+            "PostFitShapesFromWorkspace -w {WORKSPACE} --output {MODELDIR}fit_shapes.root --postfit "
             "--sampling -f {MODELDIR}fitDiagnostics.root:fit_s".format(
                 WORKSPACE=self.workspace, MODELDIR=self.modeldir
             ),
