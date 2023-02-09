@@ -376,6 +376,29 @@ class JMSTemplates(processor.ProcessorABC):
 
         isMC = "data" not in dataset.lower()
 
+        # HEM15/16 Treatment
+        # https://hypernews.cern.ch/HyperNews/CMS/get/JetMET/2000.html
+        # courtesy of C.Matthies
+        # https://github.com/MatthiesC/LegacyTopTagging/blob/master/include/Utils.h#L325-L328
+        HEM_affected_lumi_fraction = 0.64844705699  # (Run 319077 (17.370008/pb) + Run C + Run D) / all 2018
+        HEM_eta_min, HEM_eta_max = -3.2, -1.3
+        HEM_phi_min, HEM_phi_max = -1.57, -0.87
+        HEM_affected_event_jets = (
+            (events.eta < HEM_eta_max)
+            & (events.eta > HEM_eta_min)
+            & (events.phi < HEM_phi_max)
+            & (events.phi > HEM_phi_min)
+        )
+        treat_HEM = False
+        if isMC:
+            if self._year == "UL18":
+                events.weight = ak.where(
+                    HEM_affected_event_jets, events.weight * (1 - HEM_affected_lumi_fraction), events.weight
+                )
+        else:
+            if self._year == "UL18" and any(run in events.metadata["filename"] for run in ["RunC", "RunD"]):
+                treat_HEM = True
+
         # evaluate matching criteria and created new masked events dataframe
         matching_mask = np.ones(len(events), dtype="bool")
 
@@ -510,8 +533,17 @@ class JMSTemplates(processor.ProcessorABC):
                 (events.pass_reco_selection == 1) & (events.pass_gen_selection == 1),
             )
 
-            selections.add("jetpfid", events.jetpfid == 1)
+            passing_hem_treatment = (
+                ~HEM_affected_event_jets if treat_HEM else
+                ak.ones_like(events.pt, dtype=bool)
+            )
 
+            selections.add("jetpfid",
+                           (
+                               (events.jetpfid == 1)
+                               & (passing_hem_treatment == 1)
+                           )
+                           )
             selection = events.metadata["selection"]
 
             selections.add(
