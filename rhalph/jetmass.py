@@ -37,8 +37,21 @@ def jet_mass_producer(args, configs):
     # getting path of dir with root file from config
     if args.verbose > 0:
         print("histfilename", configs["histLocation"])
-    hist_file = ROOT.TFile(configs["histLocation"])
 
+    hist_file = ROOT.TFile(configs["histLocation"])
+    aux_hist_files = {
+        # "barrel": ROOT.TFile(configs["histLocation"].replace(".root", "_barrel.root")),
+        # "endcap": ROOT.TFile(configs["histLocation"].replace(".root", "_endcap.root")),
+    }
+    if args.JECVar:
+        aux_hist_files.update({
+            "jec_up": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_up.root")),
+            # "jec_up_barrel": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_up_barrel.root")),
+            # "jec_up_endcap": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_up_endcap.root")),
+            "jec_down": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_down.root")),
+            # "jec_down_barrel": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_down_barrel.root")),
+            # "jec_down_endcap": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_down_endcap.root")),
+        })
     do_qcd_estimation = len(qcd_estimation_channels) > 0
     do_initial_qcd_fit = configs.get("InitialQCDFit", "False") == "True"
     qcd_fail_region_constant = configs.get("QCDFailConstant", "False") == "True"
@@ -51,8 +64,13 @@ def jet_mass_producer(args, configs):
     if "Pseudo" in configs and len(configs["Pseudo"]) > 0 and "lumiScale" in configs["Pseudo"][0]:
         lumi_scale = float(configs["Pseudo"][0].split(":")[-1])
 
-    def get_hist(hist_dir):
-        hist = hist_file.Get(str(hist_dir))
+    def get_hist(hist_dir, hist_file_="nominal"):
+        # print(hist_dir)
+        if hist_file_ == "nominal":
+            hist = hist_file.Get(str(hist_dir))
+        else:
+            hist = aux_hist_files[hist_file_].Get(str(hist_dir))
+
         hist.SetName("msd")
         hist.GetXaxis().SetTitle("msd")
         if rebin_msd > 0:
@@ -349,6 +367,9 @@ def jet_mass_producer(args, configs):
                 if norm_unc > 0 and name in sample and sample not in norm_nuisances:
                     norm_nuisances.update({sample: nuisance_par})
 
+    # jec variation nuisances
+    jec_var_nuisance = rl.NuisanceParameter("jec_variation", "shape", 0, -10, 10)
+
     # tagging eff sf for ttbar semileptonic samples
 
     # top_tag_eff = rl.IndependentParameter("top_tag_eff_sf",1.,-10,10)
@@ -447,6 +468,13 @@ def jet_mass_producer(args, configs):
                             )
 
                 if not args.noNuisances:
+                    if args.JECVar and (
+                        sample.sampletype == rl.Sample.SIGNAL or sample.sampletype == rl.Sample.BACKGROUND
+                    ):
+                        hist_jec_up = get_hist(hist_dir % (sample_name, ""), "jec_up")
+                        hist_jec_down = get_hist(hist_dir % (sample_name, ""), "jec_down")
+                        sample.setParamEffect(jec_var_nuisance, hist_jec_up, hist_jec_down)
+
                     # setting effects of JMR variation nuisance(s)
                     if args.JMRparameter and sample.sampletype == rl.Sample.SIGNAL:
                         hist_jmr_up = get_hist(hist_dir % (sample_name, "") + "_jer_up")
@@ -629,6 +657,7 @@ if __name__ == "__main__":
     parser.add_argument("--customCombineWrapper", action="store_true")
     parser.add_argument("--noNuisances", action="store_true")
     parser.add_argument("--JMRparameter", action="store_true")
+    parser.add_argument("--JECVar", action="store_true")
     parser.add_argument("--pTdependetJMRParameter", action="store_true")
     parser.add_argument("--noNormUnc", action="store_true")
     parser.add_argument("--skipExtArgRender", action="store_true")
