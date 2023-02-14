@@ -5,8 +5,8 @@ import os
 import numpy as np
 import ROOT
 ROOT.PyConfig.IgnoreCommandLineOptions = True
-from jetmass_scale_fit_utils import scale_lumi, build_pseudo, build_mass_scale_variations
-import rhalphalib as rl
+from jetmass_scale_fit_utils import scale_lumi, build_pseudo, build_mass_scale_variations  # noqa
+import rhalphalib as rl         # noqa
 rl.util.install_roofit_helpers()
 
 
@@ -44,7 +44,7 @@ def jet_mass_producer(args, configs):
     qcd_fail_region_constant = configs.get("QCDFailConstant", "False") == "True"
     qcd_fail_sigma_scale = configs.get("QCDSigmaScale", 1.0)
     TF_ranges = (-50, 50)
-    qcdparam_lo, qcdparam_hi = (-100, 100)
+    qcdparam_lo, qcdparam_hi = (-50, 50)
     QCDFailUnbound = False
 
     lumi_scale = 1.0
@@ -157,6 +157,9 @@ def jet_mass_producer(args, configs):
 
         TF_suffix = configs.get("TFSuffix", "")
 
+        tf1_basis = "Bernstein"
+        tf2_basis = "Bernstein"
+
         if do_initial_qcd_fit:
             initial_qcd_fit_orders = tuple(configs.get("InitialQCDFitOrders", [2, 2]))
             if not os.path.exists(model_name):
@@ -177,10 +180,11 @@ def jet_mass_producer(args, configs):
             #     init_params=np.ones((initial_qcd_fit_orders[0] + 1, initial_qcd_fit_orders[1] + 1)),
             #     limits=TF_ranges,
             # )
-            tf_MCtempl = rl.BernsteinPoly(
+            tf_MCtempl = rl.BasisPoly(
                 "tf_MCtempl",
                 initial_qcd_fit_orders,
                 ["pt", "rho"],
+                basis=tf1_basis,
                 init_params=np.ones((initial_qcd_fit_orders[0] + 1, initial_qcd_fit_orders[1] + 1)),
                 limits=TF_ranges,
             )
@@ -246,6 +250,7 @@ def jet_mass_producer(args, configs):
             # ROOT.Math.MinimizerOptions.SetDefaultMinimizer("Minuit2")
             # ROOT.Math.MinimizerOptions.SetDefaultTolerance(0.0001)
             # ROOT.Math.MinimizerOptions.SetDefaultPrecision(-1.0)
+
             qcdfit = simpdf.fitTo(
                 obs,
                 ROOT.RooFit.Extended(True),
@@ -275,7 +280,10 @@ def jet_mass_producer(args, configs):
             #     "tf_dataResidual_" + model_name + TF_suffix, bernstein_orders, ["pt", "rho"], limits=TF_ranges
             # )
 
-            tf_dataResidual = rl.BernsteinPoly("tf_dataResidual", bernstein_orders, ["pt", "rho"], limits=TF_ranges)
+            tf_dataResidual = rl.BasisPoly(
+                "tf_dataResidual", bernstein_orders, ["pt", "rho"],
+                basis=tf2_basis, limits=TF_ranges
+            )
             # tf_dataResidual = rl.BernsteinPoly("tf_dataResidual", bernstein_orders, ['pt', 'rho'], limits=(0,10))
             tf_dataResidual_params = tf_dataResidual(ptscaled, rhoscaled)
             tf_params = data_norms["eff_arr"] * tf_MCtempl_params_final * tf_dataResidual_params
@@ -517,7 +525,10 @@ def jet_mass_producer(args, configs):
             # tf_params = rl.BernsteinPoly(
             #     "tf_params_" + model_name + TF_suffix, bernstein_orders, ["pt", "rho"], limits=TF_ranges
             # )
-            tf_params = rl.BernsteinPoly("tf_params", bernstein_orders, ["pt", "rho"], limits=TF_ranges)
+            tf_params = rl.BasisPoly(
+                "tf_params", bernstein_orders, ["pt", "rho"],
+                basis=tf1_basis, limits=TF_ranges
+            )
 
             # for a in tf_params.parameters:
             #     for params in a:
@@ -641,11 +652,11 @@ if __name__ == "__main__":
         if args.config.endswith(".json"):
             configs = json.load(open(args.config))
         else:
-            execfile(args.config)
+            execfile(args.config)  # noqa
         existing_config = configs["ModelName"] + "/config.json"
-        if os.path.isfile(existing_config):
+        if os.path.isfile(existing_config) and args.unfolding:
             use_existing_config = (
-                raw_input(
+                raw_input(      # noqa
                     "There already is a directory corresponding to this config. "
                     "Do you want to load the existing config? [Y/N]"
                 ).lower()
@@ -728,19 +739,20 @@ if __name__ == "__main__":
             json.dumps(fit_result_parameters, sort_keys=True, indent=2)
         )
 
-        if args.massScales:
-            massScales = []
-            fitargs = fit_diagnostics.Get("fit_s").floatParsFinal()
-            for name in build_mass_scale_variations(configs, args)[1]:
-                param = fitargs.find(name)
-                center = param.getValV()
-                error_up = abs(param.getErrorHi())
-                error_down = abs(param.getErrorLo())
+        # if args.massScales:
+        #     massScales = []
+        #     fitargs = fit_diagnostics.Get("fit_s").floatParsFinal()
+        #     for name in build_mass_scale_variations(configs, args)[1]:
+        #         param = fitargs.find(name)
+        #         center = param.getValV()
+        #         error_up = abs(param.getErrorHi())
+        #         error_down = abs(param.getErrorLo())
 
-                massScales.append([center, error_up, -error_down])
-            np.save(
-                configs["ModelName"] + "/" + configs["ModelName"] + "MassScales.npy", np.array(massScales, dtype=float)
-            )
+        #         massScales.append([center, error_up, -error_down])
+        #     np.save(
+        #         configs["ModelName"] + "/" + configs["ModelName"] + "MassScales.npy",
+        #         np.array(massScales, dtype=float)
+        #     )
 
         do_postfit = fit_result.status() <= 3
     except BaseException as e:
