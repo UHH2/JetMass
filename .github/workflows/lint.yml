@@ -19,4 +19,6 @@ jobs:
     - name: Install and run flake 8
       run: |
         pip install flake8
+        ls /usr/bin/python*
+        which pip
         flake8 python --statistics
