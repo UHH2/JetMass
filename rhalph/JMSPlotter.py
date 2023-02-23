@@ -137,10 +137,8 @@ class JMSPlotter:
             )
         [self.lFits.append(fit) for fit in updated_fit_names]
         self.dFitResults.update({k + postfix: v for k, v in fit_results.items() if k in fits_to_plot})
-        print(self.dJms)
         self.extract_fit_results()
-        print(self.dJms)
-
+        
     def load_JEC_fits(self, fit_results: Dict, fits: List[str] = None):
         if fits is None:
             fits = self.lFits
@@ -230,7 +228,6 @@ class SFHist(object):
         return self._pt_high[m]
 
     def update_yerr(self, yerr, source: Union[List[str], str] = ""):
-        print(yerr, source)
         if isinstance(source, list):
             [self.unc_sources.append(s) for s in source if s not in self.unc_sources]
         elif isinstance(source, str):
@@ -462,9 +459,9 @@ def create_plotter(fit_result_path: str, years: List, regions: List, JEC: bool =
 
 if __name__ == "__main__":
     # years = ["UL18"]
-    # regions = ["Combined"]
+    regions = ["Combined"]
     years = ["UL16preVFP", "UL16postVFP", "UL17", "UL18"]
-    regions = ["TTBar", "VJets", "Combined"]
+    # regions = ["TTBar", "VJets", "Combined"]
     plotter = {}
     # plotter["12_02_23"] = create_plotter("fitResults_12-02-23.json", years, regions, True, True)
     plotter["22_02_23"] = create_plotter("fitResults_JECVarAsInput_22-02-23.json", years, regions)
