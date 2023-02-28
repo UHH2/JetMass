@@ -136,15 +136,44 @@ def jet_mass_producer(args, configs):
                 qcd_estimation_relevant_selection + "_QCD__mjet_" + config["pt_bin"] + additional_bin + "_pass"
             )
 
-            empty_hist = fail_hist.Clone()
-            empty_hist.Reset()
-            signal_fail = rl.TemplateSample(channel_name + "fail" + "_" + "Signal", rl.Sample.SIGNAL, empty_hist)
+            # empty_hist = fail_hist.Clone()
+            # empty_hist.Reset()
+            # adding signal process just for the sake of being complete. won't be used in fit of qcd-model
+            signal_fail_hist = get_hist(
+                qcd_estimation_relevant_selection
+                + "_"
+                + config["signal"][0]
+                + "__mjet_"
+                + config["pt_bin"]
+                + additional_bin
+                + "_fail"
+            )
+
+            signal_pass_hist = get_hist(
+                qcd_estimation_relevant_selection
+                + "_"
+                + config["signal"][0]
+                + "__mjet_"
+                + config["pt_bin"]
+                + additional_bin
+                + "_pass"
+            )
+
+            signal_fail = rl.TemplateSample(channel_name + "fail" + "_" + "Signal", rl.Sample.SIGNAL, signal_fail_hist)
             fail_ch.addSample(signal_fail)
-            signal_pass = rl.TemplateSample(channel_name + "pass" + "_" + "Signal", rl.Sample.SIGNAL, empty_hist)
+            signal_pass = rl.TemplateSample(channel_name + "pass" + "_" + "Signal", rl.Sample.SIGNAL, signal_pass_hist)
             pass_ch.addSample(signal_pass)
 
-            fail_ch.setObservation(fail_hist)
-            pass_ch.setObservation(pass_hist)
+            # creating pseudo data from qcd mc
+            h_np_fail = rl.util._to_numpy(fail_hist)
+            h_np_pseudo_fail = (np.random.poisson(h_np_fail[0]),) + h_np_fail[1:]
+            h_np_pass = rl.util._to_numpy(pass_hist)
+            h_np_pseudo_pass = (np.random.poisson(h_np_pass[0]), ) + h_np_pass[1:]
+
+            fail_ch.setObservation(h_np_pseudo_fail)
+            pass_ch.setObservation(h_np_pseudo_pass)
+
+            # fail_
             qcd_fail += fail_ch.getObservation().sum()
             qcd_pass += pass_ch.getObservation().sum()
         qcd_eff = qcd_pass / qcd_fail
