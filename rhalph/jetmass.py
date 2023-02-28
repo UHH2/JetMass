@@ -355,17 +355,40 @@ def jet_mass_producer(args, configs):
     for channel_name in channels.keys():
         if args.minimalModel:
             break
-        for i, sample in enumerate(channels[channel_name]["samples"]):
-            if "NormUnc" not in channels[channel_name]:
+        if "NormUnc" not in channels[channel_name]:
+            continue
+        norm_uncertainty_pars = {}
+        norm_uncertainties = channels[channel_name]["NormUnc"]
+        for name, norm_unc in norm_uncertainties.items():
+            norm_uncertainty_regions = [""]
+            norm_unc_val = 0.0
+            if isinstance(norm_unc, dict):
+                if norm_unc.get("decorrelateRegions", False):
+                    print("decorrelating normUnc {} accross regions.".format(name))
+                    norm_uncertainty_regions = channels[channel_name]["regions"]
+                    norm_unc_val = norm_unc["value"]
+                else:
+                    raise NotImplementedError(
+                        'If NormUnc is a dict it should be of the form {"value":XX.XX,"decorrelateRegions":True}.'
+                        "Anything else is not implemented at the moment."
+                    )
+            elif isinstance(norm_unc, float):
+                norm_unc_val = norm_unc
+            else:
+                raise NotImplementedError("provided form of NormUnc parameter is not implemented!")
+            norm_uncertainty_pars.update({
+                name: {region: [rl.NuisanceParameter(name + region + "_normUnc", "lnN"), norm_unc_val]
+                       for region in norm_uncertainty_regions
+                       }
+            })
+
+        for sample in channels[channel_name]["samples"]:
+            if sample in norm_nuisances:
                 continue
-            norm_uncertainties = channels[channel_name]["NormUnc"]
-            for name, norm_unc in norm_uncertainties.items():
-                nuisance_par = [rl.NuisanceParameter(name + "_normUnc", "lnN"), norm_unc]
-                for k, v in norm_nuisances.items():
-                    if name in v[0].name:
-                        nuisance_par = v
-                if norm_unc > 0 and name in sample and sample not in norm_nuisances:
-                    norm_nuisances.update({sample: nuisance_par})
+            for nuisance_par_name, nuisance_par_dict in norm_uncertainty_pars.items():
+
+                if nuisance_par_name in sample:
+                    norm_nuisances[sample] = nuisance_par_dict
 
     # jec variation nuisances
     jec_var_nuisance = rl.NuisanceParameter("jec_variation", "shape", 0, -10, 10)
@@ -493,7 +516,12 @@ def jet_mass_producer(args, configs):
                     sample.setParamEffect(lumi, lumi_effect)
                     if not args.noNormUnc:
                         if sample_name in norm_nuisances.keys():
-                            sample.setParamEffect(norm_nuisances[sample_name][0], norm_nuisances[sample_name][1])
+                            for norm_nuisance_region in norm_nuisances[sample_name].keys():
+                                if norm_nuisance_region == region or norm_nuisance_region == "":
+                                    sample.setParamEffect(
+                                        norm_nuisances[sample_name][norm_nuisance_region][0],
+                                        norm_nuisances[sample_name][norm_nuisance_region][1],
+                                    )
 
                 ch.addSample(sample)
 
