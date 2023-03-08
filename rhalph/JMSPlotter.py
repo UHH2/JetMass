@@ -1,10 +1,10 @@
 #!/usr/bin/env pythonJMS.sh
 import matplotlib
-try:
-    matplotlib.use("module://imgcat")
-except ModuleNotFoundError as e:
-    print(e)
-    print("Install imgcat with `pip install imgcat`")
+# try:
+#     matplotlib.use("module://imgcat")
+# except ModuleNotFoundError as e:
+#     print(e)
+#     print("Install imgcat with `pip install imgcat`")
 import numpy as np  # noqa
 from typing import List, Dict, Union, Tuple # noqa
 import json  # noqa
@@ -16,6 +16,34 @@ import re  # noqa
 from copy import deepcopy  # noqa
 import os # noqa
 hep.style.use("CMS")
+# mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=[
+#     # "#1b9e77",
+#     # "#d95f02",
+#     # "#7570b3",
+#     # "#e7298a",
+#     # "#66a61e",
+#     # "#e6ab02",
+
+#     # "#66c2a5",
+#     # "#fc8d62",
+#     # "#8da0cb",
+#     # "#e78ac3",
+#     # "#a6d854",
+#     # "#ffd92f",
+
+#     # "#e41a1c",
+#     # "#377eb8",
+#     # "#ffff33",
+#     # "#4daf4a",
+#     # "#984ea3",
+#     # "#ff7f00",
+
+#     "ff5c5c",
+#     "f9c784",
+#     "7eb2dd",
+#     "4c9f70",
+#     "762e42"
+# ])
 
 
 class JMSPlotter:
@@ -138,7 +166,7 @@ class JMSPlotter:
         [self.lFits.append(fit) for fit in updated_fit_names]
         self.dFitResults.update({k + postfix: v for k, v in fit_results.items() if k in fits_to_plot})
         self.extract_fit_results()
-        
+
     def load_JEC_fits(self, fit_results: Dict, fits: List[str] = None):
         if fits is None:
             fits = self.lFits
@@ -290,6 +318,11 @@ class SFHist(object):
         elif self.color is not None:
             kwargs["color"] = self.color
 
+        error_linestyle = "-"
+        if "linestyle" in kwargs:
+            error_linestyle = kwargs["linestyle"]
+            del kwargs["linestyle"]
+
         if ax is None:
             ax = plt.gca()
         xerr = [self.bin_centers - self.pt_low, self.pt_high - self.bin_centers] if self.xerr else None
@@ -309,7 +342,8 @@ class SFHist(object):
                         **kwargs_copy
                     )
                 )
-                split_unc_ebs[-1][2][0].set_linestyle("--")
+                # split_unc_ebs[-1][2][0].set_linestyle(error_linestyle)
+                # split_unc_ebs[-1][0].set_linestyle(error_linestyle)
 
                 kwargs_copy["color"] = split_unc_ebs[-1][0].get_color()
                 kwargs["color"] = kwargs_copy["color"]
@@ -332,11 +366,12 @@ class SFHist(object):
             yerr=self.yerr(sum_sources=uncertainty_index < 0, source_index=uncertainty_index),
             xerr=xerr,
             # label=label,
-            **kwargs
-            # capsize=10 if jec_unc else 0.0,
+            capsize=5,
+            **kwargs,
         )
         if split_uncertainty:
-            eb[2][0].set_linestyle("--")
+            eb[2][0].set_linestyle(error_linestyle)
+            eb[2][1].set_linestyle(error_linestyle)
         try:
             self.save_color(eb[0].get_color())
         except RuntimeError as e:
@@ -355,6 +390,7 @@ class SFHist(object):
         else:
             if self.color is None:
                 kwargs["color"] = mpl.colors.to_rgba_array(ax._get_lines.get_next_color())
+                self.save_color(kwargs["color"])
             else:
                 kwargs["color"] = deepcopy(self.color)
 
@@ -362,6 +398,9 @@ class SFHist(object):
         hatch_facecolor[-1] = min(
             1.0, kwargs.get("alpha", hatch_facecolor[-1]) * 1.5
         )  # setting alpha to 1 for hatch facecolor
+        if "linewidth" not in kwargs:
+            kwargs["linewidth"] = 0.5
+
         hatch_kwargs = deepcopy(kwargs)
         del kwargs["hatch"]
         del hatch_kwargs["label"]
@@ -394,7 +433,7 @@ class SFHist(object):
                 #     del hatch_kwargs["label"]
                 if ibin > 0 and "label" in kwargs:
                     del kwargs["label"]
-
+                mpl.rcParams['hatch.linewidth'] = kwargs["linewidth"]
                 ax.fill_between(
                     self.edges[ibin:ibin+2],
                     lower[ibin],
@@ -407,8 +446,17 @@ class SFHist(object):
                     upper[ibin],
                     **hatch_kwargs
                 )
+                ax.plot(
+                    self.edges[ibin:ibin+2],
+                    [self.bin_content[ibin], self.bin_content[ibin]],
+                    color=kwargs["color"],
+                    linestyle="--",
+                    linewidth=kwargs["linewidth"]
+                )
         else:
+            ax.fill_between(self.bin_centers, lower, upper, **kwargs)
             ax.fill_between(self.bin_centers, lower, upper, **hatch_kwargs)
+            del kwargs["label"]
             kwargs["color"] = hatch_facecolor
             ax.plot(self.bin_centers, self.bin_content, "--", **kwargs)
 
@@ -421,9 +469,15 @@ def setup_ax(w: int = 10, h: int = 7, fontsize: float = 20.0) -> Tuple[plt.Figur
     return f, ax
 
 
-def finalize_ax(ax: plt.Axes, font_size: float = 20.0, fname: str = None, reversered_legend: bool = True) -> None:
+def finalize_ax(
+    ax: plt.Axes, font_size: float = 20.0, fname: str = None, reversered_legend: bool = True, year: str = ""
+) -> None:
     f = ax.get_figure()
-    hep.cms.text(",work in progress", ax=ax, fontsize=font_size)
+    extra_text = ", private work"
+    if year != "":
+        hep.cms.label(label=extra_text, ax=ax, fontsize=font_size, year=year)
+    else:
+        hep.cms.text(extra_text, ax=ax, fontsize=font_size)
 
     handles, labels = ax.get_legend_handles_labels()
     if reversered_legend:
@@ -458,24 +512,20 @@ def create_plotter(fit_result_path: str, years: List, regions: List, JEC: bool =
 
 
 if __name__ == "__main__":
-    # years = ["UL18"]
-    regions = ["Combined"]
     years = ["UL16preVFP", "UL16postVFP", "UL17", "UL18"]
-    # regions = ["TTBar", "VJets", "Combined"]
+    regions = ["TTBar", "VJets", "Combined"]
     plotter = {}
-    # plotter["12_02_23"] = create_plotter("fitResults_12-02-23.json", years, regions, True, True)
-    plotter["22_02_23"] = create_plotter("fitResults_JECVarAsInput_22-02-23.json", years, regions)
-    plotter["21_02_23"] = create_plotter("fitResults_scan_21-02-23.json", years, regions)
+    plotter["07_03_23"] = create_plotter("fitResults_07-03-23.json", years, regions)
+    plotter["06_03_23"] = create_plotter("fitResults_06-03-23.json", years, regions)
 
-    plotter["22_02_23"].load_fit_results(
-        json.load(open("fitResults_JECVarAsInput_22-02-23.json")),
-        [f"Combined{year}JEC{jecdir}" for year in years for jecdir in ["UP", "DOWN"]],
+    plotter["06_03_23"].load_fit_results(
+        json.load(open("fitResults_06-03-23.json")),
+        [f"{region}{year}JEC{jecdir}" for year in years for jecdir in ["UP", "DOWN"] for region in regions],
     )
-    plotter["22_02_23"].construct_hists()
+    plotter["06_03_23"].construct_hists()
     label_suffix = {
-        "12_02_23": "JEC Var as input",
-        "21_02_23": "JEC Var nuisance",
-        "22_02_23": "JEC nominal",
+        "07_03_23": "JEC Var nuisance",
+        "06_03_23": "JEC nominal",
     }
 
     for region in regions:
@@ -483,9 +533,11 @@ if __name__ == "__main__":
             f, ax = setup_ax(10, 7)
             for date, jms_plotter in plotter.items():
                 jms_plotter.dHists[f"{region}{year}"].plot_errorbar(
-                    ax=ax, split_uncertainty=True, alpha=0.8, label=f"{region} {year} {label_suffix[date]}", fmt="."
+                    ax=ax, split_uncertainty=True, alpha=0.8, label=f"{region} {year} {label_suffix[date]}", fmt=".",
+                    linewidth=0.9,
+                    linestyle="--" if date == "06_03_23" else "-"
                 )
-                if "22" in date:
+                if date == "06_03_23":
                     nominal_color = jms_plotter.dHists[f"{region}{year}"].color
                     # jms_plotter.dHists[f"{region}{year}JECDOWN"].plot_errorbar(
                     #     ax,
@@ -501,28 +553,43 @@ if __name__ == "__main__":
                     #     alpha=0.6,
                     #     label=f"{region} {year} JEC up",
                     # )
-
+                    extend = True
                     jms_plotter.dHists[f"{region}{year}JECDOWN"].plot_uncertainty_band(
                         ax,
-                        extend=True,
+                        extend=extend,
                         hatch="/",
                         alpha=0.4,
-                        # linewidth=3,
-                        color=nominal_color - np.array([0, 0.1, 0.0, 0.0]),
+                        linewidth=.6,
+                        # color=nominal_color - np.array([0, 0.1, 0.0, 0.0]),
                         label=f"{region} {year} JEC down",
                     )
+                    var_color = jms_plotter.dHists[f"{region}{year}JECDOWN"].color
+
                     jms_plotter.dHists[f"{region}{year}JECUP"].plot_uncertainty_band(
                         ax,
-                        extend=True,
+                        extend=extend,
                         hatch="\\",
-                        # linewidth=3,
+                        linewidth=.6,
                         alpha=0.4,
-                        color=nominal_color + np.array([0, 0.1, 0.0, 0.0]),
+                        # color=var_color + np.array([0, 0.1, 0.0, 0.0]),
                         label=f"{region} {year} JEC up",
                     )
 
-                    # jms_plotter.dHists[f"VJets{year}"].plot_uncertainty_band(
-                    #     ax=ax, uncertainty_index=1, hatch="/", alpha=0.6, label=f"VJets{year} JEC var."
-                    # )
-            finalize_ax(ax, fname=f"JMSSF_22-02-23/{region}_{year}_comparison.pdf")
+            finalize_ax(ax, fname=f"JMSSF_07-03-23/{region}_{year}_comparison.pdf", year=year)
             # plt.gca().set_prop_cycle(None)
+
+    plotter["07_03_23"] = create_plotter("fitResults_07-03-23.json", years, regions)
+    plotter["06_03_23"] = create_plotter("fitResults_06-03-23.json", years, regions)
+    for date, jms_plotter in plotter.items():
+        for region in regions:
+            f, ax = setup_ax(10, 7)
+            for year in years:
+                jms_plotter.dHists[f"{region}{year}"].plot_errorbar(
+                    ax=ax,
+                    split_uncertainty=True,
+                    alpha=0.8,
+                    label=f"{region} {year}",
+                    linewidth=0.9,
+                    fmt=".",
+                )
+            finalize_ax(ax, fname=f"JMSSF_07-03-23/{date}_{region}_year_comparison.pdf")
