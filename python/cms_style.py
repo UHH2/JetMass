@@ -89,7 +89,8 @@ def draw_lumi(
     global cms_text
     lumi_text = "(%s) %.2f fb^{-1} (13 TeV)" % (str(year), float(lumi))
     if private_work:
-        extra_text = "____,work_in_progress"
+        cms_text = "Private work"
+        extra_text = "________________(CMS_data/simulation)"
     latex = ROOT.TLatex()
     latex.SetNDC()
 
@@ -118,8 +119,8 @@ def draw_lumi(
     if not private_work and not do_cms_text:
         return
     # CMS Text
-    # latex.SetTextFont(42 if private_work else 61)
-    latex.SetTextFont(61)
+    if not private_work:
+        latex.SetTextFont(61)
     latex.SetTextAlign(11)
     latex.SetTextSize(cms_text_size * top_margin)
 
