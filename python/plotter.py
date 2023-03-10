@@ -823,7 +823,6 @@ def plot_data_mc(
                 y_max_ratio = ratio_hist_max
             # make symmetric
             yrange = max(abs(1-y_min_ratio), abs(1-y_max_ratio))
-            
             return 1-yrange, 1+yrange
 
         ratiopad.cd()
