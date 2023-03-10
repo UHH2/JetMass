@@ -184,5 +184,3 @@ def plot_fit_result(
                     additional_hists=additional_hists,
                     additional_text=additional_text,
                 )
-
-                exit(0)
