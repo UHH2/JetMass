@@ -130,6 +130,7 @@ private:
   uhh2::Event::Handle<double>handle_gen_HT,handle_HT;
   
   uhh2::Event::Handle<TTbarGen>handle_ttbar_gen;
+  uhh2::Event::Handle<float> handle_toppt_weight;
 
   uhh2::Event::Handle<const GenTopJet*> handle_gentopjet,handle_gentopjet_nocut;
   uhh2::Event::Handle<const TopJet*> handle_recotopjet,handle_recotopjet_chs;
@@ -296,8 +297,9 @@ JetMassModule::JetMassModule(Context & ctx){
   
   //AnalysisModules
   ttgen_producer.reset(new TTbarGenProducer(ctx,ttbargen_handlename,false));
-  
-  topPtReweighting.reset(new TopPtReweight(ctx, 0.0615, -0.0005,"","",true));
+
+  handle_toppt_weight = ctx.declare_event_output<float>("toppt_weight");
+  topPtReweighting.reset(new TopPtReweight(ctx, 0.0615, -0.0005,ttbargen_handlename,"toppt_weight",false));
 
   recojet_selector.reset(new JetSelector<TopJet>(ctx,recotopjet_handlename, matching_selection_handlename));
   genjet_selector.reset(new JetSelector<GenTopJet>(ctx,gentopjet_handlename));
@@ -538,6 +540,7 @@ bool JetMassModule::process(Event & event) {
     if(EXTRAOUT) std::cout << "JetMassModule: SpikeKiller done!" << std::endl;
   }
 
+  event.set(handle_toppt_weight, 1.0);
   if(is_mc)topPtReweighting->process(event);
 
   std::vector<TopJet> & chs_jets = event.get(handle_chs_jets);
