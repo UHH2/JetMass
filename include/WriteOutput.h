@@ -47,6 +47,8 @@ private:
   uhh2::Event::Handle<int>h_n_trueint_ootimeafter;
   uhh2::Event::Handle<float>h_n_trueint;
 
+  uhh2::Event::Handle<std::vector<float>> h_ps_weights;
+
   uhh2::Event::Handle<std::vector<int>> h_trigger_bits;
   std::vector<std::string> trigger_names;
 
