@@ -60,6 +60,7 @@ bool TopJetPtCut::passes(const Event & event){
     if( pt > max_pt) max_pt = pt;
   }
   if( max_pt < pt_min) return false;
+  return true;
 }
 
 MassCut::MassCut(){}
