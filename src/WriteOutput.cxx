@@ -291,19 +291,19 @@ WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selec
 
 
     h_PF_multiplicities_reco_ak8_puppi = ctx.declare_event_output<std::vector<int>>("PF_multiplicity_reco_ak8_puppi");
-    h_PF_multiplicities_reco_ak8_chs = ctx.declare_event_output<std::vector<int>>("PF_multiplicity_reco_ak8_chs");;
+    h_PF_multiplicities_reco_ak8_chs = ctx.declare_event_output<std::vector<int>>("PF_multiplicity_reco_ak8_chs");
     h_PF_multiplicities_reco_ak8_puppi_sd = ctx.declare_event_output<std::vector<int>>("PF_multiplicity_reco_ak8_puppi_sd");
-    h_PF_multiplicities_reco_ak8_chs_sd = ctx.declare_event_output<std::vector<int>>("PF_multiplicity_reco_ak8_chs_sd");;
+    h_PF_multiplicities_reco_ak8_chs_sd = ctx.declare_event_output<std::vector<int>>("PF_multiplicity_reco_ak8_chs_sd");
   
     h_PF_energy_reco_ak8_puppi = ctx.declare_event_output<std::vector<float>>("PF_energy_reco_ak8_puppi");
-    h_PF_energy_reco_ak8_chs = ctx.declare_event_output<std::vector<float>>("PF_energy_reco_ak8_chs");;
+    h_PF_energy_reco_ak8_chs = ctx.declare_event_output<std::vector<float>>("PF_energy_reco_ak8_chs");
     h_PF_energy_reco_ak8_puppi_sd = ctx.declare_event_output<std::vector<float>>("PF_energy_reco_ak8_puppi_sd");
-    h_PF_energy_reco_ak8_chs_sd = ctx.declare_event_output<std::vector<float>>("PF_energy_reco_ak8_chs_sd");;
+    h_PF_energy_reco_ak8_chs_sd = ctx.declare_event_output<std::vector<float>>("PF_energy_reco_ak8_chs_sd");
   
     h_PF_pt_reco_ak8_puppi = ctx.declare_event_output<std::vector<float>>("PF_pt_reco_ak8_puppi");
-    h_PF_pt_reco_ak8_chs = ctx.declare_event_output<std::vector<float>>("PF_pt_reco_ak8_chs");;
+    h_PF_pt_reco_ak8_chs = ctx.declare_event_output<std::vector<float>>("PF_pt_reco_ak8_chs");
     h_PF_pt_reco_ak8_puppi_sd = ctx.declare_event_output<std::vector<float>>("PF_pt_reco_ak8_puppi_sd");
-    h_PF_pt_reco_ak8_chs_sd = ctx.declare_event_output<std::vector<float>>("PF_pt_reco_ak8_chs_sd");;
+    h_PF_pt_reco_ak8_chs_sd = ctx.declare_event_output<std::vector<float>>("PF_pt_reco_ak8_chs_sd");
   }
   
 
