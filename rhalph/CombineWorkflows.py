@@ -202,6 +202,15 @@ class CombineWorkflows(object):
 
         bin_signal_strenght_constructor = "[1,0.1,10.0]"
 
+        genbins = configs["genbins"]
+
+        # adding lines to setup env variables helpful for later workflows
+        command_string += exec_bash(
+            "export POIS=({})".format(" ".join(["r_{GENBIN}".format(GENBIN=genbin) for genbin in genbins])),
+            debug,
+        )
+        command_string += exec_bash('if [[ $1 == "env" ]];then return 0 ; fi', debug)
+
         regions_mapping = " ".join(
             [
                 "{NAME}={NAME}.txt".format(NAME=channel_name + region_name)
@@ -222,7 +231,101 @@ class CombineWorkflows(object):
         #     for iptgen in range(len(unfolding_bins["ptgen"]) - 1)
         #     for imsdgen in range(len(unfolding_bins["msdgen"]) - 1)
         # ]
-        genbins = configs["genbins"]
+
+
+        # don't use first and last msd genbin as signal but treat as background
+        # pt_uflow, msd_uflow = genbins[0].split("_")
+        # pt_oflow, msd_oflow = genbins[-1].split("_")
+
+        # def is_flow(bin_name):
+        #     pt_bin, msd_bin = bin_name.split("_")
+        #     # if pt_bin == pt_uflow or pt_bin == pt_oflow:
+        #     #     return True
+        #     # if msd_bin == msd_uflow or msd_bin == msd_oflow:
+        #     if msd_bin == msd_uflow:
+        #         return True
+
+        # genbins = [bin_name for bin_name in genbins if not is_flow(bin_name)]
+
+        delta = 0.1
+        datacard = self.workspace.replace(".root", ".txt")
+        command_string += exec_bash('sed -i "s/kmax/kmax * # /g" {DATACARD} \n'.format(DATACARD=datacard), debug)
+        command_string += exec_bash('echo "" >> {DATACARD}'.format(DATACARD=datacard), debug)
+        command_string += exec_bash(
+            'echo "# SVD regularization penalty terms" >> {DATACARD}'.format(DATACARD=datacard), debug
+        )
+
+        def svd_constrains(rs, constr_index):
+            n_bins = len(rs)
+            result = ""
+            for i in range(n_bins):
+                if i == 0:
+                    result += 'echo "constr{IT} constr {NEXT}-{THIS} delta[{DELTA}]" >> {DATACARD}\n'.format(
+                        IT=constr_index,
+                        NEXT=rs[i+1],
+                        THIS=rs[i],
+                        DELTA=delta,
+                        DATACARD=datacard
+                    )
+                    constr_index += 1
+                elif i == (n_bins - 1):
+                    result += 'echo "constr{IT} constr {PREV}-{THIS} delta[{DELTA}]" >> {DATACARD}\n'.format(
+                        IT=constr_index,
+                        PREV=rs[i-1],
+                        THIS=rs[i],
+                        DELTA=delta,
+                        DATACARD=datacard
+                    )
+                    constr_index += 1
+                else:
+                    result += 'echo "constr{IT} constr {PREV}+{NEXT}-2*{THIS} delta[{DELTA}]" >> {DATACARD}\n'.format(
+                        IT=constr_index,
+                        PREV=rs[i-1],
+                        NEXT=rs[i+1],
+                        THIS=rs[i],
+                        DELTA=delta,
+                        DATACARD=datacard
+                    )
+                    constr_index += 1
+            result += 'echo "" >> {DATACARD}\n'.format(DATACARD=datacard)
+            return result, constr_index
+
+        # rs = ["r_"+b for b in genbins]
+        n_pt_bins = len(configs["unfolding_bins"]["ptgen"])
+        n_msd_bins = len(configs["unfolding_bins"]["msdgen"])
+        constr_index = 0
+        if "msd" in configs.get("regularization",[""]):
+            for i_particle_msd in range(n_msd_bins-1):
+                rs = [
+                    "r_ptgen{}_msdgen{}".format(i_particle_pt, i_particle_msd) for i_particle_pt in range(n_pt_bins-1)
+                ]
+                print("adding SVD constrains for r_vec =", rs)
+                svd_constrains_lines, constr_index_current = svd_constrains(rs, constr_index)
+                command_string += exec_bash(svd_constrains_lines, debug)
+                constr_index = constr_index_current
+
+        if "pt" in configs.get("regularization",[""]):
+            for i_particle_pt in range(n_pt_bins-1):
+                rs = [
+                    "r_ptgen{}_msdgen{}".format(i_particle_pt, i_particle_msd) for i_particle_msd in range(n_msd_bins-1)
+                ]
+                print("adding SVD constrains for r_vec =", rs)
+                svd_constrains_lines, constr_index_current = svd_constrains(rs, constr_index)
+                command_string += exec_bash(svd_constrains_lines, debug)
+                constr_index = constr_index_current
+
+        # xsec prior rateParam
+        freeze_Parameters = []
+        if "xsec_priors" in configs:
+            command_string += exec_bash('echo "# xsec prior rateParams" >> {DATACARD}'.format(DATACARD=datacard), debug)
+            for signal, xsec_prior in configs["xsec_priors"].items():
+                command_string += exec_bash(
+                    'echo "xsec_prior_{SIGNAL} rateParam * {SIGNAL}* {XSEC_PRIOR}" >> {DATACARD}'.format(
+                        DATACARD=datacard, SIGNAL=signal, XSEC_PRIOR=xsec_prior
+                    ), debug
+                )
+                freeze_Parameters.append("xsec_prior_"+signal)
+
         POMAPS = " ".join(
             [
                 "--PO map='.*{GENBIN}.*:r_{GENBIN}{PARCONSTRUCT}'".format(
@@ -230,6 +333,11 @@ class CombineWorkflows(object):
                 )
                 for genbin in genbins
             ]
+            # +
+            # [
+            #     "--PO map='.*ptgen.*:r[1.0,0.1,10.0]'"  # TODO use this as signal-strength modifier for all genbins?
+            #     # Note 02-02-23 This will not work since this PO map wwill overwrite the unfolding rs
+            # ]
         )
 
         command_string += exec_bash(
@@ -242,12 +350,81 @@ class CombineWorkflows(object):
 
         poi_defaults = ",".join(["r_{GENBIN}=1".format(GENBIN=genbin) for genbin in genbins])
         command_string += exec_bash(
-            "combine -M MultiDimFit --setParameters={PARAMETERS} -t -1 -m 0 {WORKSPACE}"
-            " -n .Asimov --saveWorkspace\n".format(
-                PARAMETERS=poi_defaults, WORKSPACE=self.workspace
+            (
+                "{BUILDPREFIX}combine -M FitDiagnostics -d {WORKSPACE} --saveShapes -n '' "
+                "--cminDefaultMinimizerStrategy 0 "
+                "{FREEZEPARAMS}"
+            ).format(
+                BUILDPREFIX=self._build_prefix,
+                FREEZEPARAMS=""
+                if len(freeze_Parameters) == 0
+                else ("--freezeParameter " + ",".join(freeze_Parameters)),
+                WORKSPACE=self.workspace,
             ),
             debug,
         )
+        command_string += exec_bash(
+            "{BUILDPREFIX}PostFitShapesFromWorkspace -w {WORKSPACE} --output {MODELDIR}fit_shapes.root --postfit "
+            "--sampling  -f {MODELDIR}fitDiagnostics.root:fit_s".format(
+                BUILDPREFIX=self._build_prefix,
+                WORKSPACE=self.workspace, MODELDIR=self.modeldir
+            ),
+            debug,
+        )
+
+
+        # command_string += exec_bash(
+        #     "combine -M MultiDimFit --setParameters={PARAMETERS} -t -1 -m 0 {WORKSPACE} "
+        #     "-n .Asimov --saveWorkspace\n".format(
+        #         PARAMETERS=poi_defaults, WORKSPACE=self.workspace
+        #     ),
+        #     debug,
+        # )
+
+        # command_string += exec_bash(
+        #     (
+        #         "combine -M FitDiagnostics -d {WORKSPACE} --saveShapes -n '.PseudoAsimov_10kEvents' "
+        #         "--cminDefaultMinimizerStrategy 0 -t -1 --expectSignal 1 --X-rtd TMCSO_PseudoAsimov=10000 "
+        #         "{FREEZEPARAMS}"
+        #     ).format(
+        #         FREEZEPARAMS=""
+        #         if len(freeze_Parameters) == 0
+        #         else ("--freezeParameter " + ",".join(freeze_Parameters)),
+        #         WORKSPACE=self.workspace,
+        #     ),
+        #     debug,
+        # )
+
+        # command_string += exec_bash(
+        #     "PostFitShapesFromWorkspace -w {WORKSPACE} --output {MODELDIR}fit_shapes_pseudoasimov_10k.root --postfit "
+        #     "--sampling  -f {MODELDIR}fitDiagnostics.PseudoAsimov_10kEvents.root:fit_s".format(
+        #         WORKSPACE=self.workspace, MODELDIR=self.modeldir
+        #     ),
+        #     debug,
+        # )
+
+        # command_string += exec_bash(
+        #     (
+        #         "combine -M FitDiagnostics -d {WORKSPACE} --saveShapes -n '.PseudoAsimov_100kEvents' "
+        #         "--cminDefaultMinimizerStrategy 0 -t -1 --expectSignal 1 --X-rtd TMCSO_PseudoAsimov=100000 "
+        #         "{FREEZEPARAMS}"
+        #     ).format(
+        #         FREEZEPARAMS=""
+        #         if len(freeze_Parameters) == 0
+        #         else ("--freezeParameter " + ",".join(freeze_Parameters)),
+        #         WORKSPACE=self.workspace,
+        #     ),
+        #     debug,
+        # )
+
+        # command_string += exec_bash(
+        #     "PostFitShapesFromWorkspace -w {WORKSPACE} --output {MODELDIR}fit_shapes.root --postfit --sampling "
+        #     "-f {MODELDIR}fitDiagnostics.PseudoAsimov_100kEvents.root:fit_s".format(
+        #         WORKSPACE=self.workspace, MODELDIR=self.modeldir
+        #     ),
+        #     debug,
+        # )
+
         command_string += exec_bash(
             "combine -M MultiDimFit --setParameters={PARAMETERS}  -m 0 {WORKSPACE} -n .Data \n".format(
                 PARAMETERS=poi_defaults, WORKSPACE=self.workspace
@@ -257,22 +434,16 @@ class CombineWorkflows(object):
 
         poi_string = "--redefineSignalPOIs " + ",".join(["r_{GENBIN}".format(GENBIN=genbin) for genbin in genbins])
         command_string += exec_bash(
-            "combine -M FitDiagnostics -d higgsCombine.Asimov.MultiDimFit.mH0.root --bypassFrequentistFit"
-            " --snapshotName MultiDimFit {POI} --setParameters={POIDEFAULTS} --saveShapes -n '' "
+            "#combine -M FitDiagnostics -d {WORKSPACE} "
+            "{POI} --setParameters={POIDEFAULTS} --saveShapes -n '' "
             "--cminDefaultMinimizerStrategy 0".format(
+                WORKSPACE=self.workspace,
                 POI=poi_string, POIDEFAULTS=poi_defaults
             ),
             debug,
         )
-        # command_string += exec_bash(
-        #     "combine -M FitDiagnostics {WORKSPACE} {POI} --setParameters={POIDEFAULTS} --saveShapes -n ''"
-        #     " --cminDefaultMinimizerStrategy 0".format(
-        #         WORKSPACE=self.workspace, POI=poi_string, POIDEFAULTS=poi_defaults
-        #     ),
-        #     debug,
-        # )
         command_string += exec_bash(
-            "PostFitShapesFromWorkspace -w {WORKSPACE} --output {MODELDIR}fit_shapes.root --postfit --sampling "
+            "#PostFitShapesFromWorkspace -w {WORKSPACE} --output {MODELDIR}fit_shapes.root --postfit --sampling "
             "-f {MODELDIR}fitDiagnostics.root:fit_s".format(
                 WORKSPACE=self.workspace, MODELDIR=self.modeldir
             ),
