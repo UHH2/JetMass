@@ -6,7 +6,7 @@ import ROOT
 import rhalphalib as rl
 import numpy as np
 import sys
-import cms_style
+# import cms_style
 
 ROOT.gROOT.SetBatch(True)
 ROOT.gStyle.SetOptStat(0)
@@ -16,8 +16,8 @@ sys.path.append('/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6
 
 rl.util.install_roofit_helpers()
 
-cms_style.extra_text = "Preliminary Simulation"
-cms_style.cms_style()
+# cms_style.extra_text = "Preliminary Simulation"
+# cms_style.cms_style()
 
 
 def _RooFitResult_massScales(self):
@@ -62,7 +62,7 @@ rMAX = 1.5
 
 
 class CombineWorkflows(object):
-    def __init__(self):
+    def __init__(self, build_only=False):
         # print('Nothing to do here. This class is just a wrapper for some worflow methods using combine')
         self.methods = [
             func for func in dir(CombineWorkflows) if (callable(getattr(CombineWorkflows, func)) and "__" not in func)
@@ -90,6 +90,7 @@ class CombineWorkflows(object):
         self.modeldir = ""
         self._workspace = 'model_combined.root'
         self._method = ""
+        self._build_prefix = "#" if build_only else ""
 
         def dummyMethod(debug=True):
             raise BaseException("You have not selected a CombineWorkflow method! Choose from: "+", ".join(self.methods))
