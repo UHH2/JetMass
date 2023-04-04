@@ -251,9 +251,10 @@ class CombineWorkflows(object):
         datacard = self.workspace.replace(".root", ".txt")
         command_string += exec_bash('sed -i "s/kmax/kmax * # /g" {DATACARD} \n'.format(DATACARD=datacard), debug)
         command_string += exec_bash('echo "" >> {DATACARD}'.format(DATACARD=datacard), debug)
-        command_string += exec_bash(
-            'echo "# SVD regularization penalty terms" >> {DATACARD}'.format(DATACARD=datacard), debug
-        )
+        if configs.get("regularization", [""]) != [""]:
+            command_string += exec_bash(
+                'echo "# SVD regularization penalty terms" >> {DATACARD}'.format(DATACARD=datacard), debug
+            )
 
         def svd_constrains(rs, constr_index):
             n_bins = len(rs)
@@ -294,20 +295,21 @@ class CombineWorkflows(object):
         n_pt_bins = len(configs["unfolding_bins"]["ptgen"])
         n_msd_bins = len(configs["unfolding_bins"]["msdgen"])
         constr_index = 0
-        if "msd" in configs.get("regularization",[""]):
-            for i_particle_msd in range(n_msd_bins-1):
+        if "msd" in configs.get("regularization", [""]):
+            for i_particle_msd in range(n_msd_bins - 1):
                 rs = [
-                    "r_ptgen{}_msdgen{}".format(i_particle_pt, i_particle_msd) for i_particle_pt in range(n_pt_bins-1)
+                    "r_ptgen{}_msdgen{}".format(i_particle_pt, i_particle_msd) for i_particle_pt in range(n_pt_bins - 1)
                 ]
                 print("adding SVD constrains for r_vec =", rs)
                 svd_constrains_lines, constr_index_current = svd_constrains(rs, constr_index)
                 command_string += exec_bash(svd_constrains_lines, debug)
                 constr_index = constr_index_current
 
-        if "pt" in configs.get("regularization",[""]):
-            for i_particle_pt in range(n_pt_bins-1):
+        if "pt" in configs.get("regularization", [""]):
+            for i_particle_pt in range(n_pt_bins - 1):
                 rs = [
-                    "r_ptgen{}_msdgen{}".format(i_particle_pt, i_particle_msd) for i_particle_msd in range(n_msd_bins-1)
+                    "r_ptgen{}_msdgen{}".format(i_particle_pt, i_particle_msd)
+                    for i_particle_msd in range(n_msd_bins - 1)
                 ]
                 print("adding SVD constrains for r_vec =", rs)
                 svd_constrains_lines, constr_index_current = svd_constrains(rs, constr_index)
@@ -479,8 +481,8 @@ class CombineWorkflows(object):
 
         if not self.justplots and not merge:
             command_string += exec_bash(
-                'combine -M GoodnessOfFit -d {WORKSPACE} -m 0 {POI} --algo={ALGO} {FREEZEPARAMS}'
-                ' {EXTRA} -n "{NAME}Baseline"'.format(
+                'combine -M GoodnessOfFit -d {WORKSPACE} -m 0 {POI} --algo={ALGO} {FREEZEPARAMS} '
+                '{EXTRA} -n "{NAME}Baseline"'.format(
                     WORKSPACE=self.workspace,
                     FREEZEPARAMS=self.freezeParameters,
                     EXTRA=self.extraOptions,
@@ -558,7 +560,7 @@ class CombineWorkflows(object):
         command_string += exec_bash("cd " + self.modeldir, debug)
         command_string += exec_bash("source build.sh", debug)
 
-        GOF_extra = self.extraOptions + (" --fixedSignalStrength 1 " if "r" in self._freezeParameters else "")
+        GOF_extra = self.extraOptions  # + (" --fixedSignalStrength 1 " if "r" in self._freezeParameters else "")
 
         # # using snapshot
         # combine -M MultiDimFit -d workspace.root --saveWorkspace -m 0 -n '.snapshot' --setParameters r=1
@@ -566,13 +568,26 @@ class CombineWorkflows(object):
         # --seed 42 --freezeParameters r
 
         command_string += exec_bash(
-            'combine -M MultiDimFit   -d {WORKSPACE} --saveWorkspace -m 0 {POI} {FREEZEPARAMS} {EXTRA} '
-            '-n "{NAME}Snapshot" --seed {SEED}'.format(
+            'combine -M MultiDimFit   -d {WORKSPACE} --saveWorkspace -m 0 {POI} {EXTRA} '
+            '-n "{NAME}Snapshot" --seed {SEED} --trackParameters r'.format(
                 WORKSPACE=self.workspace,
-                FREEZEPARAMS=self.freezeParameters,
                 EXTRA=self.extraOptions,
                 NAME=self.name,
                 POI=self.POI,
+                SEED=self.seed,
+            ),
+            debug,
+        )
+
+        # extract r_bestfit to be able to throw toys from exact signal-bestfit:
+        # this is necessary since combine apparently loads a snapshot but then resets r to the default
+        # (or given) value of --expectSignal when throwing toys -> setting parameters to postfit but
+        # setting r=0 by default.
+        # to avoid throwing toys on s+b postfit nuisances but with s=0 we extract r here and
+        # set it manually when throwing toys
+        command_string += exec_bash(
+            'r_bestfit=$(python -c "from __future__ import print_function;import uproot;f=uproot.open(\\"higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root\\");print(f[\\"limit\\"][\\"trackedParam_r\\"].array()[0])")'.format(
+                NAME=self.name,
                 SEED=self.seed,
             ),
             debug,
@@ -583,7 +598,7 @@ class CombineWorkflows(object):
         # --cminDefaultMinimizerTolerance 0.01 --seed 42 --fixedSignalStrength 1
         command_string += exec_bash(
             'combine -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root '
-            '--snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS}'
+            '--snapshotName MultiDimFit --bypassFrequentistFit --trackParameters r -m 0 {POI} --seed {SEED} {FREEZEPARAMS} '
             '{EXTRA} -n "{NAME}Baseline" --algo={ALGO}'.format(
                 NAME=self.name,
                 FREEZEPARAMS=self.freezeParameters,
@@ -600,7 +615,8 @@ class CombineWorkflows(object):
         # --setParameters r=1 --freezeParameters r --saveToys  -n '.snapshot2gen'
         command_string += exec_bash(
             'combine -M GenerateOnly  -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root '
-            '--snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS}'
+            '--snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} '
+            '--expectSignal $r_bestfit --trackParameters r '
             '{EXTRA} -n "{NAME}" -t {NTOYS} {TOYSOPTIONS}  --saveToys  '.format(
                 NAME=self.name,
                 FREEZEPARAMS=self.freezeParameters,
@@ -619,6 +635,7 @@ class CombineWorkflows(object):
             'combine -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root '
             '--snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} '
             '{EXTRA} -n "{NAME}" -t {NTOYS} {TOYSOPTIONS}  --toysFile higgsCombine{NAME}.GenerateOnly.mH0.{SEED}.root '
+            '--expectSignal $r_bestfit --trackParameters r '
             '--algo={ALGO}'.format(
                 NAME=self.name,
                 FREEZEPARAMS=self.freezeParameters,
@@ -686,9 +703,8 @@ class CombineWorkflows(object):
 
             # using snapshot
             command_string += exec_bash(
-                'combine -M MultiDimFit   -d *_combined.root --saveWorkspace -m 0 {POI} {FREEZEPARAMS} {EXTRA} '
+                'combine -M MultiDimFit   -d *_combined.root --saveWorkspace -m 0 {POI} {EXTRA} '
                 '-n "{NAME}Snapshot" --seed {SEED}'.format(
-                    FREEZEPARAMS=self.freezeParameters,
                     EXTRA=self.extraOptions,
                     NAME=self.name,
                     POI=self.POI,
@@ -713,6 +729,7 @@ class CombineWorkflows(object):
                 'combine -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root '
                 '--snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} {EXTRA} '
                 '-n "{NAME}" -t {NTOYS} {TOYSOPTIONS}  '
+                '--expectSignal $r_bestfit --trackParameters r '
                 '--toysFile {BASEMODELDIR}/higgsCombine{NAME}.GenerateOnly.mH0.{SEED}.root --algo={ALGO}'.format(
                     NAME=self.name,
                     FREEZEPARAMS=self.freezeParameters,
