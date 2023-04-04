@@ -109,7 +109,10 @@ def jet_mass_producer(args, configs):
         norms["fail"] = np.array(norms["fail"])
         norms["pass"] = np.array(norms["pass"])
         norms["eff"] = norms["pass"] / norms["fail"]
-        norms["eff_arr"] = np.array([[norms["eff"][i]] * (len(msd_bins) - 1) for i in range(len(norms["eff"]))])
+        channels_sorted = norms["channels"]
+        channels_sorted.sort()
+        # norms["eff_arr"] = np.array([[norms["eff"][i]] * (len(msd_bins) - 1) for i in range(len(norms["eff"]))])        
+        norms["eff_arr"] = np.array([[norms["eff"][norms["channels"].index(ch)]] * (len(msd_bins) - 1) for ch in channels_sorted])
         return norms
 
     if do_qcd_estimation:
@@ -352,9 +355,10 @@ def jet_mass_producer(args, configs):
             signal_samples = deepcopy(config["signal"])
             unfolding_bins = configs["unfolding_bins"]
             genbins = (
-                ["onegenbin"]
-                if args.one_bin
-                else [
+                # ["onegenbin"]
+                # if args.one_bin
+                # else
+                [
                     "ptgen%i_msdgen%i" % (iptgen, imsdgen)
                     for iptgen in range(len(unfolding_bins["ptgen"]) - 1)
                     for imsdgen in range(len(unfolding_bins["msdgen"]) - 1)
@@ -381,6 +385,7 @@ def jet_mass_producer(args, configs):
     }
 
     norm_nuisances = {}
+    initial_qcd_from_data = {}
     for channel_name in channels.keys():
         if args.minimalModel:
             break
@@ -681,6 +686,7 @@ def jet_mass_producer(args, configs):
             #     initial_qcd * (1 + qcd_fail_sigma_scale / np.maximum(1.0, np.sqrt(initial_qcd))) ** qcd_params
             # )
 
+            initial_qcd_from_data[channel_name] = initial_qcd
             scaledparams = initial_qcd * (1 + qcd_fail_sigma_scale / 100.0) ** qcd_params
             fail_qcd = rl.ParametericSample("%sfail_qcd" % channel_name, rl.Sample.BACKGROUND, msd, scaledparams)
             fail_ch.addSample(fail_qcd)
@@ -695,6 +701,18 @@ def jet_mass_producer(args, configs):
                     raw_tf_params.append(param)
             # pass_ch.addParamGroup("QCDPass",raw_tf_params)
 
+    if args.prefitAsimov:
+        for c in model:
+            prefit_asimov = initial_qcd_from_data[c.name.replace("pass", "").replace("fail", "")].copy()
+            if "pass" in c.name:
+                prefit_asimov *= data_norms["eff"][list(configs["channels"].keys()).index(c.name.replace("pass", ""))]
+            for sample in c.samples:
+                if "qcd" in sample.name.lower():
+                    continue
+                prefit_asimov += sample.getExpectation(nominal=True)
+            prefit_asimov_data = (prefit_asimov, c.observable.binning, c.observable.name)
+            c.setObservation(prefit_asimov_data)
+
     model.renderCombine(model_name)
 
 
@@ -703,6 +721,8 @@ if __name__ == "__main__":
     import argparse
     import fitplotter
     from CombineWorkflows import CombineWorkflows
+    # from scan_poi import MassScalePOIScanner
+    # from collections import namedtuple
 
     parser = argparse.ArgumentParser()
     parser.add_argument("config", type=str, help="path to json with config")
@@ -715,6 +735,7 @@ if __name__ == "__main__":
     parser.add_argument("--noNuisances", action="store_true")
     parser.add_argument("--JMRparameter", action="store_true")
     parser.add_argument("--JECVar", action="store_true")
+    parser.add_argument("--prefitAsimov", action="store_true")
     parser.add_argument("--pTdependetJMRParameter", action="store_true")
     parser.add_argument("--noNormUnc", action="store_true")
     parser.add_argument("--skipExtArgRender", action="store_true")
@@ -766,14 +787,12 @@ if __name__ == "__main__":
         jet_mass_producer(args, configs)
         open(configs["ModelName"] + "/config.json", "w").write(json.dumps(configs, sort_keys=False, indent=2))
         if not args.customCombineWrapper:
+            cw = CombineWorkflows(build_only=args.build)
+            cw.workspace = configs["ModelName"] + "/model_combined.root"
             if args.unfolding:
-                cw = CombineWorkflows()
-                cw.workspace = configs["ModelName"] + "/model_combined.root"
                 cw.method = "unfolding"
                 cw.write_wrapper()
             else:
-                cw = CombineWorkflows()
-                cw.workspace = configs["ModelName"] + "/model_combined.root"
                 cw.extraOptions = args.combineOptions
                 if args.massScales:
                     cw.extraOptions += " --freezeParameters r --preFitValue 0"
