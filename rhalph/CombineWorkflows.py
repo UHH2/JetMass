@@ -232,7 +232,6 @@ class CombineWorkflows(object):
         #     for imsdgen in range(len(unfolding_bins["msdgen"]) - 1)
         # ]
 
-
         # don't use first and last msd genbin as signal but treat as background
         # pt_uflow, msd_uflow = genbins[0].split("_")
         # pt_oflow, msd_oflow = genbins[-1].split("_")
@@ -354,7 +353,8 @@ class CombineWorkflows(object):
         command_string += exec_bash(
             (
                 "{BUILDPREFIX}combine -M FitDiagnostics -d {WORKSPACE} --saveShapes -n '' "
-                "--cminDefaultMinimizerStrategy 0 "
+                # "--cminDefaultMinimizerStrategy 0 --robustFit 1 "
+                "--robustHesse 1 "
                 "{FREEZEPARAMS}"
             ).format(
                 BUILDPREFIX=self._build_prefix,
@@ -428,7 +428,7 @@ class CombineWorkflows(object):
         # )
 
         command_string += exec_bash(
-            "combine -M MultiDimFit --setParameters={PARAMETERS}  -m 0 {WORKSPACE} -n .Data \n".format(
+            "#combine -M MultiDimFit --setParameters={PARAMETERS}  -m 0 {WORKSPACE} -n .Data \n".format(
                 PARAMETERS=poi_defaults, WORKSPACE=self.workspace
             ),
             debug,
