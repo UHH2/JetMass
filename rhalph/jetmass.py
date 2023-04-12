@@ -25,6 +25,8 @@ def jet_mass_producer(args, configs):
     nbins = int(np.floor((max_msd - min_msd) / binwidth))
     msd_bins = np.linspace(min_msd, nbins * binwidth + min_msd, nbins + 1)
 
+    xsec_priors = configs.get("xsec_priors",{})
+    
     # channels for combined fit
     channels = configs["channels"]
     qcd_estimation_channels = {
@@ -70,6 +72,10 @@ def jet_mass_producer(args, configs):
             hist = hist_file.Get(str(hist_dir))
         else:
             hist = aux_hist_files[hist_file_].Get(str(hist_dir))
+
+        for sample_name_pattern, xsec_prior in xsec_priors.items():
+            if sample_name_pattern in hist_dir:
+                hist.Scale(xsec_prior)
 
         hist.SetName("msd")
         hist.GetXaxis().SetTitle("msd")

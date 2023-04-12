@@ -317,15 +317,15 @@ class CombineWorkflows(object):
 
         # xsec prior rateParam
         freeze_Parameters = []
-        if "xsec_priors" in configs:
-            command_string += exec_bash('echo "# xsec prior rateParams" >> {DATACARD}'.format(DATACARD=datacard), debug)
-            for signal, xsec_prior in configs["xsec_priors"].items():
-                command_string += exec_bash(
-                    'echo "xsec_prior_{SIGNAL} rateParam * {SIGNAL}* {XSEC_PRIOR}" >> {DATACARD}'.format(
-                        DATACARD=datacard, SIGNAL=signal, XSEC_PRIOR=xsec_prior
-                    ), debug
-                )
-                freeze_Parameters.append("xsec_prior_"+signal)
+        # if "xsec_priors" in configs:
+        #     command_string += exec_bash('echo "# xsec prior rateParams" >> {DATACARD}'.format(DATACARD=datacard), debug)
+        #     for signal, xsec_prior in configs["xsec_priors"].items():
+        #         command_string += exec_bash(
+        #             'echo "xsec_prior_{SIGNAL} rateParam * {SIGNAL}* {XSEC_PRIOR}" >> {DATACARD}'.format(
+        #                 DATACARD=datacard, SIGNAL=signal, XSEC_PRIOR=xsec_prior
+        #             ), debug
+        #         )
+        #         freeze_Parameters.append("xsec_prior_"+signal)
 
         POMAPS = " ".join(
             [
