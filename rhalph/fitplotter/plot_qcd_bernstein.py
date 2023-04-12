@@ -68,8 +68,12 @@ def plot_qcd_fail_parameters(config={"ModelName": "WMassModel"}):
     nbins = int(np.floor((max_msd - min_msd) / binwidth))
     msd_bin_edges = np.linspace(min_msd, nbins * binwidth + min_msd, nbins + 1)
 
+    pt_cutoff = config.get("pt_cutoff", 1400)
     pt_bin_edges = np.array(
-        [(1400 if pt == "Inf" else pt) for pt in config.get("pt_edges", [500.0, 550.0, 600.0, 675.0, 800.0, 1200.0])]
+        [
+            (pt_cutoff if pt == "Inf" else pt)
+            for pt in config.get("pt_edges", [500.0, 550.0, 600.0, 675.0, 800.0, 1200.0])
+        ]
     )
 
     result = ROOT.TFile(config["ModelName"] + "/fitDiagnostics.root", "READ").Get("fit_s")
@@ -164,8 +168,12 @@ def plot_qcd_bernstein(config={"ModelName": "WMassModel"}, do_3d_plot=True):
             pt_edges.add(float(this_bin.split("to")[1]))
     pt_edges = list(pt_edges)
     pt_edges.sort()
+    pt_cutoff = config.get("pt_cutoff", 1400)
     pt_edges = np.array(
-        [(1400 if pt == "Inf" else pt) for pt in config.get("pt_edges", [500.0, 550.0, 600.0, 675.0, 800.0, 1200.0])]
+        [
+            (pt_cutoff if pt == "Inf" else pt)
+            for pt in config.get("pt_edges", [500.0, 550.0, 600.0, 675.0, 800.0, 1200.0])
+        ]
     )
 
     # pt_min = 500.
