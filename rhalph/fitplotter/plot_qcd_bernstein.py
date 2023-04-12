@@ -44,12 +44,12 @@ def extract_fit_pars(file_path, order, suffix="params", TFSuffix="tf"):
     bernstein_par_names = []
     for i in range(fitargs.getSize()):
         if (
-            "tf" in fitargs.at(i).GetTitle()
-            and suffix in fitargs.at(i).GetTitle()
-            and TFSuffix in fitargs.at(i).GetTitle()
+            "tf" in fitargs.at(i).GetName()
+            and suffix in fitargs.at(i).GetName()
+            and TFSuffix in fitargs.at(i).GetName()
         ):
             bernstein_pars.append(fitargs.at(i).getVal())
-            bernstein_par_names.append(fitargs.at(i).GetTitle())
+            bernstein_par_names.append(fitargs.at(i).GetName())
     return np.array(bernstein_pars).reshape(order[0] + 1, order[1] + 1), np.array(bernstein_par_names).reshape(
         order[0] + 1, order[1] + 1
     )
@@ -68,7 +68,9 @@ def plot_qcd_fail_parameters(config={"ModelName": "WMassModel"}):
     nbins = int(np.floor((max_msd - min_msd) / binwidth))
     msd_bin_edges = np.linspace(min_msd, nbins * binwidth + min_msd, nbins + 1)
 
-    pt_bin_edges = np.array(config.get("pt_edges", [500.0, 550.0, 600.0, 675.0, 800.0, 1200.0]))
+    pt_bin_edges = np.array(
+        [(1400 if pt == "Inf" else pt) for pt in config.get("pt_edges", [500.0, 550.0, 600.0, 675.0, 800.0, 1200.0])]
+    )
 
     result = ROOT.TFile(config["ModelName"] + "/fitDiagnostics.root", "READ").Get("fit_s")
     args = result.floatParsFinal()
@@ -162,6 +164,9 @@ def plot_qcd_bernstein(config={"ModelName": "WMassModel"}, do_3d_plot=True):
             pt_edges.add(float(this_bin.split("to")[1]))
     pt_edges = list(pt_edges)
     pt_edges.sort()
+    pt_edges = np.array(
+        [(1400 if pt == "Inf" else pt) for pt in config.get("pt_edges", [500.0, 550.0, 600.0, 675.0, 800.0, 1200.0])]
+    )
 
     # pt_min = 500.
     # pt_max = 1200.
