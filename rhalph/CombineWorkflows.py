@@ -246,7 +246,7 @@ class CombineWorkflows(object):
 
         # genbins = [bin_name for bin_name in genbins if not is_flow(bin_name)]
 
-        delta = 0.1
+        regularization_strength = configs.get("regularizationStrength", 0.1)
         datacard = self.workspace.replace(".root", ".txt")
         command_string += exec_bash('sed -i "s/kmax/kmax * # /g" {DATACARD} \n'.format(DATACARD=datacard), debug)
         command_string += exec_bash('echo "" >> {DATACARD}'.format(DATACARD=datacard), debug)
@@ -254,66 +254,139 @@ class CombineWorkflows(object):
             command_string += exec_bash(
                 'echo "# SVD regularization penalty terms" >> {DATACARD}'.format(DATACARD=datacard), debug
             )
+            
+        rs = ["r_"+b for b in genbins]
 
-        def svd_constrains(rs, constr_index):
-            n_bins = len(rs)
-            result = ""
-            for i in range(n_bins):
+        def regul_bin(b, inf_repl):
+            if isinstance(b, int):
+                return float(b)
+            elif isinstance(b, float):
+                return b
+            if "inf" in b.lower():
+                b = b.lower().replace("inf", inf_repl)
+            return float(b)
+        pt_cutoff = str(configs.get("pt_cutoff", 1400))
+        msd_cutoff = str(configs.get("msd_cutoff", 100))
+        pt_edges = np.array([regul_bin(bin_, pt_cutoff) for bin_ in configs["unfolding_bins"]["ptgen"]])
+        msd_edges = np.array([regul_bin(bin_, msd_cutoff) for bin_ in configs["unfolding_bins"]["msdgen"]])
+        n_pt_bins = len(pt_edges) - 1
+        n_msd_bins = len(msd_edges) - 1
+
+        pt_centers = (pt_edges[1:] + pt_edges[:-1]) / 2
+        msd_centers = (msd_edges[1:] + msd_edges[:-1]) / 2
+
+        pt_widths = pt_edges[1:] - pt_edges[:-1]
+        msd_widths = msd_edges[1:] - msd_edges[:-1]
+
+        pt_width_average = pt_widths.sum() / n_pt_bins
+        msd_width_average = msd_widths.sum() / n_msd_bins
+
+        n_bins = {1: n_msd_bins, 2: n_pt_bins}
+        centers = {1: msd_centers, 2: pt_centers}
+        widths = {1: msd_widths, 2: pt_widths}
+        Delta = {1: msd_width_average, 2: pt_width_average}
+        # Delta = {1:msd_widths.max(), 2:pt_widths.max()}
+        global_bins = np.arange(n_bins[1] * n_bins[2]).reshape((n_bins[2], n_bins[1])).T
+
+        def delta(d, i, j):
+            if i > j:
+                i_ = j
+                j = i
+                i = i_
+            return centers[d][j] - centers[d][i]
+
+        def w(d, i):
+            return widths[d][i]
+
+        def get_sub_c(d, uniform=False):
+            sub_c = np.zeros((n_bins[d], n_bins[d]))
+            for i in range(n_bins[d]):
                 if i == 0:
-                    result += 'echo "constr{IT} constr {NEXT}-{THIS} delta[{DELTA}]" >> {DATACARD}\n'.format(
-                        IT=constr_index,
-                        NEXT=rs[i+1],
-                        THIS=rs[i],
-                        DELTA=delta,
-                        DATACARD=datacard
-                    )
-                    constr_index += 1
-                elif i == (n_bins - 1):
-                    result += 'echo "constr{IT} constr {PREV}-{THIS} delta[{DELTA}]" >> {DATACARD}\n'.format(
-                        IT=constr_index,
-                        PREV=rs[i-1],
-                        THIS=rs[i],
-                        DELTA=delta,
-                        DATACARD=datacard
-                    )
-                    constr_index += 1
+                    if uniform:
+                        sub_c[i, 0] = -1
+                        sub_c[i, 1] = 1
+                    else:
+                        sub_c[i, 0] = -Delta[d] / delta(d=d, i=0, j=1)
+                        sub_c[i, 1] = +Delta[d] / delta(d=d, i=0, j=1)
+                elif i == (n_bins[d]-1):
+                    if uniform:
+                        sub_c[i, i] = -1
+                        sub_c[i, i - 1] = 1
+                    else:
+                        sub_c[i, i - 1] = +Delta[d] / delta(d=d, i=0, j=1)
+                        sub_c[i, i] = -Delta[d] / delta(d=d, i=0, j=1)
                 else:
-                    result += 'echo "constr{IT} constr {PREV}+{NEXT}-2*{THIS} delta[{DELTA}]" >> {DATACARD}\n'.format(
-                        IT=constr_index,
-                        PREV=rs[i-1],
-                        NEXT=rs[i+1],
-                        THIS=rs[i],
-                        DELTA=delta,
-                        DATACARD=datacard
-                    )
-                    constr_index += 1
-            result += 'echo "" >> {DATACARD}\n'.format(DATACARD=datacard)
-            return result, constr_index
+                    if uniform:
+                        sub_c[i, i - 1] = 1
+                        sub_c[i, i] = -2
+                        sub_c[i, i + 1] = 1
+                    else:
+                        sub_c[i, i - 1] = Delta[d] ** 2 / (
+                            (delta(d=d, i=i, j=i - 1) + delta(d=d, i=i, j=i + 1)) * delta(d=d, i=i, j=i - 1)
+                        )
+                        sub_c[i, i] = (
+                            -Delta[d] ** 2
+                            / ((delta(d=d, i=i, j=i - 1) + delta(d=d, i=i, j=i + 1)))
+                            * (1 / delta(d=d, i=i, j=i - 1) + 1 / delta(d=d, i=i, j=i + 1))
+                        )
+                        sub_c[i, i + 1] = Delta[d] ** 2 / (
+                            (delta(d=d, i=i, j=i - 1) + delta(d=d, i=i, j=i + 1)) * delta(d=d, i=i, j=i + 1)
+                        )
+            return sub_c
 
-        # rs = ["r_"+b for b in genbins]
-        n_pt_bins = len(configs["unfolding_bins"]["ptgen"])
-        n_msd_bins = len(configs["unfolding_bins"]["msdgen"])
+        def get_C(dimensions=[1, 2], uniform=False, density=True):
+            C = []
+
+            for d in dimensions:
+                d_other = {1: 2, 2: 1}[d]
+                sub_c = get_sub_c(d, uniform)
+                for i_other_dim in range(n_bins[d_other]):
+                    if d == 2:
+                        ws = np.ones_like(sub_c)/(w(1, i_other_dim)*w(2, slice(None,)))
+                    elif d == 1:
+                        ws = np.ones_like(sub_c)/(w(1, slice(None,))*w(2, i_other_dim))
+                    if uniform:
+                        sub_c_final = sub_c
+                    else:
+                        sub_c_final = np.multiply(sub_c, ws) if density else sub_c
+
+                    for row in sub_c_final:
+                        row_final = np.zeros((n_bins[1]*n_bins[2]))
+                        for ic, c in enumerate(row):
+                            if d == 1:
+                                row_final[global_bins[ic, i_other_dim]] = c
+                            elif d == 2:
+                                row_final[global_bins[i_other_dim, ic]] = c
+                        C.append(row_final)
+            return np.array(C)
+
         constr_index = 0
-        if "msd" in configs.get("regularization", [""]):
-            for i_particle_msd in range(n_msd_bins - 1):
-                rs = [
-                    "r_ptgen{}_msdgen{}".format(i_particle_pt, i_particle_msd) for i_particle_pt in range(n_pt_bins - 1)
-                ]
-                print("adding SVD constrains for r_vec =", rs)
-                svd_constrains_lines, constr_index_current = svd_constrains(rs, constr_index)
-                command_string += exec_bash(svd_constrains_lines, debug)
-                constr_index = constr_index_current
+        uniform_binning = configs.get("uniformGenbins", "False") == "True"
 
-        if "pt" in configs.get("regularization", [""]):
-            for i_particle_pt in range(n_pt_bins - 1):
-                rs = [
-                    "r_ptgen{}_msdgen{}".format(i_particle_pt, i_particle_msd)
-                    for i_particle_msd in range(n_msd_bins - 1)
-                ]
-                print("adding SVD constrains for r_vec =", rs)
-                svd_constrains_lines, constr_index_current = svd_constrains(rs, constr_index)
-                command_string += exec_bash(svd_constrains_lines, debug)
-                constr_index = constr_index_current
+        def constrain_snippet(iconst, r):
+            snippet = "constr{} constr ".format(iconst)
+            for ic, c in enumerate(r):
+                if c == 0:
+                    continue
+                sign = "+" if c > 0 else "-"
+
+                def number(n):
+                    return ("%.0f*" if uniform_binning else "%.5f*") % abs(c)
+
+                snippet += "{}{}{}".format(sign, number(c), rs[ic])
+                # snippet += "{}{:.0f}*{}".format(sign, abs(c), rs[ic])
+            snippet += " delta[{}]".format(regularization_strength)
+            return snippet
+
+        dims = [{"msd": 1, "pt": 2, "": -1}[d] for d in configs.get("regularization", [""])]
+        if -1 not in dims:
+            C = get_C(dims, uniform_binning)
+            for row in C:
+                command_string += exec_bash('echo "{CONSTR}" >> {DATACARD}\n'.format(
+                    CONSTR=constrain_snippet(constr_index, row),
+                    DATACARD=datacard
+                ))
+                constr_index += 1
 
         # xsec prior rateParam
         freeze_Parameters = []
