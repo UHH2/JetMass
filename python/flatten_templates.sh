@@ -51,38 +51,60 @@ function flatten_eta_regions {
 
 }
 
-function flatten_variations {
+function flatten_templates {
     VAR=${1:-none}
 
     if [ "$VAR" == "none" ];then
-    echo "You have to provide a variation name!"
-    exit -1
+        echo "You have to provide a variation name!"
+        exit -1
     fi
 
     for YEAR in ${YEARS[@]};
     do
-    echo "flattening ${YEAR} templates for variation of ${VAR}"
-    # JEC on pt
-    ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}_up.coffea -o $outdir/templates_${YEAR}_1d_jecpt_${VAR}_up --JEC "pt"
-    ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}_down.coffea -o $outdir/templates_${YEAR}_1d_jecpt_${VAR}_down --JEC "pt"
-    
-    ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}_up.coffea -o $outdir/templates_${YEAR}_1d_jecpt_unfolding_${VAR}_up --JEC "pt" --unfolding
-    ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}_down.coffea -o $outdir/templates_${YEAR}_1d_jecpt_unfolding_${VAR}_down --JEC "pt" --unfolding
-                                    
-    # JEC on pt&mJ
-    ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}_up.coffea -o $outdir/templates_${YEAR}_1d_${VAR}_up --JEC "pt&mJ"
-    ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}_down.coffea -o $outdir/templates_${YEAR}_1d_${VAR}_down --JEC "pt&mJ"
+    if [ "$VAR" == "nominal" ];then
+        # JEC on pt
+        ./create_root_templates.py -i $indir/templates_${YEAR}.coffea -o $outdir/templates_${YEAR}_1d_jecpt --JEC "pt"
+        ./create_root_templates.py -i $indir/templates_${YEAR}.coffea -o $outdir/templates_${YEAR}_1d_jecpt_unfolding --JEC "pt" --unfolding
 
-    ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}_up.coffea -o $outdir/templates_${YEAR}_1d_unfolding_${VAR}_up --JEC "pt&mJ" --unfolding
-    ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}_down.coffea -o $outdir/templates_${YEAR}_1d_unfolding_${VAR}_down --JEC "pt&mJ" --unfolding
+        # JEC on pt&mJ
+        ./create_root_templates.py -i $indir/templates_${YEAR}.coffea -o $outdir/templates_${YEAR}_1d --JEC "pt&mJ"
+        ./create_root_templates.py -i $indir/templates_${YEAR}.coffea -o $outdir/templates_${YEAR}_1d_unfolding --JEC "pt&mJ" --unfolding
+    elif [ "$VAR" == "toppt_off" ];then
+        echo "flattening ${YEAR} templates for variation of ${VAR}"
+        # JEC on pt
+        ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}.coffea -o $outdir/templates_${YEAR}_1d_jecpt_${VAR} --JEC "pt"
+        ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}.coffea -o $outdir/templates_${YEAR}_1d_jecpt_unfolding_${VAR} --JEC "pt" --unfolding
+
+        # JEC on pt&mJ
+        ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}.coffea -o $outdir/templates_${YEAR}_1d_${VAR} --JEC "pt&mJ"
+        ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}.coffea -o $outdir/templates_${YEAR}_1d_unfolding_${VAR} --JEC "pt&mJ" --unfolding
+    else
+        for DIR in up down;
+        do
+            echo "flattening ${YEAR} templates for variation of ${VAR}"
+            # JEC on pt
+            # ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}_up.coffea -o $outdir/templates_${YEAR}_1d_jecpt_${VAR}_up --JEC "pt"
+            ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}_${DIR}.coffea -o $outdir/templates_${YEAR}_1d_jecpt_${VAR}_${DIR} --JEC "pt"
+
+            # ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}_up.coffea -o $outdir/templates_${YEAR}_1d_jecpt_unfolding_${VAR}_up --JEC "pt" --unfolding
+            ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}_${DIR}.coffea -o $outdir/templates_${YEAR}_1d_jecpt_unfolding_${VAR}_${DIR} --JEC "pt" --unfolding
+
+            # JEC on pt&mJ
+            # ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}_up.coffea -o $outdir/templates_${YEAR}_1d_${VAR}_up --JEC "pt&mJ"
+            ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}_${DIR}.coffea -o $outdir/templates_${YEAR}_1d_${VAR}_${DIR} --JEC "pt&mJ"
+
+            # ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}_up.coffea -o $outdir/templates_${YEAR}_1d_unfolding_${VAR}_up --JEC "pt&mJ" --unfolding
+            ./create_root_templates.py -i $indir/templates_${YEAR}_${VAR}_${DIR}.coffea -o $outdir/templates_${YEAR}_1d_unfolding_${VAR}_${DIR} --JEC "pt&mJ" --unfolding
+        done
+    fi
     done
 }
 
 # run the things
 
-flatten_nominal
+# flatten_nominal
 
-flatten_variation jec
-flatten_variation fsr
-# flatten_variation isr
-flatten_variation toppt_off
+flatten_template jec
+flatten_template fsr
+flatten_templates isr
+flatten_templates toppt_off
