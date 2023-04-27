@@ -362,6 +362,7 @@ class CombineWorkflows(object):
 
         constr_index = 0
         uniform_binning = configs.get("uniformGenbins", "False") == "True"
+        scale_to_binwidth = configs.get("scaleGenBinWidth", "False") == "True"
 
         def constrain_snippet(iconst, r):
             snippet = "constr{} constr ".format(iconst)
@@ -380,7 +381,7 @@ class CombineWorkflows(object):
 
         dims = [{"msd": 1, "pt": 2, "": -1}[d] for d in configs.get("regularization", [""])]
         if -1 not in dims:
-            C = get_C(dims, uniform_binning)
+            C = get_C(dims, uniform_binning, scale_to_binwidth)
             for row in C:
                 command_string += exec_bash('echo "{CONSTR}" >> {DATACARD}\n'.format(
                     CONSTR=constrain_snippet(constr_index, row),
