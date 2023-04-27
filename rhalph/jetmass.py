@@ -25,8 +25,8 @@ def jet_mass_producer(args, configs):
     nbins = int(np.floor((max_msd - min_msd) / binwidth))
     msd_bins = np.linspace(min_msd, nbins * binwidth + min_msd, nbins + 1)
 
-    xsec_priors = configs.get("xsec_priors",{})
-    
+    xsec_priors = configs.get("xsec_priors", {})
+
     # channels for combined fit
     channels = configs["channels"]
     qcd_estimation_channels = {
@@ -740,7 +740,7 @@ if __name__ == "__main__":
     parser.add_argument("--customCombineWrapper", action="store_true")
     parser.add_argument("--noNuisances", action="store_true")
     parser.add_argument("--JMRparameter", action="store_true")
-    parser.add_argument("--JECVar", action="store_true")
+    # parser.add_argument("--JECVar", action="store_true")
     parser.add_argument("--prefitAsimov", action="store_true")
     parser.add_argument("--pTdependetJMRParameter", action="store_true")
     parser.add_argument("--noNormUnc", action="store_true")
@@ -753,7 +753,14 @@ if __name__ == "__main__":
 
     parser.add_argument("-M", "--mode", default="default", choices=["unfolding", "jms", "default"],
                         help="choose what fit should be run. 'unfolding' performs MaxLik. unfolding, jms measures "
-                        "JetMassScale variations,'default' measures signal cross section.")
+                        "JetMassScale variations,'default' measures signal cross section.",
+                        required=True)
+    parser.add_argument(
+        "--uncertainty-breakdown",
+        default=[],
+        nargs="+",
+        help="specify nuisances for which uncertainty breakdown plots should be created",
+    )
 
     args = parser.parse_args()
 
@@ -788,6 +795,7 @@ if __name__ == "__main__":
     args.pTdependetMassScale = configs.get("pTdependentMassScale", "True") == "True"
     args.separateMassScales = configs.get("separateMassScales", "False") == "True"
     args.VaryOnlySignal = configs.get("VaryOnlySignal", "False") == "True"
+    args.JECVar = configs.get("JECVar", "True") == "True"
 
     if not args.justplots:
         jet_mass_producer(args, configs)
@@ -872,10 +880,19 @@ if __name__ == "__main__":
         do_postfit = False
     if not args.skipTemplatePlots:
         fitplotter.plot_fit_result(
-            configs, plot_total_sig_bkg=False, do_postfit=do_postfit, use_config_samples=args.unfolding
+            configs,
+            plot_total_sig_bkg=False,
+            do_postfit=do_postfit,
+            use_config_samples=args.unfolding,
+            pseudo_data=False,
         )
         fitplotter.plot_fit_result(
-            configs, logY=True, plot_total_sig_bkg=False, do_postfit=do_postfit, use_config_samples=args.unfolding
+            configs,
+            logY=True,
+            plot_total_sig_bkg=False,
+            do_postfit=do_postfit,
+            use_config_samples=args.unfolding,
+            pseudo_data=False,
         )
     if do_postfit and args.massScales:
         fitplotter.plot_mass_scale_nuisances(configs)
@@ -887,3 +904,12 @@ if __name__ == "__main__":
         fitplotter.plot_qcd_bernstein(configs, do_3d_plot=False)
         if configs.get("QCDFailConstant", "False") == "False":
             fitplotter.plot_qcd_fail_parameters(configs)
+
+    if args.JECVar and not args.unfolding:
+        args.uncertainty_breakdown.append("jec_variation")
+    if len(args.uncertainty_breakdown) > 0:
+        os.system(
+            "./scan_poi.py {} --poi all --plots --lasteffect rest -f {}".format(
+                configs["ModelName"], " ".join(args.uncertainty_breakdown)
+            )
+        )
