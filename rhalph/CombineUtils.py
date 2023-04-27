@@ -1,5 +1,28 @@
 import ROOT
+import json
 ROOT.TH1.AddDirectory(False)
+ROOT.PyConfig.IgnoreCommandLineOptions = True
+
+
+def import_config(config_path):
+    try:
+        if config_path.endswith(".py"):
+            try:  # try py2 syntax first
+                execfile(config_path)  # noqa
+            except BaseException:  # if that fails try py3 syntax
+                exec(open(config_path).read())
+            config = locals()["configs"]
+        else:
+            config = json.load(open(config_path))
+    except BaseException as e:
+        print(e)
+        raise (
+            TypeError(
+                "Could not convert fit configuration. Valid input types are a path of json-file or python dict."
+            )
+        )
+    return config
+
 
 class CombineWorkspace:
     def __init__(self, file_path_):
