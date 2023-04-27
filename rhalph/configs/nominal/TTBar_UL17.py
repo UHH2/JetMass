@@ -5,7 +5,7 @@ pt_edges = [200, 300, 400, 500, 650]
 print(len(pt_edges))
 configs = {
     "year": "UL17",
-    "ModelName": "TTBarUL17Test",
+    "ModelName": "TTBarUL17",
     "gridHistFileName": "../Histograms/grid_oneScale.root",
     "histLocation": "../python/flat_templates/templates_UL17_1d.root",
     "binning": [50, 300, 5],
