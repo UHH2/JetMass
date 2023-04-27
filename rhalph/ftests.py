@@ -182,11 +182,6 @@ class FTest(object):
             nll_toys2 += this_nll_toys2
             status_toys1 += this_status_toys1
             status_toys2 += this_status_toys2
-        print("NLLs")
-        print(self._nll_base1)
-        print(self._nll_base2)
-        print(self._nll_toys1)
-        print(self._nll_toys2)
         if skip_failed_fits:
             status_1 = np.array(status_toys1)
             status_2 = np.array(status_toys2)
@@ -281,6 +276,7 @@ class FTest(object):
             lH.GetXaxis().SetTitle("-2log#lambda")
             lH.GetYaxis().SetTitle("Pseudodatasets")
             lH.GetYaxis().SetTitleOffset(0.85)
+            # lH.GetXaxis().SetRangeUser(0,250)
         elif method == "GoodnessOfFit" and self._algo == "KS":
             lH.GetXaxis().SetTitle("KS")
             lH.GetYaxis().SetTitle("Pseudodatasets")
@@ -362,10 +358,10 @@ class FTest(object):
 
 
 def process_TF_prep(dir_pattern, model_dir_pattern, output_dir, algo="KS", n_p_other=1):
-    for i_pt in range(0, 8):
-        for i_rho in range(0, 8):
-            # for i_pt in [1]:
-            #     for i_rho in [4]:
+    for i_pt in range(0, 7):
+        for i_rho in range(0, 7):
+    # for i_pt in [0]:
+    #     for i_rho in [0]:
             for (j_pt, j_rho) in [(i_pt + 1, i_rho), (i_pt, i_rho + 1)]:
                 ft = FTest()
                 ft._algo = algo
@@ -426,14 +422,15 @@ if __name__ == "__main__":
                 )
             )
         # for algo in ["AD","KS","saturated"]:
-        for algo in ["saturated", "KS"]:
+        # for algo in ["saturated"]:
+        for algo in ["saturated"]:
             # process_TF_prep('{PREFIX}_QCDTFScan_{ALGO}_Seed*'.format(PREFIX=args.processScan,ALGO=algo),
             #                 # 'VJetsSelectionMCTFPt%iRho%iDataResTFPt0Rho0/qcdmodel/',
             #                 model_prefix+'MCTFPt%iRho%iDataResTFPt0Rho0/qcdmodel/',
             #                 "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/rhalph/{MODELPREFIX}QCDTfFTestPlots{ALGO}/".format(MODELPREFIX=model_prefix,ALGO=algo),
             #                 algo)
 
-            if algo == "saturated":
+            # if algo == "saturated":
 
                 #     process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_DataTFScan_QCDOrder0x4_%s_Seed*'%algo,
                 #                     'VJetsMCTFPt0Rho4DataResTFPt%iRho%i/',
@@ -441,15 +438,15 @@ if __name__ == "__main__":
                 #                     algo,
                 #                     n_p_other = 1 + (0+1)*(4+1))
 
-                process_TF_prep(
-                    "{PREFIX}_DataTFScan_{ALGO}_Seed*".format(PREFIX=args.processScan, ALGO=algo),
-                    model_prefix + "TFPt%iRho%i/",
-                    ("/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/"
-                     "rhalph/{MODELPREFIX}DataTfFTestPlots{ALGO}/").format(
-                        MODELPREFIX=model_prefix, ALGO=algo
-                    ),
-                    algo,
-                )
+            process_TF_prep(
+                "{PREFIX}_DataTFScan_{ALGO}_Seed*".format(PREFIX=args.processScan, ALGO=algo),
+                model_prefix + "TFPt%iRho%i/",
+                ("/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/"
+                 "rhalph/{MODELPREFIX}DataTfFTestPlots{ALGO}/").format(
+                     MODELPREFIX=model_prefix, ALGO=algo
+                 ),
+                algo,
+            )
     else:
 
         ft = FTest()

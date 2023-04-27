@@ -5,12 +5,16 @@ import uproot
 
 
 class FitResults:
-    def __init__(self, config):
+    def __init__(self, config, fit_dir):
         self._config = config
         self.name = self._config["ModelName"]
-        self.fit_result = json.load(open(f"{self.name}/{self.name}fitResult.json", "r"))
+        self.fit_result = json.load(open(f"{fit_dir}/{self.name}fitResult.json", "r"))
+        self.poi_scan_result = None
+        scan_result_path = f"{fit_dir}/{self.name}fitResultSplitUnc.json"
+        if os.path.isfile(scan_result_path):
+            self.poi_scan_result = json.load(open(scan_result_path, "r"))
 
-        shapes_file_path = self.name + "/fit_shapes.root"
+        shapes_file_path = fit_dir + "/fit_shapes.root"
         if os.path.isfile(shapes_file_path):
             self.fit_shapes_uproot = uproot.open(shapes_file_path)
         else:
@@ -38,7 +42,26 @@ class FitResults:
             central = (100 + param[1] * factor) / 100
             error_up = (param[2] * factor) / 100
             error_down = (param[3] * factor) / 100
-            massScales.update({param[0]: {"edges": pt_edges, "vals": [central, error_up, error_down]}})
+            errors_up = [error_up]
+            errors_down = [error_down]
+            unc_sources = ["total"]
+            # massScales.update({param[0]: {"edges": pt_edges, "vals": [central, error_up, error_down]}})
+            if self.poi_scan_result is not None:
+                unc_sources = self.poi_scan_result[param[0]]["source"]
+                errors_up = [(val*factor) / 100 for val in self.poi_scan_result[param[0]]["up"]]
+                errors_down = [(val*factor) / 100 for val in self.poi_scan_result[param[0]]["down"]]
+
+            massScales.update(
+                {
+                    param[0]: {
+                        "edges": pt_edges,
+                        "central": central,
+                        "err_up": errors_up,
+                        "err_down": errors_down,
+                        "unc_sources": unc_sources,
+                    }
+                }
+            )
         self.results.update({"jms": massScales})
         return massScales
 
@@ -155,18 +178,20 @@ if __name__ == "__main__":
     parser.add_argument("--fits", nargs="+", default=[], help="List of fits (separated by spaces).", required=True)
     parser.add_argument("--fit-peaks", action="store_true")
     parser.add_argument("-o", "--output", default="fitResults.json")
+    parser.add_argument("--dir-pattern", default="./*/config.json", help="pattern to find fit configs")
     args = parser.parse_args()
 
     if args.fits == ["all"]:
-        args.fits = glob.glob("*/config.json")
+        args.fits = glob.glob(args.dir_pattern)
     configs = [(fit_dir if "config.json" else f"{fit_dir}/config.json") for fit_dir in args.fits]
 
     all_results = {}
     for config_path in configs:
+        fit_dir = os.path.dirname(config_path)
         config = json.load(open(config_path))
         name = config["ModelName"]
         print(name)
-        FR = FitResults(config)
+        FR = FitResults(config, fit_dir)
         sf = FR.get_massScales()
 
         if args.fit_peaks:

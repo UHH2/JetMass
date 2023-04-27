@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import json
-import ROOT
+import uproot
 import hist
 import numpy as np
 from scipy.optimize import curve_fit
@@ -38,13 +38,20 @@ def landau_gauss(x, p0, p1, x0, sigma):
 
 
 class UnfoldingToyClosure(object):
-    def __init__(self, modeldir, workdir, name="ToyClosure"):
+    def __init__(self, modeldir, workdir, n_toys, name="ToyClosure"):
         self._modeldir = os.path.abspath(modeldir)
+        if not os.path.isfile(modeldir+"/model_combined.root"):
+            raise FileNotFoundError("Could not locate model_combined.root in model dir. "
+                                    "Either provided directory is wrong, or workspace has not been created yet.")
         self._workdir = os.path.abspath(workdir)
         self._cmssw_dir = (
             "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/rhalph/"
             "CMSSW_11_3_4/src"
         )
+        self._n_toys = n_toys
+        if n_toys % 50 != 0:
+            raise ArithmeticError("Number of toys has to be a multiple of 50!")
+        self._n_jobs = int(n_toys/50)
 
         self._name = name
 
@@ -56,13 +63,14 @@ class UnfoldingToyClosure(object):
             raise RuntimeError("could not find any genbins in config.")
 
         self._initial_seed = 123456
+        self._base_seed = int(self._initial_seed*10**(np.floor(np.log10(self._n_toys))+1))
 
         if not os.path.exists(workdir):
             os.makedirs(workdir)
 
-    def submit_toys(self, n_toys):
+    def submit_toys(self, debug=False):
         os.chdir(self._workdir)
-        for i in range(n_toys):
+        for i in range(self._n_jobs):
             cmd = (
                 "combineTool.py -M FitDiagnostics -d {}/model_combined.root  --cminDefaultMinimizerStrategy 0 ".format(
                     self._modeldir
@@ -72,35 +80,57 @@ class UnfoldingToyClosure(object):
             cmd += "--setParameters {}=1 ".format("=1,".join(self._pois))
             cmd += "--robustFit 1 "
             cmd += "-n .{}{} ".format(self._name, i)
-            cmd += "--seed {} ".format(int(self._initial_seed*10**(np.floor(np.log10(n_toys))+1) + i))
-            cmd += "-t 1 "
+            cmd += "--seed {} ".format(self._base_seed + i)
+            cmd += "-t 50 "
+            cmd += "--trackParameters rgx{r_.*} "
+            cmd += "--trackErrors rgx{r_.*} "
             cmd += "--job-mode condor "
             cmd += "--task-name {}_job_{} ".format(self._name, i)
-            os.system(cmd)
+            if debug:
+                print(cmd)
+            else:
+                os.system(cmd)
 
-    def get_parameters(self, itoy, fit_result_name="fit_s"):
-        fname = "{}/fitDiagnostics.{}{}.root".format(self._workdir, self._name, itoy)
-        file_ = ROOT.TFile.Open(fname, "READ")
-        try:
-            fit_result = file_.Get(fit_result_name)
-            fit_result_pars = fit_result.floatParsFinal()
-        except BaseException:
-            print("could not find fit result ({}) in provided file (itoy={}).".format(fit_result_name, itoy))
-            return None
+    def get_parameters(self, i_job):  # , fit_result_name="fit_s"):
+        fname = "{}/higgsCombine.{}{}.FitDiagnostics.mH120.{}.root".format(
+            self._workdir, self._name, i_job, self._base_seed + i_job
+        )
+        file_ = uproot.open(fname)
+        limit = file_["limit"]
 
-        poi_result_tmp = {}
-        for p in fit_result_pars:
-            if p.GetName() in self._pois or len(self._pois) == 0:
-                poi_result_tmp[p.GetName()] = [p.getVal(), p.getErrorHi(), p.getErrorLo()]
-        return [np.array([poi_result_tmp[name][i] for name in self._pois]) for i in [0, 1, 2]]
+        result_arrays = limit.arrays(["trackedParam_{}".format(poi) for poi in self._pois])
 
-    def plot_toys(self, n_toys_submitted):
-        toy_postfit = np.array([arr for arr in [self.get_parameters(itoy) for itoy in range(n_toys_submitted)] if arr])
-        n_toys = len(toy_postfit[:, 0, 0])
-        print("extracted fitresults for {}/{} toys".format(n_toys, n_toys_submitted))
+        # reformat and get rid of duplicate entries
+        result_arrays = np.array([result_arrays["trackedParam_{}".format(poi).encode()][::4] for poi in self._pois])
+
+        # transpose and reshape to return array of type [poi, toy] instead of [toy, poi]
+        n_pois, n_toy_valid = result_arrays.shape
+
+        result_arrays = result_arrays.T.reshape(n_toy_valid, n_pois)
+        return result_arrays
+        # fname = "{}/fitDiagnostics.{}{}.root".format(self._workdir, self._name, itoy)
+        # file_ = ROOT.TFile.Open(fname, "READ")
+        # try:
+        #     fit_result = file_.Get(fit_result_name)
+        #     fit_result_pars = fit_result.floatParsFinal()
+        # except BaseException:
+        #     print("could not find fit result ({}) in provided file (itoy={}).".format(fit_result_name, itoy))
+        #     return None
+
+        # poi_result_tmp = {}
+        # for p in fit_result_pars:
+        #     if p.GetName() in self._pois or len(self._pois) == 0:
+        #         poi_result_tmp[p.GetName()] = [p.getVal(), p.getErrorHi(), p.getErrorLo()]
+        # return [np.array([poi_result_tmp[name][i] for name in self._pois]) for i in [0, 1, 2]]
+
+    def plot_toys(self):
+        # toy_postfit = np.array([arr for arr in [self.get_parameters(ijob) for ijob in range(self._n_jobs)] if arr])
+        toy_postfit = np.concatenate([self.get_parameters(ijob) for ijob in range(self._n_jobs)])
+        n_toys = len(toy_postfit[:, 0])
+        print("extracted fitresults for {}/{} toys".format(n_toys, self._n_toys))
 
         for ipoi, poi in enumerate(self._pois):
-            postfit_results = toy_postfit[:, 0, ipoi]
+            postfit_results = toy_postfit[:, ipoi]
 
             # xmin = max(0, np.floor(postfit_results.min()))
             # xmax = min(10, np.ceil(postfit_results.max()))
@@ -134,7 +164,14 @@ class UnfoldingToyClosure(object):
                 fontsize=20,
             )
 
-            hep.histplot(h, label=r"$N_\mathrm{toys}=%i$ (mean=%.2f, width=%.2f)" % (n_toys, calc_mean(x,y), calc_sigma(x,y)), ax=ax, yerr=False)
+            hep.histplot(
+                h,
+                label=r"$N_\mathrm{toys}=%i$ (mean=%.2f, width=%.2f, sum=%i)" % (
+                    n_toys, calc_mean(x, y), calc_sigma(x, y), y.sum()
+                ),
+                ax=ax,
+                yerr=False,
+            )
 
             x_fine = np.linspace(xmin, xmax, 1000)
             ax.plot(x_fine, fit_func(x_fine, *popt), label=r"fit ($\mu=%.2f, \sigma=%.2f$)" % (popt[2], popt[3]))
@@ -154,10 +191,13 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--toys", help="number of toys to produce/fit", type=int)
     parser.add_argument("-s", "--submit", action="store_true", help="submit toys")
     parser.add_argument("-p", "--plot", action="store_true", help="plot finished toys")
+    parser.add_argument(
+        "--debug", action="store_true", help="just print cmd and don't execute. (does not affect plotting task)"
+    )
     args = parser.parse_args()
 
-    uct = UnfoldingToyClosure(modeldir=args.model, workdir=args.workdir, name="ToyTest")
+    uct = UnfoldingToyClosure(modeldir=args.model, workdir=args.workdir, name="ToyTest", n_toys = args.toys)
     if args.submit:
-        uct.submit_toys(args.toys)
+        uct.submit_toys(args.debug)
     if args.plot:
-        uct.plot_toys(args.toys)
+        uct.plot_toys()

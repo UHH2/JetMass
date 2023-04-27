@@ -66,10 +66,14 @@ def plot_fit_result(
     plot_total_sig_bkg=True,
     do_postfit=True,
     use_config_samples=False,
+    pseudo_data=True,
 ):
     print("opening file", config["ModelName"] + "/" + fit_shapes_root)
     fit_shapes_root = "fit_shapes.root" if do_postfit else "fitDiagnostics.root"
     f_shapes = ROOT.TFile(config["ModelName"] + "/" + fit_shapes_root, "READ")
+    pseudo_data_file = None
+    if pseudo_data:
+        pseudo_data_file = ROOT.TFile(config["ModelName"] + "/fitDiagnostics.root", "READ")
     ROOT.TH1.AddDirectory(0)
     PrePostFit = ["prefit", "postfit"] if do_postfit else ["prefit"]
     out_dir = config["ModelName"] + "/plots/" + fit_shapes_root.replace(".root", "/") + ("/logY/" if logY else "")
@@ -116,7 +120,12 @@ def plot_fit_result(
                 )
                 plotter.rebin = False
                 h_obs, fit_shapes = plotter.get_hists(
-                    f_shapes, backgrounds, hist_dir, scaleQCD=False, selection=channel["selection"]
+                    f_shapes,
+                    backgrounds,
+                    hist_dir,
+                    scaleQCD=False,
+                    selection=channel["selection"],
+                    pseudo_data_file=pseudo_data_file,
                 )
                 # print(fit_shapes)
                 # h_obs.GetXaxis().SetTitle('m_{SD} [GeV]')
@@ -166,7 +175,10 @@ def plot_fit_result(
                     legend_entries.append((h_total_s, "Total Signal", "l"))
                     additional_hists.append(h_total_s)
 
-                legend_entries.append((h_obs, "Data", "pe1x0"))
+                if pseudo_data:
+                    legend_entries.append((h_obs, "Pseudodata", "pe1x0"))
+                else:
+                    legend_entries.append((h_obs, "Data", "pe1x0"))
                 additional_text = (
                     " "
                     + plotter.selection_tex[channel["selection"]]

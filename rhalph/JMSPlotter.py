@@ -1,5 +1,5 @@
 #!/usr/bin/env pythonJMS.sh
-import matplotlib
+# import matplotlib
 # try:
 #     matplotlib.use("module://imgcat")
 # except ModuleNotFoundError as e:
@@ -498,7 +498,7 @@ def finalize_ax(
         f.savefig(fname, bbox_inches="tight")
     else:
         f.tight_layout()
-    f.show()
+    # f.show()
 
 
 def create_plotter(fit_result_path: str, years: List, regions: List, JEC: bool = False, legacy: bool = False):
