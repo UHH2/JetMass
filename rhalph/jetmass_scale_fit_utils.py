@@ -65,6 +65,10 @@ def build_pseudo(samples, hist_file, hist_dir, vary_pseudo_like, MINIMAL_MODEL=F
             toy_pseudo_data.Scale(N_entries_toys / toy_pseudo_data.Integral())
             return toy_pseudo_data
         else:
+            # poissonify uncertainty
+            for i in range(1, pseudo_data_hist.GetNbinsX() + 1):
+                pseudo_data_hist.SetBinError(i, np.sqrt(pseudo_data_hist.GetBinContent(i)))
+
             pseudo_data_hist = scale_lumi(pseudo_data_hist, lumiScale)
             return pseudo_data_hist
 
