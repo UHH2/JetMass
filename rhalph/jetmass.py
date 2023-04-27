@@ -45,15 +45,18 @@ def jet_mass_producer(args, configs):
         # "barrel": ROOT.TFile(configs["histLocation"].replace(".root", "_barrel.root")),
         # "endcap": ROOT.TFile(configs["histLocation"].replace(".root", "_endcap.root")),
     }
-    if args.JECVar:
-        aux_hist_files.update({
-            "jec_up": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_up.root")),
-            # "jec_up_barrel": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_up_barrel.root")),
-            # "jec_up_endcap": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_up_endcap.root")),
-            "jec_down": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_down.root")),
-            # "jec_down_barrel": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_down_barrel.root")),
-            # "jec_down_endcap": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_down_endcap.root")),
-        })
+
+    for var in [
+            "jec_up", "jec_down",
+            "jer_up", "jer_down",
+            "isr_up", "isr_down",
+            "fsr_up", "fsr_down",
+            "toppt_off",
+    ]:
+        fname = configs["histLocation"].replace(".root", "_{}.root".format(var))
+        if os.path.isfile(fname):
+            aux_hist_files[var] = ROOT.TFile(fname, "READ")
+
     do_qcd_estimation = len(qcd_estimation_channels) > 0
     do_initial_qcd_fit = configs.get("InitialQCDFit", "False") == "True"
     qcd_fail_region_constant = configs.get("QCDFailConstant", "False") == "True"
@@ -392,7 +395,11 @@ def jet_mass_producer(args, configs):
 
     # jec variation nuisances
     jec_var_nuisance = rl.NuisanceParameter("jec_variation", "shape", 0, -10, 10)
-
+    extra_nuisances = {
+        "isr": rl.NuisanceParameter("isr_variation", "shape", 0, -10, 10),
+        "fsr": rl.NuisanceParameter("fsr_variation", "shape", 0, -10, 10),
+        "toppt": rl.NuisanceParameter("toppt_reweight", "shape", 0, -10, 10),
+    }
     # tagging eff sf for ttbar semileptonic samples
 
     # top_tag_eff = rl.IndependentParameter("top_tag_eff_sf",1.,-10,10)
@@ -497,6 +504,21 @@ def jet_mass_producer(args, configs):
                         hist_jec_up = get_hist(hist_dir % (sample_name, ""), "jec_up")
                         hist_jec_down = get_hist(hist_dir % (sample_name, ""), "jec_down")
                         sample.setParamEffect(jec_var_nuisance, hist_jec_up, hist_jec_down)
+
+                    # ISR down
+                    if sample.sampletype == rl.Sample.SIGNAL:
+                        hist_isr_up = get_hist(hist_dir % (sample_name, ""), "isr_up")
+                        hist_isr_down = get_hist(hist_dir % (sample_name, ""), "isr_down")
+                        sample.setParamEffect(extra_nuisances["isr"], hist_isr_up, hist_isr_down)
+                    # FSR down
+                    if sample.sampletype == rl.Sample.SIGNAL:
+                        hist_fsr_up = get_hist(hist_dir % (sample_name, ""), "fsr_up")
+                        hist_fsr_down = get_hist(hist_dir % (sample_name, ""), "fsr_down")
+                        sample.setParamEffect(extra_nuisances["fsr"], hist_fsr_up, hist_fsr_down)
+
+                    if "TTTo" in sample.name:
+                        hist_toppt_off = get_hist(hist_dir % (sample_name, ""), "toppt_off")
+                        sample.setParamEffect(extra_nuisances["toppt"], effect_up=hist_toppt_off)#, scale=0.5)
 
                     # setting effects of JMR variation nuisance(s)
                     if args.JMRparameter and sample.sampletype == rl.Sample.SIGNAL:
