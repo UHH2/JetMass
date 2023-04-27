@@ -3,7 +3,7 @@ from __future__ import print_function
 import sys
 import os
 import numpy as np
-import ROOT
+import ROOT # type: ignore
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 from jetmass_scale_fit_utils import scale_lumi, build_pseudo, build_mass_scale_variations  # noqa
 import rhalphalib as rl         # noqa
@@ -735,11 +735,11 @@ if __name__ == "__main__":
         if args.config.endswith(".json"):
             configs = json.load(open(args.config))
         else:
-            execfile(args.config)  # noqa
+            execfile(args.config)  # noqa # type: ignore
         existing_config = configs["ModelName"] + "/config.json"
         if os.path.isfile(existing_config) and args.unfolding:
             use_existing_config = (
-                raw_input(      # noqa
+                raw_input(      # noqa # type: ignore
                     "There already is a directory corresponding to this config. "
                     "Do you want to load the existing config? [Y/N]"
                 ).lower()
