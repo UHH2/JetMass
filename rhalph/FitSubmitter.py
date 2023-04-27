@@ -4,7 +4,7 @@ import os
 import copy
 import subprocess
 from CombineWorkflows import CombineWorkflows
-
+from CombineUtils import import_config
 
 class FitSubmitter(object):
     def __init__(self, config, workdir, dry_run=False):
@@ -14,7 +14,7 @@ class FitSubmitter(object):
         self._workdir = os.path.realpath(workdir)
 
         self.rhalphdir = os.getcwd()
-        self.CombinePath = self.rhalphdir + "/CMSSW_10_2_13"
+        self.CombinePath = self.rhalphdir + "/CMSSW_11_3_4"
 
         self.setup_workdir(self._workdir)
 
@@ -32,9 +32,6 @@ class FitSubmitter(object):
             os.makedirs(workdir)
             scriptdir = os.getcwd()
             os.chdir(workdir)
-            os.system("ln -sf " + self.CombinePath)
-            os.system("ln -sf " + self.rhalphdir + "/setup_ralph.sh")
-            os.system("ln -sf " + self.rhalphdir + "/runFit.py")
             os.system("ln -sf " + self.rhalphdir + "/rhalphalib")
             os.system("ln -sf " + self.rhalphdir + "/jetmass.py")
             os.system("ln -sf " + self.rhalphdir + "/fitplotter")
@@ -51,15 +48,20 @@ class FitSubmitter(object):
         if isinstance(c, dict):
             self._config = c
         else:
-            try:
-                self._config = json.load(open(c))
-            except BaseException as e:
-                print(e)
-                raise (
-                    TypeError(
-                        "Could not convert fit configuration. Valid input types are a path of json-file or python dict."
-                    )
-                )
+            self._config = import_config(c)
+            # try:
+            #     if c.endswith(".py"):
+            #         execfile(c)  # noqa
+            #         self._config = locals()["configs"]
+            #     else:
+            #         self._config = json.load(open(c))
+            # except BaseException as e:
+            #     print(e)
+            #     raise (
+            #         TypeError(
+            #             "Could not convert fit configuration. Valid input types are a path of json-file or python dict."
+            #         )
+            #     )
         self._config["gridHistFileName"] = os.path.abspath(self._config["gridHistFileName"])
         self._config["histLocation"] = os.path.abspath(self._config["histLocation"])
 
@@ -68,13 +70,22 @@ class FitSubmitter(object):
         print("adding to postfit_command: ", fitdiagnostics_plotting)
         self.postfit_command += fitdiagnostics_plotting
 
-    def display(self):
-        print("-> ModelBaseName:\t", self._config["ModelName"])
-        print("-> histLocation:\t", self._config["histLocation"])
-        print("-> gridHistFileName:\t", self._config["gridHistFileName"])
-        print("-> workdir:\t\t", self._workdir)
+    def __str__(self):
+        result = "-> ModelBaseName:\t {}\n".format(self._config["ModelName"])
+        result += "-> histLocation:\t {}\n".format(self._config["histLocation"])
+        result += "-> gridHistFileName:\t {}\n".format(self._config["gridHistFileName"])
+        result += "-> workdir:\t\t {}\n".format(self._workdir)
 
-    def submit_fits(self, job_workdirs, batchname="JetMassJobs", defaultFit=True):
+    def display(self):
+        print(self.__str__())
+
+    def submit_fits(self, job_workdirs=None, batchname="JetMassJobs", defaultFit=True):
+
+        if job_workdirs is None:
+            c = self._workdir + "/" + self.config["ModelName"] + ".json"
+            json.dump(self.config, open(c, "w"))
+            job_workdirs = [c]
+            batchname = self.config["ModelName"]
 
         # config_model_names = [config['ModelName'] for config in configs]
         # write HTCondor submissio jdl
@@ -87,12 +98,8 @@ universe          = vanilla
 # universe          =  local
 # request_cpus      =  8
 notification      = Error
-notify_user       = """
-                + self._email
-                + """
-initialdir        = """
-                + self._workdir
-                + """
+notify_user       = """ + self._email + """
+initialdir        = """ + self._workdir + """
 output            = $(ConfigName).o$(ClusterId).$(Process)
 error             = $(ConfigName).e$(ClusterId).$(Process)
 log               = $(ConfigName).$(Cluster).log
@@ -100,18 +107,10 @@ log               = $(ConfigName).$(Cluster).log
 RequestMemory     = 4G
 RequestDisk       = 4G
 #getenv            = True
-JobBatchName      = """
-                + batchname
-                + """
-executable        = """
-                + self._workdir
-                + """/"""
-                + batchname
-                + """_wrapper.sh
+JobBatchName      = """ + batchname + """
+executable        = """ + self._workdir + """/""" + batchname + """_wrapper.sh
 arguments         = $(ConfigName) $(FitJobIndex)
-queue ConfigName from ("""
-                + "\n".join(job_workdirs)
-                + """
+queue ConfigName from (""" + "\n".join(job_workdirs) + """
 )"""
             )
             condor_submit_jdl.close()
@@ -125,10 +124,14 @@ queue ConfigName from ("""
         batch_wrapper.write("cd " + self._workdir + "\n")
         # batch_wrapper.write("source setup_ralph.sh\n")
         jetmass_options = self.extra_jetmass_options + ("" if defaultFit else " --customCombineWrapper")
-        batch_wrapper.write("cd $1\n")
 
         # produce ModelDir with datacards using rhalphalib
-        batch_wrapper.write("for i in *.json; do python jetmass.py $i %s;done\n" % jetmass_options)
+        if job_workdirs[0].endswith(".json"):
+            batch_wrapper.write("python jetmass.py $1 %s\n" % jetmass_options)
+        else:
+            batch_wrapper.write("cd $1\n")
+            batch_wrapper.write("for i in *.json; do python jetmass.py $i %s;done\n" % jetmass_options)
+            
         # write wrapper that runs combine workflow if previous command did not do that yet!
         if "--build" in self.extra_jetmass_options:
             # batch_wrapper.write('env -i bash $1/'+('qcdmodel/' if self.fit_qcd_model else '')+'wrapper.sh\n')
@@ -267,7 +270,8 @@ queue ConfigName from ("""
                 this_config["ModelName"] += value[0]
                 this_config[attribute] = value[1]
                 json.dump(this_config, open(self._workdir + "/" + this_config["ModelName"] + ".json", "w"))
-                configs.append(this_config)
+                configs.append(this_config["ModelName"] + ".json")
+                # configs.append(this_config)
                 if combine_method is not None:
                     if isinstance(combine_method, str):
                         cw = CombineWorkflows()
@@ -311,7 +315,7 @@ queue ConfigName from ("""
                             )
                         )
 
-        self.submit_fits(configs, batchname=scanName, fitDiagnostics=(combine_method is None))
+        self.submit_fits(configs, batchname=scanName, defaultFit=(combine_method is None))
 
 
 if __name__ == "__main__":
