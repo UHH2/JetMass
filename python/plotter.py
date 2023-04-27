@@ -6,7 +6,7 @@ import cms_style
 import collections
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 cms_style.cms_style()
 
@@ -79,12 +79,18 @@ colors = {
     "ST_tch_top": 43,
     "ST_tch_antitop": 44,
     "ST_sch": 40,
+    "ST_tW": 41,
+    "ST_t": 43,
+    "ST_t_top": 43,
+    "ST_t_antitop": 44,
+    "ST_s": 40,
     "ttbar": 810,
     "TTbar": 810,
     "TTbar_Hadronic": 810,
     "TTbar_SemiLeptonic": 804,
     "TTToHadronic": 810,
     "TTToSemiLeptonic": 804,
+    "TTTo2L2Nu": 803,
     "TTbar_had": 810,
     "TTbar_semilep": 804,
     "TTbar_dilep": 803,
@@ -96,6 +102,7 @@ colors = {
     "TTToSemiLeptonic_mergedTop": ROOT.kRed,
     "TTToSemiLeptonic_mergedW": 798,
     "TTToSemiLeptonic_mergedQB": 792,
+    "TTToSemiLeptonic_notMerged": 635,
     "TTbarNonSemiLep": 804,
     "TTbarMergedTop": ROOT.kRed,
     "TTbarMergedW": 798,
@@ -142,6 +149,9 @@ legend_names = {
     "ST_tch_top": "Single top (t-ch.)",
     "ST_tch_antitop": "Single antitop (t-ch.)",
     "ST_sch": "Single anti-/top (s-ch.)",
+    "ST_tW": "Single anti-/top (tW-ch.)",
+    "ST_t": "Single anti-/top (t-ch.)",
+    "ST_s": "Single anti-/top (s-ch.)",
     "ttbar": "t#bar{t}",
     "TTbar": "t#bar{t}",
     "TTbar_Hadronic": "t#bar{t} (hadronic)",
@@ -232,8 +242,9 @@ mc_samples = {
     "W": [
         "other_vjets",
         "QCD",
-        "ZJetsUnmatched",
-        "ZJetsMatched",
+        "ZJets",
+        # "ZJetsUnmatched",
+        # "ZJetsMatched",
         "WJetsUnmatched",
         "WJetsMatched",
     ],
@@ -415,7 +426,10 @@ nbjet_bins_tex_dict = {
 }
 lumis = {
     "2017": 41528.9954019578 / 1000.0,
+    "UL16preVFP": 19301.591954787407 / 1000.0,
+    "UL16postVFP": 16626.734093195286 / 1000.0,
     "UL17": 41479.68052876168 / 1000.0,
+    "UL18": 59832.47533908866 / 1000.0,
 }
 
 
@@ -455,6 +469,7 @@ xmax = 1.0
 xmin = 0.0
 
 y_range = [None, None]
+y_range_ratio = [None, None]
 x_range = [None, None]
 YRangeUser = all(list(map(lambda a: a is not None, y_range)))
 XRangeUser = all(list(map(lambda a: a is not None, x_range)))
@@ -480,12 +495,12 @@ def get_hists(
     if not pseudo_data:
         for data_name in ["Data", "data_obs", "data"]:
             h_data = f_hists.Get(str(hist_dir % data_name))
+            print(hist_dir % data_name)
             try:
                 h_data.GetName()
                 break
-            except BaseException(
-                "tried getting data hist with", data_name, "(which failed miserably)"
-            ) as e:
+            except BaseException as e:
+                logger.exception("tried getting data hist with" + data_name + "(which failed miserably)")
                 logger.exception(e)
 
         if "tgraph" in str(type(h_data)).lower():
@@ -525,11 +540,13 @@ def get_hists(
             for subsample in merged_hists[sample]:
                 try:
                     this_subhist = f_hists.Get(str(hist_dir % subsample)).Clone()
-                except BaseException(
-                    "hist",
-                    str(hist_dir % subsample),
-                    "not found. Taking empty hist instead.",
-                ) as e:
+                except BaseException as e:
+                    logger.exception((
+                        "hist"
+                        + str(hist_dir % subsample)
+                        + "not found. Taking empty hist instead."
+                    )
+                    )
                     logger.exception(e)
                     this_subhist = h_data.Clone()
                     this_subhist.Reset()
@@ -544,7 +561,8 @@ def get_hists(
         else:
             try:
                 this_hist = f_hists.Get(str(hist_dir % sample)).Clone()
-            except BaseException("Did not find hist ", hist_dir % sample) as e:
+            except BaseException as e:
+                logger.exception("Did not find hist "+hist_dir % sample)
                 logger.exception(e)
                 continue
 
@@ -619,7 +637,7 @@ def plot_data_mc(
     # else:
     cms_style.extra_text = extra_text
     cms_style.extra_text_rel_X = 0.14
-    cms_style.font_size_modifier = 0.8
+    cms_style.font_size_modifier = 0.6
     # if ratio_plot:
     cms_style.text_padding = lumi_text_padding
     # cms_style.text_padding = lumi_text_padding
@@ -788,6 +806,25 @@ def plot_data_mc(
         h_data_minus_bg.Draw(obs_draw_option + "SAME")
 
     if ratio_plot:
+        def setup_yrange(h):
+            y_min_ratio, y_max_ratio = y_range_ratio
+
+            ratio_hist_max = 1.
+            for ibin in range(1, h.GetNbinsX()+1):
+                binc = h.GetBinContent(ibin)
+                binerr = h.GetBinError(ibin)
+                if binc == 0:
+                    continue
+                ratio_hist_max = max(abs(1-ratio_hist_max), abs(1-binc)) + 1
+                ratio_hist_max = max(abs(1-ratio_hist_max), abs(binerr)) + 1
+            if y_min_ratio is None:
+                y_min_ratio = ratio_hist_max
+            if y_max_ratio is None:
+                y_max_ratio = ratio_hist_max
+            # make symmetric
+            yrange = max(abs(1-y_min_ratio), abs(1-y_max_ratio))
+            return 1-yrange, 1+yrange
+
         ratiopad.cd()
         ratio_hist = []
         if bkg_err is not None:
@@ -800,7 +837,7 @@ def plot_data_mc(
             ratio_hist[0].SetMarkerStyle(8)
             ratio_hist[0].SetMarkerSize(0.5)
             cms_style.setup_ratio_hist(ratio_hist[0])
-            ratio_hist[0].GetYaxis().SetRangeUser(0.3, 1.7)
+            ratio_hist[0].GetYaxis().SetRangeUser(*setup_yrange(ratio_hist[0]))
             ratio_hist[0].Draw("PE1X0")
 
             ratio_stat_err = bkg_err.Clone()
@@ -819,7 +856,7 @@ def plot_data_mc(
                 ratio_hist[-1].Divide(h_data)
 
             cms_style.setup_ratio_hist(ratio_hist[0])
-            ratio_hist[0].GetYaxis().SetRangeUser(0.3, 1.7)
+            ratio_hist[0].GetYaxis().SetRangeUser(*setup_yrange(ratio_hist[0]))
             ratio_hist[0].Draw(ratio_draw_options)
             for h in ratio_hist[1:]:
                 h.Draw(ratio_draw_options + "SAME")
@@ -827,7 +864,7 @@ def plot_data_mc(
         for h in ratio_hist:
             h.GetXaxis().SetTitle(h_data.GetXaxis().GetTitle())
             h.GetYaxis().SetTitle(ratio_hist_yTitle)
-            h.GetYaxis().SetRangeUser(0.5, 1.5)
+            h.GetYaxis().SetRangeUser(*setup_yrange(ratio_hist[0]))
 
         ratioXMin = ratio_hist[0].GetXaxis().GetXmin()
         ratioXMax = ratio_hist[0].GetXaxis().GetXmax()
@@ -839,8 +876,8 @@ def plot_data_mc(
         minus10percent.SetLineStyle(ROOT.kDashed)
 
         zeropercent.Draw()
-        plus10percent.Draw()
-        minus10percent.Draw()
+        # plus10percent.Draw()
+        # minus10percent.Draw()
 
         plotpad.cd()
     additional_latex = ROOT.TLatex()

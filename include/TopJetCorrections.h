@@ -10,6 +10,7 @@
 #include "UHH2/common/include/CleaningModules.h"
 #include "UHH2/common/include/YearRunSwitchers.h"
 #include "UHH2/JetMETObjects/interface/JetCorrectorParameters.h"
+#include "UHH2/JetMETObjects/interface/JetCorrectionUncertainty.h"
 #include "UHH2/JetMETObjects/interface/FactorizedJetCorrector.h"
 
 
@@ -46,7 +47,7 @@ public:
   inline static const std::string tjer_tag_UL16postVFP = "Summer20UL16_JRV3";
   inline static const std::string tjer_tag_UL17 = "Summer19UL17_JRV2";
   inline static const std::string tjer_tag_UL18 = "Summer19UL18_JRV2";
-  
+
 
 private:
     void fail_if_init() const;
@@ -83,19 +84,21 @@ class TopJetLeptonDeltaRCleaner : public uhh2::AnalysisModule {
 class StandaloneTopJetCorrector{
 public:
   StandaloneTopJetCorrector(uhh2::Context& ctx, std::string tjec_tjet_coll = "AK8PFPuppi");
-  float getJecFactor(const uhh2::Event & event, LorentzVector topjet);
+  float getJecFactor(const uhh2::Event & event, TopJet topjet, int direction = 0);
+  float getJecFactor(const uhh2::Event & event, LorentzVector topjet, int direction = 0);
   float getJERSmearingFactor(const uhh2::Event &event, Particle topjet, int direction, float jec_factor = 1.0);
   float getJERSmearingFactor(const uhh2::Event &event, LorentzVector topjet, int direction, float jec_factor = 1.0){
     Particle topjet_particle;
     topjet_particle.set_v4(topjet);
     return getJERSmearingFactor(event,topjet_particle,direction,jec_factor);
   };
-  
+
 private:
   bool is_mc;
   std::string short_year;
   std::map<std::string,std::unique_ptr<FactorizedJetCorrector>> jet_corrector;
   JME::JetResolution resolution_;
   JME::JetResolutionScaleFactor res_sf_;
+  JetCorrectionUncertainty* jec_uncertainty;
 
 };

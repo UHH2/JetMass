@@ -47,7 +47,9 @@ private:
   uhh2::Event::Handle<int>h_n_trueint_ootimeafter;
   uhh2::Event::Handle<float>h_n_trueint;
 
-  uhh2::Event::Handle<std::vector<bool>> h_trigger_bits;
+  uhh2::Event::Handle<std::vector<float>> h_ps_weights;
+
+  uhh2::Event::Handle<std::vector<int>> h_trigger_bits;
   std::vector<std::string> trigger_names;
 
   uhh2::Event::Handle<double>h_msubjets; // mass of summed v4 of subjets
@@ -68,6 +70,61 @@ private:
   uhh2::Event::Handle<double>h_MIDeepDoubleBHbbprob;
   uhh2::Event::Handle<double>h_MIDeepDoubleBQCDprob;
 
+
+  //raw scores of ParticleNet tagger
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probTbcq;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probTbqq;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probTbc;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probTbq;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probTbel;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probTbmu;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probTbta;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probWcq;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probWqq;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probZbb;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probZcc;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probZqq;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probHbb;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probHcc;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probHqqqq;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probQCDbb;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probQCDcc;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probQCDb;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probQCDc;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probQCDothers;
+  uhh2::Event::Handle<double> h_btag_ParticleNetJetTags_probQCD;
+
+  //binary scores of ParticleNet, see https://github.com/cms-sw/cmssw/blob/master/RecoBTag/ONNXRuntime/python/pfParticleNetDiscriminatorsJetTags_cfi.py
+  uhh2::Event::Handle<double> h_btag_ParticleNetDiscriminatorsJetTags_TvsQCD;
+  uhh2::Event::Handle<double> h_btag_ParticleNetDiscriminatorsJetTags_WvsQCD;
+  uhh2::Event::Handle<double> h_btag_ParticleNetDiscriminatorsJetTags_ZvsQCD;
+  uhh2::Event::Handle<double> h_btag_ParticleNetDiscriminatorsJetTags_ZbbvsQCD;
+  uhh2::Event::Handle<double> h_btag_ParticleNetDiscriminatorsJetTags_HbbvsQCD;
+  uhh2::Event::Handle<double> h_btag_ParticleNetDiscriminatorsJetTags_HccvsQCD;
+  uhh2::Event::Handle<double> h_btag_ParticleNetDiscriminatorsJetTags_H4qvsQCD;
+
+  //raw scores of mass decorrelated ParticleNet tagger
+  uhh2::Event::Handle<double> h_btag_MassDecorrelatedParticleNetJetTags_probXbb;
+  uhh2::Event::Handle<double> h_btag_MassDecorrelatedParticleNetJetTags_probXcc;
+  uhh2::Event::Handle<double> h_btag_MassDecorrelatedParticleNetJetTags_probXqq;
+  uhh2::Event::Handle<double> h_btag_MassDecorrelatedParticleNetJetTags_probQCDbb;
+  uhh2::Event::Handle<double> h_btag_MassDecorrelatedParticleNetJetTags_probQCDcc;
+  uhh2::Event::Handle<double> h_btag_MassDecorrelatedParticleNetJetTags_probQCDb;
+  uhh2::Event::Handle<double> h_btag_MassDecorrelatedParticleNetJetTags_probQCDc;
+  uhh2::Event::Handle<double> h_btag_MassDecorrelatedParticleNetJetTags_probQCDothers;
+  uhh2::Event::Handle<double> h_btag_MassDecorrelatedParticleNetJetTags_probQCD;
+
+  //binary scores of mass decorrelated ParticleNet tagger, see https://github.com/cms-sw/cmssw/blob/master/RecoBTag/ONNXRuntime/python/pfMassDecorrelatedParticleNetDiscriminatorsJetTags_cfi.py
+  uhh2::Event::Handle<double> h_btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XbbvsQCD;
+  uhh2::Event::Handle<double> h_btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XccvsQCD;
+  uhh2::Event::Handle<double> h_btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XqqvsQCD;
+
+  //mass from ParticleNet mass regression
+  uhh2::Event::Handle<double> h_ParticleNetMassRegressionJetTags_mass;
+
+
+
+  
 
   uhh2::Event::Handle<int>h_NextraMBtagDR0p8;
   uhh2::Event::Handle<int>h_NextraTBtagDR0p8;

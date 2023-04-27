@@ -1,4 +1,4 @@
-#!/nfs/dust/cms/user/albrechs/python/coffea/bin/python3
+#!/usr/bin/env pythonJMS.sh
 import awkward as ak
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,13 +19,30 @@ import correctionlib.convert
 import correctionlib.schemav2 as cs
 from hashlib import sha512
 import argparse
+import re
 
+mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
+    color=[
+        "#e66101",
+        "#fdb863",
+        "#5e3c99",
+        "#b2abd2",
+        "#a6cee3",
+        "#1f78b4",
+        "#b2df8a",
+        "#33a02c",
+    ]
+)
 hep.style.use("CMS")
 logger = logging.getLogger(__name__)
 
 
-def cms_label(ax, fs=20):
-    hep.cms.label(label=", Work in Progress", year=2017, ax=ax, fontsize=fs)
+def cms_label(ax, fs=20, year=2017):
+    if isinstance(year, str):
+        year_substr = re.search("[1678]{2}", year)
+        if year_substr:
+            year = 2000 + int(year_substr.group())
+    hep.cms.label(label=", Work in Progress", year=year, ax=ax, fontsize=fs)
 
 
 def fax(w=9, h=9):
@@ -75,18 +92,6 @@ class JMSFitter(object):
         self.fit_results = []
         self.jms_names = []
         self.poly_dim = poly_dim
-        mpl.rcParams["axes.prop_cycle"] = mpl.cycler(
-            color=[
-                "#e66101",
-                "#fdb863",
-                "#5e3c99",
-                "#b2abd2",
-                "#a6cee3",
-                "#1f78b4",
-                "#b2df8a",
-                "#33a02c",
-            ]
-        )
 
     def fit_jms(self, obs):
 
@@ -224,8 +229,9 @@ def iterative_fit(
 
 
 class JMSExtractor(object):
-    def __init__(self, tree_file):
+    def __init__(self, tree_file, year):
         self.tree = tree_file
+        self.year = year
         self.fs = 18
         self.groomings = ["g", "u"]
         self.plot_dir = "."
@@ -298,7 +304,7 @@ class JMSExtractor(object):
 
     def construct_hists(self, groomed=True, JEC=True):
         m_min = 30
-        m_max = 200
+        m_max = 300
         n_bins = 2 * (m_max - m_min)
 
         h = hist.Hist(
@@ -362,10 +368,10 @@ class JMSExtractor(object):
             hep.histplot(self.hists[hid][1][pt_id], ax=ax, label=hlabel, density=True)
 
         ax.legend(loc="upper left", fontsize=self.fs)
-        cms_label(ax)
+        cms_label(ax, year=self.year)
         ax.set_xlabel(r"$m_{SD,\mathrm{reco}}/m_{SD,\mathrm{gen}}$")
         ax.set_ylabel(r"$\Delta N / N$")
-        f.savefig(f"{self.plot_dir}/msd_responses.pdf", bbox_inches="tight")
+        f.savefig(f"{self.plot_dir}/msd_responses_{self.year}.pdf", bbox_inches="tight")
 
         # plot msd distributions
         f, ax = fax()
@@ -379,10 +385,10 @@ class JMSExtractor(object):
             self.hists["g_jec"][0][{**pt_id, "msd_reco": sum}], ax=ax, label="gen"
         )
         ax.legend(loc="upper left", fontsize=self.fs)
-        cms_label(ax)
+        cms_label(ax, year=self.year)
         ax.set_xlabel(r"$m_{SD}$ [GeV]")
         ax.set_ylabel(r"Events/$\Delta m_{SD}$")
-        f.savefig(f"{self.plot_dir}/msd_distributions.pdf", bbox_inches="tight")
+        f.savefig(f"{self.plot_dir}/msd_distributions_{self.year}.pdf", bbox_inches="tight")
 
     def extract_jms(self):
 
@@ -410,7 +416,7 @@ class JMSExtractor(object):
                     grid_overlap = f.add_gridspec(1, 1)
                     cms_label_ax = f.add_subplot(grid_overlap[0])
                     cms_label_ax.axis("off")
-                    cms_label(cms_label_ax)
+                    cms_label(cms_label_ax, year=self.year)
 
                     for ipt in range(n_pt_bins):
                         ax_ipt = f.add_subplot(grid[ipt])
@@ -452,7 +458,7 @@ class JMSExtractor(object):
                         )
 
                     f.savefig(
-                        f"{self.plot_dir}/{grooming}_{jec}_{fit_variable}_control_plots.pdf",
+                        f"{self.plot_dir}/{grooming}_{jec}_{fit_variable}_control_plots_{self.year}.pdf",
                         bbox_inches="tight",
                     )
                 self.jms_from_mc[f"response_{grooming}_{jec}"] = np.array(
@@ -499,9 +505,9 @@ class JMSExtractor(object):
             ax.set_ylabel(f"JMS of {grooming_text} jet mass")
             ax.set_xlabel(r"$p_{T,\mathrm{reco}}$ [GeV]")
             ax.plot(ax.get_xlim(), [1.0, 1.0], "k--", alpha=0.6)
-            cms_label(ax)
+            cms_label(ax, year=self.year)
             f.savefig(
-                f"{self.plot_dir}/{grooming}_extracted_jms.pdf", bbox_inches="tight"
+                f"{self.plot_dir}/{grooming}_extracted_jms_{self.year}.pdf", bbox_inches="tight"
             )
 
     def create_corrections(
@@ -519,16 +525,16 @@ class JMSExtractor(object):
                 for jec in jecs:
                     jms_name = f"{method}_{grooming}_{jec}"
                     jms_fits.add_jms(
-                        jms_name,
+                        f"{jms_name}_{self.year}",
                         self.jms_from_mc[jms_name],
                         (method + " " + grooming_text + " " + self.tex_alias[jec]),
                     )
             ax.legend()
-            cms_label(ax)
+            cms_label(ax, year=self.year)
             ax.set_ylim(0.8, 1.4)
             ax.set_xlabel(r"$p_{T,\mathrm{reco}}$ [GeV]")
             ax.set_ylabel(f"JMS of {grooming_text} jet mass")
-            f.savefig(f"{self.plot_dir}/{grooming}_fitted_jms.pdf", bbox_inches="tight")
+            f.savefig(f"{self.plot_dir}/{grooming}_fitted_jms_{self.year}.pdf", bbox_inches="tight")
             corrections += jms_fits.export()
         return corrections
 
@@ -542,17 +548,22 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    wjets_jms_extractor = JMSExtractor("WJetsToQQ_tinyTree.parquet")
-    wjets_jms_extractor.plot_dir = f"jms_from_mc_plots_{args.output_suffix}"
-    wjets_jms_extractor.pt_binning = np.array([500, 550, 650, 725, 800, 1000, 1200])
-    print("set pt binning to", wjets_jms_extractor.pt_binning)
-    print("constructing and filling hists")
-    wjets_jms_extractor.create_hist_dict()
-    print("making control plots")
-    wjets_jms_extractor.save_control_plots()
-    wjets_jms_extractor.extract_jms()
-    wjets_jms_extractor.plot_extracted_jms()
-    corrections = wjets_jms_extractor.create_corrections(poly_dim=args.ndpoly)
+    years = ["UL16preVFP", "UL16postVFP", "UL17", "UL18"]
+    corrections = []
+
+    for year in years:
+        wjets_jms_extractor = JMSExtractor(f"WJetsToQQ_tinyTree_{year}.parquet", year=year)
+        wjets_jms_extractor.plot_dir = f"jms_from_mc_plots_{args.output_suffix}"
+        wjets_jms_extractor.pt_binning = np.array([500, 550, 650, 725, 800, 1000, 1200])
+        print("set pt binning to", wjets_jms_extractor.pt_binning)
+        print("constructing and filling hists")
+        wjets_jms_extractor.create_hist_dict()
+        print("making control plots")
+        wjets_jms_extractor.save_control_plots()
+        wjets_jms_extractor.extract_jms()
+        wjets_jms_extractor.plot_extracted_jms()
+        corrections += wjets_jms_extractor.create_corrections(poly_dim=args.ndpoly)
+
     correction_set = cs.CorrectionSet(
         schema_version=2,
         description=(

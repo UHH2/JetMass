@@ -179,7 +179,12 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--year", default="2017", choices=["2017", "UL17"])
+    parser.add_argument("--year", default="2017", choices=[
+        "2017",
+        "UL16preVFP", "UL16postVFP",
+        "UL17",
+        "UL18"
+    ])
     parser.add_argument("--origQCDScale", action="store_true")
     parser.add_argument("--input", "-i", default="templates_2017_1d.root")
 

@@ -54,7 +54,28 @@ template<>
 bool JetSelector<TopJet>::process(uhh2::Event & event){
   assert(event.topjets);
   if(event.topjets->size() == 0) return false;
+  // int selected_jet_index = 0;
   const TopJet * selected_jet = &(event.topjets->at(0));
+  // if( v_matching ){
+  //   MatchingSelection matching_selection = event.get(matching_selection_handle);
+  //   float min_dr_1(999.), min_dr_2(999.);
+  //   for(unsigned int ijet = 0 ; ijet < event.topjets->size(); ijet++){
+  //     const TopJet * probe_jet = &(event.topjets->at(ijet));
+  //     float dr_1 = matching_selection.dR_Q1(*probe_jet);
+  //     float dr_2 = matching_selection.dR_Q2(*probe_jet);
+  //     if( matching_selection.passes_matching(*probe_jet, MatchingSelection::oIsMergedV) ){
+  //       if( ( dr_1 < min_dr_1 ) && ( dr_2 < min_dr_2 ) ){
+  //         selected_jet = probe_jet;
+  //         selected_jet_index = ijet;
+  //         min_dr_1 = dr_1;
+  //         min_dr_2 = dr_2;
+  //       } 
+  //     }
+  //   }
+  // }
+  // if(selected_jet_index > 0){
+  //   std::swap(event.topjets->at(0), event.topjets->at(selected_jet_index));
+  // }
   // float n2_min = 1000.;
   // for(unsigned int i=0; i<event.topjets->size();i++){
   //   const TopJet* jet = &(event.topjets->at(i));
@@ -88,14 +109,14 @@ bool JetSelector<GenTopJet>::process(uhh2::Event & event){
 }
 
 
-NLOWeights::NLOWeights(uhh2::Context & ctx, const std::string & boson_pt_handlename){
+NLOWeights::NLOWeights(uhh2::Context & ctx, const std::string & boson_pt_handlename, bool isUL){
   TString version = ctx.get("dataset_version");
   TString selection = ctx.get("selection");
   apply_nloweights = false;
   if(selection == "vjets" && (version.Contains("WJets") || version.Contains("ZJets")) ){
     boson_pt_handle = ctx.get_handle<double>(boson_pt_handlename);
-    std::string NLOWeightsFilename =  "JetMass/NLOweights" + (std::string)(version.Contains("W") ? "/WJets" : "/ZJets") + "Corr.root";
-    
+    std::string NLOWeightsFilename =  "JetMass/NLOweights" + (std::string)(version.Contains("W") ? "/WJets" : "/ZJets") + "Corr"+ (std::string)(isUL ? "UL" : "") +".root";
+    std::cout << "Getting NLOWeights from " << NLOWeightsFilename << std::endl;
     TFile * NLOWeightsFile = new TFile(locate_file(NLOWeightsFilename).c_str());
     h_kfactor = (TH1F*) NLOWeightsFile->Get("kfactor");
     h_ewcorr = (TH1F*) NLOWeightsFile->Get("ewcorr");

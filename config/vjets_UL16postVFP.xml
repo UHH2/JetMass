@@ -1,6 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE JobConfiguration PUBLIC "" "JobConfig.dtd" [
-<!ENTITY 	 JetHT_RunF 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL16postVFP/JetHT_Run2016F-UL2016_MiniAODv2-v2.xml">
+<!ENTITY 	 JetHT_Recount_RunF 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data-recount/UL16postVFP/JetHT_Run2016F-UL2016_MiniAODv2-v2.xml">
+<!ENTITY 	 JetHT_Recount_RunG 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data-recount/UL16postVFP/JetHT_Run2016G-UL2016_MiniAODv2-v2.xml">
+<!ENTITY 	 JetHT_Recount_RunH 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data-recount/UL16postVFP/JetHT_Run2016H-UL2016_MiniAODv2-v2.xml">
 
 <!ENTITY 	 QCD_HT50to100 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/QCD_HT50to100_CP5_PSWeights_madgraph-pythia8_Summer20UL16_v1.xml">
 <!ENTITY 	 QCD_HT100to200 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/QCD_HT100to200_CP5_PSWeights_madgraphMLM-pythia8_Summer20UL16_v1.xml">
@@ -11,9 +13,12 @@
 <!ENTITY 	 QCD_HT1000to1500 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/QCD_HT1000to1500_CP5_PSWeights_madgraphMLM-pythia8_Summer20UL16_v1.xml">
 <!ENTITY 	 QCD_HT1500to2000 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/QCD_HT1500to2000_CP5_PSWeights_madgraphMLM-pythia8_Summer20UL16_v1.xml">
 <!ENTITY 	 QCD_HT2000toInf 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/QCD_HT2000toInf_CP5_PSWeights_madgraphMLM-pythia8_Summer20UL16_v1.xml">
+<!ENTITY 	 WJetsToQQ_HT200to400 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/WJetsToQQ_HT-200to400_CP5_madgraphMLM-pythia8_Summer20UL16_v2.xml">
 <!ENTITY 	 WJetsToQQ_HT400to600 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/WJetsToQQ_HT-400to600_CP5_madgraphMLM-pythia8_Summer20UL16_v2.xml">
 <!ENTITY 	 WJetsToQQ_HT600to800 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/WJetsToQQ_HT-600to800_CP5_madgraphMLM-pythia8_Summer20UL16_v2.xml">
 <!ENTITY 	 WJetsToQQ_HT800toInf 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/WJetsToQQ_HT-800toInf_CP5_madgraphMLM-pythia8_Summer20UL16_v2.xml">
+<!ENTITY 	 ZJetsToQQ_HT200to400 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/ZJetsToQQ_HT-200to400_CP5_madgraphMLM-pythia8_Summer20UL16_v2.xml">
+<!ENTITY 	 ZJetsToQQ_HT400to600 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/ZJetsToQQ_HT-400to600_CP5_madgraphMLM-pythia8_Summer20UL16_v2.xml">
 <!ENTITY 	 ZJetsToQQ_HT600to800 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/ZJetsToQQ_HT-600to800_CP5_madgraphMLM-pythia8_Summer20UL16_v2.xml">
 <!ENTITY 	 ZJetsToQQ_HT800toInf 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/ZJetsToQQ_HT-800toInf_CP5_madgraphMLM-pythia8_Summer20UL16_v2.xml">
 <!ENTITY 	 TTToHadronic 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/TTToHadronic_CP5_powheg-pythia8_Summer20UL16_v1.xml">
@@ -33,23 +38,28 @@
   <Library Name="libSUHH2JetMass"/>
   <Package Name="SUHH2JetMass.par"/>
   <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="16626.734093195286">
-    <InputData Version="JetHT_RunF_UL16postVFP" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&JetHT_RunF;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="QCD_HT50to100_UL16postVFP" Lumi="0.06023230769230769" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT50to100;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="QCD_HT100to200_UL16postVFP" Lumi="3.1133465480728506" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT100to200;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="QCD_HT200to300_UL16postVFP" Lumi="27.904911669890392" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT200to300;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="QCD_HT300to500_UL16postVFP" Lumi="144.50652482269504" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT300to500;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="QCD_HT500to700_UL16postVFP" Lumi="501.738497033619" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT500to700;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="QCD_HT700to1000_UL16postVFP" Lumi="2159.272360248447" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT700to1000;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="QCD_HT1000to1500_UL16postVFP" Lumi="11337.939177101967" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT1000to1500;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="QCD_HT1500to2000_UL16postVFP" Lumi="86823.75" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT1500to2000;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="QCD_HT2000toInf_UL16postVFP" Lumi="221272.5" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT2000toInf;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="WJetsToQQ_HT400to600_UL16postVFP" Lumi="16107.640327082645" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToQQ_HT400to600;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="WJetsToQQ_HT600to800_UL16postVFP" Lumi="114993.25375578956" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToQQ_HT600to800;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="WJetsToQQ_HT800toInf_UL16postVFP" Lumi="235353.97122869318" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToQQ_HT800toInf;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="ZJetsToQQ_HT600to800_UL16postVFP" Lumi="216989.53824829066" Type="MC" NEventsMax="-1" Cacheable="False">&ZJetsToQQ_HT600to800;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="ZJetsToQQ_HT800toInf_UL16postVFP" Lumi="339802.93544877676" Type="MC" NEventsMax="-1" Cacheable="False">&ZJetsToQQ_HT800toInf;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="TTToHadronic_UL16postVFP" Lumi="90327852.0490888" Type="MC" NEventsMax="-1" Cacheable="False">&TTToHadronic;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="TTToSemiLeptonic_UL16postVFP" Lumi="119744171.21470542" Type="MC" NEventsMax="-1" Cacheable="False">&TTToSemiLeptonic;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="JetHT_Recount_RunF_UL16postVFP" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&JetHT_Recount_RunF;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="JetHT_Recount_RunG_UL16postVFP" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&JetHT_Recount_RunG;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="JetHT_Recount_RunH_UL16postVFP" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&JetHT_Recount_RunH;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_HT50to100_UL16postVFP" Lumi="0.05960264658418504" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT50to100;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_HT100to200_UL16postVFP" Lumi="3.076666454891995" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT100to200;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_HT200to300_UL16postVFP" Lumi="27.54547904577692" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT200to300;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_HT300to500_UL16postVFP" Lumi="140.31109774899784" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT300to500;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_HT500to700_UL16postVFP" Lumi="496.6013183915623" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT500to700;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_HT700to1000_UL16postVFP" Lumi="2129.633850931677" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT700to1000;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_HT1000to1500_UL16postVFP" Lumi="11106.144007155635" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT1000to1500;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_HT1500to2000_UL16postVFP" Lumi="85594.70370370371" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT1500to2000;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="QCD_HT2000toInf_UL16postVFP" Lumi="220179.5" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT2000toInf;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="WJetsToQQ_HT200to400_UL16postVFP" Lumi="2717.218099254966" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToQQ_HT200to400;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="WJetsToQQ_HT400to600_UL16postVFP" Lumi="15604.780512062007" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToQQ_HT400to600;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="WJetsToQQ_HT600to800_UL16postVFP" Lumi="114301.7448932012" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToQQ_HT600to800;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="WJetsToQQ_HT800toInf_UL16postVFP" Lumi="229620.44601293758" Type="MC" NEventsMax="-1" Cacheable="False">&WJetsToQQ_HT800toInf;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="ZJetsToQQ_HT200to400_UL16postVFP" Lumi="7142.564011444318" Type="MC" NEventsMax="-1" Cacheable="False">&ZJetsToQQ_HT200to400;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="ZJetsToQQ_HT400to600_UL16postVFP" Lumi="59548.26981269859" Type="MC" NEventsMax="-1" Cacheable="False">&ZJetsToQQ_HT400to600;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="ZJetsToQQ_HT600to800_UL16postVFP" Lumi="213265.19393183605" Type="MC" NEventsMax="-1" Cacheable="False">&ZJetsToQQ_HT600to800;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="ZJetsToQQ_HT800toInf_UL16postVFP" Lumi="329592.6687341022" Type="MC" NEventsMax="-1" Cacheable="False">&ZJetsToQQ_HT800toInf;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="TTToHadronic_UL16postVFP" Lumi="88489755.86739273" Type="MC" NEventsMax="-1" Cacheable="False">&TTToHadronic;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="TTToSemiLeptonic_UL16postVFP" Lumi="117575358.67690803" Type="MC" NEventsMax="-1" Cacheable="False">&TTToSemiLeptonic;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <UserConfig>
       <Item Name="selection" Value="vjets"/>
       <Item Name="pileup_directory_data" Value="common/UHH2-data/UL16postVFP/MyDataPileupHistogram_UL16postVFP.root"/>

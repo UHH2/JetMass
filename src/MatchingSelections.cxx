@@ -89,11 +89,8 @@ using namespace uhh2;
     }
 
     bool b_in_Jet = is_TTbar ? deltaR(probe_jet, genB) < radius : false;
-    float dr_q1_Jet = deltaR(probe_jet, genQ1);
-    float dr_q2_Jet = deltaR(probe_jet, genQ2);
-    //std::cout << "dR jet,qi : " << dr_q1_Jet << " " << dr_q2_Jet << std::endl;
-    bool q1_in_Jet = deltaR(probe_jet, genQ1) < radius;
-    bool q2_in_Jet = deltaR(probe_jet, genQ2) < radius;
+    bool q1_in_Jet = dR_Q1(probe_jet) < radius;
+    bool q2_in_Jet = dR_Q2(probe_jet) < radius;
 
     bool q3_in_Jet = is_HiggsToWW ? deltaR(probe_jet, genQ3)< radius : false;
     bool q4_in_Jet = is_HiggsToWW ? deltaR(probe_jet, genQ4)< radius : false;
@@ -119,6 +116,9 @@ using namespace uhh2;
     if(!is_VJets && !is_TTbar) return 10000;
     return genQ2.pdgId();
   }
+
+  double MatchingSelection::dR_Q1(const FlavorParticle &probe_jet) {return deltaR(probe_jet, genQ1);}
+  double MatchingSelection::dR_Q2(const FlavorParticle &probe_jet) {return deltaR(probe_jet, genQ2);}
 
   int MatchingSelection::n_merged_partons(const FlavorParticle &probe_jet,float radius) {
     int n(0);

@@ -1,4 +1,4 @@
-#!/nfs/dust/cms/user/albrechs/miniconda3/envs/coffea/bin/python
+#!/usr/bin/env pythonJMS.sh
 import awkward as ak
 import numpy as np
 from coffea import processor
@@ -18,17 +18,22 @@ kfactor_path = f"{jetmass_path}/NLOweights/"
 
 
 class JMSTemplates(processor.ProcessorABC):
-    def __init__(self, year="2017"):
+    def __init__(self, year="2017", jec="nominal"):
         self._year = year
+        self._jec = jec
 
         dataset_ax = hist.axis.StrCategory([], name="dataset", growth=True)
         # shift_ax = hist.axis.StrCategory([], name="shift", growth=True)
         jec_applied_ax = hist.axis.StrCategory(
             [], name="jecAppliedOn", label="JEC applied on", growth=True
         )
+        # jec_ax = hist.axis.StrCategory(
+        #     ["raw", "pt", "pt_up", "pt_down","pt_","pt_mJ_up", "down"], name="JEC", label="JEC"
+        # )
         mJ_ax = hist.axis.Regular(50, 0.0, 500.0, name="mJ", label=r"$m_{SD}$ [GeV]")
         pT_ax = hist.axis.Regular(100, 0.0, 3000.0, name="pt", label=r"$p_{T}$ [GeV]")
         eta_ax = hist.axis.Regular(100, -6.5, 6.5, name="eta", label=r"$\eta$")
+        eta_regions_ax = hist.axis.Variable([0, 1.3, 2.5], name="abs_eta_regions", label=r"$|\eta|$")
         phi_ax = hist.axis.Regular(100, -4, 4, name="phi", label=r"$\Phi$")
 
         mJ_fit_ax = hist.axis.Regular(
@@ -44,7 +49,7 @@ class JMSTemplates(processor.ProcessorABC):
                     label=r"$p_{T,\mathrm{gen}}$ [GeV]",
                 ),
                 "mJgen": hist.axis.Variable(
-                    np.array([0.0, 44.5, 68.0, 80.5, 92.0, 132.5, np.inf]),
+                    np.array([0.0, 70., 80.5, 89.5, np.inf]),
                     name="mJgen",
                     label=r"$m_{SD,\mathrm{gen}}$ [GeV]",
                 ),
@@ -69,7 +74,7 @@ class JMSTemplates(processor.ProcessorABC):
                 ),
                 "mJgen": hist.axis.Variable(
                     np.array(
-                        [0, 55, 65, 72.5, 80, 87.5, 95, 110, 125, 150, 180, 220, np.inf]
+                        [0, 55, 80, 87.5,  np.inf]
                     ),
                     name="mJgen",
                     label=r"$m_{SD,\mathrm{gen}}$ [GeV]",
@@ -125,7 +130,10 @@ class JMSTemplates(processor.ProcessorABC):
             for jec_applied_on in ["none", "pt", "pt&mJ"]
         }
 
-        self.mjet_reco_correction = correctionlib.CorrectionSet.from_file("jms_corrections_quadratic_47e3e54d1c.json")
+        self.mjet_reco_correction = correctionlib.CorrectionSet.from_file(
+            "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/python/"
+            + "jms_corrections_quadratic_40c365c4ab.json"
+        )
 
         # get some corrections and pack them into dense_lookups
         corrections_extractor = coffea.lookup_tools.extractor()
@@ -239,6 +247,23 @@ class JMSTemplates(processor.ProcessorABC):
                             self._pT_fit_ax[selection],
                             dataset_ax,
                             jec_applied_ax,
+                            eta_regions_ax,
+                            storage=hist.storage.Weight(),
+                        ),
+                        f"{selection}_mjet_{region}_jec_up": hist.Hist(
+                            mJ_fit_ax,
+                            self._pT_fit_ax[selection],
+                            dataset_ax,
+                            jec_applied_ax,
+                            eta_regions_ax,
+                            storage=hist.storage.Weight(),
+                        ),
+                        f"{selection}_mjet_{region}_jec_down": hist.Hist(
+                            mJ_fit_ax,
+                            self._pT_fit_ax[selection],
+                            dataset_ax,
+                            jec_applied_ax,
+                            eta_regions_ax,
                             storage=hist.storage.Weight(),
                         ),
                         f"{selection}_pt_{region}": hist.Hist(
@@ -254,6 +279,15 @@ class JMSTemplates(processor.ProcessorABC):
                             rho_ax,
                             dataset_ax,
                             jec_applied_ax,
+                            storage=hist.storage.Weight(),
+                        ),
+                        f"{selection}_mjet_v_jecfactor_{region}": hist.Hist(
+                            mJ_ax,
+                            eta_regions_ax,
+                            hist.axis.Regular(
+                                300, 0, 3, name="jecfactor", label="jecfactor",
+                            ),
+                            dataset_ax,
                             storage=hist.storage.Weight(),
                         ),
                     }
@@ -279,6 +313,7 @@ class JMSTemplates(processor.ProcessorABC):
                             f"{selection}_mjet_{variation}_variation_{region}__up": hist.Hist(
                                 mJ_fit_ax,
                                 self._pT_fit_ax[selection],
+                                eta_regions_ax,
                                 dataset_ax,
                                 jec_applied_ax,
                                 storage=hist.storage.Weight(),
@@ -291,6 +326,7 @@ class JMSTemplates(processor.ProcessorABC):
                             f"{selection}_mjet_{variation}_variation_{region}__down": hist.Hist(
                                 mJ_fit_ax,
                                 self._pT_fit_ax[selection],
+                                eta_regions_ax,
                                 dataset_ax,
                                 jec_applied_ax,
                                 storage=hist.storage.Weight(),
@@ -340,6 +376,29 @@ class JMSTemplates(processor.ProcessorABC):
 
         isMC = "data" not in dataset.lower()
 
+        # HEM15/16 Treatment
+        # https://hypernews.cern.ch/HyperNews/CMS/get/JetMET/2000.html
+        # courtesy of C.Matthies
+        # https://github.com/MatthiesC/LegacyTopTagging/blob/master/include/Utils.h#L325-L328
+        HEM_affected_lumi_fraction = 0.64844705699  # (Run 319077 (17.370008/pb) + Run C + Run D) / all 2018
+        HEM_eta_min, HEM_eta_max = -3.2, -1.3
+        HEM_phi_min, HEM_phi_max = -1.57, -0.87
+        HEM_affected_event_jets = (
+            (events.eta < HEM_eta_max)
+            & (events.eta > HEM_eta_min)
+            & (events.phi < HEM_phi_max)
+            & (events.phi > HEM_phi_min)
+        )
+        treat_HEM = False
+        if isMC:
+            if self._year == "UL18":
+                events.weight = ak.where(
+                    HEM_affected_event_jets, events.weight * (1 - HEM_affected_lumi_fraction), events.weight
+                )
+        else:
+            if self._year == "UL18" and any(run in events.metadata["filename"] for run in ["RunC", "RunD"]):
+                treat_HEM = True
+
         # evaluate matching criteria and created new masked events dataframe
         matching_mask = np.ones(len(events), dtype="bool")
 
@@ -369,7 +428,15 @@ class JMSTemplates(processor.ProcessorABC):
         #     events.weight = events.weight/self.corrections['Z_kfactor'](genpt)*self.corrections[f'Z_ewcorr'](vpt)
         #     events.weight = events.weight*self.corrections['Z_kfactor'](genpt)*self.corrections[f'Z_ewcorr'](genpt)
 
-        jecfactor = events.jecfactor
+        jecfactors = {
+            "nominal": events.jecfactor,
+            "up": events.jecfactor_up,
+            "down": events.jecfactor_down,
+        }
+        if "data" in dataset.lower():
+            jecfactor = jecfactors["nominal"]
+        else:
+            jecfactor = jecfactors[self._jec]
 
         pt_raw = events.pt
         pt = pt_raw * jecfactor
@@ -466,25 +533,35 @@ class JMSTemplates(processor.ProcessorABC):
                 (events.pass_reco_selection == 1) & (events.pass_gen_selection == 1),
             )
 
-            selections.add("jetpfid", events.jetpfid == 1)
+            passing_hem_treatment = (
+                ~HEM_affected_event_jets if treat_HEM else
+                ak.ones_like(events.pt, dtype=bool)
+            )
 
+            selections.add("jetpfid",
+                           (
+                               (events.jetpfid == 1)
+                               & (passing_hem_treatment == 1)
+                           )
+                           )
             selection = events.metadata["selection"]
 
             selections.add(
-                "HLT_AK8PFJet450", self.passes_trigger(events, "HLT_AK8PFJet450_v*")
+                # "HLT_AK8PFJet450", self.passes_trigger(events, "HLT_AK8PFJet450_v*")
+                "HLT_AK8PFJet450", ak.ones_like(events.pt, dtype=bool)
             )
 
             for region in self._regions[selection].keys():
-                smask_unfolding = selections.require(
-                    **self._regions[selection][region], unfolding=True, jetpfid=True
-                )
+                smask_unfolding = selections.require(**self._regions[selection][region], unfolding=True, jetpfid=True)
+                corrector = self.mjet_reco_correction[
+                    "response_g_" + ("jec" if "mJ" in jec_applied_on else "nojec") + f"_{self._year}"
+                ]
                 msd_correction = (
-                    self.mjet_reco_correction[("response_" "g_" "jec" if "mJ" in jec_applied_on else "nojec")](
-                        pt_[smask_unfolding]
-                    )
+                    corrector.evaluate(pt_[smask_unfolding])
                     if selection == "vjets"
-                    else ak.ones_like(pt_[smask_unfolding]),
+                    else 1.0  # ak.ones_like(pt_[smask_unfolding])
                 )
+
                 out[f"{selection}_mjet_unfolding_{region}"].fill(
                     ptreco=pt_[smask_unfolding],
                     mJreco=mJ_[smask_unfolding] * msd_correction,
@@ -495,33 +572,42 @@ class JMSTemplates(processor.ProcessorABC):
                     weight=events.weight[smask_unfolding],
                 )
 
-                smask = selections.require(
-                    **self._regions[selection][region], jetpfid=True
-                )
+                smask = selections.require(**self._regions[selection][region], jetpfid=True)
 
                 out[f"{selection}_mjet_{region}"].fill(
                     dataset=dataset,
                     jecAppliedOn=jec_applied_on,
                     pt=pt_[smask],
+                    abs_eta_regions=np.abs(eta_[smask]),
                     mJ=mJ_[smask],
                     weight=events.weight[smask],
                 )
+
                 out[f"{selection}_pt_{region}"].fill(
                     dataset=dataset,
                     jecAppliedOn=jec_applied_on,
                     pt=pt_[smask],
                     weight=events.weight[smask],
                 )
+
                 out[f"{selection}_rho_{region}"].fill(
                     dataset=dataset,
                     jecAppliedOn=jec_applied_on,
                     rho=rho_[smask],
                     weight=events.weight[smask],
                 )
-                if jec_applied_on == "none":
-                    out[f"{selection}_eta_{region}"].fill(
-                        dataset=dataset, eta=eta_[smask], weight=events.weight[smask]
+
+                if jec_applied_on == "pt":
+                    out[f"{selection}_mjet_v_jecfactor_{region}"].fill(
+                        dataset=dataset,
+                        mJ=mJ_[smask],
+                        abs_eta_regions=np.abs(eta_[smask]),
+                        jecfactor=jecfactor[smask],
+                        weight=events.weight[smask]
                     )
+
+                if jec_applied_on == "pt":
+                    out[f"{selection}_eta_{region}"].fill(dataset=dataset, eta=eta_[smask], weight=events.weight[smask])
 
                 if isMC:
                     for variation in self._variations:
@@ -530,22 +616,20 @@ class JMSTemplates(processor.ProcessorABC):
                         if "mJ" in jec_applied_on:
                             mJVar_ = mJVar_ * jecfactor
 
-                        out[
-                            f"{selection}_mjet_{variation}_variation_{region}__up"
-                        ].fill(
+                        out[f"{selection}_mjet_{variation}_variation_{region}__up"].fill(
                             dataset=dataset,
                             jecAppliedOn=jec_applied_on,
                             pt=pt_[smask],
                             mJ=mJVar_[:, 0][smask],
+                            abs_eta_regions=np.abs(eta_[smask]),
                             weight=events.weight[smask],
                         )
-                        out[
-                            f"{selection}_mjet_{variation}_variation_{region}__down"
-                        ].fill(
+                        out[f"{selection}_mjet_{variation}_variation_{region}__down"].fill(
                             dataset=dataset,
                             jecAppliedOn=jec_applied_on,
                             pt=pt_[smask],
                             mJ=mJVar_[:, 1][smask],
+                            abs_eta_regions=np.abs(eta_[smask]),
                             weight=events.weight[smask],
                         )
         return out
@@ -554,20 +638,18 @@ class JMSTemplates(processor.ProcessorABC):
 if __name__ == "__main__":
     workflow = CoffeaWorkflow("JMSTemplates")
 
-    workflow.parser.add_argument(
-        "--output", "-o", type=str, default="jms_templates.coffea"
-    )
-    workflow.parser.add_argument("--year", default="2017")
+    workflow.parser.add_argument("--output", "-o", type=str, default="jms_templates.coffea")
+    workflow.parser.add_argument("--year", default="UL17")
+    workflow.parser.add_argument("--JEC", default="nominal")
     workflow.parser.add_argument("--maxfiles", type=int, default=-1)
 
     args = workflow.parse_args()
 
-    workflow.processor_instance = JMSTemplates(args.year)
+    workflow.processor_instance = JMSTemplates(args.year, args.JEC)
     workflow.processor_schema = BaseSchema
 
     sample_pattern = (
-        "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/"
-        "{SELECTION}Trees/workdir_{SELECTION}_{YEAR}/*{SAMPLE}*.root"
+        "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/{SELECTION}Trees/workdir_{SELECTION}_{YEAR}/*{SAMPLE}*.root"
     )
     sample_names = {
         "vjets": [
@@ -611,13 +693,13 @@ if __name__ == "__main__":
                 [
                     s.replace(child_samplename_suffix, "")
                     for child_samplename_suffix in [
-                            "Matched",
-                            "Unmatched",
-                            "_mergedTop",
-                            "_mergedW",
-                            "_mergedQB",
-                            "_semiMergedTop",
-                            "notMerged",
+                        "Matched",
+                        "Unmatched",
+                        "_mergedTop",
+                        "_mergedW",
+                        "_mergedQB",
+                        "_semiMergedTop",
+                        "notMerged",
                     ]
                 ],
                 key=len,

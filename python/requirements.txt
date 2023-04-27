@@ -1,0 +1,14 @@
+awkward==1.10.2
+coffea==0.7.20
+correctionlib==2.2.2
+dask==2022.11.0
+-e git+ssh://git@github.com/dask/dask-jobqueue.git@2a0d31f03fbfd4c14057d845a684eb32868df868#egg=dask_jobqueue
+hist==2.6.2
+matplotlib==3.6.2
+mplhep==0.3.26
+numpy==1.23.4
+scipy==1.9.3
+seaborn==0.12.1
+simple_term_menu==1.5.2
+typing_extensions==4.4.0
+uproot==4.3.7

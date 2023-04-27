@@ -1,3 +1,4 @@
+#!/usr/bin/env pythonJMS.sh
 import awkward as ak
 import numpy as np
 import hist
@@ -12,6 +13,7 @@ import seaborn as sns
 from matplotlib.colors import LogNorm
 import unfolding_plotting
 import correctionlib
+import os
 
 hep.style.use("CMS")
 
@@ -318,8 +320,13 @@ class BinOptimizer(object):
         cax1 = f.add_subplot(bottom_grid[4])
         cax2 = f.add_subplot(bottom_grid[5])
         migmat_mjet_arr, bins_x, bins_y = migmat_initial.to_numpy()
-        migmat_mjet_genax_normed = (migmat_mjet_arr.T / np.sum(migmat_mjet_arr.T, axis=1)[:, None]).T
-        migmat_mjet_recoax_normed = migmat_mjet_arr / np.sum(migmat_mjet_arr, axis=1)[:, None]
+
+        migmat_mjet_genax_normed = unfolding_plotting.safe_div(
+            migmat_mjet_arr.T, np.sum(migmat_mjet_arr.T, axis=1)[:, None]
+        ).T
+        migmat_mjet_recoax_normed = unfolding_plotting.safe_div(
+            migmat_mjet_arr, np.sum(migmat_mjet_arr, axis=1)[:, None]
+        )
 
         sns.heatmap(migmat_mjet_genax_normed.T, ax=ax1, norm=LogNorm(), cbar=False)
         f.colorbar(ax1.get_children()[0], cax=cax1, orientation="horizontal")
@@ -347,6 +354,7 @@ if __name__ == "__main__":
     import numpy as np
     import argparse
     import logging
+    import re
 
     parser = argparse.ArgumentParser()
 
@@ -357,6 +365,11 @@ if __name__ == "__main__":
     parser.add_argument("--threshold", "-t", type=float, default=0.5)
     parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()
+
+    year = "UL17"
+    year_re = re.search("(UL)*(20)*1[678]{1}(preVFP|postVFP)*", args.input)
+    if year_re:
+        year = year_re.group()
 
     logFormatter = logging.Formatter("%(asctime)s %(funcName)s %(message)s")
     logger = logging.getLogger()
@@ -405,11 +418,14 @@ if __name__ == "__main__":
 
     plot_dir = "unfolding_binning_plots"
 
+    if not os.path.exists(plot_dir):
+        os.makedirs(plot_dir)
+
     def save_plot(fax, outname):
         fax[0].savefig((plot_dir + "/" + outname), bbox_inches="tight")
 
-    pt_gen_binning = np.array([0, 550, 650, 800, 1200])  # , np.inf])
-    pt_reco_binning = np.array([500, 550, 650, 725, 800, 1000, 1200, np.inf])
+    pt_gen_binning = np.array([0, 575, 650, 800, 1200])  # , np.inf])
+    pt_reco_binning = np.array([500, 575, 650, 725, 800, 1000, 1200, np.inf])
 
     # pt binning
     if "pt" in args.optimize:
@@ -521,12 +537,12 @@ if __name__ == "__main__":
         logger.info(logging_styles["red_bold_underline"]("optimize mjet binning (\"advanced\" correction (response))"))
 
         polynomial_msd_correction_set = correctionlib.CorrectionSet.from_file(
-            "jms_corrections_quadratic_47e3e54d1c.json"
+            "jms_corrections_quadratic_40c365c4ab.json"
         )
 
         # optimization with dedicated JMS from MC (response)
         def polynomial_msd_corr_response(pt):
-            return 1.0 / polynomial_msd_correction_set["response_g_jec"].evaluate(pt)
+            return 1.0 / polynomial_msd_correction_set[f"response_g_jec_{year}"].evaluate(pt)
 
         # sequential bin merging
         logger.info(logging_styles["orange_bold"]("pt-scan sequential"))
@@ -554,7 +570,7 @@ if __name__ == "__main__":
 
         # optimization with dedicated JMS from MC (response)
         def polynomial_msd_corr_means(pt):
-            return 1.0 / polynomial_msd_correction_set["means_g_jec"].evaluate(pt)
+            return 1.0 / polynomial_msd_correction_set[f"means_g_jec_{year}"].evaluate(pt)
 
         # sequential bin merging
         logger.info(logging_styles["orange_bold"]("pt-scan sequential"))

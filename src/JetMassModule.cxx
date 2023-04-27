@@ -68,7 +68,7 @@ public:
 
 private:
   TString version;
-  bool is_mc, is_QCD, matchV, is_WSample, is_ZSample, is_buggyPU;
+  bool is_mc, is_QCD, matchV, is_WSample, is_ZSample, is_buggyPU, isUL;
   bool isttbarSel = false;
   bool isvjetsSel = false;
   bool do_genStudies = false;
@@ -83,9 +83,10 @@ private:
   std::unique_ptr<AnalysisModule> topPtReweighting;
   std::unique_ptr<MCLargeWeightKiller> mcSpikeKiller;
   std::unique_ptr<TopJetCorrections> topjetCorr,topjetCorr_chs;
+  std::unique_ptr<StandaloneTopJetCorrector> topjet_jec_ev;
   std::unique_ptr<AnalysisModule>ttgen_producer;  
   std::unique_ptr<AnalysisModule> matching_selection_producer;
-  std::unique_ptr<AnalysisModule> nlo_weights;
+  std::unique_ptr<AnalysisModule> nlo_weights, nlo_weights_UL;
   std::unique_ptr<AnalysisModule> recojet_selector;
   std::unique_ptr<AnalysisModule> genjet_selector;
   std::unique_ptr<AnalysisModule> ht_calculator;
@@ -129,14 +130,20 @@ private:
   uhh2::Event::Handle<double>handle_gen_HT,handle_HT;
   
   uhh2::Event::Handle<TTbarGen>handle_ttbar_gen;
+  uhh2::Event::Handle<float> handle_toppt_weight;
 
   uhh2::Event::Handle<const GenTopJet*> handle_gentopjet,handle_gentopjet_nocut;
   uhh2::Event::Handle<const TopJet*> handle_recotopjet,handle_recotopjet_chs;
-  uhh2::Event::Handle<double> handle_genjetpt;
+  uhh2::Event::Handle<double> handle_genjetpt, handle_V_pt;
   uhh2::Event::Handle<MatchingSelection> handle_matching_selection;
 
   uhh2::Event::Handle<std::vector<TopJet>> handle_chs_jets;
   uhh2::Event::Handle<std::vector<GenTopJet>> handle_sd_gen_jets;
+
+  //systweights
+
+  //JEC factors
+  uhh2::Event::Handle<double> handle_jecfactor_nominal, handle_jecfactor_up, handle_jecfactor_down;
 
   TopJetId jetpfid;
 
@@ -150,6 +157,7 @@ JetMassModule::JetMassModule(Context & ctx){
   // Set some boolians
   version = ctx.get("dataset_version");
   is_mc = ctx.get("dataset_type") == "MC";
+  isUL = is_UL(extract_year(ctx));
   is_QCD = ctx.get("dataset_version").find("QCD") != std::string::npos;
   is_WSample = ctx.get("dataset_version").find("WJets") != std::string::npos;
   is_ZSample = ctx.get("dataset_version").find("ZJets") != std::string::npos;
@@ -173,9 +181,9 @@ JetMassModule::JetMassModule(Context & ctx){
   handle_matching_selection = ctx.get_handle<MatchingSelection>(matching_selection_handlename);
 
   std::string genjetpt_handlename("genjetpt");
-  // std::string V_pt_handlename("V_pt");
   nlo_weights.reset(new NLOWeights(ctx,genjetpt_handlename));
-  
+  std::string V_pt_handlename("V_pt");
+  nlo_weights_UL.reset(new NLOWeights(ctx,V_pt_handlename,true));
   do_genStudies = string2bool(ctx.get("doGenStudies", "true"));
   
   // common modules
@@ -277,24 +285,30 @@ JetMassModule::JetMassModule(Context & ctx){
   handle_recotopjet = ctx.get_handle<const TopJet*>(recotopjet_handlename);
   handle_recotopjet_chs = ctx.get_handle<const TopJet*>(recotopjet_chs_handlename);
 
-  // handle_V_pt = ctx.declare_event_output<double>(V_pt_handlename);
+  handle_V_pt = ctx.declare_event_output<double>(V_pt_handlename);
   handle_genjetpt = ctx.declare_event_output<double>(genjetpt_handlename);
   handle_gen_HT = ctx.declare_event_output<double>(genHT_handlename);
   handle_HT = ctx.declare_event_output<double>(HT_handlename);
   ht_calculator.reset(new HTCalculator(ctx,jetid,HT_handlename));
+
+  handle_jecfactor_nominal = ctx.declare_event_output<double>("jecfactor_nominal");
+  handle_jecfactor_up = ctx.declare_event_output<double>("jecfactor_up");
+  handle_jecfactor_down = ctx.declare_event_output<double>("jecfactor_down");
   
   //AnalysisModules
   ttgen_producer.reset(new TTbarGenProducer(ctx,ttbargen_handlename,false));
-  
-  topPtReweighting.reset(new TopPtReweight(ctx, 0.0615, -0.0005,"","",true));
 
-  recojet_selector.reset(new JetSelector<TopJet>(ctx,recotopjet_handlename));
+  handle_toppt_weight = ctx.declare_event_output<float>("toppt_weight");
+  topPtReweighting.reset(new TopPtReweight(ctx, 0.0615, -0.0005,ttbargen_handlename,"toppt_weight",false));
+
+  recojet_selector.reset(new JetSelector<TopJet>(ctx,recotopjet_handlename, matching_selection_handlename));
   genjet_selector.reset(new JetSelector<GenTopJet>(ctx,gentopjet_handlename));
 
   // AK8 JEC/JER
   topjetCorr.reset(new TopJetCorrections());
   topjetCorr->init(ctx);
   topjetCorr->disable_jersmear();
+  topjet_jec_ev.reset(new StandaloneTopJetCorrector(ctx, "AK8PFPuppi"));
 
   // AK8 CHS JEC/JER
   topjetCorr_chs.reset(new TopJetCorrections(chs_jets_collection));
@@ -323,7 +337,9 @@ JetMassModule::JetMassModule(Context & ctx){
   reco_selection_part2.reset(new AndSelection(ctx,"reco_selection_part2"));
   if(isttbarSel){
     reco_selection_part1->add<TriggerSelection>("Trigger selection","HLT_Mu50_v*");
-    reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 200 GeV", 1,-1,TopJetId(PtEtaCut(200.,100000.)));
+    // reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 200 GeV", 1,-1,TopJetId(PtEtaCut(200.,100000.)));
+    reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1", 1);
+    reco_selection_part1->add<TopJetPtCut>("p_{T, AK8} #geq 200 GeV", ctx, 200);
     reco_selection_part1->add<NMuonSelection>("N_{#mu} #geq 1", 1,1);
     reco_selection_part1->add<NElectronSelection>("N_{e} = 0", 0,0);
     reco_selection_part1->add<METCut>("MET > 50 GeV", 50.,100000.);
@@ -334,7 +350,9 @@ JetMassModule::JetMassModule(Context & ctx){
   }else if(isvjetsSel){
     reco_selection_part1->add<NElectronSelection>("ele-veto",0,0);
     reco_selection_part1->add<NMuonSelection>("muon-veto",0,0);
-    reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 500 GeV", 1,-1,TopJetId(PtEtaCut(500.,100000.)));
+    // reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 500 GeV", 1,-1,TopJetId(PtEtaCut(500.,100000.)));
+    reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1", 1);
+    reco_selection_part1->add<TopJetPtCut>("p_{T, AK8} #geq 500 GeV", ctx, 500);
     // reco_selection_part1->add<HTCut>("H_{T} > 1000 GeV",ctx, 1000.); 
 
     // reco_selection_part2->add<JetIdSelection<TopJet>>("selected jet - p_{T} > 500 GeV", ctx, TopJetId(PtEtaCut(500.,100000.)) ,recotopjet_handlename);
@@ -522,6 +540,7 @@ bool JetMassModule::process(Event & event) {
     if(EXTRAOUT) std::cout << "JetMassModule: SpikeKiller done!" << std::endl;
   }
 
+  event.set(handle_toppt_weight, 1.0);
   if(is_mc)topPtReweighting->process(event);
 
   std::vector<TopJet> & chs_jets = event.get(handle_chs_jets);
@@ -554,7 +573,7 @@ bool JetMassModule::process(Event & event) {
   }
   if(EXTRAOUT) std::cout << "JetMassModule: Cleaner done!" << std::endl;
 
-  double genjetpt = -1;
+  double genjetpt(-1.0), bosonpt(-1.0);
   if(is_mc){
     //find gen(top)jet from gen V boson and save it to handle for use in nloweight application
     // const Particle gen_V_particle = event.genparticles->at(get_V_index(*event.genparticles));
@@ -566,10 +585,9 @@ bool JetMassModule::process(Event & event) {
     // std::cout << "genV jets pt: " << (v_gentopjet?v_gentopjet->pt():-1.0) << " " << (v_genjet?v_genjet->pt():-1.0) <<" " << gen_V_particle.pt() << std::endl; 
     // std::cout << "genV jets mass: " << v_gentopjet->softdropmass() << " " << v_genjet->v4().M() <<" " << gen_V_particle.v4().M() << std::endl; 
     // event.set(handle_gentopjet_matched_V,v_gentopjet);
-    // const Particle gen_V_particle = event.genparticles->at(get_V_index(*event.genparticles));
-    // float boson_pt = gen_V_particle.pt();
-    // event.set(handle_V_pt, boson_pt);
     if(isvjetsSel && (is_WSample || is_ZSample)){
+      const Particle gen_V_particle = event.genparticles->at(get_V_index(*event.genparticles));
+      bosonpt = gen_V_particle.pt();
       if(event.topjets->size()>0){
         //get genjet pt for k factors
         const GenJet * closest_genjet_1 = closestParticle(event.topjets->at(0), *event.genjets);
@@ -580,10 +598,13 @@ bool JetMassModule::process(Event & event) {
       }
     }
   }
+  event.set(handle_V_pt, bosonpt);
   event.set(handle_genjetpt, genjetpt);
 
-  if(is_mc) nlo_weights->process(event); // now taking pT of V-boson genparticle
-
+  if(is_mc){
+    if(isUL) nlo_weights_UL->process(event);
+    else nlo_weights->process(event);
+  }
   h_hlt_eff->fill(event);
   
   // if(event.topjets->size()>0){
@@ -603,6 +624,15 @@ bool JetMassModule::process(Event & event) {
   //   if(AK8_pt>800 && AK8_pt<1200)h_pfhists_800to1200->fill(event);
   //   if(AK8_pt>1200)h_pfhists_1200toInf->fill(event);
   // }
+  float jecfactor_standalone_nominal(-1.),jecfactor_standalone_up(-1.),jecfactor_standalone_down(-1.);
+  if(event.topjets->size() >0){
+    jecfactor_standalone_nominal = topjet_jec_ev->getJecFactor(event, event.topjets->at(0), 0);
+    jecfactor_standalone_up = topjet_jec_ev->getJecFactor(event, event.topjets->at(0), +1);
+    jecfactor_standalone_down = topjet_jec_ev->getJecFactor(event, event.topjets->at(0), -1);
+  }
+  event.set(handle_jecfactor_nominal, jecfactor_standalone_nominal);
+  event.set(handle_jecfactor_up, jecfactor_standalone_up);
+  event.set(handle_jecfactor_down, jecfactor_standalone_down);
   
   bool pass_reco_selection_part1 = reco_selection_part1->passes(event);
   bool pass_reco_selection_part2(false);
