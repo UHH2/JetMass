@@ -513,7 +513,7 @@ if __name__ == "__main__":
     events_sel["rhogen"] = 2 * np.log(events_sel.mjetgen / events_sel.ptgen)
 
     polynomial_msd_correction_set = correctionlib.CorrectionSet.from_file(
-        f"{workdir}/jms_corrections_quadratic_40c365c4ab.json"
+        f"{workdir}/jms_corrections_28-02-23_608835ecf6.json"
     )
 
     pt_reco_ax = hist.axis.Variable(

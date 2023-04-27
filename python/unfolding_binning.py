@@ -537,7 +537,7 @@ if __name__ == "__main__":
         logger.info(logging_styles["red_bold_underline"]("optimize mjet binning (\"advanced\" correction (response))"))
 
         polynomial_msd_correction_set = correctionlib.CorrectionSet.from_file(
-            "jms_corrections_quadratic_40c365c4ab.json"
+            "jms_corrections_28-02-23_608835ecf6.json"
         )
 
         # optimization with dedicated JMS from MC (response)
