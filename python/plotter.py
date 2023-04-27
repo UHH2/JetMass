@@ -483,6 +483,7 @@ def get_hists(
     pseudo_data=False,
     include_merged_hists=True,
     scaleQCD=True,
+    pseudo_data_file=None
 ):
     # print(f_hists, samples, hist_dir,selection)
     hist_dir = selection + hist_dir if (hist_dir[0] == "_") else hist_dir
@@ -503,6 +504,15 @@ def get_hists(
                 logger.exception("tried getting data hist with" + data_name + "(which failed miserably)")
                 logger.exception(e)
 
+        if pseudo_data_file:
+            suffix_aliase = {
+                "prefit": "shapes_prefit",
+                "postfit": "shapes_fit_s",
+            }
+            channel_region, suffix = hist_dir.split("/")[0].split("_")
+            pseudo_data_hist_dir = suffix_aliase[suffix]+"/"+channel_region+"/data"
+            h_data = pseudo_data_file.Get(str(pseudo_data_hist_dir))
+
         if "tgraph" in str(type(h_data)).lower():
             x = np.array([1.0])
             y = np.array([1.0])
@@ -520,6 +530,8 @@ def get_hists(
                 h_data_temp.SetBinContent(i + 1, y)
                 h_data_temp.SetBinError(i + 1, h_data.GetErrorY(i))
             h_data = h_data_temp
+            if pseudo_data_file:
+                h_data.Scale(binwidth)
         if new_binning is not None:
             h_data = h_data.Rebin(len(new_binning) - 1, "", new_binning)
             h_data.GetYaxis().SetTitle(
@@ -527,8 +539,9 @@ def get_hists(
             )
         elif yTitle is not None:
             h_data.GetYaxis().SetTitle(yTitle)
-
+        
         h_qcd_from_data = h_data.Clone()
+            
 
     # mc_hists = {}
     mc_hists = collections.OrderedDict()

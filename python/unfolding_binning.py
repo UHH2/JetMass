@@ -2,7 +2,6 @@
 import awkward as ak
 import numpy as np
 import hist
-from unfolding_plotting import Unfolding1DPlotter, migration_metric
 from JMS_from_MC import iterative_fit
 from collections.abc import Callable
 from typing import Union
@@ -80,15 +79,15 @@ class BinOptimizer(object):
         if events is None:
             events = self.events
 
-        unfolding_plotter = Unfolding1DPlotter(self.variable, mjet_reco_correction)
+        unfolding_plotter = unfolding_plotting.Unfolding1DPlotter(self.variable, mjet_reco_correction)
         migmat = unfolding_plotter.build_migration_matrix(
             hist.axis.Variable(binning, name=f"{self.variable}_reco", overflow=flow),
             hist.axis.Variable(binning, name=f"{self.variable}_gen", overflow=flow),
             events,
         )
 
-        stability = migration_metric(migmat, f"{self.variable}_reco", flow=flow)[0]
-        purity = migration_metric(migmat, f"{self.variable}_gen", flow=flow)[0]
+        stability = unfolding_plotting.migration_metric(migmat, f"{self.variable}_reco", flow=flow)[0]
+        purity = unfolding_plotting.migration_metric(migmat, f"{self.variable}_gen", flow=flow)[0]
 
         if bin_merger == "sequential":
             for bin_ind in range(len(binning) - 1):
@@ -145,7 +144,7 @@ class BinOptimizer(object):
             events = self.events
 
         if split_value < 0:
-            unfolding_plotter = Unfolding1DPlotter(self.variable, mjet_reco_correction)
+            unfolding_plotter = unfolding_plotting.Unfolding1DPlotter(self.variable, mjet_reco_correction)
             migmat = unfolding_plotter.build_migration_matrix(
                 hist.axis.Variable(self.initial_binning, name=f"{self.variable}_reco", overflow=flow),
                 hist.axis.Variable(self.initial_binning, name=f"{self.variable}_gen", overflow=flow),
@@ -230,7 +229,7 @@ class BinOptimizer(object):
 
         # PLOTS
         # build migration matrix with optimized binning
-        unfolding_plotter = Unfolding1DPlotter(self.variable, mjet_reco_correction)
+        unfolding_plotter = unfolding_plotting.Unfolding1DPlotter(self.variable, mjet_reco_correction)
         migmat = unfolding_plotter.build_migration_matrix(
             hist.axis.Variable(binning, name=f"{self.variable}_reco", overflow=flow),
             hist.axis.Variable(binning, name=f"{self.variable}_gen", overflow=flow),
@@ -257,13 +256,13 @@ class BinOptimizer(object):
 
         # plot stability and purity
         hep.histplot(
-            migration_metric(migmat, f"{self.variable}_reco", flow=flow),
+            unfolding_plotting.migration_metric(migmat, f"{self.variable}_reco", flow=flow),
             label="stability",
             ax=ax01,
             **{"color": unfolding_plotting.stability_color},
         )
         hep.histplot(
-            migration_metric(migmat, f"{self.variable}_gen", flow=flow),
+            unfolding_plotting.migration_metric(migmat, f"{self.variable}_gen", flow=flow),
             label="purity",
             ax=ax01,
             **{"color": unfolding_plotting.purity_color},
@@ -370,6 +369,7 @@ if __name__ == "__main__":
     year_re = re.search("(UL)*(20)*1[678]{1}(preVFP|postVFP)*", args.input)
     if year_re:
         year = year_re.group()
+    unfolding_plotting.year = year
 
     logFormatter = logging.Formatter("%(asctime)s %(funcName)s %(message)s")
     logger = logging.getLogger()
@@ -432,7 +432,7 @@ if __name__ == "__main__":
         logger.info(logging_styles["red_bold_underline"]("optimize pt binning (simple)"))
         initial_pt_binning = np.arange(500, 1500, 5)
 
-        unfolding_plotter_pt = Unfolding1DPlotter("pt")
+        unfolding_plotter_pt = unfolding_plotting.Unfolding1DPlotter("pt")
         save_plot(
             unfolding_plotter_pt.plot_migration_metric(pt_gen_binning, events_sel, w=9, h=9),
             "pt_metrics.pdf",
@@ -461,7 +461,7 @@ if __name__ == "__main__":
 
     if "mjet" in args.optimize:
         logger.info(logging_styles["red_bold_underline"]("optimize mjet binning (no correction)"))
-        unfolding_plotter_mjet = Unfolding1DPlotter("mjet")
+        unfolding_plotter_mjet = unfolding_plotting.Unfolding1DPlotter("mjet")
         save_plot(
             unfolding_plotter_mjet.plot_migration_metric(initial_mjet_binning, events_sel, w=9, h=9),
             "mjet_metrics.pdf",

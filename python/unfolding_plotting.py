@@ -22,10 +22,17 @@ label_tex_dict = {
 
 
 lumi = 41.47968052876168  # fb^-1
+global year
+year = "UL17"
 
 
 def cms_label(ax, fs=20):
-    hep.cms.label(label=", Work in Progress", year=2017, ax=ax, fontsize=fs)
+    # hep.cms.label(label=", Work in Progress", year=2017, ax=ax, fontsize=fs)
+    try:
+        hep.label.exp_label(llabel="Private work (CMS simulation)", year=year, ax=ax, fontsize=fs)
+    except BaseException as e:
+        print(e)
+        hep._exp_label(llabel="Private work (CMS simulation)", year=year, ax=ax, fontsize=fs)
 
 
 def fax(w=9, h=9):
@@ -567,7 +574,8 @@ if __name__ == "__main__":
     # old bininng from optimization on fail region
     # optimization on pass region in 575 < pT < 650 (response_g_jec JMS factor)
     # mjetgen_binning = np.array([0.0, 44.5, 68.0, 80.5, 92.0, 132.5, 300])
-    mjetgen_binning = np.array([0., 70., 80.5, 89.5, 300.0])
+    # mjetgen_binning = np.array([0., 70., 80.5, 89.5, 300.0])
+    mjetgen_binning = np.array([0., 70., 80., 90., 300.0])
 
     h_2d = hist.Hist(
         hist.axis.Variable(np.array([0, 650, 800, 1200, np.inf]), name="pt_gen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"),
