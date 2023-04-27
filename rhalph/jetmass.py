@@ -714,7 +714,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--verbose", type=int, default=-1)
 
-    parser.add_argument("-M", "--mode", default="default", choices=["unfolding", "jms", "default"],
+    parser.add_argument("-M", "--mode", choices=["unfolding", "jms", "default"],
                         help="choose what fit should be run. 'unfolding' performs MaxLik. unfolding, jms measures "
                         "JetMassScale variations,'default' measures signal cross section.",
                         required=True)
