@@ -18,9 +18,10 @@ kfactor_path = f"{jetmass_path}/NLOweights/"
 
 
 class JMSTemplates(processor.ProcessorABC):
-    def __init__(self, year="2017", jec="nominal"):
+    def __init__(self, year="2017", jec="nominal", variation_weight="nominal"):
         self._year = year
         self._jec = jec
+        self._variation_weight = variation_weight
 
         dataset_ax = hist.axis.StrCategory([], name="dataset", growth=True)
         # shift_ax = hist.axis.StrCategory([], name="shift", growth=True)
@@ -49,7 +50,7 @@ class JMSTemplates(processor.ProcessorABC):
                     label=r"$p_{T,\mathrm{gen}}$ [GeV]",
                 ),
                 "mJgen": hist.axis.Variable(
-                    np.array([0.0, 70., 80.5, 89.5, np.inf]),
+                    np.array([0.0, 70., 80, 90, np.inf]),
                     name="mJgen",
                     label=r"$m_{SD,\mathrm{gen}}$ [GeV]",
                 ),
@@ -439,6 +440,29 @@ class JMSTemplates(processor.ProcessorABC):
         else:
             jecfactor = jecfactors[self._jec]
 
+        # apply top-pt reweighting weight
+        events.weight = events.weight * events["toppt_weight"]
+        if self._variation_weight != "nominal" and "data" not in dataset.lower() and len(events) > 0:
+            variation_weights = {
+                "toppt_off": 1. / events["toppt_weight"],
+            }
+            if len(events["ps_weights"][0]) == 46:
+                variation_weights["fsr_down"] = events["ps_weights"][:, 0] / events["ps_weights"][:, 4]
+                variation_weights["fsr_up"] = events["ps_weights"][:, 0] / events["ps_weights"][:, 5]
+                variation_weights["isr_down"] = events["ps_weights"][:, 0] / events["ps_weights"][:, 26]
+                variation_weights["isr_up"] = events["ps_weights"][:, 0] / events["ps_weights"][:, 27]
+                # variation_weights["fsr_down"] = (events["ps_weights"][:, 0] / events["ps_weights"][:, 1]) * events["ps_weights"][:, 4]
+                # variation_weights["fsr_up"] = (events["ps_weights"][:, 0] / events["ps_weights"][:, 1]) * events["ps_weights"][:, 5]
+                # variation_weights["isr_down"] = (events["ps_weights"][:, 0] / events["ps_weights"][:, 1]) * events["ps_weights"][:, 26]
+                # variation_weights["isr_up"] = (events["ps_weights"][:, 0] / events["ps_weights"][:, 1]) * events["ps_weights"][:, 27]
+            else:
+                variation_weights["fsr_down"] = 1.0
+                variation_weights["fsr_up"] = 1.0
+                variation_weights["isr_down"] = 1.0
+                variation_weights["isr_up"] = 1.0
+
+            events.weight = events.weight * variation_weights[self._variation_weight]
+
         pt_raw = events.pt
         pt = pt_raw * jecfactor
 
@@ -642,11 +666,16 @@ if __name__ == "__main__":
     workflow.parser.add_argument("--output", "-o", type=str, default="jms_templates.coffea")
     workflow.parser.add_argument("--year", default="UL17")
     workflow.parser.add_argument("--JEC", default="nominal")
+    workflow.parser.add_argument("--variation", default="nominal")
     workflow.parser.add_argument("--maxfiles", type=int, default=-1)
 
     args = workflow.parse_args()
 
-    workflow.processor_instance = JMSTemplates(args.year, args.JEC)
+    workflow.processor_instance = JMSTemplates(
+        year=args.year,
+        jec=args.JEC,
+        variation_weight=args.variation
+    )
     workflow.processor_schema = BaseSchema
 
     sample_pattern = (
