@@ -539,9 +539,8 @@ def get_hists(
             )
         elif yTitle is not None:
             h_data.GetYaxis().SetTitle(yTitle)
-        
+
         h_qcd_from_data = h_data.Clone()
-            
 
     # mc_hists = {}
     mc_hists = collections.OrderedDict()

@@ -121,7 +121,12 @@ class CoffeaWorkflow(object):
                 samples[k]["files"] = [samples[k]["files"][0]]
             if self.args.megadebug:
                 samples = {k: samples[k] for k in list(samples.keys())[2:3]}
-                samples["vjets_WJetsMatched"]["files"]=['/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/workdir_vjets_UL18/uhh2.AnalysisModuleRunner.MC.WJetsToQQ_HT800toInf_UL18_10.root']
+                samples["vjets_WJetsMatched"]["files"] = [
+                    (
+                        "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/workdir_vjets_UL18/"
+                        + "uhh2.AnalysisModuleRunner.MC.WJetsToQQ_HT800toInf_UL18_10.root"
+                    )
+                ]
             print(samples)
         if self.args.scaleout > 0 & self._init_dask:
             return self.run_uproot_job_dask(samples)
