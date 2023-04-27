@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE JobConfiguration PUBLIC "" "JobConfig.dtd" [
-<!ENTITY 	 JetHT_Recount_RunF 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data-recount/UL16postVFP/JetHT_Run2016F-UL2016_MiniAODv2-v2.xml">
-<!ENTITY 	 JetHT_Recount_RunG 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data-recount/UL16postVFP/JetHT_Run2016G-UL2016_MiniAODv2-v2.xml">
-<!ENTITY 	 JetHT_Recount_RunH 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data-recount/UL16postVFP/JetHT_Run2016H-UL2016_MiniAODv2-v2.xml">
+<!ENTITY 	 JetHT_RunF 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL16postVFP/JetHT_Run2016F-UL2016_MiniAODv2-v2.xml">
+<!ENTITY 	 JetHT_RunG 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL16postVFP/JetHT_Run2016G-UL2016_MiniAODv2-v2.xml">
+<!ENTITY 	 JetHT_RunH 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL16postVFP/JetHT_Run2016H-UL2016_MiniAODv2-v2.xml">
 
 <!ENTITY 	 QCD_HT50to100 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/QCD_HT50to100_CP5_PSWeights_madgraph-pythia8_Summer20UL16_v1.xml">
 <!ENTITY 	 QCD_HT100to200 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL16postVFP/QCD_HT100to200_CP5_PSWeights_madgraphMLM-pythia8_Summer20UL16_v1.xml">
@@ -38,9 +38,9 @@
   <Library Name="libSUHH2JetMass"/>
   <Package Name="SUHH2JetMass.par"/>
   <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="16626.734093195286">
-    <InputData Version="JetHT_Recount_RunF_UL16postVFP" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&JetHT_Recount_RunF;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="JetHT_Recount_RunG_UL16postVFP" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&JetHT_Recount_RunG;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="JetHT_Recount_RunH_UL16postVFP" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&JetHT_Recount_RunH;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="JetHT_RunF_UL16postVFP" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&JetHT_RunF;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="JetHT_RunG_UL16postVFP" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&JetHT_RunG;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="JetHT_RunH_UL16postVFP" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&JetHT_RunH;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="QCD_HT50to100_UL16postVFP" Lumi="0.05960264658418504" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT50to100;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="QCD_HT100to200_UL16postVFP" Lumi="3.076666454891995" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT100to200;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="QCD_HT200to300_UL16postVFP" Lumi="27.54547904577692" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_HT200to300;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>

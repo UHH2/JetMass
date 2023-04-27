@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE JobConfiguration PUBLIC "" "JobConfig.dtd" [
-<!ENTITY 	 SingleMuon_Recount_RunB 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data-recount/UL17/SingleMuon_Run2017B-UL2017_MiniAODv2-v1.xml">
-<!ENTITY 	 SingleMuon_Recount_RunC 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data-recount/UL17/SingleMuon_Run2017C-UL2017_MiniAODv2-v1.xml">
-<!ENTITY 	 SingleMuon_Recount_RunD 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data-recount/UL17/SingleMuon_Run2017D-UL2017_MiniAODv2-v1.xml">
-<!ENTITY 	 SingleMuon_Recount_RunE 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data-recount/UL17/SingleMuon_Run2017E-UL2017_MiniAODv2-v1.xml">
-<!ENTITY 	 SingleMuon_Recount_RunF 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data-recount/UL17/SingleMuon_Run2017F-UL2017_MiniAODv2-v1.xml">
+<!ENTITY 	 SingleMuon_RunB 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL17/SingleMuon_Run2017B-UL2017_MiniAODv2-v1.xml">
+<!ENTITY 	 SingleMuon_RunC 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL17/SingleMuon_Run2017C-UL2017_MiniAODv2-v1.xml">
+<!ENTITY 	 SingleMuon_RunD 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL17/SingleMuon_Run2017D-UL2017_MiniAODv2-v1.xml">
+<!ENTITY 	 SingleMuon_RunE 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL17/SingleMuon_Run2017E-UL2017_MiniAODv2-v1.xml">
+<!ENTITY 	 SingleMuon_RunF 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL17/SingleMuon_Run2017F-UL2017_MiniAODv2-v1.xml">
 
 <!ENTITY 	 TTToHadronic 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/TTToHadronic_CP5_powheg-pythia8_Summer20UL17_v2.xml">
 <!ENTITY 	 TTToSemiLeptonic 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/SM/UL17/TTToSemiLeptonic_CP5_powheg-pythia8_Summer20UL17_v1.xml">
@@ -48,7 +48,7 @@
 ]>
 
 <!--
-<ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="60" />
+<ConfigParse NEventsBreak="0" LastBreak="0" FileSplit="50" />
 <ConfigSGE RAM ="4" DISK ="4" Mail="steffen.albrecht@desy.de" Notification="as" Workdir="workdir_ttbar_UL17"/>
 -->
 
@@ -57,19 +57,19 @@
   <Library Name="libSUHH2JetMass"/>
   <Package Name="SUHH2JetMass.par"/>
   <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="41479.68052876168">
-    <InputData Version="SingleMuon_Recount_RunB_UL17" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_Recount_RunB;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="SingleMuon_Recount_RunC_UL17" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_Recount_RunC;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="SingleMuon_Recount_RunD_UL17" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_Recount_RunD;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="SingleMuon_Recount_RunE_UL17" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_Recount_RunE;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="SingleMuon_Recount_RunF_UL17" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_Recount_RunF;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="SingleMuon_RunB_UL17" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_RunB;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="SingleMuon_RunC_UL17" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_RunC;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="SingleMuon_RunD_UL17" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_RunD;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="SingleMuon_RunE_UL17" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_RunE;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="SingleMuon_RunF_UL17" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_RunF;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="TTToHadronic_UL17" Lumi="190947232.88378084" Type="MC" NEventsMax="-1" Cacheable="False">&TTToHadronic;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="TTToSemiLeptonic_UL17" Lumi="287297864.34871227" Type="MC" NEventsMax="-1" Cacheable="False">&TTToSemiLeptonic;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="TTTo2L2Nu_UL17" Lumi="86394848.08209327" Type="MC" NEventsMax="-1" Cacheable="False">&TTTo2L2Nu;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="ST_s-channel_4f_leptonDecays_UL17" Lumi="14468534.84924145" Type="MC" NEventsMax="-1" Cacheable="False">&ST_s-channel_4f_leptonDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="ST_t-channel_antitop_4f_InclusiveDecays_UL17" Lumi="54133245.962322414" Type="MC" NEventsMax="-1" Cacheable="False">&ST_t-channel_antitop_4f_InclusiveDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="ST_t-channel_top_4f_InclusiveDecays_UL17" Lumi="100258060.25952065" Type="MC" NEventsMax="-1" Cacheable="False">&ST_t-channel_top_4f_InclusiveDecays;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="ST_tW_antitop_5f_NoFullyHadronicDecays_PDFWeights_UL17" Lumi="13855728.415307282" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_antitop_5f_NoFullyHadronicDecays_PDFWeights;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
-    <InputData Version="ST_tW_top_5f_NoFullyHadronicDecays_PDFWeights_UL17" Lumi="13673378.468038764" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_top_5f_NoFullyHadronicDecays_PDFWeights;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="ST_tW_antitop_5f_NoFullyHadronicDecays_PDFWeights_UL17" Lumi="13732022.026707351" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_antitop_5f_NoFullyHadronicDecays_PDFWeights;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
+    <InputData Version="ST_tW_top_5f_NoFullyHadronicDecays_PDFWeights_UL17" Lumi="13476028.854265392" Type="MC" NEventsMax="-1" Cacheable="False">&ST_tW_top_5f_NoFullyHadronicDecays_PDFWeights;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="QCD_Pt-15To20_MuEnrichedPt5_UL17" Lumi="2.961291485649073" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_Pt-15To20_MuEnrichedPt5;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="QCD_Pt-20To30_MuEnrichedPt5_UL17" Lumi="25.015219582455444" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_Pt-20To30_MuEnrichedPt5;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="QCD_Pt-30To50_MuEnrichedPt5_UL17" Lumi="42.124317715959" Type="MC" NEventsMax="-1" Cacheable="False">&QCD_Pt-30To50_MuEnrichedPt5;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>

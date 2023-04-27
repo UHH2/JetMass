@@ -14,6 +14,7 @@ class CoffeaWorkflow(object):
         self.parser.add_argument("--chunk", type=int, default=-1)
         self.parser.add_argument("--maxchunks", type=int, default=-1)
         self.parser.add_argument("--debug", action="store_true")
+        self.parser.add_argument("--megadebug", action="store_true")
         self.args = None
 
         self.processor_args = {}
@@ -112,12 +113,15 @@ class CoffeaWorkflow(object):
         return output
 
     def run(self, samples):
-        if self.args.debug:
+        if self.args.debug or self.args.megadebug:
             self.processor_args["maxchunks"] = 1
             self.processor_args["chunksize"] = 1000
             samples = {k: v for k, v in samples.items() if len(v["files"]) > 0}
             for k, v in samples.items():
                 samples[k]["files"] = [samples[k]["files"][0]]
+            if self.args.megadebug:
+                samples = {k: samples[k] for k in list(samples.keys())[2:3]}
+                samples["vjets_WJetsMatched"]["files"]=['/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/workdir_vjets_UL18/uhh2.AnalysisModuleRunner.MC.WJetsToQQ_HT800toInf_UL18_10.root']
             print(samples)
         if self.args.scaleout > 0 & self._init_dask:
             return self.run_uproot_job_dask(samples)

@@ -19,7 +19,7 @@ def plot_template_variations(
     plotter.obs_draw_option = "Hist"
     plotter.ratio_draw_options = "H"
     plotter.ratio_hist_yTitle = "#frac{variation}{nominal}"
-    plotter.extra_text = "private work"
+    # plotter.extra_text = "private work"
     plotter.private_work = True
     plotter.legend_bbox = (0.60, 0.2, 0.9, 0.6)
 
@@ -281,7 +281,8 @@ def plot_variation_envelope(
     plotter.ratio_plot = False
     # plotter.ratio_draw_options='H'
     # plotter.ratio_hist_yTitle="#frac{variation}{nominal}"
-    plotter.extra_text = "Simulation"
+    # plotter.extra_text = "Simulation"
+    plotter.private_work = True
     plotter.obs_draw_option = "H"
     plotter.obs_marker_size = 0
     plotter.draw_option = "F"

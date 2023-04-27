@@ -25,8 +25,8 @@ def jet_mass_producer(args, configs):
     nbins = int(np.floor((max_msd - min_msd) / binwidth))
     msd_bins = np.linspace(min_msd, nbins * binwidth + min_msd, nbins + 1)
 
-    xsec_priors = configs.get("xsec_priors",{})
-    
+    xsec_priors = configs.get("xsec_priors", {})
+
     # channels for combined fit
     channels = configs["channels"]
     qcd_estimation_channels = {
@@ -45,15 +45,18 @@ def jet_mass_producer(args, configs):
         # "barrel": ROOT.TFile(configs["histLocation"].replace(".root", "_barrel.root")),
         # "endcap": ROOT.TFile(configs["histLocation"].replace(".root", "_endcap.root")),
     }
-    if args.JECVar:
-        aux_hist_files.update({
-            "jec_up": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_up.root")),
-            # "jec_up_barrel": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_up_barrel.root")),
-            # "jec_up_endcap": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_up_endcap.root")),
-            "jec_down": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_down.root")),
-            # "jec_down_barrel": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_down_barrel.root")),
-            # "jec_down_endcap": ROOT.TFile(configs["histLocation"].replace(".root", "_jec_down_endcap.root")),
-        })
+
+    for var in [
+            "jec_up", "jec_down",
+            "jer_up", "jer_down",
+            "isr_up", "isr_down",
+            "fsr_up", "fsr_down",
+            "toppt_off",
+    ]:
+        fname = configs["histLocation"].replace(".root", "_{}.root".format(var))
+        if os.path.isfile(fname):
+            aux_hist_files[var] = ROOT.TFile(fname, "READ")
+
     do_qcd_estimation = len(qcd_estimation_channels) > 0
     do_initial_qcd_fit = configs.get("InitialQCDFit", "False") == "True"
     qcd_fail_region_constant = configs.get("QCDFailConstant", "False") == "True"
@@ -117,8 +120,10 @@ def jet_mass_producer(args, configs):
         norms["eff"] = norms["pass"] / norms["fail"]
         channels_sorted = norms["channels"]
         channels_sorted.sort()
-        # norms["eff_arr"] = np.array([[norms["eff"][i]] * (len(msd_bins) - 1) for i in range(len(norms["eff"]))])        
-        norms["eff_arr"] = np.array([[norms["eff"][norms["channels"].index(ch)]] * (len(msd_bins) - 1) for ch in channels_sorted])
+        # norms["eff_arr"] = np.array([[norms["eff"][i]] * (len(msd_bins) - 1) for i in range(len(norms["eff"]))])
+        norms["eff_arr"] = np.array(
+            [[norms["eff"][norms["channels"].index(ch)]] * (len(msd_bins) - 1) for ch in channels_sorted]
+        )
         return norms
 
     if do_qcd_estimation:
@@ -192,7 +197,7 @@ def jet_mass_producer(args, configs):
         # get all lower edges from channel names
         # pt_edges = configs.get('pt_edges',[500,550,600,675,800,1200])
         pt_edges = configs.get("pt_edges", [500, 650, 800, 1200])
-        pt_bins = np.array(pt_edges)
+        pt_bins = np.array([(1400 if pt == "Inf" else pt) for pt in pt_edges])
         # pt_bins = np.array([500, 550, 600, 675, 800, 1200])
         msd = rl.Observable("msd", msd_bins)
 
@@ -222,20 +227,6 @@ def jet_mass_producer(args, configs):
                 os.makedirs(model_name)
             if args.verbose > 0:
                 print("QCD eff:", qcd_eff)
-            # tf_MCtempl = rl.BernsteinPoly(
-            #     "tf_MCtempl",
-            #     initial_qcd_fit_orders,
-            #     ["pt", "rho"],
-            #     init_params=np.ones((initial_qcd_fit_orders[0] + 1, initial_qcd_fit_orders[1] + 1)),
-            #     limits=(-1, 10),
-            # )
-            # tf_MCtempl = rl.BernsteinPoly(
-            #     "tf_MCtempl_" + model_name + TF_suffix,
-            #     initial_qcd_fit_orders,
-            #     ["pt", "rho"],
-            #     init_params=np.ones((initial_qcd_fit_orders[0] + 1, initial_qcd_fit_orders[1] + 1)),
-            #     limits=TF_ranges,
-            # )
             tf_MCtempl = rl.BasisPoly(
                 "tf_MCtempl",
                 initial_qcd_fit_orders,
@@ -253,24 +244,6 @@ def jet_mass_producer(args, configs):
                 failObs = failCh.getObservation()
                 if qcd_fail_region_constant and args.verbose > 0:
                     print("Setting QCD parameters in fail region constant")
-                # qcdparams = np.array(
-                #     [
-                #         rl.IndependentParameter(
-                #             "qcdparam_" + model_name + TF_suffix + "_ptbin%d_msdbin%d" % (ptbin, i),
-                #             0,
-                #             constant=qcd_fail_region_constant,
-                #         )
-                #         for i in range(msd.nbins)
-                #     ]
-                # )
-                # qcdparams = np.array(
-                #     [
-                #         rl.IndependentParameter(
-                #             "qcdparam_" + model_name + TF_suffix + "_ptbin%d_msdbin%d" % (ptbin, i), 0
-                #         )
-                #         for i in range(msd.nbins)
-                #     ]
-                # )
                 qcdparams = np.array(
                     [
                         rl.IndependentParameter(
@@ -332,15 +305,10 @@ def jet_mass_producer(args, configs):
             tf_MCtempl.parameters = decoVector.correlated_params.reshape(tf_MCtempl.parameters.shape)
             tf_MCtempl_params_final = tf_MCtempl(ptscaled, rhoscaled)
 
-            # tf_dataResidual = rl.BernsteinPoly(
-            #     "tf_dataResidual_" + model_name + TF_suffix, bernstein_orders, ["pt", "rho"], limits=TF_ranges
-            # )
-
             tf_dataResidual = rl.BasisPoly(
                 "tf_dataResidual", bernstein_orders, ["pt", "rho"],
                 basis=tf2_basis, limits=TF_ranges
             )
-            # tf_dataResidual = rl.BernsteinPoly("tf_dataResidual", bernstein_orders, ['pt', 'rho'], limits=(0,10))
             tf_dataResidual_params = tf_dataResidual(ptscaled, rhoscaled)
             tf_params = data_norms["eff_arr"] * tf_MCtempl_params_final * tf_dataResidual_params
         else:
@@ -360,16 +328,11 @@ def jet_mass_producer(args, configs):
 
             signal_samples = deepcopy(config["signal"])
             unfolding_bins = configs["unfolding_bins"]
-            genbins = (
-                # ["onegenbin"]
-                # if args.one_bin
-                # else
-                [
+            genbins = [
                     "ptgen%i_msdgen%i" % (iptgen, imsdgen)
                     for iptgen in range(len(unfolding_bins["ptgen"]) - 1)
                     for imsdgen in range(len(unfolding_bins["msdgen"]) - 1)
                 ]
-            )
             configs["genbins"] = genbins
             for signal_sample in signal_samples:
                 config["samples"].remove(signal_sample)
@@ -432,7 +395,11 @@ def jet_mass_producer(args, configs):
 
     # jec variation nuisances
     jec_var_nuisance = rl.NuisanceParameter("jec_variation", "shape", 0, -10, 10)
-
+    extra_nuisances = {
+        "isr": rl.NuisanceParameter("isr_variation", "shape", 0, -10, 10),
+        "fsr": rl.NuisanceParameter("fsr_variation", "shape", 0, -10, 10),
+        "toppt": rl.NuisanceParameter("toppt_reweight", "shape", 0, -10, 10),
+    }
     # tagging eff sf for ttbar semileptonic samples
 
     # top_tag_eff = rl.IndependentParameter("top_tag_eff_sf",1.,-10,10)
@@ -538,10 +505,25 @@ def jet_mass_producer(args, configs):
                         hist_jec_down = get_hist(hist_dir % (sample_name, ""), "jec_down")
                         sample.setParamEffect(jec_var_nuisance, hist_jec_up, hist_jec_down)
 
+                    # ISR down
+                    if sample.sampletype == rl.Sample.SIGNAL:
+                        hist_isr_up = get_hist(hist_dir % (sample_name, ""), "isr_up")
+                        hist_isr_down = get_hist(hist_dir % (sample_name, ""), "isr_down")
+                        sample.setParamEffect(extra_nuisances["isr"], hist_isr_up, hist_isr_down)
+                    # FSR down
+                    if sample.sampletype == rl.Sample.SIGNAL:
+                        hist_fsr_up = get_hist(hist_dir % (sample_name, ""), "fsr_up")
+                        hist_fsr_down = get_hist(hist_dir % (sample_name, ""), "fsr_down")
+                        sample.setParamEffect(extra_nuisances["fsr"], hist_fsr_up, hist_fsr_down)
+
+                    if "TTTo" in sample.name:
+                        hist_toppt_off = get_hist(hist_dir % (sample_name, ""), "toppt_off")
+                        sample.setParamEffect(extra_nuisances["toppt"], effect_up=hist_toppt_off)#, scale=0.5)
+
                     # setting effects of JMR variation nuisance(s)
                     if args.JMRparameter and sample.sampletype == rl.Sample.SIGNAL:
-                        hist_jmr_up = get_hist(hist_dir % (sample_name, "") + "_jer_up")
-                        hist_jmr_down = get_hist(hist_dir % (sample_name, "") + "_jer_down")
+                        hist_jmr_up = get_hist(hist_dir % (sample_name, ""), "jer_up")
+                        hist_jmr_down = get_hist(hist_dir % (sample_name, ""), "jer_down")
                         if args.pTdependetJMRParameter:
                             sample.setParamEffect(
                                 jmr_nuisances.get("jmr_variation_PT" + channel_name.split("Pt")[-1]),
@@ -618,9 +600,6 @@ def jet_mass_producer(args, configs):
     if do_qcd_estimation:
         # QCD TF
         if not do_initial_qcd_fit:
-            # tf_params = rl.BernsteinPoly(
-            #     "tf_params_" + model_name + TF_suffix, bernstein_orders, ["pt", "rho"], limits=TF_ranges
-            # )
             tf_params = rl.BasisPoly(
                 "tf_params", bernstein_orders, ["pt", "rho"],
                 basis=tf1_basis, limits=TF_ranges
@@ -631,7 +610,6 @@ def jet_mass_producer(args, configs):
             #         params.unbound = True
             if args.verbose > 0:
                 print("Using QCD efficiency (N2-ddt) of %.2f%% to scale initial QCD in pass region" % (qcd_eff * 100))
-            # tf_params = qcd_eff * tf_params(ptscaled,rhoscaled)
             tf_params = data_norms["eff_arr"] * tf_params(ptscaled, rhoscaled)
 
         for channel_name, config in channels.items():
@@ -654,19 +632,7 @@ def jet_mass_producer(args, configs):
                     for i in range(msd.nbins)
                 ]
             )
-
-            # qcd_params = np.array(
-            #     [
-            #         rl.IndependentParameter(
-            #             "qcdparam_" + model_name + TF_suffix + "_ptbin%i_msdbin%i" % (ptbin, i),
-            #             0,
-            #             constant=qcd_fail_region_constant,
-            #             lo=qcdparam_lo,
-            #             hi=qcdparam_hi,
-            #         )
-            #         for i in range(msd.nbins)
-            #     ]
-            # )
+            
             for param in qcd_params:
                 param.unbound = QCDFailUnbound
 
@@ -727,8 +693,6 @@ if __name__ == "__main__":
     import argparse
     import fitplotter
     from CombineWorkflows import CombineWorkflows
-    # from scan_poi import MassScalePOIScanner
-    # from collections import namedtuple
 
     parser = argparse.ArgumentParser()
     parser.add_argument("config", type=str, help="path to json with config")
@@ -740,7 +704,6 @@ if __name__ == "__main__":
     parser.add_argument("--customCombineWrapper", action="store_true")
     parser.add_argument("--noNuisances", action="store_true")
     parser.add_argument("--JMRparameter", action="store_true")
-    parser.add_argument("--JECVar", action="store_true")
     parser.add_argument("--prefitAsimov", action="store_true")
     parser.add_argument("--pTdependetJMRParameter", action="store_true")
     parser.add_argument("--noNormUnc", action="store_true")
@@ -753,7 +716,14 @@ if __name__ == "__main__":
 
     parser.add_argument("-M", "--mode", default="default", choices=["unfolding", "jms", "default"],
                         help="choose what fit should be run. 'unfolding' performs MaxLik. unfolding, jms measures "
-                        "JetMassScale variations,'default' measures signal cross section.")
+                        "JetMassScale variations,'default' measures signal cross section.",
+                        required=True)
+    parser.add_argument(
+        "--uncertainty-breakdown",
+        default=[],
+        nargs="+",
+        help="specify nuisances for which uncertainty breakdown plots should be created",
+    )
 
     args = parser.parse_args()
 
@@ -788,6 +758,7 @@ if __name__ == "__main__":
     args.pTdependetMassScale = configs.get("pTdependentMassScale", "True") == "True"
     args.separateMassScales = configs.get("separateMassScales", "False") == "True"
     args.VaryOnlySignal = configs.get("VaryOnlySignal", "False") == "True"
+    args.JECVar = configs.get("JECVar", "True") == "True"
 
     if not args.justplots:
         jet_mass_producer(args, configs)
@@ -872,10 +843,19 @@ if __name__ == "__main__":
         do_postfit = False
     if not args.skipTemplatePlots:
         fitplotter.plot_fit_result(
-            configs, plot_total_sig_bkg=False, do_postfit=do_postfit, use_config_samples=args.unfolding
+            configs,
+            plot_total_sig_bkg=False,
+            do_postfit=do_postfit,
+            use_config_samples=args.unfolding,
+            pseudo_data=False,
         )
         fitplotter.plot_fit_result(
-            configs, logY=True, plot_total_sig_bkg=False, do_postfit=do_postfit, use_config_samples=args.unfolding
+            configs,
+            logY=True,
+            plot_total_sig_bkg=False,
+            do_postfit=do_postfit,
+            use_config_samples=args.unfolding,
+            pseudo_data=False,
         )
     if do_postfit and args.massScales:
         fitplotter.plot_mass_scale_nuisances(configs)
@@ -887,3 +867,12 @@ if __name__ == "__main__":
         fitplotter.plot_qcd_bernstein(configs, do_3d_plot=False)
         if configs.get("QCDFailConstant", "False") == "False":
             fitplotter.plot_qcd_fail_parameters(configs)
+
+    if args.JECVar and not args.unfolding:
+        args.uncertainty_breakdown.append("jec_variation")
+    if len(args.uncertainty_breakdown) > 0:
+        os.system(
+            "./scan_poi.py {} --poi all --plots --lasteffect rest -f {}".format(
+                configs["ModelName"], " ".join(args.uncertainty_breakdown)
+            )
+        )

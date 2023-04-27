@@ -79,7 +79,8 @@ scaleQCD = False
 reverse_stacking = False
 
 # plotter.legend_on_extern_canvas = True
-plotter.draw_extra_text = False
+plotter.draw_extra_text = True
+plotter.private_work = True
 
 
 def plot_mass(

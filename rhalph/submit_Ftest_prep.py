@@ -8,7 +8,7 @@ try:
 except BaseException as e:
     print(e)
     pass
-    
+
 
 def submit_ftest_prep(
     config,
@@ -63,8 +63,10 @@ def submit_ftest_prep(
         cw.POI = "r"
         cw.freezeParameters = "r"
         cw.extraOptions = (
-            ("--toysFrequentist --setParameters r=1 " if do_data_test else "")
-            + ("--toysNoSystematics --setParameters r=0 " if do_qcd_test else "")
+            ("--toysFrequentist " if do_data_test else "")
+            + ("--toysNoSystematics " if do_qcd_test else "")
+            # ("--toysFrequentist --setParameters r=1 " if do_data_test else "")
+            # + ("--toysNoSystematics --setParameters r=0 " if do_qcd_test else "")
             + " --cminDefaultMinimizerStrategy 2 --cminDefaultMinimizerTolerance 0.01"
         )
         # +(
@@ -164,25 +166,26 @@ if __name__ == "__main__":
     else:
         execfile(args.config)
 
-    Orders = (range(0, 8)), (range(0, 8))
+    # Orders = (range(0, 5)), (range(0, 5))
+    Orders = (range(0, 7)), (range(0, 7))
 
-    for algo in ["saturated", "KS"]:  # ,"AD"]:
+    for algo in ["saturated"]:
         # for algo in ["saturated"]:
-        if algo == "saturated":
+        # if algo == "saturated":
             # # FTests with QCD-TF orders 0x4 and scanning Data-TF orders
             # submit_ftest_prep(
             #     config, args.ntoys, args.njobs, QCDOrders=(0, 4), DataOrders=Orders, algo=algo, dry_run=args.dryrun
             # )
             # # FTests without QCD-TF and scanning Data-TF orders
-            submit_ftest_prep(
-                configs,
-                args.ntoys,
-                args.njobs,
-                QCDOrders=None,
-                DataOrders=Orders,
-                algo=algo,
-                dry_run=args.dryrun,
-                unfolding=args.unfolding,
-            )
+        submit_ftest_prep(
+            configs,
+            args.ntoys,
+            args.njobs,
+            QCDOrders=None,
+            DataOrders=Orders,
+            algo=algo,
+            dry_run=args.dryrun,
+            unfolding=args.unfolding,
+        )
         # FTests scanning QCD-TF orders
         # submit_ftest_prep(config, args.ntoys, args.njobs, QCDOrders=Orders,  algo=algo, dry_run=args.dryrun)
