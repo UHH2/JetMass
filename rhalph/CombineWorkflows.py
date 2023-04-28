@@ -103,7 +103,7 @@ class CombineWorkflows(object):
     @workspace.setter
     def workspace(self, w):
         if sys.version_info.major < 3:
-            if isinstance(w, unicode):
+            if isinstance(w, unicode): # noqa
                 w = str(w)
 
         if isinstance(w, str):
@@ -254,7 +254,7 @@ class CombineWorkflows(object):
             command_string += exec_bash(
                 'echo "# SVD regularization penalty terms" >> {DATACARD}'.format(DATACARD=datacard), debug
             )
-            
+
         rs = ["r_"+b for b in genbins]
 
         def regul_bin(b, inf_repl):
@@ -389,18 +389,6 @@ class CombineWorkflows(object):
                 ))
                 constr_index += 1
 
-        # xsec prior rateParam
-        freeze_Parameters = []
-        # if "xsec_priors" in configs:
-        #     command_string += exec_bash('echo "# xsec prior rateParams" >> {DATACARD}'.format(DATACARD=datacard), debug)
-        #     for signal, xsec_prior in configs["xsec_priors"].items():
-        #         command_string += exec_bash(
-        #             'echo "xsec_prior_{SIGNAL} rateParam * {SIGNAL}* {XSEC_PRIOR}" >> {DATACARD}'.format(
-        #                 DATACARD=datacard, SIGNAL=signal, XSEC_PRIOR=xsec_prior
-        #             ), debug
-        #         )
-        #         freeze_Parameters.append("xsec_prior_"+signal)
-
         POMAPS = " ".join(
             [
                 "--PO map='.*{GENBIN}.*:r_{GENBIN}{PARCONSTRUCT}'".format(
@@ -447,7 +435,6 @@ class CombineWorkflows(object):
             ),
             debug,
         )
-
 
         # command_string += exec_bash(
         #     "combine -M MultiDimFit --setParameters={PARAMETERS} -t -1 -m 0 {WORKSPACE} "
@@ -660,7 +647,9 @@ class CombineWorkflows(object):
         # to avoid throwing toys on s+b postfit nuisances but with s=0 we extract r here and
         # set it manually when throwing toys
         command_string += exec_bash(
-            'r_bestfit=$(python -c "from __future__ import print_function;import uproot;f=uproot.open(\\"higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root\\");print(f[\\"limit\\"][\\"trackedParam_r\\"].array()[0])")'.format(
+            ('r_bestfit=$(python -c "from __future__ import print_function;import uproot;f=uproot.open(\\"'
+             'higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root\\");print(f[\\"limit\\"]'
+             '[\\"trackedParam_r\\"].array()[0])")').format(
                 NAME=self.name,
                 SEED=self.seed,
             ),
@@ -672,8 +661,8 @@ class CombineWorkflows(object):
         # --cminDefaultMinimizerTolerance 0.01 --seed 42 --fixedSignalStrength 1
         command_string += exec_bash(
             'combine -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root '
-            '--snapshotName MultiDimFit --bypassFrequentistFit --trackParameters r -m 0 {POI} --seed {SEED} {FREEZEPARAMS} '
-            '{EXTRA} -n "{NAME}Baseline" --algo={ALGO}'.format(
+            '--snapshotName MultiDimFit --bypassFrequentistFit --trackParameters r -m 0 {POI} --seed {SEED} '
+            '{FREEZEPARAMS} {EXTRA} -n "{NAME}Baseline" --algo={ALGO}'.format(
                 NAME=self.name,
                 FREEZEPARAMS=self.freezeParameters,
                 POI=self.POI,
