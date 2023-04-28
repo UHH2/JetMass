@@ -518,7 +518,7 @@ def jet_mass_producer(args, configs):
 
                     if "TTTo" in sample.name:
                         hist_toppt_off = get_hist(hist_dir % (sample_name, ""), "toppt_off")
-                        sample.setParamEffect(extra_nuisances["toppt"], effect_up=hist_toppt_off)#, scale=0.5)
+                        sample.setParamEffect(extra_nuisances["toppt"], effect_up=hist_toppt_off)  # , scale=0.5)
 
                     # setting effects of JMR variation nuisance(s)
                     if args.JMRparameter and sample.sampletype == rl.Sample.SIGNAL:
@@ -632,7 +632,7 @@ def jet_mass_producer(args, configs):
                     for i in range(msd.nbins)
                 ]
             )
-            
+
             for param in qcd_params:
                 param.unbound = QCDFailUnbound
 
@@ -709,6 +709,7 @@ if __name__ == "__main__":
     parser.add_argument("--noNormUnc", action="store_true")
     parser.add_argument("--skipExtArgRender", action="store_true")
     parser.add_argument("--seed", type=str, default="42")
+    parser.add_argument("--freezeParameters", nargs="+", default=[])
     parser.add_argument(
         "--combineOptions", type=str, help="string with additional cli-options passed to combine", default=""
     )
@@ -772,7 +773,8 @@ if __name__ == "__main__":
             else:
                 cw.extraOptions = args.combineOptions
                 if args.massScales:
-                    cw.extraOptions += " --freezeParameters r --preFitValue 0"
+                    cw.freezeParameters = ["r"]+args.freezeParameters
+                    cw.extraOptions += " --preFitValue 0"
                     cw.POIRange = (-100, 100)
                 if args.defaultPOI:
                     cw.POIRange = (0.01, 100.0)

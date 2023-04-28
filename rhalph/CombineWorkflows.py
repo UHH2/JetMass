@@ -76,7 +76,7 @@ class CombineWorkflows(object):
         self.POIRange = (-10, 10)
         self.altmodel = None
         self.workers = 1
-        self._freezeParameters = ""
+        self._freezeParameters = []
         self.lumi = 41.8
         self.name = ""
         self.seed = 123456
@@ -126,16 +126,17 @@ class CombineWorkflows(object):
 
     @property
     def freezeParameters(self):
-        if self._freezeParameters == "":
+        if len(self._freezeParameters) == 0:
             return ""
         return "--freezeParameters " + ",".join(self._freezeParameters)
 
     @freezeParameters.setter
     def freezeParameters(self, pars):
+        print("adding pars to freeze list:", pars)
         if isinstance(pars, str):
-            self._freezeParameters = pars.split(",")
+            self._freezeParameters += pars.split(",")
         elif isinstance(pars, list):
-            self._freezeParameters = pars
+            self._freezeParameters += pars
         else:
             raise TypeError(
                 "freezeParameters must be either string (',' as delimiter) or list!\nYou provided a ", type(pars)
@@ -420,9 +421,7 @@ class CombineWorkflows(object):
                 "{FREEZEPARAMS}"
             ).format(
                 BUILDPREFIX=self._build_prefix,
-                FREEZEPARAMS=""
-                if len(freeze_Parameters) == 0
-                else ("--freezeParameter " + ",".join(freeze_Parameters)),
+                FREEZEPARAMS=self.freeze_Parameters,
                 WORKSPACE=self.workspace,
             ),
             debug,
@@ -521,8 +520,9 @@ class CombineWorkflows(object):
         command_string += exec_bash("source build.sh\n", debug)
         command_string += exec_bash(
             "combine -M FitDiagnostics {WORKSPACE} {POI} --saveShapes {EXTRA} -n '' "
-            "--cminDefaultMinimizerStrategy 0".format(
-                WORKSPACE=self.workspace, POI=self.POI, EXTRA=self.extraOptions
+            "--cminDefaultMinimizerStrategy 0 {FREEZE}".format(
+                WORKSPACE=self.workspace, POI=self.POI, EXTRA=self.extraOptions,
+                FREEZE=self.freezeParameters
             ),
             debug,
         )
