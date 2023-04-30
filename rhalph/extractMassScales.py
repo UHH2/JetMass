@@ -183,8 +183,7 @@ if __name__ == "__main__":
 
     if args.fits == ["all"]:
         args.fits = glob.glob(args.dir_pattern)
-    configs = [(fit_dir if "config.json" else f"{fit_dir}/config.json") for fit_dir in args.fits]
-
+    configs = [(fit_dir if "config.json" in fit_dir else f"{fit_dir}/config.json") for fit_dir in args.fits]
     all_results = {}
     for config_path in configs:
         fit_dir = os.path.dirname(config_path)
