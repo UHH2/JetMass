@@ -3,7 +3,7 @@ from __future__ import print_function
 import sys
 import os
 import numpy as np
-import ROOT # type: ignore
+import ROOT  # type: ignore
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 from jetmass_scale_fit_utils import scale_lumi, build_pseudo, build_mass_scale_variations  # noqa
 import rhalphalib as rl         # noqa
@@ -781,9 +781,9 @@ if __name__ == "__main__":
                 cw.POI = "r" if args.defaultPOI else build_mass_scale_variations(configs, args)[1]
                 cw.method = "diagnostics"
                 cw.write_wrapper()
-                if args.massScales:
-                    cw.method = "FastScanMassScales"
-                    cw.write_wrapper(append=True)
+                # if args.massScales:
+                #     cw.method = "FastScanMassScales"
+                #     cw.write_wrapper(append=True)
         else:
             if not os.path.isfile(configs["ModelName"] + "/wrapper.sh"):
                 import warnings
