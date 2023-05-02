@@ -18,10 +18,18 @@ kfactor_path = f"{jetmass_path}/NLOweights/"
 
 
 class JMSTemplates(processor.ProcessorABC):
-    def __init__(self, year="2017", jec="nominal", variation_weight="nominal"):
+    def __init__(self, year="2017", jec="nominal", variation_weight="nominal", tagger="substructure"):
         self._year = year
         self._jec = jec
         self._variation_weight = variation_weight
+
+        self._tagger_approach = tagger
+        tagger_approaches = ["substructure", "particlenet"]
+        if self._tagger_approach not in tagger_approaches:
+            raise NotImplementedError(
+                "You chose a tagger ({}) approach that is not implemented. Choose among:".format(self._tagger_approach),
+                tagger_approaches
+            )
 
         dataset_ax = hist.axis.StrCategory([], name="dataset", growth=True)
         # shift_ax = hist.axis.StrCategory([], name="shift", growth=True)
@@ -202,24 +210,53 @@ class JMSTemplates(processor.ProcessorABC):
             }
         )
 
+        # define regions in terms of selection-bits
+        # for "old" approach using energy correlation and n-subjettiness substructure variables
+        # new approach using particlenet (working points from https://indico.cern.ch/event/1152827/contributions/
+        # 4840404/attachments/2428856/4162159/ParticleNet_SFs_ULNanoV9_JMAR_25April2022_PK.pdf
+        tagger = {
+            "vjets": {
+                "substructure": {"pass": {"n2ddt": True}, "fail": {"n2ddt": False}},
+                "particlenet": {"pass": {"particlenetMDWvsQCD": True}, "fail": {"particlenetMDWvsQCD": False}},
+            },
+            "ttbar": {
+                "substructure": {
+                    "pass": {"tau32": True},
+                    "passW": {"tau32": False, "tau21": True},
+                    "fail": {"tau32": False, "tau21": False},
+                },
+                "particlenet": {
+                    "pass": {"particlenetTvsQCD": True},
+                    "passW": {"particlenetTvsQCD": False, "particlenetWvsQCD": True},
+                    "fail": {"particlenetTvsQCD": False, "particlenetWvsQCD": False},
+                },
+            },
+        }
+
         self._regions = {
             "vjets": {
                 "inclusive": {"rhocut": True, "pt500cut": True},
-                "pass": {"n2ddt": True, "rhocut": True, "pt500cut": True},
-                "fail": {"n2ddt": False, "rhocut": True, "pt500cut": True},
+                "pass": {
+                    **tagger["vjets"][self._tagger_approach]["pass"],
+                    "rhocut": True, "pt500cut": True
+                },
+                "fail": {
+                    **tagger["vjets"][self._tagger_approach]["fail"],
+                    "rhocut": True, "pt500cut": True
+                },
                 "inclusive_trigger": {
                     "rhocut": True,
                     "pt500cut": True,
                     "HLT_AK8PFJet450": True,
                 },
                 "pass_trigger": {
-                    "n2ddt": True,
+                    **tagger["vjets"][self._tagger_approach]["pass"],
                     "rhocut": True,
                     "pt500cut": True,
                     "HLT_AK8PFJet450": True,
                 },
                 "fail_trigger": {
-                    "n2ddt": False,
+                    **tagger["vjets"][self._tagger_approach]["fail"],
                     "rhocut": True,
                     "pt500cut": True,
                     "HLT_AK8PFJet450": True,
@@ -227,9 +264,18 @@ class JMSTemplates(processor.ProcessorABC):
             },
             "ttbar": {
                 "inclusive": {"pt200cut": True},
-                "pass": {"tau32": True, "pt200cut": True},
-                "passW": {"tau32": False, "tau21": True, "pt200cut": True},
-                "fail": {"tau32": False, "tau21": False, "pt200cut": True},
+                "pass": {
+                    **tagger["ttbar"][self._tagger_approach]["pass"],
+                    "pt200cut": True
+                },
+                "passW": {
+                    **tagger["ttbar"][self._tagger_approach]["passW"],
+                    "pt200cut": True
+                },
+                "fail": {
+                    **tagger["ttbar"][self._tagger_approach]["fail"],
+                    "pt200cut": True
+                },
             },
         }
 
@@ -252,22 +298,6 @@ class JMSTemplates(processor.ProcessorABC):
                             eta_regions_ax,
                             storage=hist.storage.Weight(),
                         ),
-                        # f"{selection}_mjet_{region}_jec_up": hist.Hist(
-                        #     mJ_fit_ax,
-                        #     self._pT_fit_ax[selection],
-                        #     dataset_ax,
-                        #     jec_applied_ax,
-                        #     eta_regions_ax,
-                        #     storage=hist.storage.Weight(),
-                        # ),
-                        # f"{selection}_mjet_{region}_jec_down": hist.Hist(
-                        #     mJ_fit_ax,
-                        #     self._pT_fit_ax[selection],
-                        #     dataset_ax,
-                        #     jec_applied_ax,
-                        #     eta_regions_ax,
-                        #     storage=hist.storage.Weight(),
-                        # ),
                         f"{selection}_pt_{region}": hist.Hist(
                             pT_ax,
                             dataset_ax,
@@ -549,6 +579,15 @@ class JMSTemplates(processor.ProcessorABC):
             selections.add("tau21", events.tau21 < 0.45)
             selections.add("tau32", events.tau32 < 0.5)
 
+            selections.add("particlenetWvsQCD", events["ParticleNetDiscriminators_WvsQCD"] > 0.97)
+            selections.add("particlenetTvsQCD", events["ParticleNetDiscriminators_TvsQCD"] > 0.96)
+            selections.add(
+                "particlenetMDWvsQCD",
+                (events["ParticleNetMD_probXcc"] + events["ParticleNetMD_probXcc"])
+                / (events["ParticleNetMD_probXcc"] + events["ParticleNetMD_probXcc"] + events["ParticleNetMD_probQCD"])
+                > 0.91
+            )
+
             selections.add(
                 "unfolding",
                 (events.pass_reco_selection == 1) & (events.pass_gen_selection == 1),
@@ -664,13 +703,15 @@ if __name__ == "__main__":
     workflow.parser.add_argument("--JEC", default="nominal")
     workflow.parser.add_argument("--variation", default="nominal")
     workflow.parser.add_argument("--maxfiles", type=int, default=-1)
+    workflow.parser.add_argument("--tagger", default="substructure", choices=["substructure", "particlenet"])
 
     args = workflow.parse_args()
 
     workflow.processor_instance = JMSTemplates(
         year=args.year,
         jec=args.JEC,
-        variation_weight=args.variation
+        variation_weight=args.variation,
+        tagger=args.tagger
     )
     workflow.processor_schema = BaseSchema
 

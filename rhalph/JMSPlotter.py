@@ -515,17 +515,18 @@ if __name__ == "__main__":
     years = ["UL16preVFP", "UL16postVFP", "UL17", "UL18"]
     regions = ["TTBar", "VJets", "Combined"]
     plotter = {}
-    plotter["07_03_23"] = create_plotter("fitResults_07-03-23.json", years, regions)
-    plotter["06_03_23"] = create_plotter("fitResults_06-03-23.json", years, regions)
+    fitDateStr = "02-05-23"
+    plotter[f"{fitDateStr}_JECNuis"] = create_plotter(f"fitResults_{fitDateStr}_JECNuis.json", years, regions)
+    plotter[f"{fitDateStr}_JECVarAsInput"] = create_plotter(f"fitResults_{fitDateStr}_JECVarAsInput.json", years, regions)
 
-    plotter["06_03_23"].load_fit_results(
-        json.load(open("fitResults_06-03-23.json")),
+    plotter[f"{fitDateStr}_JECVarAsInput"].load_fit_results(
+        json.load(open(f"fitResults_{fitDateStr}_JECVarAsInput.json")),
         [f"{region}{year}JEC{jecdir}" for year in years for jecdir in ["UP", "DOWN"] for region in regions],
     )
-    plotter["06_03_23"].construct_hists()
+    plotter[f"{fitDateStr}_JECVarAsInput"].construct_hists()
     label_suffix = {
-        "07_03_23": "JEC Var nuisance",
-        "06_03_23": "JEC nominal",
+        f"{fitDateStr}_JECNuis": "JEC Var nuisance",
+        f"{fitDateStr}_JECVarAsInput": "JEC nominal",
     }
 
     for region in regions:
@@ -535,24 +536,10 @@ if __name__ == "__main__":
                 jms_plotter.dHists[f"{region}{year}"].plot_errorbar(
                     ax=ax, split_uncertainty=True, alpha=0.8, label=f"{region} {year} {label_suffix[date]}", fmt=".",
                     linewidth=0.9,
-                    linestyle="--" if date == "06_03_23" else "-"
+                    linestyle="--" if date == f"{fitDateStr}_JECVarAsInput" else "-"
                 )
-                if date == "06_03_23":
+                if date == f"{fitDateStr}_JECVarAsInput":
                     nominal_color = jms_plotter.dHists[f"{region}{year}"].color
-                    # jms_plotter.dHists[f"{region}{year}JECDOWN"].plot_errorbar(
-                    #     ax,
-                    #     fmt=".",
-                    #     color=nominal_color - np.array([0, 0.1, 0.0, 0.0]),
-                    #     alpha=0.6,
-                    #     label=f"{region} {year} JEC down",
-                    # )
-                    # jms_plotter.dHists[f"{region}{year}JECUP"].plot_errorbar(
-                    #     ax,
-                    #     fmt=".",
-                    #     color=nominal_color + np.array([0, 0.1, 0.0, 0.0]),
-                    #     alpha=0.6,
-                    #     label=f"{region} {year} JEC up",
-                    # )
                     extend = True
                     jms_plotter.dHists[f"{region}{year}JECDOWN"].plot_uncertainty_band(
                         ax,
@@ -560,7 +547,6 @@ if __name__ == "__main__":
                         hatch="/",
                         alpha=0.4,
                         linewidth=.6,
-                        # color=nominal_color - np.array([0, 0.1, 0.0, 0.0]),
                         label=f"{region} {year} JEC down",
                     )
                     var_color = jms_plotter.dHists[f"{region}{year}JECDOWN"].color
@@ -571,15 +557,13 @@ if __name__ == "__main__":
                         hatch="\\",
                         linewidth=.6,
                         alpha=0.4,
-                        # color=var_color + np.array([0, 0.1, 0.0, 0.0]),
                         label=f"{region} {year} JEC up",
                     )
 
-            finalize_ax(ax, fname=f"JMSSF_07-03-23/{region}_{year}_comparison.pdf", year=year)
-            # plt.gca().set_prop_cycle(None)
+            finalize_ax(ax, fname=f"JMSSF_{fitDateStr}/{region}_{year}_comparison.pdf", year=year)
 
-    plotter["07_03_23"] = create_plotter("fitResults_07-03-23.json", years, regions)
-    plotter["06_03_23"] = create_plotter("fitResults_06-03-23.json", years, regions)
+    plotter[f"{fitDateStr}_JECNuis"] = create_plotter(f"fitResults_{fitDateStr}_JECNuis.json", years, regions)
+    plotter[f"{fitDateStr}_JECVarAsInput"] = create_plotter(f"fitResults_{fitDateStr}_JECVarAsInput.json", years, regions)
     for date, jms_plotter in plotter.items():
         for region in regions:
             f, ax = setup_ax(10, 7)
@@ -592,4 +576,4 @@ if __name__ == "__main__":
                     linewidth=0.9,
                     fmt=".",
                 )
-            finalize_ax(ax, fname=f"JMSSF_07-03-23/{date}_{region}_year_comparison.pdf")
+            finalize_ax(ax, fname=f"JMSSF_{fitDateStr}/{date}_{region}_year_comparison.pdf")

@@ -3,7 +3,7 @@ from __future__ import print_function
 import sys
 import os
 import numpy as np
-import ROOT # type: ignore
+import ROOT  # type: ignore
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 from jetmass_scale_fit_utils import scale_lumi, build_pseudo, build_mass_scale_variations  # noqa
 import rhalphalib as rl         # noqa
@@ -506,19 +506,19 @@ def jet_mass_producer(args, configs):
                         sample.setParamEffect(jec_var_nuisance, hist_jec_up, hist_jec_down)
 
                     # ISR down
-                    if sample.sampletype == rl.Sample.SIGNAL:
+                    if sample.sampletype == rl.Sample.SIGNAL and ("isr_up" in aux_hist_files and "isr_down" in aux_hist_files):
                         hist_isr_up = get_hist(hist_dir % (sample_name, ""), "isr_up")
                         hist_isr_down = get_hist(hist_dir % (sample_name, ""), "isr_down")
                         sample.setParamEffect(extra_nuisances["isr"], hist_isr_up, hist_isr_down)
                     # FSR down
-                    if sample.sampletype == rl.Sample.SIGNAL:
+                    if sample.sampletype == rl.Sample.SIGNAL and ("fsr_up" in aux_hist_files and "fsr_down" in aux_hist_files):
                         hist_fsr_up = get_hist(hist_dir % (sample_name, ""), "fsr_up")
                         hist_fsr_down = get_hist(hist_dir % (sample_name, ""), "fsr_down")
                         sample.setParamEffect(extra_nuisances["fsr"], hist_fsr_up, hist_fsr_down)
 
-                    if "TTTo" in sample.name:
+                    if "TTTo" in sample.name and "toppt_off" in aux_hist_files:
                         hist_toppt_off = get_hist(hist_dir % (sample_name, ""), "toppt_off")
-                        sample.setParamEffect(extra_nuisances["toppt"], effect_up=hist_toppt_off)#, scale=0.5)
+                        sample.setParamEffect(extra_nuisances["toppt"], effect_up=hist_toppt_off)  # , scale=0.5)
 
                     # setting effects of JMR variation nuisance(s)
                     if args.JMRparameter and sample.sampletype == rl.Sample.SIGNAL:
@@ -632,7 +632,7 @@ def jet_mass_producer(args, configs):
                     for i in range(msd.nbins)
                 ]
             )
-            
+
             for param in qcd_params:
                 param.unbound = QCDFailUnbound
 
@@ -709,6 +709,7 @@ if __name__ == "__main__":
     parser.add_argument("--noNormUnc", action="store_true")
     parser.add_argument("--skipExtArgRender", action="store_true")
     parser.add_argument("--seed", type=str, default="42")
+    parser.add_argument("--freezeParameters", nargs="+", default=[])
     parser.add_argument(
         "--combineOptions", type=str, help="string with additional cli-options passed to combine", default=""
     )
@@ -772,16 +773,17 @@ if __name__ == "__main__":
             else:
                 cw.extraOptions = args.combineOptions
                 if args.massScales:
-                    cw.extraOptions += " --freezeParameters r --preFitValue 0"
+                    cw.freezeParameters = ["r"]+args.freezeParameters
+                    cw.extraOptions += " --preFitValue 0"
                     cw.POIRange = (-100, 100)
                 if args.defaultPOI:
                     cw.POIRange = (0.01, 100.0)
                 cw.POI = "r" if args.defaultPOI else build_mass_scale_variations(configs, args)[1]
                 cw.method = "diagnostics"
                 cw.write_wrapper()
-                if args.massScales:
-                    cw.method = "FastScanMassScales"
-                    cw.write_wrapper(append=True)
+                # if args.massScales:
+                #     cw.method = "FastScanMassScales"
+                #     cw.write_wrapper(append=True)
         else:
             if not os.path.isfile(configs["ModelName"] + "/wrapper.sh"):
                 import warnings

@@ -19,6 +19,7 @@ configs = {
     "QCDSigmaScale": 10.0,
     "QCDFailConstant": "False",
     "separateMassScales": "False",
+    "JECVar":False,
     "pt_edges": map(float, w_pt_edges),
     "channels": OrderedDict(common_configs.w_channels(w_pt_edges) + common_configs.top_channels(top_pt_edges)),
 }

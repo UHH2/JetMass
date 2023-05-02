@@ -81,5 +81,5 @@ optional arguments:
 
  ```shell
 ls configs/nominal/*UL*.py | xargs -n1 -P10 -I% python jetmass.py -M jms %
-ls */config.json | sed -r 's|/[^/]+$||'  | xargs echo "python extractMassScales.py --fits"
+ls */config.json | sed -r 's|/[^/]+$||'  | xargs echo "python3 extractMassScales.py --fits"
  ```
