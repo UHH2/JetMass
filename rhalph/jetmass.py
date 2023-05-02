@@ -506,17 +506,17 @@ def jet_mass_producer(args, configs):
                         sample.setParamEffect(jec_var_nuisance, hist_jec_up, hist_jec_down)
 
                     # ISR down
-                    if sample.sampletype == rl.Sample.SIGNAL:
+                    if sample.sampletype == rl.Sample.SIGNAL and ("isr_up" in aux_hist_files and "isr_down" in aux_hist_files):
                         hist_isr_up = get_hist(hist_dir % (sample_name, ""), "isr_up")
                         hist_isr_down = get_hist(hist_dir % (sample_name, ""), "isr_down")
                         sample.setParamEffect(extra_nuisances["isr"], hist_isr_up, hist_isr_down)
                     # FSR down
-                    if sample.sampletype == rl.Sample.SIGNAL:
+                    if sample.sampletype == rl.Sample.SIGNAL and ("fsr_up" in aux_hist_files and "fsr_down" in aux_hist_files):
                         hist_fsr_up = get_hist(hist_dir % (sample_name, ""), "fsr_up")
                         hist_fsr_down = get_hist(hist_dir % (sample_name, ""), "fsr_down")
                         sample.setParamEffect(extra_nuisances["fsr"], hist_fsr_up, hist_fsr_down)
 
-                    if "TTTo" in sample.name:
+                    if "TTTo" in sample.name and "toppt_off" in aux_hist_files:
                         hist_toppt_off = get_hist(hist_dir % (sample_name, ""), "toppt_off")
                         sample.setParamEffect(extra_nuisances["toppt"], effect_up=hist_toppt_off)  # , scale=0.5)
 
