@@ -18,9 +18,13 @@ function submit_templates {
     if [ ${VAR} == "nominal" ]; then
       echo "default -> ${YEAR}" 
       nohup ./JetMassTemplateProcessor.py -o coffea_hists/templates_${YEAR}${NAMESUFFIX}.coffea --year ${YEAR} --tagger ${TAGGER} --scaleout ${SCALEOUT} > ${YEAR}${NAMESUFFIX}.stdout &
+    elif [[ ${VAR} == *"jec"* ]]; then
+      echo "jec-variation (${VAR}) -> ${YEAR}" $VAR $YEAR
+      DIRECTION=${VAR#*_}
+      nohup ./JetMassTemplateProcessor.py -o coffea_hists/templates_${YEAR}${NAMESUFFIX}_${VAR}.coffea --year ${YEAR} --tagger ${TAGGER} --JEC ${DIRECTION} --scaleout ${SCALEOUT} > ${YEAR}${NAMESUFFIX}_${VAR}.stdout &
     else
       echo "variation ${VAR} -> ${YEAR}"
-      nohup ./JetMassTemplateProcessor.py -o coffea_hists/templates_${YEAR}${NAMESUFFIX}_${VAR}.coffea --year ${YEAR} --tagger ${TAGGER} --variation ${VAR} --scaleout ${SCALEOUT} > ${YEAR}_${VAR}.stdout &
+      nohup ./JetMassTemplateProcessor.py -o coffea_hists/templates_${YEAR}${NAMESUFFIX}_${VAR}.coffea --year ${YEAR} --tagger ${TAGGER} --variation ${VAR} --scaleout ${SCALEOUT} > ${YEAR}${NAMESUFFIX}_${VAR}.stdout &
     fi
   done
 }
