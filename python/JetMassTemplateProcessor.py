@@ -477,10 +477,10 @@ class JMSTemplates(processor.ProcessorABC):
                 "toppt_off": 1. / events["toppt_weight"],
             }
             if len(events["ps_weights"][0]) == 46:
-                variation_weights["fsr_down"] = events["ps_weights"][:, 0] / events["ps_weights"][:, 4]
-                variation_weights["fsr_up"] = events["ps_weights"][:, 0] / events["ps_weights"][:, 5]
-                variation_weights["isr_down"] = events["ps_weights"][:, 0] / events["ps_weights"][:, 26]
-                variation_weights["isr_up"] = events["ps_weights"][:, 0] / events["ps_weights"][:, 27]
+                variation_weights["fsr_down"] = events["ps_weights"][:, 4] / events["ps_weights"][:, 0]
+                variation_weights["fsr_up"] = events["ps_weights"][:, 5] / events["ps_weights"][:, 0]
+                variation_weights["isr_down"] = events["ps_weights"][:, 26] / events["ps_weights"][:, 0]
+                variation_weights["isr_up"] = events["ps_weights"][:, 27] / events["ps_weights"][:, 0]
             else:
                 variation_weights["fsr_down"] = 1.0
                 variation_weights["fsr_up"] = 1.0
