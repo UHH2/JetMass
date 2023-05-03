@@ -74,7 +74,8 @@ flatten_templates () {
 }
 
 # run the things
-VARS=(nominal jec fsr isr toppt_off)
+VARS_ALL=(nominal jec fsr isr toppt_off)
+VARS=(${1:-${VARS_ALL[@]}})
 MAXPROCS=5
 NAMEPREFIX=_particlenet
 export -f flatten_templates
