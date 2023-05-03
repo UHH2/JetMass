@@ -188,7 +188,7 @@ if __name__ == "__main__":
     ])
     parser.add_argument("--origQCDScale", action="store_true")
     parser.add_argument("--input", "-i", default="templates_2017_1d.root")
-
+    parser.add_argument("--output", "-o", default="")
     args = parser.parse_args()
 
     plotter.year = args.year
@@ -199,17 +199,24 @@ if __name__ == "__main__":
     # for selection in ['top','W']:
     # for selection in ['top','W','Zbb']:
     # for selection in ['Zbb']:
+    output_dir = (
+        (
+            "../Plots/%s_coffea%s/"
+            % (
+                args.input.replace(".root", ""),
+                "_originalQCDScale" if args.origQCDScale else "",
+            )
+        )
+        if args.output == ""
+        else args.output
+    )
     for selection in ["W", "top"]:
         print(selection, hist_file)
         plot_mass(
             selection,
             "mjet",
             hist_file,
-            "../Plots/%s_coffea%s/"
-            % (
-                args.input.replace(".root", ""),
-                "_originalQCDScale" if args.origQCDScale else "",
-            ),
+            output_dir,
             binning="CMS",
             scaleQCD=not args.origQCDScale,
         )
