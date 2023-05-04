@@ -68,15 +68,16 @@ def plot_fit_result(
     use_config_samples=False,
     pseudo_data=True,
 ):
-    print("opening file", config["ModelName"] + "/" + fit_shapes_root)
+    model_dir = config.get("ModelDir", config["ModelName"])
+    print("opening file", model_dir + "/" + fit_shapes_root)
     fit_shapes_root = "fit_shapes.root" if do_postfit else "fitDiagnostics.root"
-    f_shapes = ROOT.TFile(config["ModelName"] + "/" + fit_shapes_root, "READ")
+    f_shapes = ROOT.TFile(model_dir + "/" + fit_shapes_root, "READ")
     pseudo_data_file = None
     if pseudo_data:
-        pseudo_data_file = ROOT.TFile(config["ModelName"] + "/fitDiagnostics.root", "READ")
+        pseudo_data_file = ROOT.TFile(model_dir + "/fitDiagnostics.root", "READ")
     ROOT.TH1.AddDirectory(0)
     PrePostFit = ["prefit", "postfit"] if do_postfit else ["prefit"]
-    out_dir = config["ModelName"] + "/plots/" + fit_shapes_root.replace(".root", "/") + ("/logY/" if logY else "")
+    out_dir = model_dir + "/plots/" + fit_shapes_root.replace(".root", "/") + ("/logY/" if logY else "")
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 

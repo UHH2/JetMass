@@ -80,6 +80,6 @@ optional arguments:
  First perform some fits, e.g. all UL years:
 
  ```shell
-ls configs/nominal/*UL*.py | xargs -n1 -P10 -I% python jetmass.py -M jms %
-ls */config.json | sed -r 's|/[^/]+$||'  | xargs echo "python3 extractMassScales.py --fits"
+ls configs/nominal/*UL*.py | xargs -n1 -P10 -I% python jetmass.py -M jms % -workdir <workdir>
+ls <workdir>/*/config.json | sed -r 's|/[^/]+$||'  | xargs echo "python3 extractMassScales.py --fits"
  ```

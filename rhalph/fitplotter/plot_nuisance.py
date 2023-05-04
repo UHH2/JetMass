@@ -61,8 +61,8 @@ def update_nuisance(name, fitargs, nuisances):
 
 
 def plot_nuisances(config):
-
-    f_r = ROOT.TFile(config["ModelName"] + "/fitDiagnostics.root", "READ")
+    model_dir = config.get("ModelDir", config["ModelName"])
+    f_r = ROOT.TFile(model_dir + "/fitDiagnostics.root", "READ")
 
     def dummy(effect=0.01):
         return {"effect": effect, "central": 1, "up": 1.1, "down": 0.9}
@@ -77,7 +77,8 @@ def plot_nuisances(config):
 
 
 def print_nuisance(config):
-    f_r = ROOT.TFile(config["ModelName"] + "/fitDiagnostics.root", "READ")
+    model_dir = config.get("ModelDir", config["ModelName"])
+    f_r = ROOT.TFile(model_dir + "/fitDiagnostics.root", "READ")
     print(dir(f_r.Get("fit_s")))
     print(type(f_r.Get("fit_s").covQual()))
     c = ROOT.TCanvas("correlationHist", "correlationHist", 1000, 1000)
@@ -89,7 +90,8 @@ def print_nuisance(config):
 
 
 def plot_mass_scale_nuisances(config):
-    f_ = ROOT.TFile(config["ModelName"] + "/fitDiagnostics.root", "READ")
+    model_dir = config.get("ModelDir", config["ModelName"])
+    f_ = ROOT.TFile(model_dir + "/fitDiagnostics.root", "READ")
     f_r_ = f_.Get("fit_s")
     ms_par = f_r_.massScales()
 
@@ -127,7 +129,7 @@ def plot_mass_scale_nuisances(config):
     g.SetMarkerSize(1)
     g.Draw("P SAME")
     for file_ext in [".pdf", ".png"]:
-        c.SaveAs(config["ModelName"] + "/plots/JetMassScale_Nuisance" + file_ext)
+        c.SaveAs(model_dir + "/plots/JetMassScale_Nuisance" + file_ext)
 
 
 if __name__ == "__main__":
