@@ -579,14 +579,14 @@ class JMSTemplates(processor.ProcessorABC):
             selections.add("tau21", events.tau21 < 0.45)
             selections.add("tau32", events.tau32 < 0.5)
 
-            selections.add("particlenetWvsQCD", events["ParticleNetDiscriminators_WvsQCD"] > 0.97)
+            events["ParticleNetMDDiscriminators_WvsQCD"] = (
+                events["ParticleNetMD_probXqq"] + events["ParticleNetMD_probXcc"]
+            ) / (events["ParticleNetMD_probXqq"] + events["ParticleNetMD_probXcc"] + events["ParticleNetMD_probQCD"])
+
+            selections.add("particlenetWvsQCD", events["ParticleNetMDDiscriminators_WvsQCD"] > 0.91)
+            # selections.add("particlenetWvsQCD", events["ParticleNetDiscriminators_WvsQCD"] > 0.97)
             selections.add("particlenetTvsQCD", events["ParticleNetDiscriminators_TvsQCD"] > 0.96)
-            selections.add(
-                "particlenetMDWvsQCD",
-                (events["ParticleNetMD_probXcc"] + events["ParticleNetMD_probXcc"])
-                / (events["ParticleNetMD_probXcc"] + events["ParticleNetMD_probXcc"] + events["ParticleNetMD_probQCD"])
-                > 0.91
-            )
+            selections.add("particlenetMDWvsQCD", events["ParticleNetMDDiscriminators_WvsQCD"] > 0.91)
 
             selections.add(
                 "unfolding",
