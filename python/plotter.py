@@ -547,36 +547,40 @@ def get_hists(
 
     for sample in samples:
         this_hist = None
-        # print(sample, hist_dir)
-        if sample in merged_hists and include_merged_hists:
-            for subsample in merged_hists[sample]:
+
+        def get_sample_hist(sample_name, return_empty=False):
+            this_subhist = None
+            try:
+                this_subhist = f_hists.Get(str(hist_dir % sample_name)).Clone()
+            except BaseException as e:
+                logger.exception(
+                    ("hist" + str(hist_dir % sample_name) + "not found. Trying adding the year as suffix.")
+                )
+                logger.exception(e)
+                sample_name_year = "{}_{}".format(sample_name, year)
                 try:
-                    this_subhist = f_hists.Get(str(hist_dir % subsample)).Clone()
+                    this_subhist = f_hists.Get(str(hist_dir % sample_name_year))
                 except BaseException as e:
-                    logger.exception((
-                        "hist"
-                        + str(hist_dir % subsample)
-                        + "not found. Taking empty hist instead."
-                    )
+                    logger.exception(
+                        "hist" + str(hist_dir % sample_name_year) + "not found. Taking empty hist or None instead."
                     )
                     logger.exception(e)
-                    this_subhist = h_data.Clone()
-                    this_subhist.Reset()
+                    if return_empty:
+                        this_subhist = h_data.Clone()
+                        this_subhist.Reset()
+            return this_subhist
 
+        if sample in merged_hists and include_merged_hists:
+            for subsample in merged_hists[sample]:
+                this_subhist = get_sample_hist(subsample, return_empty=True)
                 if this_hist is None:
                     this_hist = this_subhist.Clone()
                     this_hist.SetTitle(this_hist.GetTitle().replace(subsample, sample))
                     this_hist.SetName(this_hist.GetName().replace(subsample, sample))
                 else:
-                    # print(sample,subsample,this_subhist.GetNbinsX())
                     this_hist.Add(this_subhist.Clone())
         else:
-            try:
-                this_hist = f_hists.Get(str(hist_dir % sample)).Clone()
-            except BaseException as e:
-                logger.exception("Did not find hist "+hist_dir % sample)
-                logger.exception(e)
-                continue
+            this_hist = get_sample_hist(sample)
 
         if new_binning is not None:
             this_hist = this_hist.Rebin(len(new_binning) - 1, "", new_binning)
