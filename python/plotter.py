@@ -549,30 +549,32 @@ def get_hists(
         this_hist = None
 
         def get_sample_hist(sample_name, return_empty=False):
-            this_subhist = None
+            this_subhist_ = None
             try:
-                this_subhist = f_hists.Get(str(hist_dir % sample_name)).Clone()
+                this_subhist_ = f_hists.Get(str(hist_dir % sample_name)).Clone()
             except BaseException as e:
+                this_subhist_ = None
                 logger.exception(
                     ("hist" + str(hist_dir % sample_name) + "not found. Trying adding the year as suffix.")
                 )
                 logger.exception(e)
                 sample_name_year = "{}_{}".format(sample_name, year)
                 try:
-                    this_subhist = f_hists.Get(str(hist_dir % sample_name_year))
+                    this_subhist_ = f_hists.Get(str(hist_dir % sample_name_year)).Clone()
                 except BaseException as e:
+                    this_subhist_ = None
                     logger.exception(
                         "hist" + str(hist_dir % sample_name_year) + "not found. Taking empty hist or None instead."
                     )
                     logger.exception(e)
-                    if return_empty:
-                        this_subhist = h_data.Clone()
-                        this_subhist.Reset()
-            return this_subhist
+            return this_subhist_
 
         if sample in merged_hists and include_merged_hists:
             for subsample in merged_hists[sample]:
-                this_subhist = get_sample_hist(subsample, return_empty=True)
+                this_subhist = get_sample_hist(subsample)
+                if this_subhist is None:
+                    this_subhist = h_data.Clone()
+                    this_subhist.Reset()
                 if this_hist is None:
                     this_hist = this_subhist.Clone()
                     this_hist.SetTitle(this_hist.GetTitle().replace(subsample, sample))
