@@ -2,7 +2,6 @@ from collections import OrderedDict
 import common_configs
 
 pt_edges = [500, 575, 650, 725, 800, 1000, 1200, "Inf"]
-print(len(pt_edges))
 configs = {
     "year": "UL17",
     "ModelName": "VJetsUL17UnfoldingPrefitAsimovUniform0p825",

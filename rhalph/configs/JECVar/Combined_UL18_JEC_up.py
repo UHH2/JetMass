@@ -3,8 +3,6 @@ import common_configs
 
 w_pt_edges = [500, 650, 800, 1200]
 top_pt_edges = [200, 300, 400, 500, 650]
-print(len(w_pt_edges))
-print(len(top_pt_edges))
 configs = {
     "year": "UL18",
     "ModelName": "CombinedUL18JECUP",
