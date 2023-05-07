@@ -70,7 +70,7 @@ def plot_fit_result(
 ):
     model_dir = config.get("ModelDir", config["ModelName"])
     print("opening file", model_dir + "/" + fit_shapes_root)
-    fit_shapes_root = "fit_shapes.root" if do_postfit else "fitDiagnostics.root"
+    fit_shapes_root = fit_shapes_root if do_postfit else "fitDiagnostics.root"
     f_shapes = ROOT.TFile(model_dir + "/" + fit_shapes_root, "READ")
     pseudo_data_file = None
     if pseudo_data:

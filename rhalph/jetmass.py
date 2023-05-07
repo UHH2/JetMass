@@ -5,7 +5,7 @@ import os
 import numpy as np
 import ROOT  # type: ignore
 ROOT.PyConfig.IgnoreCommandLineOptions = True
-from jetmass_scale_fit_utils import scale_lumi, build_pseudo, build_mass_scale_variations  # noqa
+from jetmass_scale_fit_utils import scale_lumi, build_pseudo, build_mass_scale_variations, extract_fit_results  # noqa
 import rhalphalib as rl         # noqa
 rl.util.install_roofit_helpers()
 
@@ -416,7 +416,7 @@ def jet_mass_producer(args, configs):
                     norm_nuisances[sample] = nuisance_par_dict
 
     # jec variation nuisances
-    jec_var_nuisance = rl.NuisanceParameter("jec_variation", "shape", 0, -10, 10)
+    jec_var_nuisance = rl.NuisanceParameter(nuisance_name("jec_variation"), "shape", 0, -10, 10)
     extra_nuisances = {
         "isr": rl.NuisanceParameter(nuisance_name("isr_variation"), "shape", 0, -10, 10),
         "fsr": rl.NuisanceParameter(nuisance_name("fsr_variation"), "shape", 0, -10, 10),
@@ -759,6 +759,16 @@ if __name__ == "__main__":
         help="specify nuisances for which uncertainty breakdown plots should be created",
     )
 
+    parser.add_argument(
+        "--tagger",
+        type=str,
+        help=(
+            "tagger of main selection. The string will be insterted into histLocation in the configs dict,"
+            "until i come up with a better solution."  # TODO: come up with a better solution
+        ),
+        default=""
+    )
+
     args = parser.parse_args()
 
     args.unfolding = args.mode == "unfolding"
@@ -789,6 +799,10 @@ if __name__ == "__main__":
 
     model_dir = "{}/{}".format(args.workdir, configs["ModelName"])
     configs["ModelDir"] = model_dir
+
+    if not args.tagger.startswith("_") and args.tagger != "":
+        args.tagger = "_" + args.tagger
+    configs["histLocation"] = configs["histLocation"].replace(configs["year"], configs["year"] + args.tagger)
 
     configs["nuisance_year_decorrelation"] = [
         "CMS_lumi",
@@ -843,6 +857,8 @@ if __name__ == "__main__":
             #     combineWorkflow=args.combineWorkflow,
             # )
         if args.build:
+            os.chdir(model_dir)
+            os.system("bash build.sh")
             exit(0)
         # from runFit import runFits
         # runFits([configs['ModelName']])
@@ -853,38 +869,8 @@ if __name__ == "__main__":
     if args.customCombineWrapper:
         exit(0)
 
-    do_postfit = True
-    try:
-        fit_diagnostics = ROOT.TFile(model_dir + "/fitDiagnostics.root", "READ")
-        fit_result = fit_diagnostics.Get("fit_s")
+    do_postfit = extract_fit_results(configs)
 
-        fit_result_parameters = {}
-        for p in fit_result.floatParsFinal():
-            fit_result_parameters[p.GetName()] = [p.getVal(), p.getErrorHi(), p.getErrorLo()]
-        open(model_dir + "/" + configs["ModelName"] + "fitResult.json", "w").write(
-            json.dumps(fit_result_parameters, sort_keys=True, indent=2)
-        )
-
-        # if args.massScales:
-        #     massScales = []
-        #     fitargs = fit_diagnostics.Get("fit_s").floatParsFinal()
-        #     for name in build_mass_scale_variations(configs, args)[1]:
-        #         param = fitargs.find(name)
-        #         center = param.getValV()
-        #         error_up = abs(param.getErrorHi())
-        #         error_down = abs(param.getErrorLo())
-
-        #         massScales.append([center, error_up, -error_down])
-        #     np.save(
-        #         configs["ModelName"] + "/" + configs["ModelName"] + "MassScales.npy",
-        #         np.array(massScales, dtype=float)
-        #     )
-
-        do_postfit = fit_result.status() <= 3
-    except BaseException as e:
-        print("fit failed. only plotting prefit distributions from fitDiangnostics (beware weird shape uncertainties)")
-        print(e)
-        do_postfit = False
     if not args.skipTemplatePlots:
         fitplotter.plot_fit_result(
             configs,
@@ -913,7 +899,7 @@ if __name__ == "__main__":
             fitplotter.plot_qcd_fail_parameters(configs)
 
     if args.JECVar and not args.unfolding and all("jec_variation" not in p for p in args.freezeParameters):
-        args.uncertainty_breakdown.append("jec_variation")
+        args.uncertainty_breakdown.append(nuisance_name_("jec_variation", configs))
     if len(args.uncertainty_breakdown) > 0:
         os.system(
             "./scan_poi.py {} --poi all --plots --lasteffect rest -f {}".format(

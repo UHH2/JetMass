@@ -2,6 +2,7 @@ import ROOT
 from ROOT import gSystem
 import numpy as np
 import rhalphalib as rl
+import json
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 
@@ -166,3 +167,28 @@ def build_mass_scale_variations(configs, args):
                     ]
                 )
     return grid_nuisances, mass_scale_names
+
+
+def extract_fit_results(configs):
+    '''
+    extracting postfit parameters from fitDiagnostics.root
+    '''
+    model_dir = configs.get("ModelDir", configs.get("ModelName"))
+    fit_succeded = True
+    try:
+        fit_diagnostics = ROOT.TFile(model_dir + "/fitDiagnostics.root", "READ")
+        fit_result = fit_diagnostics.Get("fit_s")
+
+        fit_result_parameters = {}
+        for p in fit_result.floatParsFinal():
+            fit_result_parameters[p.GetName()] = [p.getVal(), p.getErrorHi(), p.getErrorLo()]
+        open(model_dir + "/" + configs["ModelName"] + "fitResult.json", "w").write(
+            json.dumps(fit_result_parameters, sort_keys=True, indent=2)
+        )
+
+        fit_succeded = fit_result.status() <= 3
+    except BaseException as e:
+        print("fit failed. only plotting prefit distributions from fitDiangnostics (beware weird shape uncertainties)")
+        print(e)
+        fit_succeded = False
+    return fit_succeded
