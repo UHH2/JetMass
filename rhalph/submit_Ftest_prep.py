@@ -1,10 +1,10 @@
 import FitSubmitter
 from CombineWorkflows import CombineWorkflows
-import json
+from CombineUtils import import_config
 
 # dirty hack to keep this primarily python3 compatible, but still be able to run in py2 wihtout changes
 try:
-    range = xrange
+    range = xrange # noqa
 except BaseException as e:
     print(e)
     pass
@@ -20,6 +20,7 @@ def submit_ftest_prep(
     dry_run=False,
     PseudoData=False,
     unfolding=False,
+    particlenet=False,
 ):
     for i in range(njobs):
         do_qcd_test = False
@@ -56,7 +57,7 @@ def submit_ftest_prep(
 
         cw = CombineWorkflows()
         cw.combineCMSSW = (
-            "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/rhalph/CMSSW_10_2_13/"
+            "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/rhalph/CMSSW_11_3_4/"
         )
         cw.method = "FTestBatch"
         cw.seed = 42 + i
@@ -96,7 +97,11 @@ def submit_ftest_prep(
         fs.batchname = workdir.replace("_", "")
         fs.CombinePath = cw.combineCMSSW
         # fs.extra_jetmass_options = "--build --noMassScales"
-        fs.extra_jetmass_options = "--build" + (" --unfolding --one-bin" if unfolding else "")
+        fs.extra_jetmass_options = " --build "
+        if unfolding:
+            fs.extra_jetmass_options += " --unfolding --one-bin "
+        if particlenet:
+            fs.extra_jetmass_options += " --tagger particlenet "
         fs.fit_qcd_model = do_qcd_test
         fs.scan_TF_orders(DataOrders, QCDOrders, combine_method=cw)
 
@@ -159,12 +164,10 @@ if __name__ == "__main__":
     )
     parser.add_argument("--dryrun", action="store_true", help="perfrom a dry-run")
     parser.add_argument("--unfolding", action="store_true", help="Ftests for unfolding setup. (onegebin)")
+    parser.add_argument("--particlenet", action="store_true", help="Ftests using particlnet as tagger.")
     args = parser.parse_args()
 
-    if args.config.endswith(".json"):
-        configs = json.load(open(args.config))
-    else:
-        execfile(args.config)
+    configs = import_config(args.config)
 
     # Orders = (range(0, 5)), (range(0, 5))
     Orders = (range(0, 7)), (range(0, 7))
@@ -172,11 +175,11 @@ if __name__ == "__main__":
     for algo in ["saturated"]:
         # for algo in ["saturated"]:
         # if algo == "saturated":
-            # # FTests with QCD-TF orders 0x4 and scanning Data-TF orders
-            # submit_ftest_prep(
-            #     config, args.ntoys, args.njobs, QCDOrders=(0, 4), DataOrders=Orders, algo=algo, dry_run=args.dryrun
-            # )
-            # # FTests without QCD-TF and scanning Data-TF orders
+        # # FTests with QCD-TF orders 0x4 and scanning Data-TF orders
+        # submit_ftest_prep(
+        #     config, args.ntoys, args.njobs, QCDOrders=(0, 4), DataOrders=Orders, algo=algo, dry_run=args.dryrun
+        # )
+        # # FTests without QCD-TF and scanning Data-TF orders
         submit_ftest_prep(
             configs,
             args.ntoys,
@@ -186,6 +189,7 @@ if __name__ == "__main__":
             algo=algo,
             dry_run=args.dryrun,
             unfolding=args.unfolding,
+            particlenet=args.particlenet,
         )
         # FTests scanning QCD-TF orders
         # submit_ftest_prep(config, args.ntoys, args.njobs, QCDOrders=Orders,  algo=algo, dry_run=args.dryrun)
