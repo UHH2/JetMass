@@ -402,11 +402,17 @@ def jet_mass_producer(args, configs):
                 norm_unc_val = norm_unc
             else:
                 raise NotImplementedError("provided form of NormUnc parameter is not implemented!")
-            norm_uncertainty_pars.update({
-                name: {region: [rl.NuisanceParameter(nuisance_name("%s%s_normUnc" % (name, region)), "lnN"), norm_unc_val]
-                       for region in norm_uncertainty_regions
-                       }
-            })
+            norm_uncertainty_pars.update(
+                {
+                    name: {
+                        region: [
+                            rl.NuisanceParameter(nuisance_name("%s%s_normUnc" % (name, region)), "lnN"),
+                            norm_unc_val,
+                        ]
+                        for region in norm_uncertainty_regions
+                    }
+                }
+            )
 
         for sample in channels[channel_name]["samples"]:
             if sample in norm_nuisances:
