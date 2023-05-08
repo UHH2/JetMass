@@ -10,7 +10,6 @@ configs = {
     # "Pseudo": ["fromMC"],
     "binning": [30, 300, 5],
     "massScaleFactor": 2.0,
-    "BernsteinOrders": [2, 3],
     "InitialQCDFit": "False",
     "InitialQCDFitOrders": [1, 3],
     "VaryOnlySignal": "False",

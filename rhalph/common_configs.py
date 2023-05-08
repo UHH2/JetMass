@@ -1,3 +1,33 @@
+
+
+def bernstein_orders(year,  particlenet=False, TF="Data"):
+    orders_particlenet = {
+        "Data": {
+            "UL16preVFP": [2, 5],
+            "UL16postVFP": [2, 4],
+            "UL17": [2, 4],
+            "UL18": [2, 4],
+        },
+        "QCD": {},
+        "Data2TF": {},
+    }
+    orders_substructure = {
+        "Data": {
+            "UL16preVFP": [2, 2],
+            "UL16postVFP": [1, 2],
+            "UL17": [2, 3],
+            "UL18": [2, 3],
+        },
+        "QCD": {},
+        "Data2TF": {},
+    }
+    print("orders chosen for ", year, TF, particlenet)
+    if particlenet:
+        return orders_particlenet[TF][year]
+    else:
+        return orders_substructure[TF][year]
+
+
 def w_channels(w_pt_edges):
     return [
         (

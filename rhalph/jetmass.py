@@ -3,6 +3,7 @@ from __future__ import print_function
 import sys
 import os
 import numpy as np
+import common_configs
 import ROOT  # type: ignore
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 from jetmass_scale_fit_utils import scale_lumi, build_pseudo, build_mass_scale_variations, extract_fit_results  # noqa
@@ -799,6 +800,13 @@ if __name__ == "__main__":
 
     model_dir = "{}/{}".format(args.workdir, configs["ModelName"])
     configs["ModelDir"] = model_dir
+
+    if "BernsteinOrders" not in configs:
+        print("taking default BernsteinOrders from common configs..")
+        particlenet = "particlenet" in args.tagger
+        configs["BernsteinOrders"] = common_configs.bernstein_orders(
+            configs["year"], TF="Data", particlenet=particlenet
+        )
 
     if not args.tagger.startswith("_") and args.tagger != "":
         args.tagger = "_" + args.tagger

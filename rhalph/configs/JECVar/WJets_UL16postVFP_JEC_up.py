@@ -9,7 +9,6 @@ configs = {
     "histLocation": "../python/flat_templates/templates_UL16postVFP_1d_jec_up.root",
     "binning": [50, 300, 5],
     "massScaleFactor": 2.0,
-    "BernsteinOrders": [1, 2],
     "InitialQCDFit": "False",
     "InitialQCDFitOrders": [2, 2],
     "VaryOnlySignal": "True",
