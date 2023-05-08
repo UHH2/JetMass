@@ -20,7 +20,7 @@ def nlls(filename):
         # raise BaseException("One of the Fits seems to have failed!")
         # warnings.simplefilter("once", UserWarning)
         warnings.warn("Not able to retrieve limits from " + filename + " !")
-        warnings.warn(e)
+        warnings.warn(str(e))
         return [None], [None]
 
 
