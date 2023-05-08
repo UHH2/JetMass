@@ -1,6 +1,6 @@
 
 
-def bernstein_orders(year,  particlenet=False, TF="Data"):
+def bernstein_orders(year, particlenet=False, TF="Data"):
     orders_particlenet = {
         "Data": {
             "UL16preVFP": [2, 5],
