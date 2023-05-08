@@ -21,7 +21,6 @@ def bernstein_orders(year,  particlenet=False, TF="Data"):
         "QCD": {},
         "Data2TF": {},
     }
-    print("orders chosen for ", year, TF, particlenet)
     if particlenet:
         return orders_particlenet[TF][year]
     else:
