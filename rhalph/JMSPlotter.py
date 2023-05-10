@@ -512,10 +512,28 @@ def create_plotter(fit_result_path: str, years: List, regions: List, JEC: bool =
 
 
 if __name__ == "__main__":
-    years = ["UL16preVFP", "UL16postVFP", "UL17", "UL18"]
-    regions = ["TTBar", "VJets", "Combined"]
+    # years = ["UL17"]
+    # regions = ["Combined"]
+    
+    # plotter = {
+    #     "Substructure":create_plotter("fitResults_03-05-23_substructure.json", years, regions),
+    #     "ParticleNet":create_plotter("fitResults_03-05-23_particlenet.json", years, regions),        
+    # }
+
+    # f,ax = setup_ax(10,7)
+    # for name, jms_plotter in plotter.items():
+    #     jms_plotter.dHists["CombinedUL17"].plot_errorbar(
+    #         ax=ax, split_uncertainty=True, alpha=0.8, label=f"UL17 {name}", fmt=".",
+    #         linewidth=0.9,
+    #     )
+    # finalize_ax(ax, fname="JMSSF_03-05-23_tagger_comp/Combined_UL17_comparison.pdf")
+    # exit(0)
+    # years = ["UL16preVFP", "UL16postVFP", "UL17", "UL18"]
+    # regions = ["TTBar", "VJets", "Combined"]
+    years=[""]
+    regions = ["FullRunII"]
     plotter = {}
-    fitDateStr = "02-05-23"
+    fitDateStr = "09-05-23_Substructure"
     plotter[f"{fitDateStr}_JECNuis"] = create_plotter(f"fitResults_{fitDateStr}_JECNuis.json", years, regions)
     plotter[f"{fitDateStr}_JECVarAsInput"] = create_plotter(f"fitResults_{fitDateStr}_JECVarAsInput.json", years, regions)
 
@@ -528,10 +546,12 @@ if __name__ == "__main__":
         f"{fitDateStr}_JECNuis": "JEC Var nuisance",
         f"{fitDateStr}_JECVarAsInput": "JEC nominal",
     }
+    print("build plotters")
 
     for region in regions:
         for year in years:
             f, ax = setup_ax(10, 7)
+            print(region, year)
             for date, jms_plotter in plotter.items():
                 jms_plotter.dHists[f"{region}{year}"].plot_errorbar(
                     ax=ax, split_uncertainty=True, alpha=0.8, label=f"{region} {year} {label_suffix[date]}", fmt=".",
@@ -561,11 +581,12 @@ if __name__ == "__main__":
                     )
 
             finalize_ax(ax, fname=f"JMSSF_{fitDateStr}/{region}_{year}_comparison.pdf", year=year)
-
+    print("second round")
     plotter[f"{fitDateStr}_JECNuis"] = create_plotter(f"fitResults_{fitDateStr}_JECNuis.json", years, regions)
     plotter[f"{fitDateStr}_JECVarAsInput"] = create_plotter(f"fitResults_{fitDateStr}_JECVarAsInput.json", years, regions)
     for date, jms_plotter in plotter.items():
         for region in regions:
+            print(date, region)
             f, ax = setup_ax(10, 7)
             for year in years:
                 jms_plotter.dHists[f"{region}{year}"].plot_errorbar(
