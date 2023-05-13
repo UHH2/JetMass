@@ -124,7 +124,8 @@ def build_mass_scale_variations(configs, args):
                     }
                 }
             )
-            if any(s in selections for s in ["W", "Zbb"]):
+            # if any(s in selections for s in ["W", "Zbb"]):
+            if "Zbb" in selections:
                 separate_mass_scale_setup_dict.update(
                     {"Z_" + mass_scale_suffix: {"regions": ["pass", "passW", "fail"], "samples": ["ZJetsMatched"]}}
                 )
