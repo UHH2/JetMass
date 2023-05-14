@@ -8,7 +8,8 @@ class FitResults:
     def __init__(self, config, fit_dir):
         self._config = config
         self.name = self._config["ModelName"]
-        self.fit_result = json.load(open(f"{fit_dir}/{self.name}fitResult.json", "r"))
+        fit_result_path = f"{fit_dir}/{self.name}fitResult.json"
+        self.fit_result = None if not os.path.isfile(fit_result_path) else json.load(open(fit_result_path, "r"))
         self.poi_scan_result = None
         scan_result_path = f"{fit_dir}/{self.name}fitResultSplitUnc.json"
         if os.path.isfile(scan_result_path):
