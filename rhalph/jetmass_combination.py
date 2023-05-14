@@ -324,7 +324,7 @@ if __name__ == "__main__":
         name=args.name, year=args.year
     )
     JMS_Combination.extra_options = args.extra_options
-    # JMS_Combination.build_models()
+    JMS_Combination.build_models()
 
     JMS_Combination.combine_models()
     JMS_Combination.run_combined_fit()
