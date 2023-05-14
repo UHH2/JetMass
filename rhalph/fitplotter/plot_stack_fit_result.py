@@ -6,7 +6,7 @@ sys.path.append("/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6
 import plotter  # noqa: E402
 import cms_style  # noqa: E402
 
-cms_style.cms_style()
+# cms_style.cms_style()
 
 genbin_colors_hex = [
     # diverging color-scheme

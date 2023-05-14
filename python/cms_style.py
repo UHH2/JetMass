@@ -167,7 +167,6 @@ def cms_style():
     cmsStyle = ROOT.TStyle("CMS", "CMS approved plots style")
 
     cmsStyle.SetLegendBorderSize(0)
-
     cmsStyle.SetFrameBorderMode(0)
     cmsStyle.SetCanvasBorderMode(0)
     cmsStyle.SetPadBorderMode(0)
@@ -176,6 +175,7 @@ def cms_style():
     cmsStyle.SetTitleColor(1)
     cmsStyle.SetStatColor(0)
     cmsStyle.SetFrameFillColor(0)
+    cmsStyle.SetEndErrorSize(2)
 
     cmsStyle.SetPaperSize(20, 26)
     cmsStyle.SetPadTopMargin(0.055)
@@ -216,6 +216,58 @@ def cms_style():
 
     ROOT.gROOT.SetStyle("Plain")
     ROOT.gROOT.SetStyle("CMS")
+    
+def set_style():
+    ROOT.gStyle.SetMarkerSize(2.5)
+    ROOT.TGaxis.SetExponentOffset(-0.06, 0, "y")
+
+    ROOT.gStyle.SetLegendBorderSize(0)
+    ROOT.gStyle.SetFrameBorderMode(0)
+    ROOT.gStyle.SetCanvasBorderMode(0)
+    ROOT.gStyle.SetPadBorderMode(0)
+    ROOT.gStyle.SetPadColor(0)
+    ROOT.gStyle.SetCanvasColor(0)
+    ROOT.gStyle.SetTitleColor(1)
+    ROOT.gStyle.SetStatColor(0)
+    ROOT.gStyle.SetFrameFillColor(0)
+    ROOT.gStyle.SetEndErrorSize(2)
+
+    ROOT.gStyle.SetPaperSize(20, 26)
+    ROOT.gStyle.SetPadTopMargin(0.055)
+    ROOT.gStyle.SetPadRightMargin(0.055)
+
+    ROOT.gStyle.SetPadBottomMargin(0.15 * label_size_modifier)
+    ROOT.gStyle.SetPadLeftMargin(0.15 * label_size_modifier)
+
+    # ROOT.gStyle.SetTextFont(132)
+    ROOT.gStyle.SetTextFont(42)
+    ROOT.gStyle.SetTextSize(0.08)
+    ROOT.gStyle.SetLabelFont(42, "x")
+    ROOT.gStyle.SetLabelFont(42, "y")
+    ROOT.gStyle.SetTitleOffset(1.15, "x")
+    ROOT.gStyle.SetTitleOffset(1.15, "y")
+    ROOT.gStyle.SetTitleOffset(1.15, "z")
+    ROOT.gStyle.SetLabelFont(42, "z")
+    ROOT.gStyle.SetLabelSize(0.04, "x")
+    ROOT.gStyle.SetTitleSize(0.05, "x")
+    ROOT.gStyle.SetNdivisions(506, "x")
+    ROOT.gStyle.SetLabelSize(0.04, "y")
+    ROOT.gStyle.SetTitleSize(0.05, "y")
+    ROOT.gStyle.SetNdivisions(506, "y")
+    ROOT.gStyle.SetLabelSize(0.05, "z")
+    ROOT.gStyle.SetTitleSize(0.06, "z")
+    ROOT.gStyle.SetNdivisions(506, "z")
+
+    ROOT.gStyle.SetMarkerStyle(8)
+    ROOT.gStyle.SetHistLineWidth(2)
+    ROOT.gStyle.SetLineStyleString(2, "[12 12]")
+
+    ROOT.gStyle.SetOptTitle(0)
+    ROOT.gStyle.SetOptStat(0)
+    ROOT.gStyle.SetOptFit(0)
+
+    ROOT.gStyle.SetPalette(1)
+    ROOT.gStyle.SetOptTitle(0)
 
 
 def setup_hist(hist):

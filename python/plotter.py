@@ -8,7 +8,7 @@ import logging
 
 logger = logging.getLogger()
 
-cms_style.cms_style()
+cms_style.set_style()
 
 
 # gROOT.SetBatch(True)
@@ -113,7 +113,6 @@ colors = {
     "other_ttbar": 921,
 }
 MC_stat_err_color = 922
-MC_stat_err_color = ROOT.kGray + 2
 MC_stat_err_fillstyle = 3235  # 3204
 
 legend_names = {
@@ -431,6 +430,8 @@ lumis = {
     "UL17": 41479.68052876168 / 1000.0,
     "UL18": 59832.47533908866 / 1000.0,
 }
+lumis["RunII"] = sum([lumi for year, lumi in lumis.items() if "UL" in year])
+lumis["UL16"] = sum([lumi for year, lumi in lumis.items() if "UL16" in year])
 
 
 obs_draw_option = "PE1X0"
@@ -496,12 +497,12 @@ def get_hists(
     if not pseudo_data:
         for data_name in ["Data", "data_obs", "data"]:
             h_data = f_hists.Get(str(hist_dir % data_name))
-            print(hist_dir % data_name)
+            # print(hist_dir % data_name)
             try:
                 h_data.GetName()
                 break
             except BaseException as e:
-                logger.exception("tried getting data hist with" + data_name + "(which failed miserably)")
+                logger.info("tried getting data hist with " + data_name + "(which failed miserably)")
                 logger.exception(e)
 
         if pseudo_data_file:
@@ -628,7 +629,7 @@ def plot_data_mc(
 ):
 
     cms_style.bottom_right_margin_modifier = 1.5 if cutflow else 1.0
-    cms_style.cms_style()
+    # cms_style.cms_style()
     if h_data is None and h_mc is None and len(additional_hists) == 0:
         raise ValueError("No Histograms were provided!")
     c_width = 1200 if ultrawide else (900 if cutflow else 600)
@@ -712,8 +713,6 @@ def plot_data_mc(
         bkg_err.SetMarkerSize(0)
         legend.AddEntry(bkg_err, "MC stat. Unc.", "f")
 
-    # elif(len(additional_hists)>0):
-    #     max_val = max(max_val ,additional_hists[0].GetMaximum())
     frame_hist = (None, None)
     if h_data is not None:
         h_data.SetLineColor(obs_line_color)
