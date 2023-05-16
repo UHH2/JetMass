@@ -87,7 +87,8 @@ def plot_fit_result(
     plotter.additional_text_size_modifier = 1.5
     plotter.draw_extra_text = True
     plotter.year = config.get("year", "2017")
-    plotter.legend_bbox = (0.60, 0.2, 0.9, 0.6)
+    # plotter.legend_bbox = (0.60, 0.2, 0.9, 0.6)
+    plotter.legend_bbox = (0.60, 0.5, 0.9, 0.9)
     # plotter.y_range_ratio = [0.8,1.2]
 
     pseudo_data_info = config.get("Pseudo", [])
@@ -188,6 +189,10 @@ def plot_fit_result(
                     + "\\ %s #bf{%s}" % (plotter.region_tex[channel["selection"]][region], suffix)
                 )
 
+                ratio_y_ranges = {
+                    "top": (0.65,1.35),
+                    "W": (0.945,1.055),
+                }
                 plotter.plot_data_mc(
                     h_obs,
                     fit_shapes,
@@ -196,4 +201,5 @@ def plot_fit_result(
                     legend_entries=legend_entries,
                     additional_hists=additional_hists,
                     additional_text=additional_text,
+                    ratio_y_range = ratio_y_ranges[channel["selection"]]
                 )

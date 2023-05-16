@@ -300,8 +300,8 @@ merged_hists = {
     "TTbarMergedTop": ["TTToSemiLeptonic_mergedTop"],
     "TTbarMergedW": ["TTToSemiLeptonic_mergedW"],
     "TTbarMergedQB": ["TTToSemiLeptonic_mergedQB"],
-    "TTbarNonSemiLep": ["TTToHadronic", "TTTo2l2Nu"],
-    "TTbarNotMerged": ["TTToHadronic", "TTTo2l2Nu", "TTToSemiLeptonic_notMerged"],
+    "TTbarNonSemiLep": ["TTToHadronic", "TTTo2L2Nu"],
+    "TTbarNotMerged": ["TTToHadronic", "TTTo2L2Nu", "TTToSemiLeptonic_notMerged"],
     # "ST": ["ST_sch",  "ST_tch", "ST_tWch"],
     "ST": ["ST_s", "ST_t", "ST_tW"],
     "other_ttbar": ["QCD", "DYJets"],
@@ -626,6 +626,7 @@ def plot_data_mc(
     additional_hists=[],
     additional_data=[],
     cutflow=False,
+    ratio_y_range=(0.75, 1.25),
 ):
 
     cms_style.bottom_right_margin_modifier = 1.5 if cutflow else 1.0
@@ -791,7 +792,8 @@ def plot_data_mc(
         legend_canvas.SaveAs(out_dir + "/legend.pdf")
         plotpad.cd()
     else:
-        legend.Draw("SAME")
+        # legend.Draw("SAME")
+        legend.Draw()
 
     if additional_pad is not None:
 
@@ -854,8 +856,27 @@ def plot_data_mc(
             ratio_hist[0].SetMarkerStyle(8)
             ratio_hist[0].SetMarkerSize(0.5)
             cms_style.setup_ratio_hist(ratio_hist[0])
-            ratio_hist[0].GetYaxis().SetRangeUser(*setup_yrange(ratio_hist[0]))
+            ratio_y_min, ratio_y_max = ratio_y_range
+            ratio_hist[0].GetYaxis().SetRangeUser(ratio_y_min, ratio_y_max)
             ratio_hist[0].Draw("PE1X0")
+            arrows = []
+            arrow_length = (1 - ratio_y_min) / 5
+            arrow_color = ROOT.kRed - 7  # 13
+            for ibin in range(1, ratio_hist[0].GetNbinsX() + 1):
+                bin_content = ratio_hist[0].GetBinContent(ibin)
+                bin_center = ratio_hist[0].GetBinCenter(ibin)
+                if bin_content > ratio_y_max:
+                    arrows.append(
+                        ROOT.TArrow(bin_center, ratio_y_max - arrow_length, bin_center, ratio_y_max, 0.01, "|>")
+                    )
+                elif bin_content < ratio_y_min and bin_content > 0:
+                    arrows.append(
+                        ROOT.TArrow(bin_center, ratio_y_min + arrow_length, bin_center, ratio_y_min, 0.01, "|>")
+                    )
+                for arrow in arrows:
+                    arrow.SetLineColor(arrow_color)
+                    arrow.SetFillColor(arrow_color)
+                    arrow.Draw()
 
             ratio_stat_err = bkg_err.Clone()
             ratio_stat_err.Divide(bkg_err)
@@ -881,7 +902,6 @@ def plot_data_mc(
         for h in ratio_hist:
             h.GetXaxis().SetTitle(h_data.GetXaxis().GetTitle())
             h.GetYaxis().SetTitle(ratio_hist_yTitle)
-            h.GetYaxis().SetRangeUser(*setup_yrange(ratio_hist[0]))
 
         ratioXMin = ratio_hist[0].GetXaxis().GetXmin()
         ratioXMax = ratio_hist[0].GetXaxis().GetXmax()
