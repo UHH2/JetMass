@@ -316,7 +316,7 @@ if __name__ == "__main__":
     parser.add_argument("--name", default="FullRunII")
     parser.add_argument("--year", default="RunII")
     parser.add_argument("--extra-options", default="")
-
+    parser.add_argument("--justplots", action="store_true", help="just redo the plots.")
     args = parser.parse_args()
 
     JMS_Combination = JetMassCombination(
@@ -324,14 +324,16 @@ if __name__ == "__main__":
         name=args.name, year=args.year
     )
     JMS_Combination.extra_options = args.extra_options
-    JMS_Combination.build_models()
 
-    JMS_Combination.combine_models()
-    JMS_Combination.run_combined_fit()
+    if not args.justplots:
+        JMS_Combination.build_models()
 
-    JMS_Combination.combine_fit_shapes()
+        JMS_Combination.combine_models()
+        JMS_Combination.run_combined_fit()
 
+        JMS_Combination.combine_fit_shapes()
     do_postfit = extract_fit_results(JMS_Combination.combined_config)
+    # do_postfit=True
     fitplotter.plot_fit_result(
         JMS_Combination.combined_config,
         plot_total_sig_bkg=False,
