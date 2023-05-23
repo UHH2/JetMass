@@ -209,8 +209,13 @@ JetMassModule::JetMassModule(Context & ctx){
 
   common.reset(new CommonModules());
   //muid and eleid are taken from release dependent header file (JetMassUtils10[2,6]X.h)
-  common->set_muon_id(muid);
-  common->set_electron_id(eleid);
+  if(isttbarSel){
+    common->set_muon_id(muid);
+    common->set_electron_id(eleid);
+  }else if(isvjetsSel){
+    common->set_muon_id(muid_loose);
+    common->set_electron_id(eleid_loose);
+  }
   common->set_jet_id(jetid);
   common->switch_jetlepcleaner(true);
   common->switch_metcorrection(true);
