@@ -18,7 +18,7 @@ class DDTMapPrep(processor.ProcessorABC):
 
         year_axis = hist.axis.StrCategory([], name="year", label="Year", growth=True)
 
-        pT_ax = hist.axis.Regular(500,0.0,5000.0, name="pt", label="$p_{T}$ [GeV]")
+        pT_ax = hist.axis.Regular(500, 0.0, 5000.0, name="pt", label="$p_{T}$ [GeV]")
         rho_ax = hist.axis.Regular(300, -10.0, 0.0, name="rho", label="$\\rho$ [GeV]")
         N2_ax = hist.axis.Regular(100, 0, 1.5, name="n2", label="N2")
 
@@ -54,7 +54,7 @@ class DDTMapPrep(processor.ProcessorABC):
         selection.add("cleaner", (events.pt > 170) & (abs(events.eta) < 2.4))
         selection.add("jetpfid", events.jetpfid == 1)
         selection.add("trigger", events['trigger_bits'][:, 7] == 1)
-        
+
         events = events[selection.require(cleaner=True, jetpfid=True, trigger=True)]
 
         # HEM15/16 Treatment
@@ -70,7 +70,7 @@ class DDTMapPrep(processor.ProcessorABC):
             & (events.phi < HEM_phi_max)
             & (events.phi > HEM_phi_min)
         )
-        treat_HEM = False
+
         if year == "UL18":
             events.weight = ak.where(
                 HEM_affected_event_jets, events.weight * (1 - HEM_affected_lumi_fraction), events.weight
@@ -136,7 +136,14 @@ if __name__ == "__main__":
         for y in args.years
     }
     if args.debug:
-        samples = {"UL18":{"files":["/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/ForDDTMaps/workdir_vjets_ddt_UL18/uhh2.AnalysisModuleRunner.MC.QCD_HT700to1000_UL18_71.root"]}}
+        samples = {
+            "UL18": {
+                "files": [
+                    "/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/ForDDTMaps/workdir_vjets_ddt_UL18/"
+                    "uhh2.AnalysisModuleRunner.MC.QCD_HT700to1000_UL18_71.root"
+                ]
+            }
+        }
 
     for k, v in samples.items():
         print(k, len(v["files"]))
