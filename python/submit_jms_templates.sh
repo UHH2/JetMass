@@ -4,6 +4,10 @@ function submit_templates {
   SCALEOUT=$1
   VAR=${2:-nominal}
   TAGGER=${3:-substructure}
+  OUTDIR="coffea_hists/"
+  if [ ! -d ${OUTDIR} ]; then
+    mkdir -p $OUTDIR
+  fi
   echo $SCALEOUT $VAR
   if [ "$TAGGER" == "substructure" ]; then
     NAMESUFFIX=""
@@ -17,14 +21,14 @@ function submit_templates {
   do
     if [ ${VAR} == "nominal" ]; then
       echo "default -> ${YEAR}" 
-      nohup ./JetMassTemplateProcessor.py -o coffea_hists/templates_${YEAR}${NAMESUFFIX}.coffea --year ${YEAR} --tagger ${TAGGER} --scaleout ${SCALEOUT} > ${YEAR}${NAMESUFFIX}.stdout &
+      nohup ./JetMassTemplateProcessor.py -o ${OUTDIR}/templates_${YEAR}${NAMESUFFIX}.coffea --year ${YEAR} --tagger ${TAGGER} --scaleout ${SCALEOUT} > ${YEAR}${NAMESUFFIX}.stdout &
     elif [[ ${VAR} == *"jec"* ]]; then
       echo "jec-variation (${VAR}) -> ${YEAR}" $VAR $YEAR
       DIRECTION=${VAR#*_}
-      nohup ./JetMassTemplateProcessor.py -o coffea_hists/templates_${YEAR}${NAMESUFFIX}_${VAR}.coffea --year ${YEAR} --tagger ${TAGGER} --JEC ${DIRECTION} --scaleout ${SCALEOUT} > ${YEAR}${NAMESUFFIX}_${VAR}.stdout &
+      nohup ./JetMassTemplateProcessor.py -o ${OUTDIR}/templates_${YEAR}${NAMESUFFIX}_${VAR}.coffea --year ${YEAR} --tagger ${TAGGER} --JEC ${DIRECTION} --scaleout ${SCALEOUT} > ${YEAR}${NAMESUFFIX}_${VAR}.stdout &
     else
       echo "variation ${VAR} -> ${YEAR}"
-      nohup ./JetMassTemplateProcessor.py -o coffea_hists/templates_${YEAR}${NAMESUFFIX}_${VAR}.coffea --year ${YEAR} --tagger ${TAGGER} --variation ${VAR} --scaleout ${SCALEOUT} > ${YEAR}${NAMESUFFIX}_${VAR}.stdout &
+      nohup ./JetMassTemplateProcessor.py -o ${OUTDIR}/templates_${YEAR}${NAMESUFFIX}_${VAR}.coffea --year ${YEAR} --tagger ${TAGGER} --variation ${VAR} --scaleout ${SCALEOUT} > ${YEAR}${NAMESUFFIX}_${VAR}.stdout &
     fi
   done
 }

@@ -836,6 +836,8 @@ if __name__ == "__main__":
         open(model_dir + "/config.json", "w").write(json.dumps(configs, sort_keys=False, indent=2))
         if not args.customCombineWrapper:
             cw = CombineWorkflows(build_only=args.build)
+            if args.skipTemplatePlots:
+                cw._skip_plotting = True
             cw.workspace = model_dir + "/model_combined.root"
             if args.unfolding:
                 cw.method = "unfolding"

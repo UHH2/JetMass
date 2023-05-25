@@ -91,6 +91,7 @@ class CombineWorkflows(object):
         self._workspace = 'model_combined.root'
         self._method = ""
         self._build_prefix = "#" if build_only else ""
+        self._skip_plotting = False
 
         def dummyMethod(debug=True):
             raise BaseException("You have not selected a CombineWorkflow method! Choose from: "+", ".join(self.methods))
@@ -426,14 +427,15 @@ class CombineWorkflows(object):
             ),
             debug,
         )
-        command_string += exec_bash(
-            "{BUILDPREFIX}PostFitShapesFromWorkspace -w {WORKSPACE} --output {MODELDIR}fit_shapes.root --postfit "
-            "--sampling  -f {MODELDIR}fitDiagnostics.root:fit_s".format(
-                BUILDPREFIX=self._build_prefix,
-                WORKSPACE=self.workspace, MODELDIR=self.modeldir
-            ),
-            debug,
-        )
+        if not self._skip_plotting:
+            command_string += exec_bash(
+                "{BUILDPREFIX}PostFitShapesFromWorkspace -w {WORKSPACE} --output {MODELDIR}fit_shapes.root --postfit "
+                "--sampling  -f {MODELDIR}fitDiagnostics.root:fit_s".format(
+                    BUILDPREFIX=self._build_prefix,
+                    WORKSPACE=self.workspace, MODELDIR=self.modeldir
+                ),
+                debug,
+            )
 
         # command_string += exec_bash(
         #     "combine -M MultiDimFit --setParameters={PARAMETERS} -t -1 -m 0 {WORKSPACE} "

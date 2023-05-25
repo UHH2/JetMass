@@ -374,7 +374,7 @@ def setup_pads(c, logY=False):
     plotpad.Draw()
 
     if ratio_plot:
-        plotpad.SetBottomMargin(0.016 * label_size_modifier)
+        plotpad.SetBottomMargin(0.02 * label_size_modifier)
         ratiopad.SetTopMargin(0.016)
         ratiopad.SetBottomMargin(0.35 * bottom_right_margin_modifier)
         ratiopad.SetLeftMargin(0.14 * label_size_modifier)

@@ -4,7 +4,7 @@ import common_configs
 pt_edges = [500, 650, 800, 1200]
 configs = {
     "year": "UL17",
-    "ModelName": "VJetsUL17",
+    "ModelName": "WJetsUL17",
     "gridHistFileName": "../Histograms/grid_oneScale.root",
     "histLocation": "../python/flat_templates/templates_UL17_1d.root",
     "binning": [50, 300, 5],

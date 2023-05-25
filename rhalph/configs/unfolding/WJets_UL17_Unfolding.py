@@ -4,7 +4,7 @@ import common_configs
 pt_edges = [500, 575, 650, 725, 800, 1000, 1200, "Inf"]
 configs = {
     "year": "UL17",
-    "ModelName": "VJetsUL17UnfoldingPrefitAsimovUniform0p825",
+    "ModelName": "WJetsUL17UnfoldingPrefitAsimovUniform0p825",
     "gridHistFileName": "../Histograms/grid_oneScale.root",
     "histLocation": "../python/flat_templates/templates_UL17_1d_unfolding.root",
     # "Pseudo": ["fromMC"],

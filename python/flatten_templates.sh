@@ -29,8 +29,13 @@ flatten_templates () {
   indir=coffea_hists/
 
   VAR=${1:-none}
-  NAMEPREFIX=${2:-""}
-  
+  MASS=$2
+  if [ "$MASS" == "mPnet" ];then
+  outdir="${outdir}/mPnet/"
+  fi
+
+  NAMEPREFIX=${3:-""}
+
   if [ "$VAR" == "none" ]; then
     echo "You have to provide a variation name!"
     exit -1
@@ -42,32 +47,32 @@ flatten_templates () {
     if [ "$VAR" == "nominal" ]; then
       echo "flattening ${YEAR} templates for variation of ${VAR}"
       # JEC on pt
-      ./create_root_templates.py -i $indir/${NAME}.coffea -o $outdir/${NAME}_1d_jecpt --JEC "pt"
-      ./create_root_templates.py -i $indir/${NAME}.coffea -o $outdir/${NAME}_1d_jecpt_unfolding --JEC "pt" --unfolding
+      ./create_root_templates.py -i $indir/${NAME}.coffea -o $outdir/${NAME}_1d_jecpt --JEC "pt" --mass ${MASS}
+      ./create_root_templates.py -i $indir/${NAME}.coffea -o $outdir/${NAME}_1d_jecpt_unfolding --JEC "pt" --unfolding --mass ${MASS}
       
       # JEC on pt&mJ
-      ./create_root_templates.py -i $indir/${NAME}.coffea -o $outdir/${NAME}_1d --JEC "pt&mJ"
-      ./create_root_templates.py -i $indir/${NAME}.coffea -o $outdir/${NAME}_1d_unfolding --JEC "pt&mJ" --unfolding
+      ./create_root_templates.py -i $indir/${NAME}.coffea -o $outdir/${NAME}_1d --JEC "pt&mJ" --mass ${MASS}
+      ./create_root_templates.py -i $indir/${NAME}.coffea -o $outdir/${NAME}_1d_unfolding --JEC "pt&mJ" --unfolding --mass ${MASS}
     elif [ "$VAR" == "toppt_off" ]; then
       echo "flattening ${YEAR} templates for variation of ${VAR}"
       # JEC on pt
-      ./create_root_templates.py -i $indir/${NAME}_${VAR}.coffea -o $outdir/${NAME}_1d_jecpt_${VAR} --JEC "pt"
-      ./create_root_templates.py -i $indir/${NAME}_${VAR}.coffea -o $outdir/${NAME}_1d_jecpt_unfolding_${VAR} --JEC "pt" --unfolding
+      ./create_root_templates.py -i $indir/${NAME}_${VAR}.coffea -o $outdir/${NAME}_1d_jecpt_${VAR} --JEC "pt" --mass ${MASS}
+      ./create_root_templates.py -i $indir/${NAME}_${VAR}.coffea -o $outdir/${NAME}_1d_jecpt_unfolding_${VAR} --JEC "pt" --unfolding --mass ${MASS}
 
       # JEC on pt&mJ
-      ./create_root_templates.py -i $indir/${NAME}_${VAR}.coffea -o $outdir/${NAME}_1d_${VAR} --JEC "pt&mJ"
-      ./create_root_templates.py -i $indir/${NAME}_${VAR}.coffea -o $outdir/${NAME}_1d_unfolding_${VAR} --JEC "pt&mJ" --unfolding
+      ./create_root_templates.py -i $indir/${NAME}_${VAR}.coffea -o $outdir/${NAME}_1d_${VAR} --JEC "pt&mJ" --mass ${MASS}
+      ./create_root_templates.py -i $indir/${NAME}_${VAR}.coffea -o $outdir/${NAME}_1d_unfolding_${VAR} --JEC "pt&mJ" --unfolding --mass ${MASS}
     else
       for DIR in up down;
       do
         echo "flattening ${YEAR} templates for variation of ${VAR}"
         # JEC on pt
-        ./create_root_templates.py -i $indir/${NAME}_${VAR}_${DIR}.coffea -o $outdir/${NAME}_1d_jecpt_${VAR}_${DIR} --JEC "pt"
-        ./create_root_templates.py -i $indir/${NAME}_${VAR}_${DIR}.coffea -o $outdir/${NAME}_1d_jecpt_unfolding_${VAR}_${DIR} --JEC "pt" --unfolding
+        ./create_root_templates.py -i $indir/${NAME}_${VAR}_${DIR}.coffea -o $outdir/${NAME}_1d_jecpt_${VAR}_${DIR} --JEC "pt" --mass ${MASS}
+        ./create_root_templates.py -i $indir/${NAME}_${VAR}_${DIR}.coffea -o $outdir/${NAME}_1d_jecpt_unfolding_${VAR}_${DIR} --JEC "pt" --unfolding --mass ${MASS}
 
         # JEC on pt&mJ
-        ./create_root_templates.py -i $indir/${NAME}_${VAR}_${DIR}.coffea -o $outdir/${NAME}_1d_${VAR}_${DIR} --JEC "pt&mJ"
-        ./create_root_templates.py -i $indir/${NAME}_${VAR}_${DIR}.coffea -o $outdir/${NAME}_1d_unfolding_${VAR}_${DIR} --JEC "pt&mJ" --unfolding
+        ./create_root_templates.py -i $indir/${NAME}_${VAR}_${DIR}.coffea -o $outdir/${NAME}_1d_${VAR}_${DIR} --JEC "pt&mJ" --mass ${MASS}
+        ./create_root_templates.py -i $indir/${NAME}_${VAR}_${DIR}.coffea -o $outdir/${NAME}_1d_unfolding_${VAR}_${DIR} --JEC "pt&mJ" --unfolding --mass ${MASS}
       done
     fi
   done
@@ -78,6 +83,9 @@ VARS_ALL=(nominal jec fsr isr toppt_off)
 VARS=(${1:-${VARS_ALL[@]}})
 MAXPROCS=5
 NAMEPREFIX=_particlenet
+# NAMEPREFIX=
+# MASS=mPnet
+MASS=mjet
 export -f flatten_templates
 
-printf '%s\n' "${VARS[@]}" | xargs -n1 -P${MAXPROCS} -I{} bash -c 'flatten_templates "$@"' _ {} $NAMEPREFIX
+printf '%s\n' "${VARS[@]}" | xargs -n1 -P${MAXPROCS} -I{} bash -c 'flatten_templates "$@"' _ {} $MASS $NAMEPREFIX 

@@ -45,9 +45,17 @@ class JMSTemplates(processor.ProcessorABC):
         eta_regions_ax = hist.axis.Variable([0, 1.3, 2.5], name="abs_eta_regions", label=r"$|\eta|$")
         phi_ax = hist.axis.Regular(100, -4, 4, name="phi", label=r"$\Phi$")
 
+        chf_ax = hist.axis.Regular(51, 0, 1.02, name="chf", label="CHF")
+        nhf_ax = hist.axis.Regular(51, 0, 1.02, name="nhf", label="NHF")
+
         mJ_fit_ax = hist.axis.Regular(
             500, 0.0, 500.0, name="mJ", label=r"$m_{SD}$ [GeV]"
         )
+
+        mPnet_fit_ax = hist.axis.Regular(
+            500, 0.0, 500.0, name="mPnet", label=r"$m_{\mathrm{ParticleNet}}$ [GeV]"
+        )
+
         rho_ax = hist.axis.Regular(100, -10.0, 0, name="rho", label=r"$\rho$")
 
         self._unfolding_ax = {
@@ -207,6 +215,16 @@ class JMSTemplates(processor.ProcessorABC):
                     ),
                     storage=hist.storage.Weight(),
                 ),
+                "chf": hist.Hist(
+                    dataset_ax,
+                    chf_ax,
+                    storage=hist.storage.Weight(),
+                ),
+                "nhf": hist.Hist(
+                    dataset_ax,
+                    nhf_ax,
+                    storage=hist.storage.Weight(),
+                ),
             }
         )
 
@@ -216,6 +234,7 @@ class JMSTemplates(processor.ProcessorABC):
         # 4840404/attachments/2428856/4162159/ParticleNet_SFs_ULNanoV9_JMAR_25April2022_PK.pdf
         tagger = {
             "vjets": {
+                # "substructure": {"pass": {"n2": True}, "fail": {"n2": False}},
                 "substructure": {"pass": {"n2ddt": True}, "fail": {"n2ddt": False}},
                 "particlenet": {"pass": {"particlenetMDWvsQCD": True}, "fail": {"particlenetMDWvsQCD": False}},
             },
@@ -298,6 +317,14 @@ class JMSTemplates(processor.ProcessorABC):
                             eta_regions_ax,
                             storage=hist.storage.Weight(),
                         ),
+                        f"{selection}_mPnet_{region}": hist.Hist(
+                            mPnet_fit_ax,
+                            self._pT_fit_ax[selection],
+                            dataset_ax,
+                            jec_applied_ax,
+                            eta_regions_ax,
+                            storage=hist.storage.Weight(),
+                        ),
                         f"{selection}_pt_{region}": hist.Hist(
                             pT_ax,
                             dataset_ax,
@@ -306,6 +333,18 @@ class JMSTemplates(processor.ProcessorABC):
                         ),
                         f"{selection}_eta_{region}": hist.Hist(
                             eta_ax, dataset_ax, storage=hist.storage.Weight()
+                        ),
+                        f"{selection}_chf_{region}": hist.Hist(
+                            dataset_ax,
+                            chf_ax,
+                            self._pT_fit_ax[selection],
+                            storage=hist.storage.Weight(),
+                        ),
+                        f"{selection}_nhf_{region}": hist.Hist(
+                            dataset_ax,
+                            nhf_ax,
+                            self._pT_fit_ax[selection],
+                            storage=hist.storage.Weight(),
                         ),
                         f"{selection}_rho_{region}": hist.Hist(
                             rho_ax,
@@ -365,6 +404,26 @@ class JMSTemplates(processor.ProcessorABC):
                             ),
                         }
                     )
+                hists.update(
+                    {
+                        f"{selection}_mPnet_0_0_all_variation_{region}__up": hist.Hist(
+                            mPnet_fit_ax,
+                            self._pT_fit_ax[selection],
+                            eta_regions_ax,
+                            dataset_ax,
+                            jec_applied_ax,
+                            storage=hist.storage.Weight(),
+                        ),
+                        f"{selection}_mPnet_0_0_all_variation_{region}__down": hist.Hist(
+                            mPnet_fit_ax,
+                            self._pT_fit_ax[selection],
+                            eta_regions_ax,
+                            dataset_ax,
+                            jec_applied_ax,
+                            storage=hist.storage.Weight(),
+                        )
+                    }
+                )
 
         self._hists = lambda: {
             **hists,
@@ -497,6 +556,9 @@ class JMSTemplates(processor.ProcessorABC):
         mjet_raw = events.mjet
         mjet = mjet_raw * jecfactor
 
+        mPnet_raw = events["ParticleNetMassRegression_mass"]
+        mPnet = mPnet_raw * jecfactor
+
         mJgen_ = events.msd_gen_ak8
 
         rho = 2 * np.log(mjet / pt)
@@ -543,6 +605,8 @@ class JMSTemplates(processor.ProcessorABC):
             out["ntrueint"].fill(
                 dataset=dataset, ntrueint=events.n_trueint, weight=events.weight
             )
+        out["chf"].fill(dataset=dataset, chf=events.CHF, weight=events.weight)
+        out["nhf"].fill(dataset=dataset, nhf=events.NHF, weight=events.weight)
 
         # for jec_applied_on in ['none','pt','pt&mJ']:
         for jec_applied_on in ["pt", "pt&mJ"]:
@@ -551,8 +615,11 @@ class JMSTemplates(processor.ProcessorABC):
             if "pt" in jec_applied_on:
                 pt_ = pt
             mJ_ = mjet_raw
+            mPnet_ = mPnet_raw
+
             if "mJ" in jec_applied_on:
                 mJ_ = mjet
+                mPnet_ = mPnet
 
             rho_ = 2 * np.log(mJ_ / pt_)
 
@@ -569,6 +636,11 @@ class JMSTemplates(processor.ProcessorABC):
                 & (
                     self.n2ddt(pt_, rho_, events.N2, corrected=jec_applied_on) < 0
                 ),  # actual N2-DDT tagger
+            )
+
+            selections.add(
+                "n2",
+                (events.N2 > 0) & (events.N2 < 0.2)
             )
 
             # selections.add("rhocut",
@@ -643,6 +715,15 @@ class JMSTemplates(processor.ProcessorABC):
                     weight=events.weight[smask],
                 )
 
+                out[f"{selection}_mPnet_{region}"].fill(
+                    dataset=dataset,
+                    jecAppliedOn=jec_applied_on,
+                    pt=pt_[smask],
+                    abs_eta_regions=np.abs(eta_[smask]),
+                    mPnet=mPnet_[smask],
+                    weight=events.weight[smask],
+                )
+
                 out[f"{selection}_pt_{region}"].fill(
                     dataset=dataset,
                     jecAppliedOn=jec_applied_on,
@@ -667,6 +748,12 @@ class JMSTemplates(processor.ProcessorABC):
                     )
 
                 if jec_applied_on == "pt":
+                    out[f"{selection}_chf_{region}"].fill(
+                        dataset=dataset, chf=events.CHF[smask], pt=pt_[smask], weight=events.weight[smask]
+                    )
+                    out[f"{selection}_nhf_{region}"].fill(
+                        dataset=dataset, nhf=events.NHF[smask], pt=pt_[smask], weight=events.weight[smask]
+                    )
                     out[f"{selection}_eta_{region}"].fill(dataset=dataset, eta=eta_[smask], weight=events.weight[smask])
 
                 if isMC:
@@ -692,6 +779,23 @@ class JMSTemplates(processor.ProcessorABC):
                             abs_eta_regions=np.abs(eta_[smask]),
                             weight=events.weight[smask],
                         )
+                    out[f"{selection}_mPnet_0_0_all_variation_{region}__up"].fill(
+                        dataset=dataset,
+                        jecAppliedOn=jec_applied_on,
+                        pt=pt_[smask],
+                        mPnet=mPnet_[smask]*1.005,
+                        abs_eta_regions=np.abs(eta_[smask]),
+                        weight=events.weight[smask],
+                    )
+                    out[f"{selection}_mPnet_0_0_all_variation_{region}__down"].fill(
+                        dataset=dataset,
+                        jecAppliedOn=jec_applied_on,
+                        pt=pt_[smask],
+                        mPnet=mPnet_[smask]*0.995,
+                        abs_eta_regions=np.abs(eta_[smask]),
+                        weight=events.weight[smask],
+                    )
+
         return out
 
 
