@@ -176,6 +176,7 @@ if __name__ == "__main__":
     parser.add_argument("--input", "-i", default="templates_2017.coffea")
     parser.add_argument("--output", "-o", default="templates_1d_2017")
     parser.add_argument("--JEC", default="pt&mJ", choices=["none", "pt", "pt&mJ"])
+    parser.add_argument("--mass", default="mjet", choices=["mjet", "mPnet"])
     parser.add_argument("--eta", default="inclusive", choices=["inclusive", "barrel", "endcap"])
     parser.add_argument("--unfolding", action="store_true")
 
@@ -226,6 +227,9 @@ if __name__ == "__main__":
         },
     }
     print(f"flattening templates and saving to ROOT from {args.input}")
+    variations = ["all"]
+    if args.mass == "mjet":
+        variations += ["chargedH", "neutralH", "gamma", "other"]
     templates = {}
     for selection in selections.keys():
         samples = [f"{selection}_{s}" for s in selections[selection]["samples"]]
@@ -249,18 +253,18 @@ if __name__ == "__main__":
                 templates.update(
                     flatten_templates(
                         hists,
-                        f"{selection}_mjet_{region}",
+                        f"{selection}_{args.mass}_{region}",
                         samples=samples,
                         jec_applied_on=args.JEC,
                         legacy_hist_name_pattern=f"{selection}_mjet_PTBIN_{region}",
                         eta_region=args.eta
                     )
                 )
-                for variation in ["all", "chargedH", "neutralH", "gamma", "other"]:
+                for variation in variations:
                     templates.update(
                         flatten_templates(
                             hists,
-                            f"{selection}_mjet_0_0_{variation}_variation_{region}__up",
+                            f"{selection}_{args.mass}_0_0_{variation}_variation_{region}__up",
                             samples=samples,
                             jec_applied_on=args.JEC,
                             legacy_hist_name_pattern=f"{selection}_mjet_0_0_{variation}_PTBIN_{region}__up",
@@ -270,7 +274,7 @@ if __name__ == "__main__":
                     templates.update(
                         flatten_templates(
                             hists,
-                            f"{selection}_mjet_0_0_{variation}_variation_{region}__down",
+                            f"{selection}_{args.mass}_0_0_{variation}_variation_{region}__down",
                             samples=samples,
                             jec_applied_on=args.JEC,
                             legacy_hist_name_pattern=f"{selection}_mjet_0_0_{variation}_PTBIN_{region}__down",
