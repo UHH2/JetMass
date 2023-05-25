@@ -4,7 +4,7 @@ import common_configs
 w_pt_edges = [500, 650, 800, 1200]
 configs = {
     "year": "UL18",
-    "ModelName": "VJetsUL18JECDOWN",
+    "ModelName": "WJetsUL18JECDOWN",
     "gridHistFileName": "../Histograms/grid_oneScale.root",
     "histLocation": "../python/flat_templates/templates_UL18_1d_jec_down.root",
     "binning": [50, 300, 5],
