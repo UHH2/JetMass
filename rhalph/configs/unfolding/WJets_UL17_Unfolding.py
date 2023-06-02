@@ -10,8 +10,6 @@ configs = {
     # "Pseudo": ["fromMC"],
     "binning": [30, 300, 5],
     "massScaleFactor": 2.0,
-    "InitialQCDFit": "False",
-    "InitialQCDFitOrders": [1, 3],
     "VaryOnlySignal": "False",
     "QCDSigmaScale": 10.0,
     "QCDFailConstant": "False",

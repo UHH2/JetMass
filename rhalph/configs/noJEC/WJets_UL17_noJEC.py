@@ -9,8 +9,6 @@ configs = {
     "histLocation": "../python/flat_templates/templates_UL17_1d_jecpt.root",
     "binning": [50, 300, 5],
     "massScaleFactor": 2.0,
-    "InitialQCDFit": "False",
-    "InitialQCDFitOrders": [2, 2],
     "VaryOnlySignal": "True",
     "QCDSigmaScale": 10.0,
     "QCDFailConstant": "False",
