@@ -751,6 +751,11 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=str, default="42")
     parser.add_argument("--freezeParameters", nargs="+", default=[])
     parser.add_argument(
+        "--initialQCDTF",
+        action="store_true",
+        help="setup dual TF with inital TF from fit to QCD MC and residual Data TF",
+    )
+    parser.add_argument(
         "--combineOptions", type=str, help="string with additional cli-options passed to combine", default=""
     )
     parser.add_argument("--verbose", type=int, default=-1)
@@ -813,6 +818,14 @@ if __name__ == "__main__":
         configs["BernsteinOrders"] = common_configs.bernstein_orders(
             configs["year"], TF="Data", particlenet=particlenet
         )
+        if args.initialQCDTF:
+            configs["BernsteinOrders"] = common_configs.bernstein_orders(
+                configs["year"], TF="Data2TF", particlenet=particlenet
+            )
+            configs["InitialQCDFitOrders"] = common_configs.bernstein_orders(
+                configs["year"], TF="QCD", particlenet=particlenet
+            )
+            configs["InitialQCDFit"] = "True"
 
     if not args.tagger.startswith("_") and args.tagger != "":
         args.tagger = "_" + args.tagger

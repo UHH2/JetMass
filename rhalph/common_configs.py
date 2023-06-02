@@ -4,19 +4,29 @@ def bernstein_orders(year, particlenet=False, TF="Data"):
     orders_particlenet = {
         "Data": {
             "UL16preVFP": [2, 5],
-            "UL16postVFP": [2, 4],
-            "UL17": [2, 4],
-            "UL18": [2, 4],
+            "UL16postVFP": [2, 5],
+            "UL17": [2, 6],
+            "UL18": [2, 6],
         },
-        "QCD": {},
-        "Data2TF": {},
+        "QCD": {
+            "UL16preVFP": [2, 5],
+            "UL16postVFP": [2, 5],
+            "UL17": [2, 6],
+            "UL18": [2, 6],
+        },
+        "Data2TF": {
+            "UL16preVFP": [0, 0],
+            "UL16postVFP": [0, 0],
+            "UL17": [0, 0],
+            "UL18": [0, 0],
+        },
     }
     orders_substructure = {
         "Data": {
-            "UL16preVFP": [2, 2],
+            "UL16preVFP": [1, 4],
             "UL16postVFP": [1, 2],
             "UL17": [2, 3],
-            "UL18": [2, 3],
+            "UL18": [1, 4],
         },
         "QCD": {},
         "Data2TF": {},
