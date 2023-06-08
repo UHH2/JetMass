@@ -443,8 +443,9 @@ def jet_mass_producer(args, configs):
     # top_tag_eff = rl.IndependentParameter("top_tag_eff_sf",1.,-10,10)
     # W_tag_eff = rl.IndependentParameter("W_tag_eff_sf",1.,-10,10)
     for channel_name, config in channels.items():
-        top_tag_eff = rl.IndependentParameter(nuisance_name("%stop_tag_eff_sf" % channel_name), 1.0, -4, 4)
-        W_tag_eff = rl.IndependentParameter(nuisance_name("%sW_tag_eff_sf" % channel_name), 1.0, -4, 4)
+        ttbar_top_tag_eff = rl.IndependentParameter(nuisance_name("%sttbar_top_tag_eff_sf" % channel_name), 1.0, -4, 4)
+        ttbar_W_tag_eff = rl.IndependentParameter(nuisance_name("%sttbar_W_tag_eff_sf" % channel_name), 1.0, -4, 4)
+        wjets_W_tag_eff = rl.IndependentParameter(nuisance_name("%swjets_W_tag_eff_sf" % channel_name), 1.0, -4, 4)
 
         # using hists with /variable/ in their name (default: Mass, if defined get from config)
         variable = "mjet" if "variable" not in config else config["variable"]
@@ -622,26 +623,38 @@ def jet_mass_producer(args, configs):
 
         # setting effect for tagging eff scale factors
         # top tagging
-        if args.TTbarTaggingEff and config["selection"] == "top":
-            top_pass_sample = model[channel_name + "pass"]["TTToSemiLeptonic_mergedTop"]
-            top_passW_sample = model[channel_name + "passW"]["TTToSemiLeptonic_mergedTop"]
-            top_fail_sample = model[channel_name + "fail"]["TTToSemiLeptonic_mergedTop"]
-            rpf_top_Wfail = top_pass_sample.getExpectation(nominal=True).sum() / (
-                top_passW_sample.getExpectation(nominal=True).sum() + top_fail_sample.getExpectation(nominal=True).sum()
-            )
-            top_pass_sample.setParamEffect(top_tag_eff, 1.0 * top_tag_eff)
-            top_passW_sample.setParamEffect(top_tag_eff, (1 - top_tag_eff) * rpf_top_Wfail + 1.0)
-            top_fail_sample.setParamEffect(top_tag_eff, (1 - top_tag_eff) * rpf_top_Wfail + 1.0)
-            # W tagging
-            W_pass_sample = model[channel_name + "pass"]["TTToSemiLeptonic_mergedW"]
-            W_passW_sample = model[channel_name + "passW"]["TTToSemiLeptonic_mergedW"]
-            W_fail_sample = model[channel_name + "fail"]["TTToSemiLeptonic_mergedW"]
-            rpf_W_topfail = W_passW_sample.getExpectation(nominal=True).sum() / (
-                W_pass_sample.getExpectation(nominal=True).sum() + W_fail_sample.getExpectation(nominal=True).sum()
-            )
-            W_passW_sample.setParamEffect(W_tag_eff, 1.0 * W_tag_eff)
-            W_pass_sample.setParamEffect(W_tag_eff, (1 - W_tag_eff) * rpf_W_topfail + 1.0)
-            W_fail_sample.setParamEffect(W_tag_eff, (1 - W_tag_eff) * rpf_W_topfail + 1.0)
+        if args.TaggingEff:
+            if config["selection"] == "top":
+                ttbar_top_pass_sample = model[channel_name + "pass"]["TTToSemiLeptonic_mergedTop"]
+                ttbar_top_passW_sample = model[channel_name + "passW"]["TTToSemiLeptonic_mergedTop"]
+                ttbar_top_fail_sample = model[channel_name + "fail"]["TTToSemiLeptonic_mergedTop"]
+                rpf_top_Wfail = ttbar_top_pass_sample.getExpectation(nominal=True).sum() / (
+                    ttbar_top_passW_sample.getExpectation(nominal=True).sum()
+                    + ttbar_top_fail_sample.getExpectation(nominal=True).sum()
+                )
+                ttbar_top_pass_sample.setParamEffect(ttbar_top_tag_eff, 1.0 * ttbar_top_tag_eff)
+                ttbar_top_passW_sample.setParamEffect(ttbar_top_tag_eff, (1 - ttbar_top_tag_eff) * rpf_top_Wfail + 1.0)
+                ttbar_top_fail_sample.setParamEffect(ttbar_top_tag_eff, (1 - ttbar_top_tag_eff) * rpf_top_Wfail + 1.0)
+                # W tagging
+                ttbar_W_pass_sample = model[channel_name + "pass"]["TTToSemiLeptonic_mergedW"]
+                ttbar_W_passW_sample = model[channel_name + "passW"]["TTToSemiLeptonic_mergedW"]
+                ttbar_W_fail_sample = model[channel_name + "fail"]["TTToSemiLeptonic_mergedW"]
+                rpf_W_topfail = ttbar_W_passW_sample.getExpectation(nominal=True).sum() / (
+                    ttbar_W_pass_sample.getExpectation(nominal=True).sum()
+                    + ttbar_W_fail_sample.getExpectation(nominal=True).sum()
+                )
+                ttbar_W_passW_sample.setParamEffect(ttbar_W_tag_eff, 1.0 * ttbar_W_tag_eff)
+                ttbar_W_pass_sample.setParamEffect(ttbar_W_tag_eff, (1 - ttbar_W_tag_eff) * rpf_W_topfail + 1.0)
+                ttbar_W_fail_sample.setParamEffect(ttbar_W_tag_eff, (1 - ttbar_W_tag_eff) * rpf_W_topfail + 1.0)
+            if config["selection"] == "W":
+                wjets_W_pass_sample = model[channel_name + "pass"]["WJetsMatched"]
+                wjets_W_fail_sample = model[channel_name + "fail"]["WJetsMatched"]
+                rpf = (
+                    wjets_W_pass_sample.getExpectation(nominal=True).sum()
+                    / wjets_W_fail_sample.getExpectation(nominal=True).sum()
+                )
+                wjets_W_pass_sample.setParamEffect(wjets_W_tag_eff, 1.0 * wjets_W_tag_eff)
+                wjets_W_fail_sample.setParamEffect(wjets_W_tag_eff, (1 - wjets_W_tag_eff) * rpf + 1.0)
 
     if do_qcd_estimation:
         # QCD TF
@@ -846,12 +859,13 @@ if __name__ == "__main__":
 
     configs["nuisance_year_decorrelation"] = [
         "CMS_lumi",
+        "normUnc",
         "jec_variation", "isr_variation", "fsr_variation",
         "toppt_reweight", "tag_eff_sf", "jec_variation"
     ]
 
     args.freezeParameters = [nuisance_name_(par_name, configs) for par_name in args.freezeParameters]
-    args.TTbarTaggingEff = configs.get("TTbarTaggingEff", "True") == "True"
+    args.TaggingEff = configs.get("TaggingEff", "True") == "True"
     args.pTdependetMassScale = configs.get("pTdependentMassScale", "True") == "True"
     args.separateMassScales = configs.get("separateMassScales", "False") == "True"
     args.VaryOnlySignal = configs.get("VaryOnlySignal", "False") == "True"
