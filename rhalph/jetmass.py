@@ -292,30 +292,39 @@ def jet_mass_producer(args, configs):
                 failCh.mask = validbins[ptbin]
                 passCh.mask = validbins[ptbin]
 
-            qcd_model.renderCombine(model_dir + "/qcdmodel_%s" % year_str)
+            qcd_model.renderCombine(model_dir + "/qcdmodel")
 
             qcdfit_ws = ROOT.RooWorkspace("w")
             simpdf, obs = qcd_model.renderRoofit(qcdfit_ws)
             ROOT.Math.MinimizerOptions.SetDefaultPrecision(1e-18)
-            # ROOT.Math.MinimizerOptions.SetDefaultMinimizer("Minuit2")
-            # ROOT.Math.MinimizerOptions.SetDefaultTolerance(0.0001)
+            ROOT.Math.MinimizerOptions.SetDefaultMinimizer("Minuit2")
+            ROOT.Math.MinimizerOptions.SetDefaultTolerance(0.0001)
             # ROOT.Math.MinimizerOptions.SetDefaultPrecision(-1.0)
 
             qcdfit = simpdf.fitTo(
                 obs,
                 ROOT.RooFit.Extended(True),
-                ROOT.RooFit.SumW2Error(True),
-                ROOT.RooFit.Strategy(1),
+                ROOT.RooFit.SumW2Error(False),
+                ROOT.RooFit.Strategy(2),
                 ROOT.RooFit.Save(),
                 ROOT.RooFit.Minimizer("Minuit2", "migrad"),
-                # ROOT.RooFit.PrintLevel(-1),
+                ROOT.RooFit.Offset(True),
                 ROOT.RooFit.PrintLevel(1),
-                ROOT.RooFit.Minos(0),
             )
+            # qcdfit = simpdf.fitTo(
+            #     obs,
+            #     ROOT.RooFit.Extended(True),
+            #     ROOT.RooFit.SumW2Error(True),
+            #     ROOT.RooFit.Strategy(1),
+            #     ROOT.RooFit.Save(),
+            #     ROOT.RooFit.Minimizer("Minuit2", "migrad"),
+            #     # ROOT.RooFit.PrintLevel(-1),
+            #     ROOT.RooFit.PrintLevel(1),
+            #     ROOT.RooFit.Minos(0),
+            # )
 
             qcdfit_ws.add(qcdfit)
-            if "pytest" not in sys.modules:
-                qcdfit_ws.writeToFile(model_dir + "/qcdfit_%s_" % year_str + model_dir + TF_suffix + ".root")
+            qcdfit_ws.writeToFile(model_dir + ("/qcdfit_%s_" % year_str) + model_name + TF_suffix + ".root")
             if qcdfit.status() != 0:
                 raise RuntimeError("Could not fit qcd")
 
@@ -740,6 +749,7 @@ if __name__ == "__main__":
     parser.add_argument("--build", action="store_true", help="just build workspace for combine")
     parser.add_argument("--job_index", default="", type=str)
     parser.add_argument("--minimalModel", action="store_true")
+    parser.add_argument("--forceCommonConfig", action="store_true")
     parser.add_argument("--skipTemplatePlots", action="store_true")
     parser.add_argument("--customCombineWrapper", action="store_true")
     parser.add_argument("--noNuisances", action="store_true")
@@ -812,9 +822,9 @@ if __name__ == "__main__":
     model_dir = "{}/{}".format(args.workdir, configs["ModelName"])
     configs["ModelDir"] = model_dir
 
+    particlenet = "particlenet" in args.tagger
     if "BernsteinOrders" not in configs:
         print("taking default BernsteinOrders from common configs..")
-        particlenet = "particlenet" in args.tagger
         configs["BernsteinOrders"] = common_configs.bernstein_orders(
             configs["year"], TF="Data", particlenet=particlenet
         )
@@ -822,10 +832,13 @@ if __name__ == "__main__":
             configs["BernsteinOrders"] = common_configs.bernstein_orders(
                 configs["year"], TF="Data2TF", particlenet=particlenet
             )
+
+    if args.initialQCDTF:
+        if "InitialQCDFitOrders" not in configs or args.forceCommonConfig:
             configs["InitialQCDFitOrders"] = common_configs.bernstein_orders(
                 configs["year"], TF="QCD", particlenet=particlenet
             )
-            configs["InitialQCDFit"] = "True"
+        configs["InitialQCDFit"] = "True"
 
     if not args.tagger.startswith("_") and args.tagger != "":
         args.tagger = "_" + args.tagger
