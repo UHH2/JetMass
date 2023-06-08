@@ -73,6 +73,7 @@ class CombineWorkflows(object):
         self.justplots = False
         self.skipplots = True
         self._poi = ""
+        self._set_poi_default = ""
         self.POIRange = (-10, 10)
         self.altmodel = None
         self.workers = 1
@@ -156,11 +157,14 @@ class CombineWorkflows(object):
                 self._poi = pois
             else:
                 self._poi = "--redefineSignalPOIs " + pois
+            self._set_poi_default = " --expectSignal 1 "
         elif isinstance(pois, list):
             self._poi = "--redefineSignalPOIs " + ",".join(pois)
             range_str = "=%i,%i:" % (self.POIRange[0], self.POIRange[1])
             self._poi += " --setParameterRanges " + range_str.join(pois) + range_str[:-1]
-            return
+            if "massScale" in self._poi:
+                # self._poi += " --preFitValue 0"
+                self._set_poi_default = " --setParameters " + ",".join("%s=0" % param for param in pois)
         else:
             raise TypeError("POI must be either string (',' as delimiter) or list!\nYou provided a ", type(pois))
 
@@ -546,7 +550,7 @@ class CombineWorkflows(object):
         if not self.justplots and not merge:
             command_string += exec_bash(
                 'combine -M GoodnessOfFit -d {WORKSPACE} -m 0 {POI} --algo={ALGO} {FREEZEPARAMS} '
-                '{EXTRA} -n "{NAME}Baseline"'.format(
+                '{EXTRA} -n "{NAME}Baseline "'.format(
                     WORKSPACE=self.workspace,
                     FREEZEPARAMS=self.freezeParameters,
                     EXTRA=self.extraOptions,
@@ -633,31 +637,33 @@ class CombineWorkflows(object):
 
         command_string += exec_bash(
             'combine -M MultiDimFit   -d {WORKSPACE} --saveWorkspace -m 0 {POI} {EXTRA} '
-            '-n "{NAME}Snapshot" --seed {SEED} --trackParameters r'.format(
+            '-n "{NAME}Snapshot" --seed {SEED} --trackParameters r {FREEZEPARAMS}'.format(
                 WORKSPACE=self.workspace,
                 EXTRA=self.extraOptions,
                 NAME=self.name,
-                POI=self.POI,
+                POI=self.POI + (" --preFitValue 0 " if "massScale" in self.POI else ""),
                 SEED=self.seed,
-            ),
+                FREEZEPARAMS=self.freezeParameters,
+             ),
             debug,
         )
 
-        # extract r_bestfit to be able to throw toys from exact signal-bestfit:
-        # this is necessary since combine apparently loads a snapshot but then resets r to the default
-        # (or given) value of --expectSignal when throwing toys -> setting parameters to postfit but
-        # setting r=0 by default.
-        # to avoid throwing toys on s+b postfit nuisances but with s=0 we extract r here and
-        # set it manually when throwing toys
-        command_string += exec_bash(
-            ('r_bestfit=$(python -c "from __future__ import print_function;import uproot;f=uproot.open(\\"'
-             'higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root\\");print(f[\\"limit\\"]'
-             '[\\"trackedParam_r\\"].array()[0])")').format(
-                NAME=self.name,
-                SEED=self.seed,
-            ),
-            debug,
-        )
+        # # extract r_bestfit to be able to throw toys from exact signal-bestfit:
+        # # this is necessary since combine apparently loads a snapshot but then resets r to the default
+        # # (or given) value of --expectSignal when throwing toys -> setting parameters to postfit but
+        # # setting r=0 by default.
+        # # to avoid throwing toys on s+b postfit nuisances but with s=0 we extract r here and
+        # # set it manually when throwing toys
+        # command_string += exec_bash(
+        #     ('r_bestfit=$(python -c "from __future__ import print_function;import uproot;f=uproot.open(\\"'
+        #      'higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root\\");print(f[\\"limit\\"]'
+        #      '[\\"trackedParam_r\\"].array()[0])")').format(
+        #         NAME=self.name,
+        #         SEED=self.seed,
+        #     ),
+        #     debug,
+        # )
+
         # # snapshot + observed
         # combine -d snapshot.root -m 0 --snapshotName MultiDimFit --bypassFrequentistFit -M GoodnessOfFit
         # --algo saturated --setParameters r=1 --freezeParameters r --cminDefaultMinimizerStrategy 2
@@ -665,10 +671,11 @@ class CombineWorkflows(object):
         command_string += exec_bash(
             'combine -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root '
             '--snapshotName MultiDimFit --bypassFrequentistFit --trackParameters r -m 0 {POI} --seed {SEED} '
-            '{FREEZEPARAMS} {EXTRA} -n "{NAME}Baseline" --algo={ALGO}'.format(
+            '{FREEZEPARAMS} {EXTRA} -n "{NAME}Baseline" --algo={ALGO} {POIDEFAULTS}'.format(
                 NAME=self.name,
                 FREEZEPARAMS=self.freezeParameters,
                 POI=self.POI,
+                POIDEFAULTS=self._set_poi_default,
                 SEED=self.seed,
                 ALGO=self.algo,
                 EXTRA=GOF_extra,
@@ -682,11 +689,13 @@ class CombineWorkflows(object):
         command_string += exec_bash(
             'combine -M GenerateOnly  -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root '
             '--snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} '
-            '--expectSignal $r_bestfit --trackParameters r '
+            # '--expectSignal $r_bestfit --trackParameters r '
+            '{POIDEFAULTS} --trackParameters r '
             '{EXTRA} -n "{NAME}" -t {NTOYS} {TOYSOPTIONS}  --saveToys  '.format(
                 NAME=self.name,
                 FREEZEPARAMS=self.freezeParameters,
                 POI=self.POI,
+                POIDEFAULTS=self._set_poi_default,
                 SEED=self.seed,
                 NTOYS=self.toys,
                 TOYSOPTIONS=self.toysOptions,
@@ -701,11 +710,13 @@ class CombineWorkflows(object):
             'combine -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root '
             '--snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} '
             '{EXTRA} -n "{NAME}" -t {NTOYS} {TOYSOPTIONS}  --toysFile higgsCombine{NAME}.GenerateOnly.mH0.{SEED}.root '
-            '--expectSignal $r_bestfit --trackParameters r '
+            # '--expectSignal $r_bestfit --trackParameters r '
+            '{POIDEFAULTS} --trackParameters r '
             '--algo={ALGO}'.format(
                 NAME=self.name,
                 FREEZEPARAMS=self.freezeParameters,
                 POI=self.POI,
+                POIDEFAULTS=self._set_poi_default,
                 SEED=self.seed,
                 NTOYS=self.toys,
                 TOYSOPTIONS=self.toysOptions,
@@ -770,21 +781,23 @@ class CombineWorkflows(object):
             # using snapshot
             command_string += exec_bash(
                 'combine -M MultiDimFit   -d *_combined.root --saveWorkspace -m 0 {POI} {EXTRA} '
-                '-n "{NAME}Snapshot" --seed {SEED}'.format(
+                '-n "{NAME}Snapshot" --seed {SEED} {FREEZEPARAMS} '.format(
                     EXTRA=self.extraOptions,
                     NAME=self.name,
-                    POI=self.POI,
+                    POI=self.POI + (" --preFitValue 0 " if "massScale" in self.POI else ""),
                     SEED=self.seed,
+                    FREEZEPARAMS=self.freezeParameters,
                 ),
                 debug,
             )
             command_string += exec_bash(
                 'combine -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root '
                 '--snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} {EXTRA} '
-                '-n "{NAME}Baseline" --algo={ALGO}'.format(
+                '-n "{NAME}Baseline" --algo={ALGO} {POIDEFAULTS}'.format(
                     NAME=self.name,
                     FREEZEPARAMS=self.freezeParameters,
                     POI=self.POI,
+                    POIDEFAULTS=self._set_poi_default,
                     SEED=self.seed,
                     ALGO=self.algo,
                     EXTRA=GOF_extra,
@@ -795,11 +808,13 @@ class CombineWorkflows(object):
                 'combine -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root '
                 '--snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} {EXTRA} '
                 '-n "{NAME}" -t {NTOYS} {TOYSOPTIONS}  '
-                '--expectSignal $r_bestfit --trackParameters r '
+                # '--expectSignal $r_bestfit --trackParameters r '
+                '{POIDEFAULTS} --trackParameters r '
                 '--toysFile {BASEMODELDIR}/higgsCombine{NAME}.GenerateOnly.mH0.{SEED}.root --algo={ALGO}'.format(
                     NAME=self.name,
                     FREEZEPARAMS=self.freezeParameters,
                     POI=self.POI,
+                    POIDEFAULTS=self._set_poi_default,
                     SEED=self.seed,
                     NTOYS=self.toys,
                     TOYSOPTIONS=self.toysOptions,
@@ -861,7 +876,7 @@ class CombineWorkflows(object):
                 FREEZEPARAMS=self.freezeParameters,
                 EXTRA=self.extraOptions,
                 NAME=self.name,
-                POI=self.POI,
+                POI=self.POI + (" --preFitValue 0 " if "massScale" in self.POI else ""),
                 SEED=self.seed,
             ),
             debug,
@@ -870,10 +885,11 @@ class CombineWorkflows(object):
         command_string += exec_bash(
             'combine -M GoodnessOfFit -d higgsCombine{NAME}Snapshot.MultiDimFit.mH0.{SEED}.root '
             '--snapshotName MultiDimFit --bypassFrequentistFit -m 0 {POI} --seed {SEED} {FREEZEPARAMS} {EXTRA} '
-            '-n "{NAME}Baseline" --algo={ALGO}'.format(
+            '-n "{NAME}Baseline" --algo={ALGO} {POIDEFAULTS}'.format(
                 NAME=self.name,
                 FREEZEPARAMS=self.freezeParameters,
                 POI=self.POI,
+                POIDEFAULTS=self._set_poi_default,
                 SEED=self.seed,
                 ALGO=self.algo,
                 EXTRA=GOF_extra,
