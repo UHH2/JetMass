@@ -118,6 +118,8 @@ def plot_qcd_fail_parameters(config={"ModelName": "WMassModel"}):
     th2_qcd_params.GetZaxis().SetTitle("qcdparam")
     th2_qcd_params.Draw("colztext")
     cms_style.draw_lumi(c, 41.8, do_extra_text=False, out_of_frame=True, do_cms_text=False, private_work=False)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
     for file_ext in [".pdf", ".png"]:
         c.SaveAs(out_dir + "qcdparams" + file_ext)
 
@@ -239,7 +241,15 @@ def plot_qcd_bernstein(config={"ModelName": "WMassModel"}, do_3d_plot=True):
                 rl.util.install_roofit_helpers()
                 qcd_fit = (
                     ROOT.TFile(
-                        model_dir + "/qcdfit_" + config["ModelName"] + config.get("TFSuffix", "") + ".root"
+                        (
+                            model_dir
+                            + "/qcdfit_"
+                            + config["year"]
+                            + "_"
+                            + config["ModelName"]
+                            + config.get("TFSuffix", "")
+                            + ".root"
+                        )
                     )
                     .Get("w")
                     .genobj("fitresult_qcdmodel_simPdf_qcdmodel_observation")
@@ -327,6 +337,8 @@ def plot_qcd_bernstein(config={"ModelName": "WMassModel"}, do_3d_plot=True):
         cms_style.setup_hist(th2_map)
         th2_map.SetMarkerSize(1)
         th2_map.Draw("textcolz")
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
         for file_ext in [".pdf", ".png"]:
             c.SaveAs(
                 out_dir
@@ -349,6 +361,8 @@ def plot_qcd_bernstein(config={"ModelName": "WMassModel"}, do_3d_plot=True):
 
         z_bar = figure.colorbar(plt_cont, format="%.2f")
         z_bar.set_label(r"TF", rotation=270, labelpad=15)
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
         for f_type in [".pdf", ".png"]:
             plt.savefig(out_dir + "bernstein%s" % (parameter_suffix + config.get("TFSuffix", "") + f_type))
 

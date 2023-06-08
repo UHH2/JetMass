@@ -128,8 +128,11 @@ def plot_mass_scale_nuisances(config):
     g.SetMarkerStyle(8)
     g.SetMarkerSize(1)
     g.Draw("P SAME")
+    out_dir = model_dir + "/plots/"
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
     for file_ext in [".pdf", ".png"]:
-        c.SaveAs(model_dir + "/plots/JetMassScale_Nuisance" + file_ext)
+        c.SaveAs(out_dir + "/JetMassScale_Nuisance" + file_ext)
 
 
 if __name__ == "__main__":
