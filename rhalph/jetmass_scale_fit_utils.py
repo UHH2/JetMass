@@ -170,7 +170,7 @@ def build_mass_scale_variations(configs, args):
     return grid_nuisances, mass_scale_names
 
 
-def extract_fit_results(configs):
+def extract_fit_results(configs, return_result=False):
     '''
     extracting postfit parameters from fitDiagnostics.root
     '''
@@ -183,11 +183,13 @@ def extract_fit_results(configs):
         fit_result_parameters = {}
         for p in fit_result.floatParsFinal():
             fit_result_parameters[p.GetName()] = [p.getVal(), p.getErrorHi(), p.getErrorLo()]
+        fit_succeded = fit_result.status() <= 3
+        if return_result and fit_succeded:
+            return fit_result_parameters
         open(model_dir + "/" + configs["ModelName"] + "fitResult.json", "w").write(
             json.dumps(fit_result_parameters, sort_keys=True, indent=2)
         )
-
-        fit_succeded = fit_result.status() <= 3
+        return fit_succeded
     except BaseException as e:
         print("fit failed. only plotting prefit distributions from fitDiangnostics (beware weird shape uncertainties)")
         print(e)
