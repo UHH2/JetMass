@@ -187,6 +187,7 @@ class CombineWorkflows(object):
         with open(wrapper_name, "a" if append_wrapper else "w") as wrapper:
             if not append_wrapper:
                 wrapper.write("#!/bin/bash\n")
+                wrapper.write("ulimit -s unlimited\n")
             # wrapper.write("source /cvmfs/cms.cern.ch/cmsset_default.sh\n")
             # wrapper.write("cd "+pathCMSSW+"/src/\n")
             # wrapper.write("eval `scramv1 runtime -sh`\n")
