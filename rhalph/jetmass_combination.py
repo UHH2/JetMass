@@ -50,14 +50,14 @@ class JetMassCombination(object):
 
         for model in self._models:
             model_config = self._config_dicts[model]
-            model_config["ModelDir"] = self._combination_dir
+            model_config["ModelDir"] = "{}/{}".format(self.workdir, model)
             dump_config(model_config, "{}/{}config.json".format(self._combination_dir, model))
 
         self.combined_config = deepcopy(self._config_dicts[self._models[-1]])
         self.combined_config.update(
             {
                 "ModelName": name,
-                "ModelDir": self._combination_dir,
+                "ModelDir": "{}/{}".format(self._combination_dir, name),
                 "year": year,
             }
         )
@@ -92,7 +92,8 @@ class JetMassCombination(object):
             cmd = "python jetmass.py -M {} ".format(self._mode)
             cmd += "--workdir {} ".format(self.workdir)
             cmd += self.extra_options
-            cmd += " --build "
+            # cmd += " --build "
+            cmd += " --skipTemplatePlots "
             cmd += "{} ".format(self.configs[model_name])
             print(cmd)
             with open("{}/{}.log".format(self.workdir, model_name), "wb") as log:
@@ -132,6 +133,16 @@ class JetMassCombination(object):
             )
         )
 
+        tf_parameter_postfit = {}
+        for model in self._models:
+            fit_result = extract_fit_results(self._config_dicts[model], return_result=True)
+            if not fit_result:
+                print("Fit of model {} failed. Keeping initial TF params at 1.0.".format(model))
+                continue
+            for param, values in fit_result.items():
+                if "tf_" in param:
+                    tf_parameter_postfit[param] = values[0]
+
         def edit_line(line_):
             sections = line_.split(" ")
             resulting_sections = []
@@ -144,12 +155,23 @@ class JetMassCombination(object):
         with open("{}/wrapper_template.sh".format(self._combination_dir), "r") as template:
             with open("{}/wrapper.sh".format(self._combination_dir), "wb") as wrapper:
                 for line in template:
-                    print(line.strip())
                     if "PostFitShapesFromWorkspace" in line and self._split_postfitshapes:
                         continue
                     else:
                         if templates_model_name in line:
                             line = edit_line(line)
+
+                        if "combine" in line:
+                            set_parameters_addition = ",".join(
+                                "{}={}".format(param, value) for param, value in tf_parameter_postfit.items()
+                            )
+                            if "--setParameters" in line:
+                                line = line.replace(
+                                    "--setParameters ", "--setParameters {},".format(set_parameters_addition)
+                                )
+                            else:
+                                line = line.strip() + " --setParameters {} \n ".format(set_parameters_addition)
+
                         if "combine" in line and "--freezeParameters" in line:
                             # we have to freeze Parameters, first lets get the list from the template (i.e. last model)
                             pattern = r"--freezeParameters\s+([\w,]+)"
@@ -162,16 +184,13 @@ class JetMassCombination(object):
                             # does any of them have year in their name?
                             # If so we need to get the ones from the other wrappers as well
                             template_year = self._config_dicts[self._models[-1]]["year"]
-                            print(template_year)
                             correlated_params = [param for param in freezeParams if template_year in param]
                             if len(correlated_params) > 0:
                                 for model_name in self._models[:-1]:
-                                    print("looking for parameters in", model_name)
                                     with open("{}/{}/wrapper.sh".format(self.workdir, model_name), "r") as sub_wrapper:
                                         for line_sub_wrapper in sub_wrapper.readlines():
                                             match = re.search(pattern, line_sub_wrapper)
                                             if match:
-                                                print(match.group())
                                                 for param in match.group(1).strip().split(","):
                                                     freezeParams.add(param)
                             print("full list of params to freeze", freezeParams)
@@ -213,7 +232,7 @@ class JetMassCombination(object):
             if model_processes[-1].returncode == 0:
                 model_processes.pop()
             else:
-                [p.terminate() for p in model_processes]
+                [p.terminate() for p in model_processes if p.returncode]
                 raise RuntimeError("One of the processes had an issue. Check the logs!")
             time.sleep(2)
 
