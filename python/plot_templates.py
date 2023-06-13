@@ -219,6 +219,7 @@ if __name__ == "__main__":
             output_dir,
             binning="CMS",
             scaleQCD=not args.origQCDScale,
+            logY=True
         )
     # for selection in ['W']:
     #     plot_mass(selection,'mjet',hist_file,'../Plots/templates',binning="CMS")

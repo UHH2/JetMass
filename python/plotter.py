@@ -469,6 +469,8 @@ ymax = 1.0
 xmax = 1.0
 xmin = 0.0
 
+qcd_scale = 1.0
+
 y_range = [None, None]
 y_range_ratio = [None, None]
 x_range = [None, None]
@@ -484,7 +486,8 @@ def get_hists(
     pseudo_data=False,
     include_merged_hists=True,
     scaleQCD=True,
-    pseudo_data_file=None
+    pseudo_data_file=None,
+    rebin_factor=1,
 ):
     # print(f_hists, samples, hist_dir,selection)
     hist_dir = selection + hist_dir if (hist_dir[0] == "_") else hist_dir
@@ -533,6 +536,8 @@ def get_hists(
             h_data = h_data_temp
             if pseudo_data_file:
                 h_data.Scale(binwidth)
+        if rebin_factor>1:
+            h_data = h_data.Rebin(rebin_factor)
         if new_binning is not None:
             h_data = h_data.Rebin(len(new_binning) - 1, "", new_binning)
             h_data.GetYaxis().SetTitle(
@@ -585,6 +590,8 @@ def get_hists(
         else:
             this_hist = get_sample_hist(sample)
 
+        if rebin_factor > 1:
+            this_hist = this_hist.Rebin(rebin_factor)
         if new_binning is not None:
             this_hist = this_hist.Rebin(len(new_binning) - 1, "", new_binning)
             this_hist.GetYaxis().SetTitle(
@@ -608,9 +615,9 @@ def get_hists(
     else:
         if scaleQCD and (selection in ["W", "Zbb"]):
             norm = mc_hists["QCD"].Integral()
-            mc_hists["QCD"].Scale(
-                (h_qcd_from_data.Integral() / norm) if norm > 0 else 1.0
-            )
+            global qcd_scale
+            qcd_scale = (h_qcd_from_data.Integral() / norm) if norm > 0 else 1.0
+            mc_hists["QCD"].Scale(qcd_scale)
 
     return (h_data, mc_hists)
 
@@ -776,7 +783,7 @@ def plot_data_mc(
         if None in y_range:
             minY = 0.9 * pow(10, round(np.log10(max_val)) - 4) if logY else 0.0
             maxY = 1.4 * max_val
-        frame_hist[0].GetYaxis().SetRangeUser(minY, maxY)
+        # frame_hist[0].GetYaxis().SetRangeUser(minY, maxY)
         # for i in range(1,frame_hist[0].GetNbinsX()+1):
         #     print('changing label:')
         #     print(frame_hist[0].GetXaxis().GetBinLabel(i))
