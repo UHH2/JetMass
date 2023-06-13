@@ -493,17 +493,17 @@ def finalize_ax(
     lumis["UL16"] = sum([lumi for year, lumi in lumis.items() if "UL16" in year])
 
     f = ax.get_figure()
-    #extra_text = ", private work"
+    # extra_text = ", private work"
     exp_label = "Private work (CMS data/simulation)"
-    print("year_str",year)
-    #if year != "":
-        #hep.cms.label(label=extra_text, ax=ax, fontsize=font_size, year=year, lumi=round(lumis.get(year, None), 2))
+    print("year_str", year)
+    # if year != "":
+    #     hep.cms.label(label=extra_text, ax=ax, fontsize=font_size, year=year, lumi=round(lumis.get(year, None), 2))
     lumi = lumis.get(year, None)
     if lumi is not None:
         lumi = round(lumi, 2)
-    hep.label.exp_label(exp="",llabel=exp_label, ax=ax, fontsize=font_size-2, year=year, lumi=lumi)
-    #else:
-    #    hep.cms.text(exp_label, ax=ax, fontsize=font_size)
+    hep.label.exp_label(exp="", llabel=exp_label, ax=ax, fontsize=font_size-2, year=year, lumi=lumi)
+    # else:
+    #     hep.cms.text(exp_label, ax=ax, fontsize=font_size)
 
     handles, labels = ax.get_legend_handles_labels()
     if reversered_legend:
@@ -542,10 +542,10 @@ def create_plotter(
 if __name__ == "__main__":
     # years = ["UL17"]
     # regions = ["Combined"]
-    
+
     # plotter = {
     #     "Substructure":create_plotter("fitResults_03-05-23_substructure.json", years, regions),
-    #     "ParticleNet":create_plotter("fitResults_03-05-23_particlenet.json", years, regions),        
+    #     "ParticleNet":create_plotter("fitResults_03-05-23_particlenet.json", years, regions),
     # }
 
     # f,ax = setup_ax(10,7)
@@ -558,12 +558,14 @@ if __name__ == "__main__":
     # exit(0)
     # years = ["UL16preVFP", "UL16postVFP", "UL17", "UL18"]
     # regions = ["TTBar", "VJets", "Combined"]
-    years=[""]
+    years = [""]
     regions = ["FullRunII"]
     plotter = {}
     fitDateStr = "09-05-23_Substructure"
     plotter[f"{fitDateStr}_JECNuis"] = create_plotter(f"fitResults_{fitDateStr}_JECNuis.json", years, regions)
-    plotter[f"{fitDateStr}_JECVarAsInput"] = create_plotter(f"fitResults_{fitDateStr}_JECVarAsInput.json", years, regions)
+    plotter[f"{fitDateStr}_JECVarAsInput"] = create_plotter(
+        f"fitResults_{fitDateStr}_JECVarAsInput.json", years, regions
+    )
 
     plotter[f"{fitDateStr}_JECVarAsInput"].load_fit_results(
         json.load(open(f"fitResults_{fitDateStr}_JECVarAsInput.json")),
@@ -582,9 +584,13 @@ if __name__ == "__main__":
             print(region, year)
             for date, jms_plotter in plotter.items():
                 jms_plotter.dHists[f"{region}{year}"].plot_errorbar(
-                    ax=ax, split_uncertainty=True, alpha=0.8, label=f"{region} {year} {label_suffix[date]}", fmt=".",
+                    ax=ax,
+                    split_uncertainty=True,
+                    alpha=0.8,
+                    label=f"{region} {year} {label_suffix[date]}",
+                    fmt=".",
                     linewidth=0.9,
-                    linestyle="--" if date == f"{fitDateStr}_JECVarAsInput" else "-"
+                    linestyle="--" if date == f"{fitDateStr}_JECVarAsInput" else "-",
                 )
                 if date == f"{fitDateStr}_JECVarAsInput":
                     nominal_color = jms_plotter.dHists[f"{region}{year}"].color
@@ -594,7 +600,7 @@ if __name__ == "__main__":
                         extend=extend,
                         hatch="/",
                         alpha=0.4,
-                        linewidth=.6,
+                        linewidth=0.6,
                         label=f"{region} {year} JEC down",
                     )
                     var_color = jms_plotter.dHists[f"{region}{year}JECDOWN"].color
@@ -603,7 +609,7 @@ if __name__ == "__main__":
                         ax,
                         extend=extend,
                         hatch="\\",
-                        linewidth=.6,
+                        linewidth=0.6,
                         alpha=0.4,
                         label=f"{region} {year} JEC up",
                     )
@@ -611,7 +617,9 @@ if __name__ == "__main__":
             finalize_ax(ax, fname=f"JMSSF_{fitDateStr}/{region}_{year}_comparison.pdf", year=year)
     print("second round")
     plotter[f"{fitDateStr}_JECNuis"] = create_plotter(f"fitResults_{fitDateStr}_JECNuis.json", years, regions)
-    plotter[f"{fitDateStr}_JECVarAsInput"] = create_plotter(f"fitResults_{fitDateStr}_JECVarAsInput.json", years, regions)
+    plotter[f"{fitDateStr}_JECVarAsInput"] = create_plotter(
+        f"fitResults_{fitDateStr}_JECVarAsInput.json", years, regions
+    )
     for date, jms_plotter in plotter.items():
         for region in regions:
             print(date, region)
