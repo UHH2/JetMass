@@ -100,17 +100,17 @@ private:
   std::unique_ptr<AndSelection> reco_selection_part1,reco_selection_part2;
   std::unique_ptr<AndSelection> gen_selection_part1,gen_selection_part2;
   
-  std::vector<std::unique_ptr<uhh2::Hists>> hists;
+  std::vector<std::unique_ptr<uhh2::Hists>> hists_nosel, hists;
   std::unique_ptr<uhh2::Hists> h_pfhists_200to500, h_pfhists_500to1000, h_pfhists_1000to2000, h_pfhists_2000to3000, h_pfhists_3000to4000, h_pfhists_4000to5000;
   std::unique_ptr<uhh2::Hists> h_pfhists_inclusive, h_pfhists_500to550, h_pfhists_550to600, h_pfhists_600to675, h_pfhists_675to800, h_pfhists_800to1200, h_pfhists_1200toInf;
 
   std::unique_ptr<uhh2::Hists> h_hlt_eff;
   std::unique_ptr<uhh2::Hists> h_gen_hists_commonmodules,h_gen_hists_gensel;
-  std::unique_ptr<uhh2::Hists> h_unfolding_hists, h_unfolding_hists_fine;
-  std::unique_ptr<uhh2::Hists> h_unfolding_hists_gensubstructure;
-  std::unique_ptr<uhh2::Hists> h_unfolding_hists_no_merged_partons;
-  std::unique_ptr<uhh2::Hists> h_unfolding_hists_rhocut,h_unfolding_hists_no_merged_partons_rhocut;
-  std::unique_ptr<uhh2::Hists> h_unfolding_hists_sel_part1, h_unfolding_hists_sel_part2;
+  // std::unique_ptr<uhh2::Hists> h_unfolding_hists, h_unfolding_hists_fine;
+  // std::unique_ptr<uhh2::Hists> h_unfolding_hists_gensubstructure;
+  // std::unique_ptr<uhh2::Hists> h_unfolding_hists_no_merged_partons;
+  // std::unique_ptr<uhh2::Hists> h_unfolding_hists_rhocut,h_unfolding_hists_no_merged_partons_rhocut;
+  // std::unique_ptr<uhh2::Hists> h_unfolding_hists_sel_part1, h_unfolding_hists_sel_part2;
   
   std::unique_ptr<AnalysisModule> writer;
 
@@ -396,6 +396,13 @@ JetMassModule::JetMassModule(Context & ctx){
   hists.emplace_back(new JetHists(ctx, "JetHists"));
   hists.emplace_back(new TopJetHists(ctx, "TopJetHists"));
 
+  hists_nosel.emplace_back(new ElectronHists(ctx, "ElectronHists_nosel"));
+  hists_nosel.emplace_back(new EventHists(ctx, "EventHists_nosel"));
+  hists_nosel.emplace_back(new MuonHists(ctx, "MuonHists_nosel"));
+  hists_nosel.emplace_back(new JetHists(ctx, "JetHists_nosel"));
+  hists_nosel.emplace_back(new TopJetHists(ctx, "TopJetHists_nosel"));
+
+  
   h_hlt_eff.reset(new TriggerHists(ctx, "HLTEffHists"));
   
   // h_pfhists_200to500.reset(new PFHists(ctx, "PFHists_200to500"));
@@ -810,7 +817,8 @@ bool JetMassModule::process(Event & event) {
   // if(EXTRAOUT) std::cout << "JetMassModule: UnfoldingHistFilling done!" << std::endl;
 
   //Write everything used for JetMassCalibration to Tree if first part of reco-selection passes
-  // if(pass_reco_selection_part1){  
+  // if(pass_reco_selection_part1){
+  for(auto & h: hists_nosel) h->fill(event);
   if(
     (event.topjets->size() >0 && save_all_jets) ||
     pass_reco_selection_part1
