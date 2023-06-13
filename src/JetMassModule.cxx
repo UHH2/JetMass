@@ -536,6 +536,9 @@ bool JetMassModule::process(Event & event) {
   bool pass_common=common->process(event);
   if(!pass_common) return false;
 
+  // apply prefiring weight
+  event.weight *= event.prefiringWeight;
+  
   h_gen_hists_commonmodules->fill(event);
   if(EXTRAOUT) std::cout << "JetMassModule: CommonModules done!" << std::endl;
 

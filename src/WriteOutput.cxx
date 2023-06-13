@@ -63,7 +63,7 @@ WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selec
 
   h_MIDeepDoubleBHbbprob = ctx.declare_event_output<double>("MIDeepDoubleBHbbprob");
   h_MIDeepDoubleBQCDprob = ctx.declare_event_output<double>("MIDeepDoubleBQCDprob");
-
+  
   //ParticleNet Handles
   
   
@@ -160,6 +160,10 @@ WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selec
   h_V_pt = ctx.declare_event_output<double>("V_pt");
 
   h_ps_weights = ctx.declare_event_output<std::vector<float>>("ps_weights");
+
+  h_prefiringweight = ctx.declare_event_output<float>("prefiringweight");
+  h_prefiringweight_up = ctx.declare_event_output<float>("prefiringweight_up");
+  h_prefiringweight_down = ctx.declare_event_output<float>("prefiringweight_down");
   
   h_trigger_bits = ctx.declare_event_output<std::vector<int>>("trigger_bits");
   trigger_names = {
@@ -322,6 +326,10 @@ bool WriteOutput::process(uhh2::Event & event){
     ps_weights = event.genInfo->weights();
   }
   event.set(h_ps_weights, ps_weights);
+
+  event.set(h_prefiringweight, event.prefiringWeight);
+  event.set(h_prefiringweight_up, event.prefiringWeightUp);
+  event.set(h_prefiringweight_down, event.prefiringWeightDown);
   
   std::vector<int> trigger_results = {};
   for(auto trigger_name: trigger_names){
