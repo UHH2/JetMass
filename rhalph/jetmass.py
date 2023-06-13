@@ -773,6 +773,8 @@ if __name__ == "__main__":
     parser.add_argument("--skipExtArgRender", action="store_true")
     parser.add_argument("--seed", type=str, default="42")
     parser.add_argument("--freezeParameters", nargs="+", default=[])
+    parser.add_argument("--separateMassScales", action="store_true")
+    parser.add_argument("--uncertainty_breakdown", action="store_true")
     parser.add_argument(
         "--initialQCDTF",
         action="store_true",
@@ -867,7 +869,7 @@ if __name__ == "__main__":
     args.freezeParameters = [nuisance_name_(par_name, configs) for par_name in args.freezeParameters]
     args.TaggingEff = configs.get("TaggingEff", "True") == "True"
     args.pTdependetMassScale = configs.get("pTdependentMassScale", "True") == "True"
-    args.separateMassScales = configs.get("separateMassScales", "False") == "True"
+    # args.separateMassScales = configs.get("separateMassScales", "False") == "True"
     args.VaryOnlySignal = configs.get("VaryOnlySignal", "False") == "True"
     args.JECVar = configs.get("JECVar", "True") == "True"
 
@@ -885,7 +887,8 @@ if __name__ == "__main__":
             else:
                 cw.extraOptions = args.combineOptions
                 if args.massScales:
-                    cw.freezeParameters = ["r"]+args.freezeParameters
+                    # cw.freezeParameters = ["r"]+args.freezeParameters
+                    cw.freezeParameters = args.freezeParameters
                     cw.extraOptions += " --preFitValue 0"
                     cw.POIRange = (-100, 100)
                 if args.defaultPOI:
@@ -949,16 +952,27 @@ if __name__ == "__main__":
     qcd_estimation_channels = {
         k: v for k, v in configs["channels"].items() if "QcdEstimation" in v and v["QcdEstimation"] == "True"
     }
-    if len(qcd_estimation_channels) > 0 and do_postfit:
-        fitplotter.plot_qcd_bernstein(configs, do_3d_plot=False)
-        if configs.get("QCDFailConstant", "False") == "False":
-            fitplotter.plot_qcd_fail_parameters(configs)
 
-    if args.JECVar and not args.unfolding and all("jec_variation" not in p for p in args.freezeParameters):
-        args.uncertainty_breakdown.append(nuisance_name_("jec_variation", configs))
-    if len(args.uncertainty_breakdown) > 0:
+    uncertainties_for_breakdown = []
+
+    if len(qcd_estimation_channels) > 0 and do_postfit:
+        try:
+            fitplotter.plot_qcd_bernstein(configs, do_3d_plot=False)
+            if configs.get("QCDFailConstant", "False") == "False":
+                fitplotter.plot_qcd_fail_parameters(configs)
+        except BaseException as e:
+            print("QCD TF plots failed.")
+            print(e)
+    if (
+        args.JECVar
+        and not args.unfolding
+        and all("jec_variation" not in p for p in args.freezeParameters)
+        and args.uncertainty_breakdown
+    ):
+        uncertainties_for_breakdown.append(nuisance_name_("jec_variation", configs))
+    if len(uncertainties_for_breakdown) > 0:
         os.system(
-            "./scan_poi.py {} --poi all --plots --lasteffect rest -f {}".format(
-                model_dir, " ".join(args.uncertainty_breakdown)
+            "./scan_poi.py {} --poi massScale_pt0_eta0_all* --plots --lasteffect rest -f {}".format(
+                model_dir, " ".join(uncertainties_for_breakdown)
             )
         )
