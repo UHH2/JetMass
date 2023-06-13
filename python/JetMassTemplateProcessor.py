@@ -40,7 +40,7 @@ class JMSTemplates(processor.ProcessorABC):
         #     ["raw", "pt", "pt_up", "pt_down","pt_","pt_mJ_up", "down"], name="JEC", label="JEC"
         # )
         mJ_ax = hist.axis.Regular(50, 0.0, 500.0, name="mJ", label=r"$m_{SD}$ [GeV]")
-        pT_ax = hist.axis.Regular(100, 0.0, 3000.0, name="pt", label=r"$p_{T}$ [GeV]")
+        pT_ax = hist.axis.Regular(300, 0.0, 3000.0, name="pt", label=r"$p_{T}$ [GeV]")
         eta_ax = hist.axis.Regular(100, -6.5, 6.5, name="eta", label=r"$\eta$")
         eta_regions_ax = hist.axis.Variable([0, 1.3, 2.5], name="abs_eta_regions", label=r"$|\eta|$")
         phi_ax = hist.axis.Regular(100, -4, 4, name="phi", label=r"$\Phi$")
@@ -192,17 +192,11 @@ class JMSTemplates(processor.ProcessorABC):
         # common control-plots
         hists.update(
             {
-                "pt": hist.Hist(
-                    pT_ax, dataset_ax, jec_applied_ax, storage=hist.storage.Weight()
-                ),
+                "pt": hist.Hist(pT_ax, dataset_ax, jec_applied_ax, storage=hist.storage.Weight()),
                 "eta": hist.Hist(eta_ax, dataset_ax, storage=hist.storage.Weight()),
                 "phi": hist.Hist(phi_ax, dataset_ax, storage=hist.storage.Weight()),
-                "mjet": hist.Hist(
-                    mJ_ax, dataset_ax, jec_applied_ax, storage=hist.storage.Weight()
-                ),
-                "rho": hist.Hist(
-                    rho_ax, dataset_ax, jec_applied_ax, storage=hist.storage.Weight()
-                ),
+                "mjet": hist.Hist(mJ_ax, dataset_ax, jec_applied_ax, storage=hist.storage.Weight()),
+                "rho": hist.Hist(rho_ax, dataset_ax, jec_applied_ax, storage=hist.storage.Weight()),
                 "npv": hist.Hist(
                     dataset_ax,
                     hist.axis.Regular(80, 0, 80, name="npv", label=r"$N_{PV}$"),
@@ -210,9 +204,7 @@ class JMSTemplates(processor.ProcessorABC):
                 ),
                 "ntrueint": hist.Hist(
                     dataset_ax,
-                    hist.axis.Regular(
-                        80, 0, 80, name="ntrueint", label=r"$N_{TrueInt}$"
-                    ),
+                    hist.axis.Regular(80, 0, 80, name="ntrueint", label=r"$N_{TrueInt}$"),
                     storage=hist.storage.Weight(),
                 ),
                 "chf": hist.Hist(
@@ -223,6 +215,42 @@ class JMSTemplates(processor.ProcessorABC):
                 "nhf": hist.Hist(
                     dataset_ax,
                     nhf_ax,
+                    storage=hist.storage.Weight(),
+                ),
+                "n2": hist.Hist(
+                    dataset_ax,
+                    hist.axis.Regular(51, -2, 2, name="n2", label="$N_{2}$"),
+                    storage=hist.storage.Weight(),
+                ),
+                "n2ddt": hist.Hist(
+                    dataset_ax,
+                    jec_applied_ax,
+                    hist.axis.Regular(51, -2, 2, name="n2ddt", label=r"$N_{2}^{\mathrm{DDT}}$"),
+                    storage=hist.storage.Weight(),
+                ),
+                "tau21": hist.Hist(
+                    dataset_ax,
+                    hist.axis.Regular(51, 0, 1, name="tau21", label=r"$\frac{\tau_{2}}{\tau_{1}}$"),
+                    storage=hist.storage.Weight(),
+                ),
+                "tau32": hist.Hist(
+                    dataset_ax,
+                    hist.axis.Regular(51, 0, 1, name="tau32", label=r"$\frac{\tau_{3}}{\tau_{2}}$"),
+                    storage=hist.storage.Weight(),
+                ),
+                "pNet_TvsQCD": hist.Hist(
+                    dataset_ax,
+                    hist.axis.Regular(51, 0, 1, name="pNet_TvsQCD", label=r"pNet TvsQCD"),
+                    storage=hist.storage.Weight(),
+                ),
+                "pNet_WvsQCD": hist.Hist(
+                    dataset_ax,
+                    hist.axis.Regular(51, 0, 1, name="pNet_WvsQCD", label=r"pNet WvsQCD"),
+                    storage=hist.storage.Weight(),
+                ),
+                "pNet_MD_WvsQCD": hist.Hist(
+                    dataset_ax,
+                    hist.axis.Regular(51, 0, 1, name="pNet_MD_WvsQCD", label=r"pNet MD WvsQCD"),
                     storage=hist.storage.Weight(),
                 ),
             }
@@ -569,6 +597,10 @@ class JMSTemplates(processor.ProcessorABC):
         eta_ = events.eta
         phi_ = events.phi
 
+        events["ParticleNetMDDiscriminators_WvsQCD"] = (
+            events["ParticleNetMD_probXqq"] + events["ParticleNetMD_probXcc"]
+        ) / (events["ParticleNetMD_probXqq"] + events["ParticleNetMD_probXcc"] + events["ParticleNetMD_probQCD"])
+
         out["pt"].fill(dataset=dataset, jecAppliedOn="pt", pt=pt, weight=events.weight)
         out["pt"].fill(
             dataset=dataset, jecAppliedOn="none", pt=pt_raw, weight=events.weight
@@ -608,6 +640,18 @@ class JMSTemplates(processor.ProcessorABC):
         out["chf"].fill(dataset=dataset, chf=events.CHF, weight=events.weight)
         out["nhf"].fill(dataset=dataset, nhf=events.NHF, weight=events.weight)
 
+        out["n2"].fill(dataset=dataset, n2=events.N2, weight=events.weight)
+        out["tau21"].fill(dataset=dataset, tau21=events.tau21, weight=events.weight)
+        out["tau32"].fill(dataset=dataset, tau32=events.tau32, weight=events.weight)
+        out["pNet_WvsQCD"].fill(
+            dataset=dataset, pNet_WvsQCD=events["ParticleNetDiscriminators_WvsQCD"], weight=events.weight
+        )
+        out["pNet_MD_WvsQCD"].fill(
+            dataset=dataset, pNet_MD_WvsQCD=events["ParticleNetMDDiscriminators_WvsQCD"], weight=events.weight
+        )
+        out["pNet_TvsQCD"].fill(
+            dataset=dataset, pNet_TvsQCD=events["ParticleNetDiscriminators_TvsQCD"], weight=events.weight
+        )
         # for jec_applied_on in ['none','pt','pt&mJ']:
         for jec_applied_on in ["pt", "pt&mJ"]:
             selections = PackedSelection()
@@ -637,6 +681,12 @@ class JMSTemplates(processor.ProcessorABC):
                     self.n2ddt(pt_, rho_, events.N2, corrected=jec_applied_on) < 0
                 ),  # actual N2-DDT tagger
             )
+            out["n2ddt"].fill(
+                dataset=dataset,
+                jecAppliedOn=jec_applied_on,
+                n2ddt=self.n2ddt(pt_, rho_, events.N2, corrected=jec_applied_on),
+                weight=events.weight,
+            )
 
             selections.add(
                 "n2",
@@ -650,10 +700,6 @@ class JMSTemplates(processor.ProcessorABC):
 
             selections.add("tau21", events.tau21 < 0.45)
             selections.add("tau32", events.tau32 < 0.5)
-
-            events["ParticleNetMDDiscriminators_WvsQCD"] = (
-                events["ParticleNetMD_probXqq"] + events["ParticleNetMD_probXcc"]
-            ) / (events["ParticleNetMD_probXqq"] + events["ParticleNetMD_probXcc"] + events["ParticleNetMD_probQCD"])
 
             selections.add("particlenetWvsQCD", events["ParticleNetMDDiscriminators_WvsQCD"] > 0.91)
             # selections.add("particlenetWvsQCD", events["ParticleNetDiscriminators_WvsQCD"] > 0.97)
