@@ -47,7 +47,17 @@ class MassScalePOIScanner(object):
             )
             fit_result_file.close()
 
-        self.pois = pois[self.selection] if args.poi == "all" else [args.poi]
+        # self.pois = pois[self.selection] if args.poi == "all" else [args.poi]
+        if args.poi == "all":
+            self.pois = pois[self.selection]
+        elif "*" in args.poi:
+            self.pois = []
+            for p in self.fit_results_copy.keys():
+                if args.poi.replace("*", "") in p:
+                    self.pois.append(p)
+        else:
+            self.pois = [args.poi]
+        print(self.pois)        
         self.split_uncs = {
             poi: {"up": [], "down": [], "source": args.freeze_nuisances + [args.lasteffect]}
             for poi in self.pois
@@ -77,8 +87,8 @@ class MassScalePOIScanner(object):
 
         snapshot_fit_cmd = (
             f"combine -M MultiDimFit -d model_combined.root "
-            f"--redefineSignalPOIs  {','.join(pois[self.selection])} "
-            f"--setParameterRanges {':'.join('%s=-10,10'%poi for poi in self.pois)} "
+            f"--redefineSignalPOIs  {','.join(self.pois)} "
+            f"--setParameterRanges {':'.join('%s=-15,15'%poi for poi in self.pois)} "
             f"--cminDefaultMinimizerStrategy 0 --robustFit 1 "
             f"-n .nominal_fit --saveWorkspace "
             "--saveFitResult "
