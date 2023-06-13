@@ -3,6 +3,41 @@ from coffea.util import load, save
 import os
 
 
+def flatten_control_plots(hists, samples, jec_applied_on="pt&mJ"):
+    control_plots = {}
+    hist_ax_identifiers = {
+        "pt": {"jecAppliedOn": jec_applied_on},
+        "eta": {},
+        "phi": {},
+        "ntrueint": {},
+        "npv": {},
+        "rho": {"jecAppliedOn": jec_applied_on},
+        "n2ddt": {"jecAppliedOn": jec_applied_on},
+        "n2": {},
+        "pNet_TvsQCD": {},
+        "pNet_WvsQCD": {},
+        "pNet_MD_WvsQCD": {},
+        "tau21": {},
+        "tau32": {},
+    }
+    for hist_name, hist_id_dict in hist_ax_identifiers.items():
+        flat_hist_exists = True
+        hist_axes = hists[hist_name].axes
+        for sample in samples:
+            if sample not in hist_axes["dataset"]:
+                continue
+            sample_name = sample.replace("vjets", "W").replace("ttbar", "top")
+            flat_hist_name = f"{sample_name}_{hist_name}"
+            for flat_ax_name, flat_ax_value in hist_id_dict.items():
+                flat_ax = hist_axes[flat_ax_name]
+                flat_ax_identifiers = [k for k in flat_ax]
+                if flat_ax_value not in flat_ax_identifiers:
+                    flat_hist_exists = False
+            if flat_hist_exists:
+                control_plots[flat_hist_name] = hists[hist_name][{"dataset": sample, **hist_id_dict}]
+    return control_plots
+
+
 def flatten_templates(
         hists, hist_name, samples, jec_applied_on="pt&mJ", legacy_hist_name_pattern="",
         eta_region='inclusive'
@@ -175,6 +210,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", "-i", default="templates_2017.coffea")
     parser.add_argument("--output", "-o", default="templates_1d_2017")
+    parser.add_argument(
+        "--control", action="store_true", help="Instead of mjet templates for fit, flatten control plots"
+    )
     parser.add_argument("--JEC", default="pt&mJ", choices=["none", "pt", "pt&mJ"])
     parser.add_argument("--mass", default="mjet", choices=["mjet", "mPnet"])
     parser.add_argument("--eta", default="inclusive", choices=["inclusive", "barrel", "endcap"])
@@ -226,61 +264,68 @@ if __name__ == "__main__":
             "signal_samples": ["TTToSemiLeptonic_mergedW"],
         },
     }
-    print(f"flattening templates and saving to ROOT from {args.input}")
-    variations = ["all"]
-    if args.mass == "mjet":
-        variations += ["chargedH", "neutralH", "gamma", "other"]
     templates = {}
-    for selection in selections.keys():
-        samples = [f"{selection}_{s}" for s in selections[selection]["samples"]]
-        signal_samples = [
-            f"{selection}_{s}" for s in selections[selection]["signal_samples"]
-        ]
-        for region in selections[selection]["regions"]:
+    if args.control:
+        for selection in selections.keys():
+            samples = [f"{selection}_{s}" for s in selections[selection]["samples"]]
+            templates.update(
+                flatten_control_plots(hists, samples=samples, jec_applied_on=args.JEC)
+            )
+    else:
+        print(f"flattening templates and saving to ROOT from {args.input}")
+        variations = ["all"]
+        if args.mass == "mjet":
+            variations += ["chargedH", "neutralH", "gamma", "other"]
+        for selection in selections.keys():
+            samples = [f"{selection}_{s}" for s in selections[selection]["samples"]]
+            signal_samples = [
+                f"{selection}_{s}" for s in selections[selection]["signal_samples"]
+            ]
+            for region in selections[selection]["regions"]:
 
-            if args.unfolding:
-                templates.update(
-                    make_unfolding_templates(
-                        hists,
-                        f"{selection}_mjet_unfolding_{region}",
-                        samples=samples,
-                        signal_samples=signal_samples,
-                        jec_applied_on=args.JEC,
-                        legacy_hist_name_pattern=f"{selection}_mjet_PTBIN_{region}",
+                if args.unfolding:
+                    templates.update(
+                        make_unfolding_templates(
+                            hists,
+                            f"{selection}_mjet_unfolding_{region}",
+                            samples=samples,
+                            signal_samples=signal_samples,
+                            jec_applied_on=args.JEC,
+                            legacy_hist_name_pattern=f"{selection}_mjet_PTBIN_{region}",
+                        )
                     )
-                )
-            else:
-                templates.update(
-                    flatten_templates(
-                        hists,
-                        f"{selection}_{args.mass}_{region}",
-                        samples=samples,
-                        jec_applied_on=args.JEC,
-                        legacy_hist_name_pattern=f"{selection}_mjet_PTBIN_{region}",
-                        eta_region=args.eta
-                    )
-                )
-                for variation in variations:
+                else:
                     templates.update(
                         flatten_templates(
                             hists,
-                            f"{selection}_{args.mass}_0_0_{variation}_variation_{region}__up",
+                            f"{selection}_{args.mass}_{region}",
                             samples=samples,
                             jec_applied_on=args.JEC,
-                            legacy_hist_name_pattern=f"{selection}_mjet_0_0_{variation}_PTBIN_{region}__up",
+                            legacy_hist_name_pattern=f"{selection}_mjet_PTBIN_{region}",
                             eta_region=args.eta
                         )
                     )
-                    templates.update(
-                        flatten_templates(
-                            hists,
-                            f"{selection}_{args.mass}_0_0_{variation}_variation_{region}__down",
-                            samples=samples,
-                            jec_applied_on=args.JEC,
-                            legacy_hist_name_pattern=f"{selection}_mjet_0_0_{variation}_PTBIN_{region}__down",
-                            eta_region=args.eta
+                    for variation in variations:
+                        templates.update(
+                            flatten_templates(
+                                hists,
+                                f"{selection}_{args.mass}_0_0_{variation}_variation_{region}__up",
+                                samples=samples,
+                                jec_applied_on=args.JEC,
+                                legacy_hist_name_pattern=f"{selection}_mjet_0_0_{variation}_PTBIN_{region}__up",
+                                eta_region=args.eta
+                            )
                         )
-                    )
+                        templates.update(
+                            flatten_templates(
+                                hists,
+                                f"{selection}_{args.mass}_0_0_{variation}_variation_{region}__down",
+                                samples=samples,
+                                jec_applied_on=args.JEC,
+                                legacy_hist_name_pattern=f"{selection}_mjet_0_0_{variation}_PTBIN_{region}__down",
+                                eta_region=args.eta
+                            )
+                        )
 
     if not os.path.exists(os.path.dirname(args.output)):
         os.makedirs(os.path.dirname(args.output))
