@@ -106,6 +106,8 @@ def efficiency_scalefactor(hists, year, ref_trig, probe_trig, **kwargs):
             x = x[x < fit_range[1]]
         popt, pcov = curve_fit(fit_func, x, y, maxfev=8000, p0=p0)  # , bounds=([0.99,0,300,0],[1,0.04,900,200]))
 
+        return popt, pcov
+
     x_min = 400
     x_max = 750
 
