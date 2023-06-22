@@ -9,7 +9,7 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import mplhep as hep
 import os
-
+from copy import deepcopy
 hep.style.use("CMS")
 
 
@@ -53,20 +53,16 @@ def get_eff_hists(h, varname, ref_trig, probe_trig, **kwargs):
     rebin_factor = kwargs.pop("rebin_factor", 1.0)
     lookup_str = kwargs.pop("lookup_str", "")
     prescale_str = kwargs.pop("prescale_str", "")
-
-    # common_hist_name = f"{varname}_{ref_trig}_{probe_trig}" + lookup_str
-    # h_ref = h[f"HLTEffHists/{common_hist_name}_denom"].to_hist()[hist.rebin(rebin_factor)]
-    # probe_hist_name = (
-    #     f"{common_hist_name}{prescale_str}_num"
-    # )
-    # h_probe = h[f"HLTEffHists/{probe_hist_name}"].to_hist()[
-    #     hist.rebin(rebin_factor)
-    # ]
-
+    variation = kwargs.pop("variation", "nominal")
     h_ref = h[f"HLTEffHists/{varname}_{ref_trig}_{probe_trig}{lookup_str}_denom"].to_hist()[hist.rebin(rebin_factor)]
     h_probe = h[f"HLTEffHists/{varname}_{ref_trig}_{probe_trig}{lookup_str}{prescale_str}_num"].to_hist()[
         hist.rebin(rebin_factor)
     ]
+    if variation != "nominal":
+        direction = -1.0 if variation == "down" else 1.0
+        h_ref = h_ref + direction * np.sqrt(h_ref.variances())
+        h_probe = h_probe + direction * np.sqrt(h_probe.variances())
+
     sumw_num = h_probe.values()
     sumw_denom = h_ref.values()
     rsumw = np.nan_to_num(np.divide(sumw_num, sumw_denom, out=np.zeros_like(sumw_num), where=sumw_denom != 0))
@@ -95,69 +91,111 @@ def efficiency_scalefactor(hists, year, ref_trig, probe_trig, **kwargs):
     lookup_str = "_lookup" if kwargs.pop("lookup_trigger", False) else ""
     prescale_str = "_prescale" if kwargs.pop("use_prescales", False) else ""
 
-    def fit_func(z, a=0.5, b=0.5, c=400, d=0.1):
-        return a * erf((z - c) * d) + b
+    def fit_func(z, a, b, c, d):
+        return a * (b + 0.5 * (1 - b) * (1 + erf((z - c) / d)))
 
-    def fit_erf(x, y):
-        popt, pcov = curve_fit(fit_func, x, y, maxfev=8000, p0=(0.5, 0.5, 400, 0.1))
-        return popt, pcov
+    def fit_erf(x_, y_, fit_range=(None, None)):
+        x = deepcopy(x_)
+        y = deepcopy(y_)
+        p0 = (1.0, 0.0, 500.0, 40.0)
+        if fit_range[0] is not None:
+            y = y[x >= fit_range[0]]
+            x = x[x >= fit_range[0]]
+        if fit_range[1] is not None:
+            y = y[x < fit_range[1]]
+            x = x[x < fit_range[1]]
+        popt, pcov = curve_fit(fit_func, x, y, maxfev=8000, p0=p0)  # , bounds=([0.99,0,300,0],[1,0.04,900,200]))
 
-    x_min = 0
-    x_max = 900
-    # x_min=0
-    # x_max=1500
-    eff_data = get_eff_hists(
-        h_data,
-        varname,
-        ref_trig,
-        probe_trig,
-        rebin_factor=rebin_factor,
-        lookup_str=lookup_str,
-        prescale_str=prescale_str,
-    )
-    eff_mc = get_eff_hists(
-        h_mc, varname, ref_trig, probe_trig, rebin_factor=rebin_factor, lookup_str=lookup_str, prescale_str=prescale_str
-    )
+    x_min = 400
+    x_max = 750
 
-    ax.errorbar(
-        eff_data[0].axes[0].centers,
-        eff_data[2],
-        yerr=eff_data[3],
-        label="data" + lookup_str,
-        color="tab:red",
-        linestyle="",
-        marker=".",
-    )
-    ax.errorbar(
-        eff_mc[0].axes[0].centers,
-        eff_mc[2],
-        yerr=eff_mc[3],
-        label="mc" + lookup_str,
-        color="tab:blue",
-        linestyle="",
-        marker="x",
-    )
+    variations = ["nominal", "up", "down"]
+    eff_data = {
+        var: get_eff_hists(
+            h_data,
+            varname,
+            ref_trig,
+            probe_trig,
+            rebin_factor=rebin_factor,
+            lookup_str=lookup_str,
+            prescale_str=prescale_str,
+            variation=var,
+        )
+        for var in variations
+    }
+    eff_mc = {
+        var: get_eff_hists(
+            h_mc,
+            varname,
+            ref_trig,
+            probe_trig,
+            rebin_factor=rebin_factor,
+            lookup_str=lookup_str,
+            prescale_str=prescale_str,
+            variation=var,
+        )
+        for var in variations
+    }
 
-    popt_data, _ = fit_erf(eff_data[0].axes[0].centers, eff_data[2])
-    popt_mc, _ = fit_erf(eff_mc[0].axes[0].centers, eff_mc[2])
-
+    eff_fits = {k: {} for k in variations}
+    sf_curves = {}
     x_plot = np.linspace(x_min, x_max, 1000)
-    fit_data = fit_func(x_plot, *popt_data)
-    fit_mc = fit_func(x_plot, *popt_mc)
 
-    ax.plot(x_plot, fit_data, label="data fit", color="tab:red")
-    ax.plot(x_plot, fit_mc, label="mc fit", color="tab:blue")
+    for var in variations:
+        alpha = 1.0 if var == "nominal" else 0.2
+        ax.errorbar(
+            eff_data[var][0].axes[0].centers,
+            eff_data[var][2],
+            yerr=eff_data[var][3],
+            label=f"data ({var})",
+            color="tab:red",
+            linestyle="",
+            marker=".",
+            alpha=alpha,
+        )
+        ax.errorbar(
+            eff_mc[var][0].axes[0].centers,
+            eff_mc[var][2],
+            yerr=eff_mc[var][3],
+            label=f"mc ({var})",
+            color="tab:blue",
+            linestyle="",
+            marker="x",
+            alpha=alpha,
+        )
 
-    ax.plot(x_plot[x_plot < 500], (fit_data / fit_mc)[x_plot < 500], color="k", lw=3, ls="-.", alpha=0.2)
+        popt_data, _ = fit_erf(eff_data[var][0].axes[0].centers, eff_data[var][2], fit_range=(100, 1000))
+        popt_mc, _ = fit_erf(eff_mc[var][0].axes[0].centers, eff_mc[var][2], fit_range=(100, 1000))
+        fit_data = fit_func(x_plot, *popt_data)
+        fit_mc = fit_func(x_plot, *popt_mc)
+
+        eff_fits[var]["data"] = fit_data
+        eff_fits[var]["mc"] = fit_mc
+        sf_curves[var] = fit_data / fit_mc
+
+    ax.fill_between(x_plot, eff_fits["down"]["data"], eff_fits["up"]["data"], alpha=0.4, color="tab:red")
+    ax.fill_between(x_plot, eff_fits["down"]["mc"], eff_fits["up"]["mc"], alpha=0.4, color="tab:blue")
+    ax.plot(x_plot, eff_fits["nominal"]["data"], label="data fit", color="tab:red", alpha=0.9)
+    ax.plot(x_plot, eff_fits["nominal"]["mc"], label="mc fit", color="tab:blue", alpha=0.9)
+
+    ax.fill_between(
+        x_plot[x_plot < 500], sf_curves["down"][x_plot < 500], sf_curves["up"][x_plot < 500], alpha=0.1, color="k"
+    )
+    ax.fill_between(
+        x_plot[x_plot >= 500], sf_curves["down"][x_plot >= 500], sf_curves["up"][x_plot >= 500], alpha=0.4, color="k"
+    )
+    ax.plot(x_plot[x_plot < 500], sf_curves["nominal"][x_plot < 500], alpha=0.2, lw=2, ls="-.", color="k")
     ax.plot(
         x_plot[x_plot >= 500],
-        (fit_data / fit_mc)[x_plot >= 500],
-        label="Data/MC" + lookup_str,
-        color="k",
-        lw=3,
+        sf_curves["nominal"][x_plot >= 500],
+        label="Data/MC SF",
+        alpha=0.9,
+        lw=2,
         ls="-.",
+        color="k",
     )
 
+    ax.axhline(1.0, color="black", linestyle="dashed", linewidth=1.0)
     ax.legend(ncols=1, fontsize=15)
     ax.set_xlim(x_min, x_max)
     ax.set_ylim(0, 1.2)
@@ -286,7 +324,9 @@ if __name__ == "__main__":
             colors_ = colors[iyear:]
             for ref_trig, probe_triggers in triggers.items():
                 for probe_trig in probe_triggers:
-                    efficiency_scalefactor(hists, year, ref_trig, probe_trig, outdir=args.outdir, rebin=5, lookup_trigger=True)
+                    efficiency_scalefactor(
+                        hists, year, ref_trig, probe_trig, outdir=args.outdir, rebin=5, lookup_trigger=True
+                    )
             for lookup_trigger in [True, False]:
                 lookup_trigger_str = ("_lookup" if lookup_trigger else "")
                 if sample == "Data":
