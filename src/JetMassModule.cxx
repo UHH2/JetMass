@@ -72,6 +72,7 @@ private:
   bool isttbarSel = false;
   bool isvjetsSel = false;
   bool do_genStudies = false;
+  bool doOnlyTriggerHists = false;
   bool save_all_jets = false;
   int write_output_level = 0;
 
@@ -185,7 +186,7 @@ JetMassModule::JetMassModule(Context & ctx){
   std::string V_pt_handlename("V_pt");
   nlo_weights_UL.reset(new NLOWeights(ctx,V_pt_handlename,true));
   do_genStudies = string2bool(ctx.get("doGenStudies", "true"));
-  
+  doOnlyTriggerHists = string2bool(ctx.get("justDoTriggerHists", "false"));
   // common modules
   // MuonId muid = AndId<Muon>(MuonID(Muon::CutBasedIdTight), PtEtaCut(55., 2.4));
   // ElectronId eleid = AndId<Electron>(ElectronID_Fall17_medium_noIso, PtEtaCut(55., 2.4));
@@ -209,7 +210,7 @@ JetMassModule::JetMassModule(Context & ctx){
 
   common.reset(new CommonModules());
   //muid and eleid are taken from release dependent header file (JetMassUtils10[2,6]X.h)
-  if(isttbarSel){
+  if(isttbarSel && !doOnlyTriggerHists){
     common->set_muon_id(muid);
     common->set_electron_id(eleid);
   }else if(isvjetsSel){
@@ -621,7 +622,7 @@ bool JetMassModule::process(Event & event) {
     else nlo_weights->process(event);
   }
   h_hlt_eff->fill(event);
-  
+  if(doOnlyTriggerHists) return false;
   // if(event.topjets->size()>0){
   //   //PFHists
   //   float AK8_pt = event.topjets->at(0).pt();
