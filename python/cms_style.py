@@ -83,6 +83,7 @@ def draw_lumi(
     do_cms_text=False,
     private_work=False,
     parent_pad=None,
+    data=True,
 ):
     global additional_text_size
     global additional_text_ypos
@@ -90,8 +91,10 @@ def draw_lumi(
     lumi_text = "(%s) %.2f fb^{-1} (13 TeV)" % (str(year), float(lumi))
     if private_work:
         cms_text = "Private work"
-        # extra_text = "________________(CMS_data/simulation)"
-        extra_text = "________________(CMS_simulation)"
+        if data:
+            extra_text = "________________(CMS_data/simulation)"
+        else:
+            extra_text = "________________(CMS_simulation)"
     latex = ROOT.TLatex()
     latex.SetNDC()
 

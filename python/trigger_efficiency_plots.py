@@ -9,6 +9,7 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import mplhep as hep
 import os
+import re
 from copy import deepcopy
 hep.style.use("CMS")
 
@@ -108,8 +109,10 @@ def efficiency_scalefactor(hists, year, ref_trig, probe_trig, **kwargs):
 
         return popt, pcov
 
-    x_min = 400
-    x_max = 750
+    pt_thr_match = re.search(r"[0-9]{3}", probe_trig)
+    pt_thr = 550 if not pt_thr_match else int(pt_thr_match.group())
+    x_min = pt_thr - 100
+    x_max = pt_thr + 150
 
     variations = ["nominal", "up", "down"]
     eff_data = {
@@ -149,7 +152,7 @@ def efficiency_scalefactor(hists, year, ref_trig, probe_trig, **kwargs):
             eff_data[var][0].axes[0].centers,
             eff_data[var][2],
             yerr=eff_data[var][3],
-            label=f"data ({var})",
+            label=f"data ({var})" if var == "nominal" else None,
             color="tab:red",
             linestyle="",
             marker=".",
@@ -159,13 +162,12 @@ def efficiency_scalefactor(hists, year, ref_trig, probe_trig, **kwargs):
             eff_mc[var][0].axes[0].centers,
             eff_mc[var][2],
             yerr=eff_mc[var][3],
-            label=f"mc ({var})",
+            label=f"mc ({var})" if var == "nominal" else None,
             color="tab:blue",
             linestyle="",
             marker="x",
             alpha=alpha,
         )
-
         popt_data, _ = fit_erf(eff_data[var][0].axes[0].centers, eff_data[var][2], fit_range=(100, 1000))
         popt_mc, _ = fit_erf(eff_mc[var][0].axes[0].centers, eff_mc[var][2], fit_range=(100, 1000))
         fit_data = fit_func(x_plot, *popt_data)
@@ -196,6 +198,8 @@ def efficiency_scalefactor(hists, year, ref_trig, probe_trig, **kwargs):
         ls="-.",
         color="k",
     )
+
+    hep.label.exp_label(llabel="Private Work (CMS data/simulation)", year=year, ax=ax, fontsize=20)
 
     ax.axhline(1.0, color="black", linestyle="dashed", linewidth=1.0)
     ax.legend(ncols=1, fontsize=15)
@@ -288,12 +292,12 @@ if __name__ == "__main__":
     }
     triggers = {
         "IsoMuonReference": [
-            # "AK8PFJET400",
+            "AK8PFJet400",
             "AK8PFJet450",
             "AK8PFJet500",
             "AK8PFJet550",
             # "AK8PFHT900",
-            "PFHT1050",
+            # "PFHT1050",
         ],
         # "AK8PFJET320":[
         # "AK8PFJET450",

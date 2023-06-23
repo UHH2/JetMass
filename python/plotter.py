@@ -42,8 +42,10 @@ binning_dict = {
     # "CMS": {'top': np.linspace(50, 200, 16), 'W': np.linspace(0, 500, 101), 'WfromTop': np.linspace(0, 300, 61)},
     # "CMS": {'top': np.linspace(50, 300, 51), 'W': np.linspace(50, 200, 16), 'WfromTop': np.linspace(0, 300, 61)},
     "CMS": {
-        "top": np.linspace(50, 300, 51),
-        "W": np.linspace(50, 300, 51),
+        # "top": np.linspace(0, 300, 61),
+        # "W": np.linspace(50, 300, 51),
+        "top": np.linspace(30, 300, 55),
+        "W": np.linspace(30, 300, 55),
         "Zbb": np.linspace(50, 300, 51),
     }
     # "CMS": {'top': np.linspace(0, 500, 11), 'W': np.linspace(0, 500, 11), 'Zbb': np.linspace(0, 500, 11)}
@@ -272,6 +274,22 @@ mc_samples = {
         "TTToSemiLeptonic_mergedTop",
     ],
 }
+mc_samples_nomatching = {
+    "W": [
+        "other_vjets",
+        "QCD",
+        "ZJets",
+        "WJets",
+    ],
+    "top": [
+        "other_ttbar",
+        "WJets",
+        "TTToHadronic",
+        "TTToSemiLeptonic",
+        "TTTo2L2Nu",
+        "ST",
+    ],
+}
 
 merged_hists = {
     "TTbar": [
@@ -404,18 +422,19 @@ pt_bins_dict = {
     #       "200to225", "225to250", "250to275", "275to300", "300to325", "325to350", "350to400", "400to500", "200to350"],
 }
 
-pt_bins_tex_dict = {}
+pt_bins_tex_dict = {
+    selection: {workflow: {} for workflow in pt_bins_dict[selection].keys()} for selection in pt_bins_dict.keys()
+}
 for selection, workflows in pt_bins_dict.items():
     for workflow, bins in workflows.items():
         for pt_bin in bins:
-            pt_bins_tex_dict[pt_bin] = (
+            pt_bins_tex_dict[selection][workflow][pt_bin] = (
                 ""
                 if (pt_bin == "inclusive")
-                else " %s GeV #leq p_{T} < %s GeV"
-                % (pt_bin.split("to")[0], pt_bin.split("to")[1])
+                else " %s GeV #leq p_{T} < %s GeV" % (pt_bin.split("to")[0], pt_bin.split("to")[1])
             )
-
-
+        min_pt = min(map(lambda x: int(x.split("to")[0]) if "to" in x else 9999, bins))
+        pt_bins_tex_dict[selection][workflow]["inclusive"] = " p_{T} #geq %s GeV" % (min_pt)
 nbjet_bins_dict = {"top": [""], "W": [""], "Zbb": ["", "Nbjeteq0", "Nbjetgt0"]}
 
 nbjet_bins_tex_dict = {
@@ -445,7 +464,7 @@ year = "2017"
 extra_text = "Preliminary"
 lumi_text_padding = 0.4
 additional_text_padding = 0.4
-additional_text_size_modifier = 1.0
+additional_text_size_modifier = 1.4
 draw_extra_text = True
 private_work = False
 
@@ -491,7 +510,7 @@ def get_hists(
 ):
     # print(f_hists, samples, hist_dir,selection)
     hist_dir = selection + hist_dir if (hist_dir[0] == "_") else hist_dir
-    # print(hist_dir)
+    print(hist_dir)
     new_binning = None
     if rebin:
         new_binning = binning_dict["CMS"].get(selection, None)
@@ -536,7 +555,7 @@ def get_hists(
             h_data = h_data_temp
             if pseudo_data_file:
                 h_data.Scale(binwidth)
-        if rebin_factor>1:
+        if rebin_factor > 1:
             h_data = h_data.Rebin(rebin_factor)
         if new_binning is not None:
             h_data = h_data.Rebin(len(new_binning) - 1, "", new_binning)
@@ -634,6 +653,7 @@ def plot_data_mc(
     additional_data=[],
     cutflow=False,
     ratio_y_range=(0.75, 1.25),
+    contains_data=True,
 ):
 
     cms_style.bottom_right_margin_modifier = 1.5 if cutflow else 1.0
@@ -677,6 +697,7 @@ def plot_data_mc(
         out_of_frame=True,
         do_cms_text=draw_extra_text,
         private_work=private_work,
+        data=contains_data
     )
     plotpad.cd()
 

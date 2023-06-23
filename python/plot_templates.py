@@ -2,6 +2,7 @@
 from __future__ import print_function
 import UHH2.JetMass.plotter as plotter
 import ROOT
+import numpy as np
 import os
 
 response_samples = {
@@ -139,15 +140,26 @@ def plot_mass(
                     mc_hists[sample].SetLineColor(plotter.colors.get(sample))
                     # mc_hists[sample].SetLineColor(plotter.colors[sample])
                     # mc_hists[sample].SetFillColor(plotter.colors[sample])
-                    legend_entries.append(
-                        (mc_hists[sample], plotter.legend_names[sample], "f")
-                    )
+                    legend_label = plotter.legend_names[sample]
+                    if selection == "W" and sample == "QCD":
+                        legend_label += " \\times {:.2f}".format(plotter.qcd_scale)
+
+                    legend_entries.append((mc_hists[sample], legend_label, "f"))
                     bkg_stack.Add(mc_hists[sample], "Hist")
 
                 legend_entries.append((h_data, "Data", "p"))
 
+                ymax = max(bkg_stack.GetMaximum(), h_data.GetMaximum())
+                mc_max_vals = [mc_hists[sample].GetMaximum() for sample in plotter.mc_samples[selection]]
+                ymin_log = min(mc_max_vals)/5.
+                if logY:
+                    print(ymin_log, 10**(np.ceil(np.log10(ymax))/(2./3.)))
+                    h_data.GetYaxis().SetRangeUser(ymin_log, 10**(np.log10(ymax)/(2/3.)))
+                else:
+                    h_data.GetYaxis().SetRangeUser(0., ymax/(2./3.))
+
                 plotter.logY = logY
-                bininfo_tex = plotter.pt_bins_tex_dict[pt_bin] + (
+                bininfo_tex = plotter.pt_bins_tex_dict[selection]["jms"][pt_bin] + (
                     ""
                     if nbjet_bin == ""
                     else "\\" + plotter.nbjet_bins_tex_dict[nbjet_bin]
@@ -199,28 +211,28 @@ if __name__ == "__main__":
     # for selection in ['top','W']:
     # for selection in ['top','W','Zbb']:
     # for selection in ['Zbb']:
-    output_dir = (
-        (
-            "../Plots/%s_coffea%s/"
-            % (
-                args.input.replace(".root", ""),
-                "_originalQCDScale" if args.origQCDScale else "",
+    for logY in [False, True]:
+        output_dir = (
+            (
+                "../Plots/%s_coffea%s/"
+                % (
+                    args.input.replace(".root", ""),
+                    "_originalQCDScale" if args.origQCDScale else "",
+                )
             )
-        )
-        if args.output == ""
-        else args.output
-    )
-    for selection in ["W", "top"]:
-        print(selection, hist_file)
-        plot_mass(
-            selection,
-            "mjet",
-            hist_file,
-            output_dir,
-            binning="CMS",
-            scaleQCD=not args.origQCDScale,
-            logY=True
-        )
+            if args.output == ""
+            else args.output
+        ) + ("_logY" if logY else "")
+        for selection in ["W", "top"]:
+            plot_mass(
+                selection,
+                "mjet",
+                hist_file,
+                output_dir,
+                binning="CMS",
+                scaleQCD=not args.origQCDScale,
+                logY=logY
+            )
     # for selection in ['W']:
     #     plot_mass(selection,'mjet',hist_file,'../Plots/templates',binning="CMS")
     # hist_file = "../macros/Histograms.root"
