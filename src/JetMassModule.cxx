@@ -342,7 +342,13 @@ JetMassModule::JetMassModule(Context & ctx){
   reco_selection_part1.reset(new AndSelection(ctx,"reco_selection_part1"));
   reco_selection_part2.reset(new AndSelection(ctx,"reco_selection_part2"));
   if(isttbarSel){
-    reco_selection_part1->add<TriggerSelection>("Trigger selection","HLT_Mu50_v*");
+    OrSelection trigger_sel =  OrSelection();
+    trigger_sel.add<TriggerSelection>("HLT_Mu50_v*");
+    if(extract_year(ctx) == Year::isUL16preVFP || extract_year(ctx) == Year::isUL16postVFP){
+      trigger_sel.add<TriggerSelection>("HLT_TkMu50_v*");
+    }
+    reco_selection_part1->add<OrSelection>("Trigger selection", trigger_sel);
+    // reco_selection_part1->add<TriggerSelection>("Trigger selection","HLT_Mu50_v*");
     // reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 200 GeV", 1,-1,TopJetId(PtEtaCut(200.,100000.)));
     reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1", 1);
     reco_selection_part1->add<TopJetPtCut>("p_{T, AK8} #geq 200 GeV", ctx, 200);
