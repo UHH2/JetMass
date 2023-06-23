@@ -167,8 +167,16 @@ WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selec
   
   h_trigger_bits = ctx.declare_event_output<std::vector<int>>("trigger_bits");
   trigger_names = {
-    "HLT_PFJet320_v*","HLT_PFJet400_v*","HLT_PFJet450_v*","HLT_PFJet500_v*","HLT_PFJet550_v*",
-    "HLT_AK8PFJet320_v*","HLT_AK8PFJet400_v*","HLT_AK8PFJet450_v*","HLT_AK8PFJet500_v*","HLT_AK8PFJet550_v*",
+    "HLT_PFJet320_v*",//0
+    "HLT_PFJet400_v*",//1
+    "HLT_PFJet450_v*",//2
+    "HLT_PFJet500_v*",//3
+    "HLT_PFJet550_v*",//4
+    "HLT_AK8PFJet320_v*",//5
+    "HLT_AK8PFJet400_v*",//6
+    "HLT_AK8PFJet450_v*",//7
+    "HLT_AK8PFJet500_v*",//8
+    "HLT_AK8PFJet550_v*",//9
   };
   
   // h_n_ak8_reco = ctx.declare_event_output<int>("N_ak8_reco");
