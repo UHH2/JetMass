@@ -518,7 +518,8 @@ JetMassModule::JetMassModule(Context & ctx){
 }
 
 bool JetMassModule::process(Event & event) {
-  if(EXTRAOUT){
+  bool extra_out(false); // for rare debug cases where one want to decide for verbose output on Runtime level
+  if(EXTRAOUT || extra_out){
     cout << "JetMassModule: Starting to process event (runid, eventid) = (" << event.run << ", " << event.event << "); weight = " << event.weight << endl;
   }
   if(is_mc)ttgen_producer->process(event);
@@ -531,13 +532,13 @@ bool JetMassModule::process(Event & event) {
   event.set(handle_gen_HT,genHT);
   ht_calculator->process(event);
   
-  if(EXTRAOUT) std::cout << "JetMassModule: ExtraHandles done!" << std::endl;
+  if(EXTRAOUT || extra_out) std::cout << "JetMassModule: ExtraHandles done!" << std::endl;
   
   // Throw away events with NVTX in buggy area for buggy samples
   if(is_mc && is_buggyPU){
     float n_true = event.genInfo->pileup_TrueNumInteractions();
     if(n_true < 10. || n_true > 72.) return false;
-    if(EXTRAOUT) std::cout << "JetMassModule: BuggyPU Treatment done!" << std::endl;
+    if(EXTRAOUT || extra_out) std::cout << "JetMassModule: BuggyPU Treatment done!" << std::endl;
   }
 
   // COMMON MODULES
@@ -548,12 +549,12 @@ bool JetMassModule::process(Event & event) {
   event.weight *= event.prefiringWeight;
   
   h_gen_hists_commonmodules->fill(event);
-  if(EXTRAOUT) std::cout << "JetMassModule: CommonModules done!" << std::endl;
+  if(EXTRAOUT || extra_out) std::cout << "JetMassModule: CommonModules done!" << std::endl;
 
   //remove MC Events with very large unphysical weights
   if(is_mc && isvjetsSel && is_QCD){
     if(!mcSpikeKiller->passes(event)) return false;
-    if(EXTRAOUT) std::cout << "JetMassModule: SpikeKiller done!" << std::endl;
+    if(EXTRAOUT || extra_out) std::cout << "JetMassModule: SpikeKiller done!" << std::endl;
   }
 
   event.set(handle_toppt_weight, 1.0);
@@ -573,7 +574,8 @@ bool JetMassModule::process(Event & event) {
   sort_by_pt<TopJet>(chs_jets);
   if(is_mc)sort_by_pt<GenTopJet>(*event.gentopjets);
   if(is_mc)sort_by_pt<GenTopJet>(sd_gen_jets);  
-  if(EXTRAOUT) std::cout << "JetMassModule: TopJetCorrections done!" << std::endl;
+  if(EXTRAOUT || extra_out) std::cout << "JetMassModule: TopJetCorrections done!" << std::endl;
+  if(EXTRAOUT || extra_out) std::cout << "N topjets after topjetcorrections: " << event.topjets->size() << std::endl;
   
   // CLEANER
   // ak4cleaner15->process(event);
@@ -587,7 +589,8 @@ bool JetMassModule::process(Event & event) {
     genak8cleaner->process(event);
     genak4cleaner->process(event);
   }
-  if(EXTRAOUT) std::cout << "JetMassModule: Cleaner done!" << std::endl;
+  if(EXTRAOUT || extra_out) std::cout << "JetMassModule: Cleaner done!" << std::endl;
+  if(EXTRAOUT || extra_out) std::cout << "N topjets after cleaner: " << event.topjets->size() << std::endl;
 
   double genjetpt(-1.0), bosonpt(-1.0);
   if(is_mc){
@@ -658,7 +661,7 @@ bool JetMassModule::process(Event & event) {
     
     pass_reco_selection_part2 = reco_selection_part2->passes(event);
   }
-  if(EXTRAOUT) std::cout << "JetMassModule: RecoSelection done!" << std::endl;
+  if(EXTRAOUT || extra_out) std::cout << "JetMassModule: RecoSelection done!" << std::endl;
 
     
   bool pass_gen_selection_part1(false),pass_gen_selection_part2(false);
@@ -698,7 +701,7 @@ bool JetMassModule::process(Event & event) {
   if(pass_gen_selection_part1 && is_mc){
     pass_gen_selection_part2 = gen_selection_part2->passes(event);
   }
-  if(EXTRAOUT) std::cout << "JetMassModule: GenSelection done!" << std::endl;
+  if(EXTRAOUT || extra_out) std::cout << "JetMassModule: GenSelection done!" << std::endl;
 
   //putting closest genjet without selection and chs-jet into handle used for CHSPuppiResponseStudy
   const GenTopJet* genjet(NULL);
@@ -764,7 +767,7 @@ bool JetMassModule::process(Event & event) {
   event.set(handle_n_merged_partons_gen_jet, n_merged_partons_gen_jet);
 
 
-  if(EXTRAOUT) std::cout << "JetMassModule: Reco-Gen Matching done!" << std::endl;
+  if(EXTRAOUT || extra_out) std::cout << "JetMassModule: Reco-Gen Matching done!" << std::endl;
 
   bool pass_substructure_cut(false);  
   if(pass_reco_selection_part1){
@@ -779,7 +782,7 @@ bool JetMassModule::process(Event & event) {
       pass_substructure_cut = tau32<0.5;
     }
   }
-  if(EXTRAOUT) std::cout << "JetMassModule: SubstructureSelection done!" << std::endl;
+  if(EXTRAOUT || extra_out) std::cout << "JetMassModule: SubstructureSelection done!" << std::endl;
 
   //fill first round of unfolding hists with part1 of selections
   //IMPORTANT: setting selection bits before filling UnfoldingHists, since those rely on correct setting of handles!
@@ -815,7 +818,7 @@ bool JetMassModule::process(Event & event) {
   // h_unfolding_hists_no_merged_partons_rhocut->fill(event);
 
   
-  // if(EXTRAOUT) std::cout << "JetMassModule: UnfoldingHistFilling done!" << std::endl;
+  // if(EXTRAOUT || extra_out) std::cout << "JetMassModule: UnfoldingHistFilling done!" << std::endl;
 
   //Write everything used for JetMassCalibration to Tree if first part of reco-selection passes
   // if(pass_reco_selection_part1){
@@ -829,7 +832,7 @@ bool JetMassModule::process(Event & event) {
     // STORE EVENT
     writer->process(event);
     
-    if(EXTRAOUT) std::cout << "JetMassModule: OutputTreeWriter done!" << std::endl;
+    if(EXTRAOUT || extra_out) std::cout << "JetMassModule: OutputTreeWriter done!" << std::endl;
     return true;
   }else return false;
 }
