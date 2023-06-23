@@ -207,6 +207,7 @@ JetMassModule::JetMassModule(Context & ctx){
     ctx.set("pileup_directory",(std::string) pu_file_path);
   }
   std::cout << "reweighting mc pileup using " << ctx.get("pileup_directory")<<" as mc profile dir" <<std::endl;
+  ctx.undeclare_all_event_output();
 
   common.reset(new CommonModules());
   //muid and eleid are taken from release dependent header file (JetMassUtils10[2,6]X.h)
@@ -241,7 +242,6 @@ JetMassModule::JetMassModule(Context & ctx){
   }
 
 
-  ctx.undeclare_all_event_output();
 
   //HandleNames
   std::string reco_selection_handlename("pass_reco_selection");
