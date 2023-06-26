@@ -18,11 +18,18 @@ kfactor_path = f"{jetmass_path}/NLOweights/"
 
 
 class JMSTemplates(processor.ProcessorABC):
-    def __init__(self, year="2017", jec="nominal", variation_weight="nominal", tagger="substructure"):
+    def __init__(
+            self,
+            year: str = "2017",
+            jec: str = "nominal",
+            variation_weight: str = "nominal",
+            trigger_sf_var: str = "nominal",
+            tagger: str = "substructure"
+    ):
         self._year = year
         self._jec = jec
         self._variation_weight = variation_weight
-
+        self._trigger_sf_variation = trigger_sf_var
         self._tagger_approach = tagger
         tagger_approaches = ["substructure", "particlenet"]
         if self._tagger_approach not in tagger_approaches:
@@ -146,6 +153,11 @@ class JMSTemplates(processor.ProcessorABC):
             )
             for jec_applied_on in ["none", "pt", "pt&mJ"]
         }
+
+        self.trigger_scalefactors = correctionlib.CorrectionSet.from_file(
+            "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/notebooks/data/"
+            + "HLT_AK8PFJet_MC_trigger_sf_c2e731345f.json"
+        )
 
         self.mjet_reco_correction = correctionlib.CorrectionSet.from_file(
             "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/python/"
@@ -282,32 +294,32 @@ class JMSTemplates(processor.ProcessorABC):
 
         self._regions = {
             "vjets": {
-                "inclusive": {"rhocut": True, "pt500cut": True},
+                "inclusive": {"rhocut": True, "pt500cut": True, "trigger": True},
                 "pass": {
                     **tagger["vjets"][self._tagger_approach]["pass"],
-                    "rhocut": True, "pt500cut": True
+                    "rhocut": True, "pt500cut": True, "trigger": True
                 },
                 "fail": {
                     **tagger["vjets"][self._tagger_approach]["fail"],
-                    "rhocut": True, "pt500cut": True
+                    "rhocut": True, "pt500cut": True, "trigger": True
                 },
-                "inclusive_trigger": {
-                    "rhocut": True,
-                    "pt500cut": True,
-                    "HLT_AK8PFJet450": True,
-                },
-                "pass_trigger": {
-                    **tagger["vjets"][self._tagger_approach]["pass"],
-                    "rhocut": True,
-                    "pt500cut": True,
-                    "HLT_AK8PFJet450": True,
-                },
-                "fail_trigger": {
-                    **tagger["vjets"][self._tagger_approach]["fail"],
-                    "rhocut": True,
-                    "pt500cut": True,
-                    "HLT_AK8PFJet450": True,
-                },
+                # "inclusive_trigger": {
+                #     "rhocut": True,
+                #     "pt500cut": True,
+                #     "trigger": True,
+                # },
+                # "pass_trigger": {
+                #     **tagger["vjets"][self._tagger_approach]["pass"],
+                #     "rhocut": True,
+                #     "pt500cut": True,
+                #     "trigger": True,
+                # },
+                # "fail_trigger": {
+                #     **tagger["vjets"][self._tagger_approach]["fail"],
+                #     "rhocut": True,
+                #     "pt500cut": True,
+                #     "trigger": True,
+                # },
             },
             "ttbar": {
                 "inclusive": {"pt200cut": True},
@@ -562,6 +574,8 @@ class JMSTemplates(processor.ProcessorABC):
         if self._variation_weight != "nominal" and "data" not in dataset.lower() and len(events) > 0:
             variation_weights = {
                 "toppt_off": 1. / events["toppt_weight"],
+                "pu_down": events["weight_pu_down"]/events["weight_pu"],
+                "pu_up": events["weight_pu_down"]/events["weight_pu"],
             }
             if len(events["ps_weights"][0]) == 46:
                 variation_weights["fsr_down"] = events["ps_weights"][:, 4] / events["ps_weights"][:, 0]
@@ -597,60 +611,80 @@ class JMSTemplates(processor.ProcessorABC):
         eta_ = events.eta
         phi_ = events.phi
 
+        # apply trigger sf
+        if isMC and selection == "vjets":
+            trigger_sf_evaluator_450 = self.trigger_scalefactors[
+                f"HLT_AK8PFJet450_triggersf_{self._year}"
+            ]
+            trigger_sf_evaluator_500 = self.trigger_scalefactors[
+                f"HLT_AK8PFJet500_triggersf_{self._year}"
+            ]
+            first_ptbin = (pt < 650.0)
+            events.weight = events.weight * ak.where(
+                first_ptbin,
+                trigger_sf_evaluator_450.evaluate(
+                    pt, self._trigger_sf_variation
+                ),
+                trigger_sf_evaluator_500.evaluate(
+                    pt, self._trigger_sf_variation
+                )
+            )
+
         events["ParticleNetMDDiscriminators_WvsQCD"] = (
             events["ParticleNetMD_probXqq"] + events["ParticleNetMD_probXcc"]
         ) / (events["ParticleNetMD_probXqq"] + events["ParticleNetMD_probXcc"] + events["ParticleNetMD_probQCD"])
 
-        out["pt"].fill(dataset=dataset, jecAppliedOn="pt", pt=pt, weight=events.weight)
-        out["pt"].fill(
-            dataset=dataset, jecAppliedOn="none", pt=pt_raw, weight=events.weight
+        # apply trigger selection of vjets also to control plots
+        m_cps = np.ones_like(events.pt, dtype=bool)
+        vjets_trigger_mask = ak.where(
+            pt < 650.0,
+            events["trigger_bits"][:, self._triggerbits.index("HLT_AK8PFJet450_v*")] == 1,
+            events["trigger_bits"][:, self._triggerbits.index("HLT_AK8PFJet500_v*")] == 1,
         )
-        out["eta"].fill(dataset=dataset, eta=eta_, weight=events.weight)
-        out["phi"].fill(dataset=dataset, phi=phi_, weight=events.weight)
-        out["mjet"].fill(
-            dataset=dataset, jecAppliedOn="mJ", mJ=mjet, weight=events.weight
-        )
-        out["mjet"].fill(
-            dataset=dataset, jecAppliedOn="none", mJ=mjet_raw, weight=events.weight
-        )
-        out["rho"].fill(
-            dataset=dataset, jecAppliedOn="pt&mJ", rho=rho, weight=events.weight
-        )
+
+        if selection == "vjets":
+            m_cps = m_cps & vjets_trigger_mask
+
+        out["pt"].fill(dataset=dataset, jecAppliedOn="pt", pt=pt[m_cps], weight=events.weight[m_cps])
+        out["pt"].fill(dataset=dataset, jecAppliedOn="none", pt=pt_raw[m_cps], weight=events.weight[m_cps])
+        out["eta"].fill(dataset=dataset, eta=eta_[m_cps], weight=events.weight[m_cps])
+        out["phi"].fill(dataset=dataset, phi=phi_[m_cps], weight=events.weight[m_cps])
+        out["mjet"].fill(dataset=dataset, jecAppliedOn="mJ", mJ=mjet[m_cps], weight=events.weight[m_cps])
+        out["mjet"].fill(dataset=dataset, jecAppliedOn="none", mJ=mjet_raw[m_cps], weight=events.weight[m_cps])
+        out["rho"].fill(dataset=dataset, jecAppliedOn="pt&mJ", rho=rho[m_cps], weight=events.weight[m_cps])
         out["rho"].fill(
             dataset=dataset,
             jecAppliedOn="pt",
-            rho=rho_corrected_pt,
-            weight=events.weight,
+            rho=rho_corrected_pt[m_cps],
+            weight=events.weight[m_cps],
         )
         out["rho"].fill(
             dataset=dataset,
             jecAppliedOn="mJ",
-            rho=rho_corrected_mJ,
-            weight=events.weight,
+            rho=rho_corrected_mJ[m_cps],
+            weight=events.weight[m_cps],
         )
-        out["rho"].fill(
-            dataset=dataset, jecAppliedOn="none", rho=rho_raw, weight=events.weight
-        )
+        out["rho"].fill(dataset=dataset, jecAppliedOn="none", rho=rho_raw[m_cps], weight=events.weight[m_cps])
 
-        out["npv"].fill(dataset=dataset, npv=events.n_pv, weight=events.weight)
+        out["npv"].fill(dataset=dataset, npv=events.n_pv[m_cps], weight=events.weight[m_cps])
         if isMC:
-            out["ntrueint"].fill(
-                dataset=dataset, ntrueint=events.n_trueint, weight=events.weight
-            )
-        out["chf"].fill(dataset=dataset, chf=events.CHF, weight=events.weight)
-        out["nhf"].fill(dataset=dataset, nhf=events.NHF, weight=events.weight)
+            out["ntrueint"].fill(dataset=dataset, ntrueint=events.n_trueint[m_cps], weight=events.weight[m_cps])
+        out["chf"].fill(dataset=dataset, chf=events.CHF[m_cps], weight=events.weight[m_cps])
+        out["nhf"].fill(dataset=dataset, nhf=events.NHF[m_cps], weight=events.weight[m_cps])
 
-        out["n2"].fill(dataset=dataset, n2=events.N2, weight=events.weight)
-        out["tau21"].fill(dataset=dataset, tau21=events.tau21, weight=events.weight)
-        out["tau32"].fill(dataset=dataset, tau32=events.tau32, weight=events.weight)
+        out["n2"].fill(dataset=dataset, n2=events.N2[m_cps], weight=events.weight[m_cps])
+        out["tau21"].fill(dataset=dataset, tau21=events.tau21[m_cps], weight=events.weight[m_cps])
+        out["tau32"].fill(dataset=dataset, tau32=events.tau32[m_cps], weight=events.weight[m_cps])
         out["pNet_WvsQCD"].fill(
-            dataset=dataset, pNet_WvsQCD=events["ParticleNetDiscriminators_WvsQCD"], weight=events.weight
+            dataset=dataset, pNet_WvsQCD=events["ParticleNetDiscriminators_WvsQCD"][m_cps], weight=events.weight[m_cps]
         )
         out["pNet_MD_WvsQCD"].fill(
-            dataset=dataset, pNet_MD_WvsQCD=events["ParticleNetMDDiscriminators_WvsQCD"], weight=events.weight
+            dataset=dataset,
+            pNet_MD_WvsQCD=events["ParticleNetMDDiscriminators_WvsQCD"][m_cps],
+            weight=events.weight[m_cps],
         )
         out["pNet_TvsQCD"].fill(
-            dataset=dataset, pNet_TvsQCD=events["ParticleNetDiscriminators_TvsQCD"], weight=events.weight
+            dataset=dataset, pNet_TvsQCD=events["ParticleNetDiscriminators_TvsQCD"][m_cps], weight=events.weight[m_cps]
         )
         # for jec_applied_on in ['none','pt','pt&mJ']:
         for jec_applied_on in ["pt", "pt&mJ"]:
@@ -697,6 +731,7 @@ class JMSTemplates(processor.ProcessorABC):
             #                (rho_<-2.1)
             #                &(rho_>-6.0))
             selections.add("rhocut", rho_ < -2.1)
+            # selections.add("rhocut", np.ones_like(events.pt, dtype=bool))
 
             selections.add("tau21", events.tau21 < 0.45)
             selections.add("tau32", events.tau32 < 0.5)
@@ -725,8 +760,8 @@ class JMSTemplates(processor.ProcessorABC):
             selection = events.metadata["selection"]
 
             selections.add(
-                # "HLT_AK8PFJet450", self.passes_trigger(events, "HLT_AK8PFJet450_v*")
-                "HLT_AK8PFJet450", ak.ones_like(events.pt, dtype=bool)
+                "trigger",
+                vjets_trigger_mask
             )
 
             for region in self._regions[selection].keys():
@@ -851,7 +886,14 @@ if __name__ == "__main__":
     workflow.parser.add_argument("--output", "-o", type=str, default="jms_templates.coffea")
     workflow.parser.add_argument("--year", default="UL17")
     workflow.parser.add_argument("--JEC", default="nominal")
-    workflow.parser.add_argument("--variation", default="nominal")
+    workflow.parser.add_argument("--variation", default="nominal", choices=[
+        "isr_up", "isr_down",
+        "fsr_up", "fsr_down",
+        "triggersf_up", "triggersf_down",
+        "pu_up", "pu_down",
+        "toppt_off",
+    ])
+    workflow.parser.add_argument("--triggersf", default="nominal", choices=["nominal", "up", "down"])
     workflow.parser.add_argument("--maxfiles", type=int, default=-1)
     workflow.parser.add_argument("--tagger", default="substructure", choices=["substructure", "particlenet"])
 
@@ -861,6 +903,7 @@ if __name__ == "__main__":
         year=args.year,
         jec=args.JEC,
         variation_weight=args.variation,
+        trigger_sf_var=args.triggersf,
         tagger=args.tagger
     )
     workflow.processor_schema = BaseSchema
