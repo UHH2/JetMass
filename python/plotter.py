@@ -1,20 +1,19 @@
 from __future__ import print_function
 import ROOT
-from ROOT import gStyle
 import numpy as np
 import cms_style
 import collections
 import logging
+ROOT.PyConfig.IgnoreCommandLineOptions = True
+ROOT.gROOT.SetBatch(1)
 
 logger = logging.getLogger()
 
-cms_style.cms_style()
+cms_style.set_style()
 
-
-# gROOT.SetBatch(True)
-gStyle.SetOptStat(0)
-gStyle.SetOptFit(0)
-gStyle.SetOptTitle(0)
+ROOT.gStyle.SetOptStat(0)
+ROOT.gStyle.SetOptFit(0)
+ROOT.gStyle.SetOptTitle(0)
 
 
 leftMargin = 0.14
@@ -42,8 +41,10 @@ binning_dict = {
     # "CMS": {'top': np.linspace(50, 200, 16), 'W': np.linspace(0, 500, 101), 'WfromTop': np.linspace(0, 300, 61)},
     # "CMS": {'top': np.linspace(50, 300, 51), 'W': np.linspace(50, 200, 16), 'WfromTop': np.linspace(0, 300, 61)},
     "CMS": {
-        "top": np.linspace(50, 300, 51),
-        "W": np.linspace(50, 300, 51),
+        # "top": np.linspace(0, 300, 61),
+        # "W": np.linspace(50, 300, 51),
+        "top": np.linspace(30, 300, 55),
+        "W": np.linspace(30, 300, 55),
         "Zbb": np.linspace(50, 300, 51),
     }
     # "CMS": {'top': np.linspace(0, 500, 11), 'W': np.linspace(0, 500, 11), 'Zbb': np.linspace(0, 500, 11)}
@@ -113,7 +114,6 @@ colors = {
     "other_ttbar": 921,
 }
 MC_stat_err_color = 922
-MC_stat_err_color = ROOT.kGray + 2
 MC_stat_err_fillstyle = 3235  # 3204
 
 legend_names = {
@@ -273,6 +273,22 @@ mc_samples = {
         "TTToSemiLeptonic_mergedTop",
     ],
 }
+mc_samples_nomatching = {
+    "W": [
+        "other_vjets",
+        "QCD",
+        "ZJets",
+        "WJets",
+    ],
+    "top": [
+        "other_ttbar",
+        "WJets",
+        "TTToHadronic",
+        "TTToSemiLeptonic",
+        "TTTo2L2Nu",
+        "ST",
+    ],
+}
 
 merged_hists = {
     "TTbar": [
@@ -301,8 +317,8 @@ merged_hists = {
     "TTbarMergedTop": ["TTToSemiLeptonic_mergedTop"],
     "TTbarMergedW": ["TTToSemiLeptonic_mergedW"],
     "TTbarMergedQB": ["TTToSemiLeptonic_mergedQB"],
-    "TTbarNonSemiLep": ["TTToHadronic", "TTTo2l2Nu"],
-    "TTbarNotMerged": ["TTToHadronic", "TTTo2l2Nu", "TTToSemiLeptonic_notMerged"],
+    "TTbarNonSemiLep": ["TTToHadronic", "TTTo2L2Nu"],
+    "TTbarNotMerged": ["TTToHadronic", "TTTo2L2Nu", "TTToSemiLeptonic_notMerged"],
     # "ST": ["ST_sch",  "ST_tch", "ST_tWch"],
     "ST": ["ST_s", "ST_t", "ST_tW"],
     "other_ttbar": ["QCD", "DYJets"],
@@ -405,18 +421,19 @@ pt_bins_dict = {
     #       "200to225", "225to250", "250to275", "275to300", "300to325", "325to350", "350to400", "400to500", "200to350"],
 }
 
-pt_bins_tex_dict = {}
+pt_bins_tex_dict = {
+    selection: {workflow: {} for workflow in pt_bins_dict[selection].keys()} for selection in pt_bins_dict.keys()
+}
 for selection, workflows in pt_bins_dict.items():
     for workflow, bins in workflows.items():
         for pt_bin in bins:
-            pt_bins_tex_dict[pt_bin] = (
+            pt_bins_tex_dict[selection][workflow][pt_bin] = (
                 ""
                 if (pt_bin == "inclusive")
-                else " %s GeV #leq p_{T} < %s GeV"
-                % (pt_bin.split("to")[0], pt_bin.split("to")[1])
+                else " %s GeV #leq p_{T} < %s GeV" % (pt_bin.split("to")[0], pt_bin.split("to")[1])
             )
-
-
+        min_pt = min(map(lambda x: int(x.split("to")[0]) if "to" in x else 9999, bins))
+        pt_bins_tex_dict[selection][workflow]["inclusive"] = " p_{T} #geq %s GeV" % (min_pt)
 nbjet_bins_dict = {"top": [""], "W": [""], "Zbb": ["", "Nbjeteq0", "Nbjetgt0"]}
 
 nbjet_bins_tex_dict = {
@@ -431,6 +448,8 @@ lumis = {
     "UL17": 41479.68052876168 / 1000.0,
     "UL18": 59832.47533908866 / 1000.0,
 }
+lumis["RunII"] = sum([lumi for year, lumi in lumis.items() if "UL" in year])
+lumis["UL16"] = sum([lumi for year, lumi in lumis.items() if "UL16" in year])
 
 
 obs_draw_option = "PE1X0"
@@ -444,7 +463,7 @@ year = "2017"
 extra_text = "Preliminary"
 lumi_text_padding = 0.4
 additional_text_padding = 0.4
-additional_text_size_modifier = 1.0
+additional_text_size_modifier = 1.4
 draw_extra_text = True
 private_work = False
 
@@ -468,6 +487,8 @@ ymax = 1.0
 xmax = 1.0
 xmin = 0.0
 
+qcd_scale = 1.0
+
 y_range = [None, None]
 y_range_ratio = [None, None]
 x_range = [None, None]
@@ -483,11 +504,12 @@ def get_hists(
     pseudo_data=False,
     include_merged_hists=True,
     scaleQCD=True,
-    pseudo_data_file=None
+    pseudo_data_file=None,
+    rebin_factor=1,
 ):
     # print(f_hists, samples, hist_dir,selection)
     hist_dir = selection + hist_dir if (hist_dir[0] == "_") else hist_dir
-    # print(hist_dir)
+    print(hist_dir)
     new_binning = None
     if rebin:
         new_binning = binning_dict["CMS"].get(selection, None)
@@ -496,12 +518,12 @@ def get_hists(
     if not pseudo_data:
         for data_name in ["Data", "data_obs", "data"]:
             h_data = f_hists.Get(str(hist_dir % data_name))
-            print(hist_dir % data_name)
+            # print(hist_dir % data_name)
             try:
                 h_data.GetName()
                 break
             except BaseException as e:
-                logger.exception("tried getting data hist with" + data_name + "(which failed miserably)")
+                logger.info("tried getting data hist with " + data_name + "(which failed miserably)")
                 logger.exception(e)
 
         if pseudo_data_file:
@@ -532,6 +554,8 @@ def get_hists(
             h_data = h_data_temp
             if pseudo_data_file:
                 h_data.Scale(binwidth)
+        if rebin_factor > 1:
+            h_data = h_data.Rebin(rebin_factor)
         if new_binning is not None:
             h_data = h_data.Rebin(len(new_binning) - 1, "", new_binning)
             h_data.GetYaxis().SetTitle(
@@ -547,37 +571,45 @@ def get_hists(
 
     for sample in samples:
         this_hist = None
-        # print(sample, hist_dir)
-        if sample in merged_hists and include_merged_hists:
-            for subsample in merged_hists[sample]:
+
+        def get_sample_hist(sample_name, return_empty=False):
+            this_subhist_ = None
+            try:
+                this_subhist_ = f_hists.Get(str(hist_dir % sample_name)).Clone()
+            except BaseException as e:
+                this_subhist_ = None
+                logger.exception(
+                    ("hist" + str(hist_dir % sample_name) + "not found. Trying adding the year as suffix.")
+                )
+                logger.exception(e)
+                sample_name_year = "{}_{}".format(sample_name, year)
                 try:
-                    this_subhist = f_hists.Get(str(hist_dir % subsample)).Clone()
+                    this_subhist_ = f_hists.Get(str(hist_dir % sample_name_year)).Clone()
                 except BaseException as e:
-                    logger.exception((
-                        "hist"
-                        + str(hist_dir % subsample)
-                        + "not found. Taking empty hist instead."
-                    )
+                    this_subhist_ = None
+                    logger.exception(
+                        "hist" + str(hist_dir % sample_name_year) + "not found. Taking empty hist or None instead."
                     )
                     logger.exception(e)
+            return this_subhist_
+
+        if sample in merged_hists and include_merged_hists:
+            for subsample in merged_hists[sample]:
+                this_subhist = get_sample_hist(subsample)
+                if this_subhist is None:
                     this_subhist = h_data.Clone()
                     this_subhist.Reset()
-
                 if this_hist is None:
                     this_hist = this_subhist.Clone()
                     this_hist.SetTitle(this_hist.GetTitle().replace(subsample, sample))
                     this_hist.SetName(this_hist.GetName().replace(subsample, sample))
                 else:
-                    # print(sample,subsample,this_subhist.GetNbinsX())
                     this_hist.Add(this_subhist.Clone())
         else:
-            try:
-                this_hist = f_hists.Get(str(hist_dir % sample)).Clone()
-            except BaseException as e:
-                logger.exception("Did not find hist "+hist_dir % sample)
-                logger.exception(e)
-                continue
+            this_hist = get_sample_hist(sample)
 
+        if rebin_factor > 1:
+            this_hist = this_hist.Rebin(rebin_factor)
         if new_binning is not None:
             this_hist = this_hist.Rebin(len(new_binning) - 1, "", new_binning)
             this_hist.GetYaxis().SetTitle(
@@ -601,9 +633,9 @@ def get_hists(
     else:
         if scaleQCD and (selection in ["W", "Zbb"]):
             norm = mc_hists["QCD"].Integral()
-            mc_hists["QCD"].Scale(
-                (h_qcd_from_data.Integral() / norm) if norm > 0 else 1.0
-            )
+            global qcd_scale
+            qcd_scale = (h_qcd_from_data.Integral() / norm) if norm > 0 else 1.0
+            mc_hists["QCD"].Scale(qcd_scale)
 
     return (h_data, mc_hists)
 
@@ -619,10 +651,12 @@ def plot_data_mc(
     additional_hists=[],
     additional_data=[],
     cutflow=False,
+    ratio_y_range=(0.75, 1.25),
+    contains_data=True,
 ):
 
     cms_style.bottom_right_margin_modifier = 1.5 if cutflow else 1.0
-    cms_style.cms_style()
+    # cms_style.cms_style()
     if h_data is None and h_mc is None and len(additional_hists) == 0:
         raise ValueError("No Histograms were provided!")
     c_width = 1200 if ultrawide else (900 if cutflow else 600)
@@ -662,6 +696,7 @@ def plot_data_mc(
         out_of_frame=True,
         do_cms_text=draw_extra_text,
         private_work=private_work,
+        data=contains_data
     )
     plotpad.cd()
 
@@ -706,8 +741,6 @@ def plot_data_mc(
         bkg_err.SetMarkerSize(0)
         legend.AddEntry(bkg_err, "MC stat. Unc.", "f")
 
-    # elif(len(additional_hists)>0):
-    #     max_val = max(max_val ,additional_hists[0].GetMaximum())
     frame_hist = (None, None)
     if h_data is not None:
         h_data.SetLineColor(obs_line_color)
@@ -770,7 +803,7 @@ def plot_data_mc(
         if None in y_range:
             minY = 0.9 * pow(10, round(np.log10(max_val)) - 4) if logY else 0.0
             maxY = 1.4 * max_val
-        frame_hist[0].GetYaxis().SetRangeUser(minY, maxY)
+        # frame_hist[0].GetYaxis().SetRangeUser(minY, maxY)
         # for i in range(1,frame_hist[0].GetNbinsX()+1):
         #     print('changing label:')
         #     print(frame_hist[0].GetXaxis().GetBinLabel(i))
@@ -786,7 +819,8 @@ def plot_data_mc(
         legend_canvas.SaveAs(out_dir + "/legend.pdf")
         plotpad.cd()
     else:
-        legend.Draw("SAME")
+        # legend.Draw("SAME")
+        legend.Draw()
 
     if additional_pad is not None:
 
@@ -849,8 +883,27 @@ def plot_data_mc(
             ratio_hist[0].SetMarkerStyle(8)
             ratio_hist[0].SetMarkerSize(0.5)
             cms_style.setup_ratio_hist(ratio_hist[0])
-            ratio_hist[0].GetYaxis().SetRangeUser(*setup_yrange(ratio_hist[0]))
+            ratio_y_min, ratio_y_max = ratio_y_range
+            ratio_hist[0].GetYaxis().SetRangeUser(ratio_y_min, ratio_y_max)
             ratio_hist[0].Draw("PE1X0")
+            arrows = []
+            arrow_length = (1 - ratio_y_min) / 5
+            arrow_color = ROOT.kRed - 7  # 13
+            for ibin in range(1, ratio_hist[0].GetNbinsX() + 1):
+                bin_content = ratio_hist[0].GetBinContent(ibin)
+                bin_center = ratio_hist[0].GetBinCenter(ibin)
+                if bin_content > ratio_y_max:
+                    arrows.append(
+                        ROOT.TArrow(bin_center, ratio_y_max - arrow_length, bin_center, ratio_y_max, 0.01, "|>")
+                    )
+                elif bin_content < ratio_y_min and bin_content > 0:
+                    arrows.append(
+                        ROOT.TArrow(bin_center, ratio_y_min + arrow_length, bin_center, ratio_y_min, 0.01, "|>")
+                    )
+                for arrow in arrows:
+                    arrow.SetLineColor(arrow_color)
+                    arrow.SetFillColor(arrow_color)
+                    arrow.Draw()
 
             ratio_stat_err = bkg_err.Clone()
             ratio_stat_err.Divide(bkg_err)
@@ -876,7 +929,6 @@ def plot_data_mc(
         for h in ratio_hist:
             h.GetXaxis().SetTitle(h_data.GetXaxis().GetTitle())
             h.GetYaxis().SetTitle(ratio_hist_yTitle)
-            h.GetYaxis().SetRangeUser(*setup_yrange(ratio_hist[0]))
 
         ratioXMin = ratio_hist[0].GetXaxis().GetXmin()
         ratioXMax = ratio_hist[0].GetXaxis().GetXmax()

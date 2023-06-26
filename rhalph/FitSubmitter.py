@@ -24,6 +24,7 @@ class FitSubmitter(object):
         self._dry_run = dry_run
         self.batchname = ""
         self.extra_jetmass_options = ""
+        self.jetmass_mode = "jms"
         self.fit_qcd_model = False
         self.postfit_command = ""  # will be written into htc wrapper which recieves fit config as parameter $1
 
@@ -124,13 +125,13 @@ queue ConfigName from (""" + "\n".join(job_workdirs) + """
         batch_wrapper.write("cd " + self._workdir + "\n")
         # batch_wrapper.write("source setup_ralph.sh\n")
         jetmass_options = self.extra_jetmass_options + ("" if defaultFit else " --customCombineWrapper")
-
+        
         # produce ModelDir with datacards using rhalphalib
         if job_workdirs[0].endswith(".json"):
             batch_wrapper.write("python jetmass.py $1 %s\n" % jetmass_options)
         else:
             batch_wrapper.write("cd $1\n")
-            batch_wrapper.write("for i in *.json; do python jetmass.py $i %s;done\n" % jetmass_options)
+            batch_wrapper.write("for i in *.json; do python jetmass.py -M %s $i %s;done\n" % (self.jetmass_mode, jetmass_options))
             
         # write wrapper that runs combine workflow if previous command did not do that yet!
         if "--build" in self.extra_jetmass_options:

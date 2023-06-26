@@ -53,10 +53,12 @@ class JMSPlotter:
         fits_to_plot: List[str],
         separate_jec_fits_: bool = False,
         legacy_json_format: bool = True,  # for now allow errors and jms central best fit value to be stored in same list 'vals' # noqa
+        mass_scale_pattern: str = "massScale"
     ) -> None:
         self.lFits = fits_to_plot
         self.dFitResults = {k: v for k, v in fit_results.items() if k in self.lFits}
         self.bLegacyJsonFormat = legacy_json_format
+        self.massScalePattern = mass_scale_pattern
 
         self.f, self.ax = None, None
 
@@ -77,7 +79,15 @@ class JMSPlotter:
 
     def extract_fit_results(self) -> None:
         for fit in self.lFits:
+            if "jms" not in self.dFitResults[fit]:
+                self.lFits.remove(fit)
+                print("Fit {} seemed to have failed. Removing from plotter.".format(fit))
+                continue
             for par in self.dFitResults[fit]["jms"].keys():
+                # for split JMS ignore parameter that do not match
+                # i.e. do not include substring pattern (e.g. *_top_* or *_W_*)
+                if self.massScalePattern not in par:
+                    continue
                 # getting parameter names for easier access ?
                 self.sJmsParameters.add(par)
                 # getting lower and upper pt_edges to construct pt_edges
@@ -472,12 +482,28 @@ def setup_ax(w: int = 10, h: int = 7, fontsize: float = 20.0) -> Tuple[plt.Figur
 def finalize_ax(
     ax: plt.Axes, font_size: float = 20.0, fname: str = None, reversered_legend: bool = True, year: str = ""
 ) -> None:
+    lumis = {
+        "2017": 41528.9954019578 / 1000.0,
+        "UL16preVFP": 19301.591954787407 / 1000.0,
+        "UL16postVFP": 16626.734093195286 / 1000.0,
+        "UL17": 41479.68052876168 / 1000.0,
+        "UL18": 59832.47533908866 / 1000.0,
+    }
+    lumis["RunII"] = sum([lumi for year, lumi in lumis.items() if "UL" in year])
+    lumis["UL16"] = sum([lumi for year, lumi in lumis.items() if "UL16" in year])
+
     f = ax.get_figure()
-    extra_text = ", private work"
-    if year != "":
-        hep.cms.label(label=extra_text, ax=ax, fontsize=font_size, year=year)
-    else:
-        hep.cms.text(extra_text, ax=ax, fontsize=font_size)
+    # extra_text = ", private work"
+    exp_label = "Private work (CMS data/simulation)"
+    print("year_str", year)
+    # if year != "":
+    #     hep.cms.label(label=extra_text, ax=ax, fontsize=font_size, year=year, lumi=round(lumis.get(year, None), 2))
+    lumi = lumis.get(year, None)
+    if lumi is not None:
+        lumi = round(lumi, 2)
+    hep.label.exp_label(exp="", llabel=exp_label, ax=ax, fontsize=font_size-2, year=year, lumi=lumi)
+    # else:
+    #     hep.cms.text(exp_label, ax=ax, fontsize=font_size)
 
     handles, labels = ax.get_legend_handles_labels()
     if reversered_legend:
@@ -501,10 +527,12 @@ def finalize_ax(
     # f.show()
 
 
-def create_plotter(fit_result_path: str, years: List, regions: List, JEC: bool = False, legacy: bool = False):
+def create_plotter(
+    fit_result_path: str, years: List, regions: List, JEC: bool = False, legacy: bool = False, jms_pattern="massScale"
+):
     fitResults = json.load(open(fit_result_path))
     fits = [f"{region}{year}" for region in regions for year in years]
-    plotter = JMSPlotter(fitResults, fits, legacy_json_format=legacy)
+    plotter = JMSPlotter(fitResults, fits, legacy_json_format=legacy, mass_scale_pattern=jms_pattern)
     plotter.construct_hists()
     if JEC:
         plotter.load_JEC_fits(fitResults)
@@ -512,12 +540,32 @@ def create_plotter(fit_result_path: str, years: List, regions: List, JEC: bool =
 
 
 if __name__ == "__main__":
-    years = ["UL16preVFP", "UL16postVFP", "UL17", "UL18"]
-    regions = ["TTBar", "VJets", "Combined"]
+    # years = ["UL17"]
+    # regions = ["Combined"]
+
+    # plotter = {
+    #     "Substructure":create_plotter("fitResults_03-05-23_substructure.json", years, regions),
+    #     "ParticleNet":create_plotter("fitResults_03-05-23_particlenet.json", years, regions),
+    # }
+
+    # f,ax = setup_ax(10,7)
+    # for name, jms_plotter in plotter.items():
+    #     jms_plotter.dHists["CombinedUL17"].plot_errorbar(
+    #         ax=ax, split_uncertainty=True, alpha=0.8, label=f"UL17 {name}", fmt=".",
+    #         linewidth=0.9,
+    #     )
+    # finalize_ax(ax, fname="JMSSF_03-05-23_tagger_comp/Combined_UL17_comparison.pdf")
+    # exit(0)
+    # years = ["UL16preVFP", "UL16postVFP", "UL17", "UL18"]
+    # regions = ["TTBar", "VJets", "Combined"]
+    years = [""]
+    regions = ["FullRunII"]
     plotter = {}
-    fitDateStr = "02-05-23"
+    fitDateStr = "09-05-23_Substructure"
     plotter[f"{fitDateStr}_JECNuis"] = create_plotter(f"fitResults_{fitDateStr}_JECNuis.json", years, regions)
-    plotter[f"{fitDateStr}_JECVarAsInput"] = create_plotter(f"fitResults_{fitDateStr}_JECVarAsInput.json", years, regions)
+    plotter[f"{fitDateStr}_JECVarAsInput"] = create_plotter(
+        f"fitResults_{fitDateStr}_JECVarAsInput.json", years, regions
+    )
 
     plotter[f"{fitDateStr}_JECVarAsInput"].load_fit_results(
         json.load(open(f"fitResults_{fitDateStr}_JECVarAsInput.json")),
@@ -528,15 +576,21 @@ if __name__ == "__main__":
         f"{fitDateStr}_JECNuis": "JEC Var nuisance",
         f"{fitDateStr}_JECVarAsInput": "JEC nominal",
     }
+    print("build plotters")
 
     for region in regions:
         for year in years:
             f, ax = setup_ax(10, 7)
+            print(region, year)
             for date, jms_plotter in plotter.items():
                 jms_plotter.dHists[f"{region}{year}"].plot_errorbar(
-                    ax=ax, split_uncertainty=True, alpha=0.8, label=f"{region} {year} {label_suffix[date]}", fmt=".",
+                    ax=ax,
+                    split_uncertainty=True,
+                    alpha=0.8,
+                    label=f"{region} {year} {label_suffix[date]}",
+                    fmt=".",
                     linewidth=0.9,
-                    linestyle="--" if date == f"{fitDateStr}_JECVarAsInput" else "-"
+                    linestyle="--" if date == f"{fitDateStr}_JECVarAsInput" else "-",
                 )
                 if date == f"{fitDateStr}_JECVarAsInput":
                     nominal_color = jms_plotter.dHists[f"{region}{year}"].color
@@ -546,7 +600,7 @@ if __name__ == "__main__":
                         extend=extend,
                         hatch="/",
                         alpha=0.4,
-                        linewidth=.6,
+                        linewidth=0.6,
                         label=f"{region} {year} JEC down",
                     )
                     var_color = jms_plotter.dHists[f"{region}{year}JECDOWN"].color
@@ -555,17 +609,20 @@ if __name__ == "__main__":
                         ax,
                         extend=extend,
                         hatch="\\",
-                        linewidth=.6,
+                        linewidth=0.6,
                         alpha=0.4,
                         label=f"{region} {year} JEC up",
                     )
 
             finalize_ax(ax, fname=f"JMSSF_{fitDateStr}/{region}_{year}_comparison.pdf", year=year)
-
+    print("second round")
     plotter[f"{fitDateStr}_JECNuis"] = create_plotter(f"fitResults_{fitDateStr}_JECNuis.json", years, regions)
-    plotter[f"{fitDateStr}_JECVarAsInput"] = create_plotter(f"fitResults_{fitDateStr}_JECVarAsInput.json", years, regions)
+    plotter[f"{fitDateStr}_JECVarAsInput"] = create_plotter(
+        f"fitResults_{fitDateStr}_JECVarAsInput.json", years, regions
+    )
     for date, jms_plotter in plotter.items():
         for region in regions:
+            print(date, region)
             f, ax = setup_ax(10, 7)
             for year in years:
                 jms_plotter.dHists[f"{region}{year}"].plot_errorbar(

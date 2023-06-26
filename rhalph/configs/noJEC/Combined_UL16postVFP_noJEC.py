@@ -3,8 +3,6 @@ import common_configs
 
 w_pt_edges = [500, 650, 800, 1200]
 top_pt_edges = [200, 300, 400, 500, 650]
-print(len(w_pt_edges))
-print(len(top_pt_edges))
 configs = {
     "year": "UL16postVFP",
     "ModelName": "CombinedUL16postVFPNOJEC",
@@ -12,9 +10,6 @@ configs = {
     "histLocation": "../python/flat_templates/templates_UL16postVFP_1d_jecpt.root",
     "binning": [50, 300, 5],
     "massScaleFactor": 2.0,
-    "BernsteinOrders": [1, 2],
-    "InitialQCDFit": "False",
-    "InitialQCDFitOrders": [2, 2],
     "VaryOnlySignal": "True",
     "QCDSigmaScale": 10.0,
     "QCDFailConstant": "False",

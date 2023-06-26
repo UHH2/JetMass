@@ -2,7 +2,6 @@ from collections import OrderedDict
 import common_configs
 
 pt_edges = [200, 300, 400, 500, 650]
-print(len(pt_edges))
 configs = {
     "year": "UL18",
     "ModelName": "TTBarUL18",

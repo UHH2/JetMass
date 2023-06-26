@@ -56,7 +56,8 @@ def extract_fit_pars(file_path, order, suffix="params", TFSuffix="tf"):
 
 
 def plot_qcd_fail_parameters(config={"ModelName": "WMassModel"}):
-    out_dir = config["ModelName"] + "/plots/"
+    model_dir = config.get("ModelDir", config["ModelName"])
+    out_dir = model_dir + "/plots/"
     min_msd, max_msd = (50, 200)
     binwidth = 10
     if "binning" in config:
@@ -76,7 +77,7 @@ def plot_qcd_fail_parameters(config={"ModelName": "WMassModel"}):
         ]
     )
 
-    result = ROOT.TFile(config["ModelName"] + "/fitDiagnostics.root", "READ").Get("fit_s")
+    result = ROOT.TFile(model_dir+ "/fitDiagnostics.root", "READ").Get("fit_s")
     args = result.floatParsFinal()
     qcd_param_names = [
         name
@@ -93,7 +94,7 @@ def plot_qcd_fail_parameters(config={"ModelName": "WMassModel"}):
 
     for pt in pt_bins:
         for msd in msd_bins:
-            param_name = "qcdparam_ptbin%i_msdbin%i" % (pt, msd)
+            param_name = "qcdparam_ptbin%i_msdbin%i_%s" % (pt, msd, config["year"])
             if param_name not in qcd_param_names:
                 th2_qcd_params.SetBinContent(msd, pt, 0)
             else:
@@ -117,17 +118,20 @@ def plot_qcd_fail_parameters(config={"ModelName": "WMassModel"}):
     th2_qcd_params.GetZaxis().SetTitle("qcdparam")
     th2_qcd_params.Draw("colztext")
     cms_style.draw_lumi(c, 41.8, do_extra_text=False, out_of_frame=True, do_cms_text=False, private_work=False)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
     for file_ext in [".pdf", ".png"]:
         c.SaveAs(out_dir + "qcdparams" + file_ext)
 
 
 def plot_qcd_bernstein3D(config, parameter_suffix="params"):
+    model_dir = config.get("ModelDir", config["ModelName"])
     order = (
         tuple(config.get("InitialQCDFitOrders", [2, 2]))
         if parameter_suffix == "MCtempl"
         else tuple(config.get("BernsteinOrders", [2, 2]))
     )
-    bernstein_pars, _ = extract_fit_pars(config["ModelName"] + "/fitDiagnostics.root", order, parameter_suffix)
+    bernstein_pars, _ = extract_fit_pars(model_dir + "/fitDiagnostics.root", order, parameter_suffix)
 
     param_list_str = "{"
     for ptbin_params in bernstein_pars:
@@ -146,7 +150,7 @@ def plot_qcd_bernstein3D(config, parameter_suffix="params"):
         final_param_list_str += substr + ","
     final_param_list_str = final_param_list_str[:-1]
     print("Bernstein: %i,%i,%s" % (order[1], order[0], final_param_list_str))
-    out_name = config["ModelName"] + "/plots/bernstein_3d_%s.pdf" % parameter_suffix
+    out_name = model_dir + "/plots/bernstein_3d_%s.pdf" % parameter_suffix
     os.system("module load mathematica/11.1")
     os.system(
         './fitplotter/bernstein_3d_plot.wls "%s" %i %i "%s"' % (out_name, order[1], order[0], final_param_list_str)
@@ -154,10 +158,11 @@ def plot_qcd_bernstein3D(config, parameter_suffix="params"):
 
 
 def plot_qcd_bernstein(config={"ModelName": "WMassModel"}, do_3d_plot=True):
+    model_dir = config.get("ModelDir", config["ModelName"])
     parameter_suffixes = ["params"]
     if config["InitialQCDFit"] == "True":
         parameter_suffixes = ["MCtempl", "dataResidual"] + parameter_suffixes
-    out_dir = config["ModelName"] + "/plots/"
+    out_dir = model_dir + "/plots/"
 
     pt_edges = set()
     for channel in config["channels"].keys():
@@ -221,7 +226,7 @@ def plot_qcd_bernstein(config={"ModelName": "WMassModel"}, do_3d_plot=True):
             bernstein_maps["params"] = bernstein_maps["MCtempl"] * bernstein_maps["dataResidual"]
         else:
             bernstein_pars, _ = extract_fit_pars(
-                config["ModelName"] + "/fitDiagnostics.root", order, parameter_suffix, config.get("TFSuffix", "tf")
+                model_dir + "/fitDiagnostics.root", order, parameter_suffix, config.get("TFSuffix", "tf")
             )
 
             if parameter_suffix == "MCtempl":
@@ -236,7 +241,15 @@ def plot_qcd_bernstein(config={"ModelName": "WMassModel"}, do_3d_plot=True):
                 rl.util.install_roofit_helpers()
                 qcd_fit = (
                     ROOT.TFile(
-                        config["ModelName"] + "/qcdfit_" + config["ModelName"] + config.get("TFSuffix", "") + ".root"
+                        (
+                            model_dir
+                            + "/qcdfit_"
+                            + config["year"]
+                            + "_"
+                            + config["ModelName"]
+                            + config.get("TFSuffix", "")
+                            + ".root"
+                        )
                     )
                     .Get("w")
                     .genobj("fitresult_qcdmodel_simPdf_qcdmodel_observation")
@@ -324,6 +337,8 @@ def plot_qcd_bernstein(config={"ModelName": "WMassModel"}, do_3d_plot=True):
         cms_style.setup_hist(th2_map)
         th2_map.SetMarkerSize(1)
         th2_map.Draw("textcolz")
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
         for file_ext in [".pdf", ".png"]:
             c.SaveAs(
                 out_dir
@@ -346,6 +361,8 @@ def plot_qcd_bernstein(config={"ModelName": "WMassModel"}, do_3d_plot=True):
 
         z_bar = figure.colorbar(plt_cont, format="%.2f")
         z_bar.set_label(r"TF", rotation=270, labelpad=15)
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
         for f_type in [".pdf", ".png"]:
             plt.savefig(out_dir + "bernstein%s" % (parameter_suffix + config.get("TFSuffix", "") + f_type))
 

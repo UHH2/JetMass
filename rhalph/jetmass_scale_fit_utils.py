@@ -2,6 +2,7 @@ import ROOT
 from ROOT import gSystem
 import numpy as np
 import rhalphalib as rl
+import json
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 
@@ -123,7 +124,8 @@ def build_mass_scale_variations(configs, args):
                     }
                 }
             )
-            if any(s in selections for s in ["W", "Zbb"]):
+            # if any(s in selections for s in ["W", "Zbb"]):
+            if "Zbb" in selections:
                 separate_mass_scale_setup_dict.update(
                     {"Z_" + mass_scale_suffix: {"regions": ["pass", "passW", "fail"], "samples": ["ZJetsMatched"]}}
                 )
@@ -166,3 +168,30 @@ def build_mass_scale_variations(configs, args):
                     ]
                 )
     return grid_nuisances, mass_scale_names
+
+
+def extract_fit_results(configs, return_result=False):
+    '''
+    extracting postfit parameters from fitDiagnostics.root
+    '''
+    model_dir = configs.get("ModelDir", configs.get("ModelName"))
+    fit_succeded = True
+    try:
+        fit_diagnostics = ROOT.TFile(model_dir + "/fitDiagnostics.root", "READ")
+        fit_result = fit_diagnostics.Get("fit_s")
+
+        fit_result_parameters = {}
+        for p in fit_result.floatParsFinal():
+            fit_result_parameters[p.GetName()] = [p.getVal(), p.getErrorHi(), p.getErrorLo()]
+        fit_succeded = fit_result.status() <= 3
+        if return_result and fit_succeded:
+            return fit_result_parameters
+        open(model_dir + "/" + configs["ModelName"] + "fitResult.json", "w").write(
+            json.dumps(fit_result_parameters, sort_keys=True, indent=2)
+        )
+        return fit_succeded
+    except BaseException as e:
+        print("fit failed. only plotting prefit distributions from fitDiangnostics (beware weird shape uncertainties)")
+        print(e)
+        fit_succeded = False
+    return fit_succeded

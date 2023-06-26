@@ -18,11 +18,18 @@ kfactor_path = f"{jetmass_path}/NLOweights/"
 
 
 class JMSTemplates(processor.ProcessorABC):
-    def __init__(self, year="2017", jec="nominal", variation_weight="nominal", tagger="substructure"):
+    def __init__(
+            self,
+            year: str = "2017",
+            jec: str = "nominal",
+            variation_weight: str = "nominal",
+            trigger_sf_var: str = "nominal",
+            tagger: str = "substructure"
+    ):
         self._year = year
         self._jec = jec
         self._variation_weight = variation_weight
-
+        self._trigger_sf_variation = trigger_sf_var
         self._tagger_approach = tagger
         tagger_approaches = ["substructure", "particlenet"]
         if self._tagger_approach not in tagger_approaches:
@@ -40,14 +47,22 @@ class JMSTemplates(processor.ProcessorABC):
         #     ["raw", "pt", "pt_up", "pt_down","pt_","pt_mJ_up", "down"], name="JEC", label="JEC"
         # )
         mJ_ax = hist.axis.Regular(50, 0.0, 500.0, name="mJ", label=r"$m_{SD}$ [GeV]")
-        pT_ax = hist.axis.Regular(100, 0.0, 3000.0, name="pt", label=r"$p_{T}$ [GeV]")
+        pT_ax = hist.axis.Regular(300, 0.0, 3000.0, name="pt", label=r"$p_{T}$ [GeV]")
         eta_ax = hist.axis.Regular(100, -6.5, 6.5, name="eta", label=r"$\eta$")
         eta_regions_ax = hist.axis.Variable([0, 1.3, 2.5], name="abs_eta_regions", label=r"$|\eta|$")
         phi_ax = hist.axis.Regular(100, -4, 4, name="phi", label=r"$\Phi$")
 
+        chf_ax = hist.axis.Regular(51, 0, 1.02, name="chf", label="CHF")
+        nhf_ax = hist.axis.Regular(51, 0, 1.02, name="nhf", label="NHF")
+
         mJ_fit_ax = hist.axis.Regular(
             500, 0.0, 500.0, name="mJ", label=r"$m_{SD}$ [GeV]"
         )
+
+        mPnet_fit_ax = hist.axis.Regular(
+            500, 0.0, 500.0, name="mPnet", label=r"$m_{\mathrm{ParticleNet}}$ [GeV]"
+        )
+
         rho_ax = hist.axis.Regular(100, -10.0, 0, name="rho", label=r"$\rho$")
 
         self._unfolding_ax = {
@@ -139,6 +154,11 @@ class JMSTemplates(processor.ProcessorABC):
             for jec_applied_on in ["none", "pt", "pt&mJ"]
         }
 
+        self.trigger_scalefactors = correctionlib.CorrectionSet.from_file(
+            "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/notebooks/data/"
+            + "HLT_AK8PFJet_MC_trigger_sf_c2e731345f.json"
+        )
+
         self.mjet_reco_correction = correctionlib.CorrectionSet.from_file(
             "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/python/"
             # + "jms_corrections_quadratic_40c365c4ab.json"
@@ -184,17 +204,11 @@ class JMSTemplates(processor.ProcessorABC):
         # common control-plots
         hists.update(
             {
-                "pt": hist.Hist(
-                    pT_ax, dataset_ax, jec_applied_ax, storage=hist.storage.Weight()
-                ),
+                "pt": hist.Hist(pT_ax, dataset_ax, jec_applied_ax, storage=hist.storage.Weight()),
                 "eta": hist.Hist(eta_ax, dataset_ax, storage=hist.storage.Weight()),
                 "phi": hist.Hist(phi_ax, dataset_ax, storage=hist.storage.Weight()),
-                "mjet": hist.Hist(
-                    mJ_ax, dataset_ax, jec_applied_ax, storage=hist.storage.Weight()
-                ),
-                "rho": hist.Hist(
-                    rho_ax, dataset_ax, jec_applied_ax, storage=hist.storage.Weight()
-                ),
+                "mjet": hist.Hist(mJ_ax, dataset_ax, jec_applied_ax, storage=hist.storage.Weight()),
+                "rho": hist.Hist(rho_ax, dataset_ax, jec_applied_ax, storage=hist.storage.Weight()),
                 "npv": hist.Hist(
                     dataset_ax,
                     hist.axis.Regular(80, 0, 80, name="npv", label=r"$N_{PV}$"),
@@ -202,9 +216,53 @@ class JMSTemplates(processor.ProcessorABC):
                 ),
                 "ntrueint": hist.Hist(
                     dataset_ax,
-                    hist.axis.Regular(
-                        80, 0, 80, name="ntrueint", label=r"$N_{TrueInt}$"
-                    ),
+                    hist.axis.Regular(80, 0, 80, name="ntrueint", label=r"$N_{TrueInt}$"),
+                    storage=hist.storage.Weight(),
+                ),
+                "chf": hist.Hist(
+                    dataset_ax,
+                    chf_ax,
+                    storage=hist.storage.Weight(),
+                ),
+                "nhf": hist.Hist(
+                    dataset_ax,
+                    nhf_ax,
+                    storage=hist.storage.Weight(),
+                ),
+                "n2": hist.Hist(
+                    dataset_ax,
+                    hist.axis.Regular(51, -2, 2, name="n2", label="$N_{2}$"),
+                    storage=hist.storage.Weight(),
+                ),
+                "n2ddt": hist.Hist(
+                    dataset_ax,
+                    jec_applied_ax,
+                    hist.axis.Regular(51, -2, 2, name="n2ddt", label=r"$N_{2}^{\mathrm{DDT}}$"),
+                    storage=hist.storage.Weight(),
+                ),
+                "tau21": hist.Hist(
+                    dataset_ax,
+                    hist.axis.Regular(51, 0, 1, name="tau21", label=r"$\frac{\tau_{2}}{\tau_{1}}$"),
+                    storage=hist.storage.Weight(),
+                ),
+                "tau32": hist.Hist(
+                    dataset_ax,
+                    hist.axis.Regular(51, 0, 1, name="tau32", label=r"$\frac{\tau_{3}}{\tau_{2}}$"),
+                    storage=hist.storage.Weight(),
+                ),
+                "pNet_TvsQCD": hist.Hist(
+                    dataset_ax,
+                    hist.axis.Regular(51, 0, 1, name="pNet_TvsQCD", label=r"pNet TvsQCD"),
+                    storage=hist.storage.Weight(),
+                ),
+                "pNet_WvsQCD": hist.Hist(
+                    dataset_ax,
+                    hist.axis.Regular(51, 0, 1, name="pNet_WvsQCD", label=r"pNet WvsQCD"),
+                    storage=hist.storage.Weight(),
+                ),
+                "pNet_MD_WvsQCD": hist.Hist(
+                    dataset_ax,
+                    hist.axis.Regular(51, 0, 1, name="pNet_MD_WvsQCD", label=r"pNet MD WvsQCD"),
                     storage=hist.storage.Weight(),
                 ),
             }
@@ -216,6 +274,7 @@ class JMSTemplates(processor.ProcessorABC):
         # 4840404/attachments/2428856/4162159/ParticleNet_SFs_ULNanoV9_JMAR_25April2022_PK.pdf
         tagger = {
             "vjets": {
+                # "substructure": {"pass": {"n2": True}, "fail": {"n2": False}},
                 "substructure": {"pass": {"n2ddt": True}, "fail": {"n2ddt": False}},
                 "particlenet": {"pass": {"particlenetMDWvsQCD": True}, "fail": {"particlenetMDWvsQCD": False}},
             },
@@ -235,32 +294,32 @@ class JMSTemplates(processor.ProcessorABC):
 
         self._regions = {
             "vjets": {
-                "inclusive": {"rhocut": True, "pt500cut": True},
+                "inclusive": {"rhocut": True, "pt500cut": True, "trigger": True},
                 "pass": {
                     **tagger["vjets"][self._tagger_approach]["pass"],
-                    "rhocut": True, "pt500cut": True
+                    "rhocut": True, "pt500cut": True, "trigger": True
                 },
                 "fail": {
                     **tagger["vjets"][self._tagger_approach]["fail"],
-                    "rhocut": True, "pt500cut": True
+                    "rhocut": True, "pt500cut": True, "trigger": True
                 },
-                "inclusive_trigger": {
-                    "rhocut": True,
-                    "pt500cut": True,
-                    "HLT_AK8PFJet450": True,
-                },
-                "pass_trigger": {
-                    **tagger["vjets"][self._tagger_approach]["pass"],
-                    "rhocut": True,
-                    "pt500cut": True,
-                    "HLT_AK8PFJet450": True,
-                },
-                "fail_trigger": {
-                    **tagger["vjets"][self._tagger_approach]["fail"],
-                    "rhocut": True,
-                    "pt500cut": True,
-                    "HLT_AK8PFJet450": True,
-                },
+                # "inclusive_trigger": {
+                #     "rhocut": True,
+                #     "pt500cut": True,
+                #     "trigger": True,
+                # },
+                # "pass_trigger": {
+                #     **tagger["vjets"][self._tagger_approach]["pass"],
+                #     "rhocut": True,
+                #     "pt500cut": True,
+                #     "trigger": True,
+                # },
+                # "fail_trigger": {
+                #     **tagger["vjets"][self._tagger_approach]["fail"],
+                #     "rhocut": True,
+                #     "pt500cut": True,
+                #     "trigger": True,
+                # },
             },
             "ttbar": {
                 "inclusive": {"pt200cut": True},
@@ -298,6 +357,14 @@ class JMSTemplates(processor.ProcessorABC):
                             eta_regions_ax,
                             storage=hist.storage.Weight(),
                         ),
+                        f"{selection}_mPnet_{region}": hist.Hist(
+                            mPnet_fit_ax,
+                            self._pT_fit_ax[selection],
+                            dataset_ax,
+                            jec_applied_ax,
+                            eta_regions_ax,
+                            storage=hist.storage.Weight(),
+                        ),
                         f"{selection}_pt_{region}": hist.Hist(
                             pT_ax,
                             dataset_ax,
@@ -306,6 +373,18 @@ class JMSTemplates(processor.ProcessorABC):
                         ),
                         f"{selection}_eta_{region}": hist.Hist(
                             eta_ax, dataset_ax, storage=hist.storage.Weight()
+                        ),
+                        f"{selection}_chf_{region}": hist.Hist(
+                            dataset_ax,
+                            chf_ax,
+                            self._pT_fit_ax[selection],
+                            storage=hist.storage.Weight(),
+                        ),
+                        f"{selection}_nhf_{region}": hist.Hist(
+                            dataset_ax,
+                            nhf_ax,
+                            self._pT_fit_ax[selection],
+                            storage=hist.storage.Weight(),
                         ),
                         f"{selection}_rho_{region}": hist.Hist(
                             rho_ax,
@@ -365,6 +444,26 @@ class JMSTemplates(processor.ProcessorABC):
                             ),
                         }
                     )
+                hists.update(
+                    {
+                        f"{selection}_mPnet_0_0_all_variation_{region}__up": hist.Hist(
+                            mPnet_fit_ax,
+                            self._pT_fit_ax[selection],
+                            eta_regions_ax,
+                            dataset_ax,
+                            jec_applied_ax,
+                            storage=hist.storage.Weight(),
+                        ),
+                        f"{selection}_mPnet_0_0_all_variation_{region}__down": hist.Hist(
+                            mPnet_fit_ax,
+                            self._pT_fit_ax[selection],
+                            eta_regions_ax,
+                            dataset_ax,
+                            jec_applied_ax,
+                            storage=hist.storage.Weight(),
+                        )
+                    }
+                )
 
         self._hists = lambda: {
             **hists,
@@ -475,12 +574,14 @@ class JMSTemplates(processor.ProcessorABC):
         if self._variation_weight != "nominal" and "data" not in dataset.lower() and len(events) > 0:
             variation_weights = {
                 "toppt_off": 1. / events["toppt_weight"],
+                "pu_down": events["weight_pu_down"]/events["weight_pu"],
+                "pu_up": events["weight_pu_down"]/events["weight_pu"],
             }
             if len(events["ps_weights"][0]) == 46:
-                variation_weights["fsr_down"] = events["ps_weights"][:, 0] / events["ps_weights"][:, 4]
-                variation_weights["fsr_up"] = events["ps_weights"][:, 0] / events["ps_weights"][:, 5]
-                variation_weights["isr_down"] = events["ps_weights"][:, 0] / events["ps_weights"][:, 26]
-                variation_weights["isr_up"] = events["ps_weights"][:, 0] / events["ps_weights"][:, 27]
+                variation_weights["fsr_down"] = events["ps_weights"][:, 4] / events["ps_weights"][:, 0]
+                variation_weights["fsr_up"] = events["ps_weights"][:, 5] / events["ps_weights"][:, 0]
+                variation_weights["isr_down"] = events["ps_weights"][:, 26] / events["ps_weights"][:, 0]
+                variation_weights["isr_up"] = events["ps_weights"][:, 27] / events["ps_weights"][:, 0]
             else:
                 variation_weights["fsr_down"] = 1.0
                 variation_weights["fsr_up"] = 1.0
@@ -497,6 +598,9 @@ class JMSTemplates(processor.ProcessorABC):
         mjet_raw = events.mjet
         mjet = mjet_raw * jecfactor
 
+        mPnet_raw = events["ParticleNetMassRegression_mass"]
+        mPnet = mPnet_raw * jecfactor
+
         mJgen_ = events.msd_gen_ak8
 
         rho = 2 * np.log(mjet / pt)
@@ -507,43 +611,81 @@ class JMSTemplates(processor.ProcessorABC):
         eta_ = events.eta
         phi_ = events.phi
 
-        out["pt"].fill(dataset=dataset, jecAppliedOn="pt", pt=pt, weight=events.weight)
-        out["pt"].fill(
-            dataset=dataset, jecAppliedOn="none", pt=pt_raw, weight=events.weight
+        # apply trigger sf
+        if isMC and selection == "vjets":
+            trigger_sf_evaluator_450 = self.trigger_scalefactors[
+                f"HLT_AK8PFJet450_triggersf_{self._year}"
+            ]
+            trigger_sf_evaluator_500 = self.trigger_scalefactors[
+                f"HLT_AK8PFJet500_triggersf_{self._year}"
+            ]
+            first_ptbin = (pt < 650.0)
+            events.weight = events.weight * ak.where(
+                first_ptbin,
+                trigger_sf_evaluator_450.evaluate(
+                    pt, self._trigger_sf_variation
+                ),
+                trigger_sf_evaluator_500.evaluate(
+                    pt, self._trigger_sf_variation
+                )
+            )
+
+        events["ParticleNetMDDiscriminators_WvsQCD"] = (
+            events["ParticleNetMD_probXqq"] + events["ParticleNetMD_probXcc"]
+        ) / (events["ParticleNetMD_probXqq"] + events["ParticleNetMD_probXcc"] + events["ParticleNetMD_probQCD"])
+
+        # apply trigger selection of vjets also to control plots
+        m_cps = np.ones_like(events.pt, dtype=bool)
+        vjets_trigger_mask = ak.where(
+            pt < 650.0,
+            events["trigger_bits"][:, self._triggerbits.index("HLT_AK8PFJet450_v*")] == 1,
+            events["trigger_bits"][:, self._triggerbits.index("HLT_AK8PFJet500_v*")] == 1,
         )
-        out["eta"].fill(dataset=dataset, eta=eta_, weight=events.weight)
-        out["phi"].fill(dataset=dataset, phi=phi_, weight=events.weight)
-        out["mjet"].fill(
-            dataset=dataset, jecAppliedOn="mJ", mJ=mjet, weight=events.weight
-        )
-        out["mjet"].fill(
-            dataset=dataset, jecAppliedOn="none", mJ=mjet_raw, weight=events.weight
-        )
-        out["rho"].fill(
-            dataset=dataset, jecAppliedOn="pt&mJ", rho=rho, weight=events.weight
-        )
+
+        if selection == "vjets":
+            m_cps = m_cps & vjets_trigger_mask
+
+        out["pt"].fill(dataset=dataset, jecAppliedOn="pt", pt=pt[m_cps], weight=events.weight[m_cps])
+        out["pt"].fill(dataset=dataset, jecAppliedOn="none", pt=pt_raw[m_cps], weight=events.weight[m_cps])
+        out["eta"].fill(dataset=dataset, eta=eta_[m_cps], weight=events.weight[m_cps])
+        out["phi"].fill(dataset=dataset, phi=phi_[m_cps], weight=events.weight[m_cps])
+        out["mjet"].fill(dataset=dataset, jecAppliedOn="mJ", mJ=mjet[m_cps], weight=events.weight[m_cps])
+        out["mjet"].fill(dataset=dataset, jecAppliedOn="none", mJ=mjet_raw[m_cps], weight=events.weight[m_cps])
+        out["rho"].fill(dataset=dataset, jecAppliedOn="pt&mJ", rho=rho[m_cps], weight=events.weight[m_cps])
         out["rho"].fill(
             dataset=dataset,
             jecAppliedOn="pt",
-            rho=rho_corrected_pt,
-            weight=events.weight,
+            rho=rho_corrected_pt[m_cps],
+            weight=events.weight[m_cps],
         )
         out["rho"].fill(
             dataset=dataset,
             jecAppliedOn="mJ",
-            rho=rho_corrected_mJ,
-            weight=events.weight,
+            rho=rho_corrected_mJ[m_cps],
+            weight=events.weight[m_cps],
         )
-        out["rho"].fill(
-            dataset=dataset, jecAppliedOn="none", rho=rho_raw, weight=events.weight
-        )
+        out["rho"].fill(dataset=dataset, jecAppliedOn="none", rho=rho_raw[m_cps], weight=events.weight[m_cps])
 
-        out["npv"].fill(dataset=dataset, npv=events.n_pv, weight=events.weight)
+        out["npv"].fill(dataset=dataset, npv=events.n_pv[m_cps], weight=events.weight[m_cps])
         if isMC:
-            out["ntrueint"].fill(
-                dataset=dataset, ntrueint=events.n_trueint, weight=events.weight
-            )
+            out["ntrueint"].fill(dataset=dataset, ntrueint=events.n_trueint[m_cps], weight=events.weight[m_cps])
+        out["chf"].fill(dataset=dataset, chf=events.CHF[m_cps], weight=events.weight[m_cps])
+        out["nhf"].fill(dataset=dataset, nhf=events.NHF[m_cps], weight=events.weight[m_cps])
 
+        out["n2"].fill(dataset=dataset, n2=events.N2[m_cps], weight=events.weight[m_cps])
+        out["tau21"].fill(dataset=dataset, tau21=events.tau21[m_cps], weight=events.weight[m_cps])
+        out["tau32"].fill(dataset=dataset, tau32=events.tau32[m_cps], weight=events.weight[m_cps])
+        out["pNet_WvsQCD"].fill(
+            dataset=dataset, pNet_WvsQCD=events["ParticleNetDiscriminators_WvsQCD"][m_cps], weight=events.weight[m_cps]
+        )
+        out["pNet_MD_WvsQCD"].fill(
+            dataset=dataset,
+            pNet_MD_WvsQCD=events["ParticleNetMDDiscriminators_WvsQCD"][m_cps],
+            weight=events.weight[m_cps],
+        )
+        out["pNet_TvsQCD"].fill(
+            dataset=dataset, pNet_TvsQCD=events["ParticleNetDiscriminators_TvsQCD"][m_cps], weight=events.weight[m_cps]
+        )
         # for jec_applied_on in ['none','pt','pt&mJ']:
         for jec_applied_on in ["pt", "pt&mJ"]:
             selections = PackedSelection()
@@ -551,8 +693,11 @@ class JMSTemplates(processor.ProcessorABC):
             if "pt" in jec_applied_on:
                 pt_ = pt
             mJ_ = mjet_raw
+            mPnet_ = mPnet_raw
+
             if "mJ" in jec_applied_on:
                 mJ_ = mjet
+                mPnet_ = mPnet
 
             rho_ = 2 * np.log(mJ_ / pt_)
 
@@ -570,23 +715,31 @@ class JMSTemplates(processor.ProcessorABC):
                     self.n2ddt(pt_, rho_, events.N2, corrected=jec_applied_on) < 0
                 ),  # actual N2-DDT tagger
             )
+            out["n2ddt"].fill(
+                dataset=dataset,
+                jecAppliedOn=jec_applied_on,
+                n2ddt=self.n2ddt(pt_, rho_, events.N2, corrected=jec_applied_on),
+                weight=events.weight,
+            )
+
+            selections.add(
+                "n2",
+                (events.N2 > 0) & (events.N2 < 0.2)
+            )
 
             # selections.add("rhocut",
             #                (rho_<-2.1)
             #                &(rho_>-6.0))
             selections.add("rhocut", rho_ < -2.1)
+            # selections.add("rhocut", np.ones_like(events.pt, dtype=bool))
 
             selections.add("tau21", events.tau21 < 0.45)
             selections.add("tau32", events.tau32 < 0.5)
 
-            selections.add("particlenetWvsQCD", events["ParticleNetDiscriminators_WvsQCD"] > 0.97)
+            selections.add("particlenetWvsQCD", events["ParticleNetMDDiscriminators_WvsQCD"] > 0.91)
+            # selections.add("particlenetWvsQCD", events["ParticleNetDiscriminators_WvsQCD"] > 0.97)
             selections.add("particlenetTvsQCD", events["ParticleNetDiscriminators_TvsQCD"] > 0.96)
-            selections.add(
-                "particlenetMDWvsQCD",
-                (events["ParticleNetMD_probXcc"] + events["ParticleNetMD_probXcc"])
-                / (events["ParticleNetMD_probXcc"] + events["ParticleNetMD_probXcc"] + events["ParticleNetMD_probQCD"])
-                > 0.91
-            )
+            selections.add("particlenetMDWvsQCD", events["ParticleNetMDDiscriminators_WvsQCD"] > 0.91)
 
             selections.add(
                 "unfolding",
@@ -607,8 +760,8 @@ class JMSTemplates(processor.ProcessorABC):
             selection = events.metadata["selection"]
 
             selections.add(
-                # "HLT_AK8PFJet450", self.passes_trigger(events, "HLT_AK8PFJet450_v*")
-                "HLT_AK8PFJet450", ak.ones_like(events.pt, dtype=bool)
+                "trigger",
+                vjets_trigger_mask
             )
 
             for region in self._regions[selection].keys():
@@ -643,6 +796,15 @@ class JMSTemplates(processor.ProcessorABC):
                     weight=events.weight[smask],
                 )
 
+                out[f"{selection}_mPnet_{region}"].fill(
+                    dataset=dataset,
+                    jecAppliedOn=jec_applied_on,
+                    pt=pt_[smask],
+                    abs_eta_regions=np.abs(eta_[smask]),
+                    mPnet=mPnet_[smask],
+                    weight=events.weight[smask],
+                )
+
                 out[f"{selection}_pt_{region}"].fill(
                     dataset=dataset,
                     jecAppliedOn=jec_applied_on,
@@ -667,6 +829,12 @@ class JMSTemplates(processor.ProcessorABC):
                     )
 
                 if jec_applied_on == "pt":
+                    out[f"{selection}_chf_{region}"].fill(
+                        dataset=dataset, chf=events.CHF[smask], pt=pt_[smask], weight=events.weight[smask]
+                    )
+                    out[f"{selection}_nhf_{region}"].fill(
+                        dataset=dataset, nhf=events.NHF[smask], pt=pt_[smask], weight=events.weight[smask]
+                    )
                     out[f"{selection}_eta_{region}"].fill(dataset=dataset, eta=eta_[smask], weight=events.weight[smask])
 
                 if isMC:
@@ -692,6 +860,23 @@ class JMSTemplates(processor.ProcessorABC):
                             abs_eta_regions=np.abs(eta_[smask]),
                             weight=events.weight[smask],
                         )
+                    out[f"{selection}_mPnet_0_0_all_variation_{region}__up"].fill(
+                        dataset=dataset,
+                        jecAppliedOn=jec_applied_on,
+                        pt=pt_[smask],
+                        mPnet=mPnet_[smask]*1.005,
+                        abs_eta_regions=np.abs(eta_[smask]),
+                        weight=events.weight[smask],
+                    )
+                    out[f"{selection}_mPnet_0_0_all_variation_{region}__down"].fill(
+                        dataset=dataset,
+                        jecAppliedOn=jec_applied_on,
+                        pt=pt_[smask],
+                        mPnet=mPnet_[smask]*0.995,
+                        abs_eta_regions=np.abs(eta_[smask]),
+                        weight=events.weight[smask],
+                    )
+
         return out
 
 
@@ -701,7 +886,14 @@ if __name__ == "__main__":
     workflow.parser.add_argument("--output", "-o", type=str, default="jms_templates.coffea")
     workflow.parser.add_argument("--year", default="UL17")
     workflow.parser.add_argument("--JEC", default="nominal")
-    workflow.parser.add_argument("--variation", default="nominal")
+    workflow.parser.add_argument("--variation", default="nominal", choices=[
+        "isr_up", "isr_down",
+        "fsr_up", "fsr_down",
+        "triggersf_up", "triggersf_down",
+        "pu_up", "pu_down",
+        "toppt_off",
+    ])
+    workflow.parser.add_argument("--triggersf", default="nominal", choices=["nominal", "up", "down"])
     workflow.parser.add_argument("--maxfiles", type=int, default=-1)
     workflow.parser.add_argument("--tagger", default="substructure", choices=["substructure", "particlenet"])
 
@@ -711,6 +903,7 @@ if __name__ == "__main__":
         year=args.year,
         jec=args.JEC,
         variation_weight=args.variation,
+        trigger_sf_var=args.triggersf,
         tagger=args.tagger
     )
     workflow.processor_schema = BaseSchema

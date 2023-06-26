@@ -49,6 +49,10 @@ private:
 
   uhh2::Event::Handle<std::vector<float>> h_ps_weights;
 
+  uhh2::Event::Handle<float> h_prefiringweight;
+  uhh2::Event::Handle<float> h_prefiringweight_up;
+  uhh2::Event::Handle<float> h_prefiringweight_down;
+
   uhh2::Event::Handle<std::vector<int>> h_trigger_bits;
   std::vector<std::string> trigger_names;
 

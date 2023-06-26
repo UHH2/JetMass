@@ -1,12 +1,12 @@
 import os
 import sys
 import ROOT
-
+import numpy as np
 sys.path.append("/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/python/")
 import plotter  # noqa: E402
 import cms_style  # noqa: E402
 
-cms_style.cms_style()
+# cms_style.cms_style()
 
 genbin_colors_hex = [
     # diverging color-scheme
@@ -67,16 +67,18 @@ def plot_fit_result(
     do_postfit=True,
     use_config_samples=False,
     pseudo_data=True,
+    unfolding=False,
 ):
-    print("opening file", config["ModelName"] + "/" + fit_shapes_root)
-    fit_shapes_root = "fit_shapes.root" if do_postfit else "fitDiagnostics.root"
-    f_shapes = ROOT.TFile(config["ModelName"] + "/" + fit_shapes_root, "READ")
+    model_dir = config.get("ModelDir", config["ModelName"])
+    print("opening file", model_dir + "/" + fit_shapes_root)
+    fit_shapes_root = fit_shapes_root if do_postfit else "fitDiagnostics.root"
+    f_shapes = ROOT.TFile(model_dir + "/" + fit_shapes_root, "READ")
     pseudo_data_file = None
     if pseudo_data:
-        pseudo_data_file = ROOT.TFile(config["ModelName"] + "/fitDiagnostics.root", "READ")
+        pseudo_data_file = ROOT.TFile(model_dir + "/fitDiagnostics.root", "READ")
     ROOT.TH1.AddDirectory(0)
     PrePostFit = ["prefit", "postfit"] if do_postfit else ["prefit"]
-    out_dir = config["ModelName"] + "/plots/" + fit_shapes_root.replace(".root", "/") + ("/logY/" if logY else "")
+    out_dir = model_dir + "/plots/" + fit_shapes_root.replace(".root", "/") + ("/logY/" if logY else "")
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
@@ -86,7 +88,8 @@ def plot_fit_result(
     plotter.additional_text_size_modifier = 1.5
     plotter.draw_extra_text = True
     plotter.year = config.get("year", "2017")
-    plotter.legend_bbox = (0.60, 0.2, 0.9, 0.6)
+    # plotter.legend_bbox = (0.60, 0.2, 0.9, 0.6)
+    plotter.legend_bbox = (0.60, 0.5, 0.9, 0.9)
     # plotter.y_range_ratio = [0.8,1.2]
 
     pseudo_data_info = config.get("Pseudo", [])
@@ -161,6 +164,17 @@ def plot_fit_result(
                     # h.SetLineColorAlpha(plotter.colors.get(sample),.8)
                     legend_entries.append((h, plotter.legend_names.get(sample_name) + legend_suffix, "f"))
 
+                ymax = h_obs.GetMaximum()
+                mc_max_vals = [h.GetMaximum() for sample, h in fit_shapes.items()]
+                ymin_log = min(mc_max_vals)/5.
+                if logY:
+                    print(ymin_log, 10**(np.ceil(np.log10(ymax))/(2./3.)))
+                    h_obs.GetYaxis().SetRangeUser(ymin_log, 10**(np.log10(ymax)/(2/3.)))
+                else:
+                    h_obs.GetYaxis().SetRangeUser(0., ymax/(2./3.))
+
+                plotter.logY = logY
+
                 additional_hists = []
                 if plot_total_sig_bkg:
                     h_total_b = f_shapes.Get(hist_dir % ("TotalBkg" if do_postfit else "total_background"))
@@ -183,10 +197,16 @@ def plot_fit_result(
                     " "
                     + plotter.selection_tex[channel["selection"]]
                     + "\\"
-                    + plotter.pt_bins_tex_dict[channel["pt_bin"]]
+                    + plotter.pt_bins_tex_dict[channel["selection"]]["unfolding" if unfolding else "jms"][
+                        channel["pt_bin"]
+                    ]
                     + "\\ %s #bf{%s}" % (plotter.region_tex[channel["selection"]][region], suffix)
                 )
 
+                ratio_y_ranges = {
+                    "top": (0.65, 1.35),
+                    "W": (0.945, 1.055),
+                }
                 plotter.plot_data_mc(
                     h_obs,
                     fit_shapes,
@@ -195,4 +215,5 @@ def plot_fit_result(
                     legend_entries=legend_entries,
                     additional_hists=additional_hists,
                     additional_text=additional_text,
+                    ratio_y_range=ratio_y_ranges[channel["selection"]],
                 )
