@@ -5,6 +5,8 @@ import ROOT
 import os
 import numpy as np
 from copy import deepcopy
+ROOT.PyConfig.IgnoreCommandLineOptions = True
+ROOT.gROOT.SetBatch(1)
 
 plotter.draw_extra_text = True
 plotter.private_work = True
@@ -72,8 +74,12 @@ def plot_variable(
 
 if __name__ == "__main__":
     import argparse
-
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description=(
+            "Create control plots from 1d hists created either from UHH2 code "
+            "(make sure to hadd files before using hadd_control_plots.py)"
+        )
+    )
 
     parser.add_argument("--year", default="2017", choices=["2017", "UL16preVFP", "UL16postVFP", "UL17", "UL18"])
     parser.add_argument("--origQCDScale", action="store_true")

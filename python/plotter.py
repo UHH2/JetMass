@@ -1,20 +1,19 @@
 from __future__ import print_function
 import ROOT
-from ROOT import gStyle
 import numpy as np
 import cms_style
 import collections
 import logging
+ROOT.PyConfig.IgnoreCommandLineOptions = True
+ROOT.gROOT.SetBatch(1)
 
 logger = logging.getLogger()
 
 cms_style.set_style()
 
-
-# gROOT.SetBatch(True)
-gStyle.SetOptStat(0)
-gStyle.SetOptFit(0)
-gStyle.SetOptTitle(0)
+ROOT.gStyle.SetOptStat(0)
+ROOT.gStyle.SetOptFit(0)
+ROOT.gStyle.SetOptTitle(0)
 
 
 leftMargin = 0.14

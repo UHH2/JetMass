@@ -1,6 +1,6 @@
 import ROOT
-
-ROOT.gROOT.SetBatch(True)
+ROOT.PyConfig.IgnoreCommandLineOptions = True
+ROOT.gROOT.SetBatch(1)
 
 color_list = [
     857,
