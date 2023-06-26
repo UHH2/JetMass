@@ -1,7 +1,7 @@
 import os
 import sys
 import ROOT
-
+import numpy as np
 sys.path.append("/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/python/")
 import plotter  # noqa: E402
 import cms_style  # noqa: E402
@@ -67,6 +67,7 @@ def plot_fit_result(
     do_postfit=True,
     use_config_samples=False,
     pseudo_data=True,
+    unfolding=False,
 ):
     model_dir = config.get("ModelDir", config["ModelName"])
     print("opening file", model_dir + "/" + fit_shapes_root)
@@ -163,6 +164,17 @@ def plot_fit_result(
                     # h.SetLineColorAlpha(plotter.colors.get(sample),.8)
                     legend_entries.append((h, plotter.legend_names.get(sample_name) + legend_suffix, "f"))
 
+                ymax = h_obs.GetMaximum()
+                mc_max_vals = [h.GetMaximum() for sample, h in fit_shapes.items()]
+                ymin_log = min(mc_max_vals)/5.
+                if logY:
+                    print(ymin_log, 10**(np.ceil(np.log10(ymax))/(2./3.)))
+                    h_obs.GetYaxis().SetRangeUser(ymin_log, 10**(np.log10(ymax)/(2/3.)))
+                else:
+                    h_obs.GetYaxis().SetRangeUser(0., ymax/(2./3.))
+
+                plotter.logY = logY
+
                 additional_hists = []
                 if plot_total_sig_bkg:
                     h_total_b = f_shapes.Get(hist_dir % ("TotalBkg" if do_postfit else "total_background"))
@@ -185,13 +197,15 @@ def plot_fit_result(
                     " "
                     + plotter.selection_tex[channel["selection"]]
                     + "\\"
-                    + plotter.pt_bins_tex_dict[channel["pt_bin"]]
+                    + plotter.pt_bins_tex_dict[channel["selection"]]["unfolding" if unfolding else "jms"][
+                        channel["pt_bin"]
+                    ]
                     + "\\ %s #bf{%s}" % (plotter.region_tex[channel["selection"]][region], suffix)
                 )
 
                 ratio_y_ranges = {
-                    "top": (0.65,1.35),
-                    "W": (0.945,1.055),
+                    "top": (0.65, 1.35),
+                    "W": (0.945, 1.055),
                 }
                 plotter.plot_data_mc(
                     h_obs,
@@ -201,5 +215,5 @@ def plot_fit_result(
                     legend_entries=legend_entries,
                     additional_hists=additional_hists,
                     additional_text=additional_text,
-                    ratio_y_range = ratio_y_ranges[channel["selection"]]
+                    ratio_y_range=ratio_y_ranges[channel["selection"]],
                 )
