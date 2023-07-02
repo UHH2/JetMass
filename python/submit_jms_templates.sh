@@ -13,6 +13,8 @@ function submit_templates_parallel {
     NAMESUFFIX=""
   elif [ "$TAGGER" == "particlenet" ]; then
     NAMESUFFIX="_particlenet"
+  elif [ "$TAGGER" == "particlenetDDT" ]; then
+    NAMESUFFIX="_particlenetDDT"
   else
     echo "You did not provide a valid tagger"
   fi
@@ -46,6 +48,8 @@ function submit_templates {
     NAMESUFFIX=""
   elif [ "$TAGGER" == "particlenet" ]; then
     NAMESUFFIX="_particlenet"
+  elif [ "$TAGGER" == "particlenetDDT" ]; then
+    NAMESUFFIX="_particlenetDDT"
   else
     echo "You did not provide a valid tagger"
   fi
@@ -59,6 +63,10 @@ function submit_templates {
       echo "jec-variation (${VAR}) -> ${YEAR}" $VAR $YEAR
       DIRECTION=${VAR#*_}
       ./JetMassTemplateProcessor.py -o ${OUTDIR}/templates_${YEAR}${NAMESUFFIX}_${VAR}.coffea --year ${YEAR} --tagger ${TAGGER} --JEC ${DIRECTION} --scaleout ${SCALEOUT}
+    elif [[ ${VAR} == *"trigger"* ]]; then
+      echo "triggersf-variation (${VAR}) -> ${YEAR}" $VAR $YEAR
+      DIRECTION=${VAR#*_}
+      ./JetMassTemplateProcessor.py -o ${OUTDIR}/templates_${YEAR}${NAMESUFFIX}_${VAR}.coffea --year ${YEAR} --tagger ${TAGGER} --triggersf ${DIRECTION} --scaleout ${SCALEOUT}
     else
       echo "variation ${VAR} -> ${YEAR}"
       ./JetMassTemplateProcessor.py -o ${OUTDIR}/templates_${YEAR}${NAMESUFFIX}_${VAR}.coffea --year ${YEAR} --tagger ${TAGGER} --variation ${VAR} --scaleout ${SCALEOUT}
@@ -69,9 +77,10 @@ function submit_templates {
 export TMPDIR=/tmp/
 SCALEOUT=$1
 VARIATION=${2:-nominal}
-VARIATIONS_ALL=(nominal jec_up jec_down jer_up jer_down isr_up isr_down fsr_up fsr_down toppt_off)
-VARIATIONS_PART1=(nominal jec_up jec_down jer_up jer_down)
-VARIATIONS_PART2=(isr_up isr_down fsr_up fsr_down toppt_off)
+VARIATIONS_ALL=(nominal jec_up jec_down triggersf_up triggersf_down isr_up isr_down fsr_up fsr_down pu_up pu_down toppt_off)
+# VARIATIONS_PART1=(nominal jec_up jec_down jer_up jer_down triggersf_up triggersf_down)
+VARIATIONS_PART1=(nominal jec_up jec_down triggersf_up triggersf_down)
+VARIATIONS_PART2=(isr_up isr_down fsr_up fsr_down pu_up pu_down toppt_off)
 TAGGER=${3:-substructure}
 if [ "$VARIATION" == "all" ];
 then
