@@ -468,7 +468,7 @@ draw_extra_text = True
 private_work = False
 
 ratio_plot = True
-ratio_hist_yTitle = "#frac{Data}{MC}"
+ratio_hist_yTitle = "#frac{Data}{Simulation}"
 xTitle = "m_{SD} [GeV]"
 yTitle = "Events"
 xLabelSize = 18.0
@@ -682,7 +682,7 @@ def plot_data_mc(
     #     cms_style.extra_text = "private work"
     # else:
     cms_style.extra_text = extra_text
-    cms_style.extra_text_rel_X = 0.14
+    cms_style.extra_text_rel_X = 0.1
     cms_style.font_size_modifier = 0.6
     # if ratio_plot:
     cms_style.text_padding = lumi_text_padding
@@ -739,7 +739,7 @@ def plot_data_mc(
         bkg_err.SetFillColor(MC_stat_err_color)
         bkg_err.SetLineWidth(0)
         bkg_err.SetMarkerSize(0)
-        legend.AddEntry(bkg_err, "MC stat. Unc.", "f")
+        legend.AddEntry(bkg_err, "Simul. stat. unc.", "f")
 
     frame_hist = (None, None)
     if h_data is not None:
