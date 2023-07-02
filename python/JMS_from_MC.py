@@ -42,7 +42,8 @@ def cms_label(ax, fs=20, year=2017):
         year_substr = re.search("[1678]{2}", year)
         if year_substr:
             year = 2000 + int(year_substr.group())
-    hep.cms.label(label=", Work in Progress", year=year, ax=ax, fontsize=fs)
+    # hep.cms.label(label=", Work in Progress", year=year, ax=ax, fontsize=fs)
+    hep.cms.label("Preliminary", year=year, ax=ax, fontsize=fs, data=False)
 
 
 def fax(w=9, h=9):
@@ -247,9 +248,11 @@ class JMSExtractor(object):
         return self._tree
 
     @tree.setter
-    def tree(self, tree_file):
+    def tree(self, tree_file, triggersf=True):
         # getting raw tree without High-Level behaviour
         raw_tree = ak.from_parquet(tree_file)
+        if triggersf:
+            raw_tree.weight = raw_tree.weight * raw_tree.triggersf
 
         raw_tree.Jets = ak.zip(
             {

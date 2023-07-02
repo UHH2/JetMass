@@ -493,7 +493,7 @@ if __name__ == "__main__":
     import correctionlib
     import os
     import sys
-
+    triggersf = True
     if len(sys.argv) != 2:
         print("Usage: ./unfolding_plotting.py <year> (UL16preVFP, UL17, UL18)")
         exit(-1)
@@ -502,6 +502,9 @@ if __name__ == "__main__":
     workdir = "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/python"
 
     events_sel = ak.from_parquet(f"{workdir}/WJetsToQQ_tinyTree_{year}.parquet")
+
+    if triggersf:
+        events_sel["weight"] = events_sel["weight"]*events_sel["triggersf"]
 
     events_sel["pt_raw"] = events_sel.Jets.pt[:, 0]
     events_sel["pt"] = events_sel.pt_raw * events_sel.jecfactor[:, 0]
@@ -513,7 +516,8 @@ if __name__ == "__main__":
     events_sel["rhogen"] = 2 * np.log(events_sel.mjetgen / events_sel.ptgen)
 
     polynomial_msd_correction_set = correctionlib.CorrectionSet.from_file(
-        f"{workdir}/jms_corrections_28-02-23_608835ecf6.json"
+        f"{workdir}/jms_corrections_01-07-23_6c213bacd7.json"
+        # f"{workdir}/jms_corrections_28-02-23_608835ecf6.json"
     )
 
     pt_reco_ax = hist.axis.Variable(

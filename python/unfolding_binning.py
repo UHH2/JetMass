@@ -364,6 +364,7 @@ if __name__ == "__main__":
     parser.add_argument("--threshold", "-t", type=float, default=0.5)
     parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()
+    triggersf = True
 
     year = "UL17"
     year_re = re.search("(UL)*(20)*1[678]{1}(preVFP|postVFP)*", args.input)
@@ -375,7 +376,7 @@ if __name__ == "__main__":
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
-    fileHandler = logging.FileHandler("unfolding_binning.log")
+    fileHandler = logging.FileHandler(f"unfolding_binning_{year}.log")
     fileHandler.setFormatter(logFormatter)
     logger.addHandler(fileHandler)
 
@@ -405,6 +406,9 @@ if __name__ == "__main__":
 
     events_sel = ak.from_parquet(args.input)
 
+    if triggersf:
+        events_sel["weight"] = events_sel["weight"]*events_sel["triggersf"]
+
     events_sel["pt_raw"] = events_sel.Jets.pt[:, 0]
     events_sel["pt"] = events_sel.pt_raw * events_sel.jecfactor[:, 0]
     events_sel["ptgen"] = events_sel.pt_gen_ak8
@@ -416,7 +420,7 @@ if __name__ == "__main__":
 
     threshold_str = str(args.threshold).replace(".", "p")
 
-    plot_dir = "unfolding_binning_plots"
+    plot_dir = f"unfolding_binning_plots_{year}"
 
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
@@ -537,7 +541,8 @@ if __name__ == "__main__":
         logger.info(logging_styles["red_bold_underline"]("optimize mjet binning (\"advanced\" correction (response))"))
 
         polynomial_msd_correction_set = correctionlib.CorrectionSet.from_file(
-            "jms_corrections_28-02-23_608835ecf6.json"
+            # "jms_corrections_28-02-23_608835ecf6.json"
+            "jms_corrections_01-07-23_6c213bacd7.json"
         )
 
         # optimization with dedicated JMS from MC (response)

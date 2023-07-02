@@ -1,6 +1,7 @@
 #!/usr/bin/env pythonJMS.sh
 import uproot
 import coffea.lookup_tools
+import correctionlib
 from coffea.nanoevents.methods import vector
 import numpy as np
 import awkward as ak
@@ -10,6 +11,7 @@ import glob
 def load_tree(
         dirname: str,
         fname_pattern: str,
+        year: str,
 ):
     tree_name = "AnalysisTree"
 
@@ -50,6 +52,22 @@ def load_tree(
         ]
 
     events = uproot.concatenate(tree_paths, filter_name=filter_)
+
+    trigger_scalefactors = correctionlib.CorrectionSet.from_file(
+        "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/notebooks/data/"
+        + "HLT_AK8PFJet_MC_trigger_sf_c2e731345f.json"
+    )
+    trigger_sf_evaluator_450 = trigger_scalefactors[f"HLT_AK8PFJet450_triggersf_{year}"]
+    trigger_sf_evaluator_500 = trigger_scalefactors[f"HLT_AK8PFJet500_triggersf_{year}"]
+
+    pt_corr = events.pt * events.jecfactor
+    first_ptbin = pt_corr < 650.0
+
+    events["triggersf"] = ak.where(
+        first_ptbin,
+        trigger_sf_evaluator_450.evaluate(pt_corr, "nominal"),
+        trigger_sf_evaluator_500.evaluate(pt_corr, "nominal"),
+    )
 
     events['rho'] = 2*np.log(events.mjet/events.pt)
 
@@ -111,8 +129,8 @@ def apply_selection(
             return (e.N2 - n2ddt_LOT(e.rho, e.pt)) < 0
 
         events_sel = events[
-            (events.rho > -6.0)
-            & (events.rho < -2.1)
+            # (events.rho > -6.0)
+            (events.rho < -2.1)
             & (n2ddt(events))
             & (events.IsMergedWZ == 1)
             & (events.trigger_bits[:, 7] == 1)
@@ -163,6 +181,7 @@ if __name__ == "__main__":
     preselection_tree = load_tree(
         dirname=f"/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/workdir_vjets_{year}/",
         fname_pattern="*WJetsToQQ*.root",
+        year=year,
     )
     selection_tree = apply_selection(preselection_tree, "vjets", year=year)
     dump_tiny_tree(f"WJetsToQQ_tinyTree_{year}.parquet", selection_tree)
