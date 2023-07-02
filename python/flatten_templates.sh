@@ -79,13 +79,14 @@ flatten_templates () {
 }
 
 # run the things
-VARS_ALL=(nominal jec fsr isr toppt_off)
-VARS=(${1:-${VARS_ALL[@]}})
+VARS_ALL=(nominal jec fsr isr triggersf pu toppt_off)
+# VARS=(${2:-${VARS_ALL[@]}})
+VARS=(${VARS_ALL[@]})
 MAXPROCS=5
-NAMEPREFIX=_particlenet
-# NAMEPREFIX=
+# NAMEPREFIX=_particlenet
+NAMEPREFIX=${1:-}
 # MASS=mPnet
 MASS=mjet
 export -f flatten_templates
+printf '%s\n' "${VARS[@]}" | xargs -n1 -P${MAXPROCS} -I{} bash -c 'flatten_templates "$@"' _ {} $MASS $NAMEPREFIX
 
-printf '%s\n' "${VARS[@]}" | xargs -n1 -P${MAXPROCS} -I{} bash -c 'flatten_templates "$@"' _ {} $MASS $NAMEPREFIX 
