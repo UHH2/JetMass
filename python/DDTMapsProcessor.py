@@ -5,6 +5,7 @@ from coffea.nanoevents import BaseSchema
 from coffea import processor
 from coffea.analysis_tools import PackedSelection
 from coffea.util import save
+import correctionlib
 import os
 import glob
 from coffea_util import CoffeaWorkflow
@@ -13,25 +14,38 @@ import numpy as np
 
 
 class DDTMapPrep(processor.ProcessorABC):
-    def __init__(self):
+    def __init__(self, tagger="n2"):
+        self._tagger = tagger
         hists = {}
 
         year_axis = hist.axis.StrCategory([], name="year", label="Year", growth=True)
 
         pT_ax = hist.axis.Regular(500, 0.0, 5000.0, name="pt", label="$p_{T}$ [GeV]")
         rho_ax = hist.axis.Regular(300, -10.0, 0.0, name="rho", label="$\\rho$ [GeV]")
-        N2_ax = hist.axis.Regular(100, 0, 1.5, name="n2", label="N2")
+        # N2_ax = hist.axis.Regular(100, 0, 1.5, name="n2", label="N2")
+        disc_ax = hist.axis.Regular(100, 0, 1.5, name="discriminator", label="discriminator")
 
         hists.update(
             {
-                "leadingJet": hist.Hist(year_axis, pT_ax, rho_ax, N2_ax, storage=hist.storage.Weight()),
+                # "leadingJet": hist.Hist(year_axis, pT_ax, rho_ax, N2_ax, storage=hist.storage.Weight()),
+                # "leadingJet_corrected_pt_mass": hist.Hist(
+                #     year_axis, pT_ax, rho_ax, N2_ax, storage=hist.storage.Weight()
+                # ),
+                # "leadingJet_corrected_pt": hist.Hist(
+                #     year_axis, pT_ax, rho_ax, N2_ax, storage=hist.storage.Weight()
+                # )
+                "leadingJet": hist.Hist(year_axis, pT_ax, rho_ax, disc_ax, storage=hist.storage.Weight()),
                 "leadingJet_corrected_pt_mass": hist.Hist(
-                    year_axis, pT_ax, rho_ax, N2_ax, storage=hist.storage.Weight()
+                    year_axis, pT_ax, rho_ax, disc_ax, storage=hist.storage.Weight()
                 ),
                 "leadingJet_corrected_pt": hist.Hist(
-                    year_axis, pT_ax, rho_ax, N2_ax, storage=hist.storage.Weight()
+                    year_axis, pT_ax, rho_ax, disc_ax, storage=hist.storage.Weight()
                 )
             }
+        )
+        self.trigger_scalefactors = correctionlib.CorrectionSet.from_file(
+            "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/notebooks/data/"
+            + "HLT_AK8PFJet_MC_trigger_sf_c2e731345f.json"
         )
 
         self._hists = lambda: {
@@ -53,7 +67,14 @@ class DDTMapPrep(processor.ProcessorABC):
         selection = PackedSelection()
         selection.add("cleaner", (events.pt > 170) & (abs(events.eta) < 2.4))
         selection.add("jetpfid", events.jetpfid == 1)
-        selection.add("trigger", events['trigger_bits'][:, 7] == 1)
+        selection.add(
+            "trigger",
+            ak.where(
+                events["pt"] * events["jecfactor"] < 650.0,
+                events["trigger_bits"][:, 7] == 1,
+                events["trigger_bits"][:, 8] == 1,
+            ),
+        )
 
         events = events[selection.require(cleaner=True, jetpfid=True, trigger=True)]
 
@@ -86,13 +107,35 @@ class DDTMapPrep(processor.ProcessorABC):
         mjet = mjet_raw * jecfactor
 
         rho = 2 * np.log(mjet_raw / pt_raw)
+
+        trigger_sf_evaluator_450 = self.trigger_scalefactors[
+            f"HLT_AK8PFJet450_triggersf_{year}"
+        ]
+        trigger_sf_evaluator_500 = self.trigger_scalefactors[
+            f"HLT_AK8PFJet500_triggersf_{year}"
+        ]
+        first_ptbin = (pt < 650.0)
+        events.weight = events.weight * ak.where(
+            first_ptbin,
+            trigger_sf_evaluator_450.evaluate(
+                pt, "nominal"
+            ),
+            trigger_sf_evaluator_500.evaluate(
+                pt, "nominal"
+            )
+        )
+        disc = events.N2
+        if self._tagger == "particlenet":
+            disc = (events["ParticleNetMD_probXqq"] + events["ParticleNetMD_probXcc"]) / (
+                events["ParticleNetMD_probXqq"] + events["ParticleNetMD_probXcc"] + events["ParticleNetMD_probQCD"]
+            )
         out["leadingJet"].fill(
-            year=year, pt=pt_raw, rho=rho, n2=events.N2, weight=events.weight
+            year=year, pt=pt_raw, rho=rho, discriminator=disc, weight=events.weight
         )
 
         rho_corrected_pt = 2 * np.log(mjet_raw / pt)
         out["leadingJet_corrected_pt"].fill(
-            year=year, pt=pt, rho=rho_corrected_pt, n2=events.N2, weight=events.weight
+            year=year, pt=pt, rho=rho_corrected_pt, discriminator=disc, weight=events.weight
         )
 
         rho_corrected_pt_mass = 2 * np.log(mjet / pt)
@@ -100,7 +143,7 @@ class DDTMapPrep(processor.ProcessorABC):
             year=year,
             pt=pt,
             rho=rho_corrected_pt_mass,
-            n2=events.N2,
+            discriminator=disc,
             weight=events.weight,
         )
 
@@ -117,13 +160,14 @@ if __name__ == "__main__":
     workflow = CoffeaWorkflow("DDTMaps")
 
     workflow.parser.add_argument(
-        "--output", "-o", type=str, default="qcd_pt_v_rho_v_n2.coffea"
+        "--output", "-o", type=str, default="coffea_hists/qcd_pt_v_rho_v_n2_allyears.coffea"
     )
-    workflow.parser.add_argument("--years", nargs="+", default=["UL17"])
+    workflow.parser.add_argument("--years", nargs="+", default=["UL16preVFP", "UL16postVFP", "UL17", "UL18"])
+    workflow.parser.add_argument("--tagger", type=str, choices=["n2", "particlenet"])
 
     args = workflow.parse_args()
 
-    workflow.processor_instance = DDTMapPrep()
+    workflow.processor_instance = DDTMapPrep(tagger=args.tagger)
     workflow.processor_schema = BaseSchema
 
     # path = '/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/workdir_{SELECTION}_{YEAR}/'
