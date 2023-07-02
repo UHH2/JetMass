@@ -5,7 +5,6 @@ from coffea.nanoevents import BaseSchema
 from coffea import processor
 from coffea.analysis_tools import PackedSelection
 from coffea.util import save
-import correctionlib
 import os
 import glob
 from coffea_util import CoffeaWorkflow
@@ -42,10 +41,6 @@ class DDTMapPrep(processor.ProcessorABC):
                     year_axis, pT_ax, rho_ax, disc_ax, storage=hist.storage.Weight()
                 )
             }
-        )
-        self.trigger_scalefactors = correctionlib.CorrectionSet.from_file(
-            "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/notebooks/data/"
-            + "HLT_AK8PFJet_MC_trigger_sf_c2e731345f.json"
         )
 
         self._hists = lambda: {
@@ -108,22 +103,6 @@ class DDTMapPrep(processor.ProcessorABC):
 
         rho = 2 * np.log(mjet_raw / pt_raw)
 
-        trigger_sf_evaluator_450 = self.trigger_scalefactors[
-            f"HLT_AK8PFJet450_triggersf_{year}"
-        ]
-        trigger_sf_evaluator_500 = self.trigger_scalefactors[
-            f"HLT_AK8PFJet500_triggersf_{year}"
-        ]
-        first_ptbin = (pt < 650.0)
-        events.weight = events.weight * ak.where(
-            first_ptbin,
-            trigger_sf_evaluator_450.evaluate(
-                pt, "nominal"
-            ),
-            trigger_sf_evaluator_500.evaluate(
-                pt, "nominal"
-            )
-        )
         disc = events.N2
         if self._tagger == "particlenet":
             disc = (events["ParticleNetMD_probXqq"] + events["ParticleNetMD_probXcc"]) / (
