@@ -9,6 +9,8 @@ If you run into problems with scripts that import a package/script from this dir
 3. fill templates using the coffea processor `JetMassTemplateProcessor.py`
    1. adjust path to ddt-maps if necessary (e.g. see `self._n2ddtmaps`)
    2. adjust other pre-compiled data (i.e. trigger-sf, k-factors) if needed.
+   3. right now the histograms have to be filled for each variation (`nominal jec_up jec_down triggersf_up triggersf_down isr_up isr_down fsr_up fsr_down pu_up pu_down toppt_off`) separetely and once for each of the tagger approaches (Substructure & ParticleNet)
+      1. the script `submit_jms_templates.sh <number-of-jobs> <variations> <tagger>` will run variations sequentially for all years and a given tagging approach. So for all variations one can do `./submit_jms_tempaltes.sh 50 all substructure` and `./submit_jms_tempaltes.sh 50 all particlenet`. This will spawn a maximum of 100 dask-jobs on condor at any time, so will put minimal stress on the system. Be careful not to submit too many jobs that access the same files simultaneously (i.e. calling the script for each variation individually for one tagger). This can/will put stress on the filesystem the UHH2 flat tree ROOT files are stored on (e.g. DUST@DESY).
 4. flatten output from coffea processor into 1d ROOT (and coffea) hists.
    1. `./flatten_templates.sh` and `./flatten_templates.sh _particlenet`
    2. create control plots
