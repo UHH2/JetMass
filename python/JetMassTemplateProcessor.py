@@ -13,7 +13,8 @@ import glob
 from coffea_util import CoffeaWorkflow
 
 jetmass_path = "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass"
-ddtmaps_path = f"{jetmass_path}/Histograms/ddtmaps.npy"
+ddtmaps_n2_path = f"{jetmass_path}/Histograms/ddtmaps_n2.npy"
+ddtmaps_particlenet_path = f"{jetmass_path}/Histograms/ddtmaps_particlenet.npy"
 kfactor_path = f"{jetmass_path}/NLOweights/"
 
 
@@ -31,7 +32,7 @@ class JMSTemplates(processor.ProcessorABC):
         self._variation_weight = variation_weight
         self._trigger_sf_variation = trigger_sf_var
         self._tagger_approach = tagger
-        tagger_approaches = ["substructure", "particlenet"]
+        tagger_approaches = ["substructure", "particlenet", "particlenetDDT"]
         if self._tagger_approach not in tagger_approaches:
             raise NotImplementedError(
                 "You chose a tagger ({}) approach that is not implemented. Choose among:".format(self._tagger_approach),
@@ -130,24 +131,41 @@ class JMSTemplates(processor.ProcessorABC):
         hists = {}
 
         # create dense_lookup from custom n2ddt map
-        n2ddtmap = np.load(ddtmaps_path, allow_pickle=True).item()
         corrected_str = {
             "none": "",
             "pt": "_corrected_pt",
             "pt&mJ": "_corrected_pt_mass",
         }
 
+        n2ddtmap = np.load(ddtmaps_n2_path, allow_pickle=True).item()
         self._n2ddtmaps = {
             jec_applied_on: coffea.lookup_tools.dense_lookup.dense_lookup(
                 n2ddtmap[
-                    f"n2ddt_map_{year}_smooth_4_0p05{corrected_str[jec_applied_on]}"
+                    f"discddt_map_{year}_smooth_4_0p05{corrected_str[jec_applied_on]}"
                 ][0],
                 dims=(
                     n2ddtmap[
-                        f"n2ddt_map_{year}_smooth_4_0p05{corrected_str[jec_applied_on]}"
+                        f"discddt_map_{year}_smooth_4_0p05{corrected_str[jec_applied_on]}"
                     ][1],
                     n2ddtmap[
-                        f"n2ddt_map_{year}_smooth_4_0p05{corrected_str[jec_applied_on]}"
+                        f"discddt_map_{year}_smooth_4_0p05{corrected_str[jec_applied_on]}"
+                    ][2],
+                ),
+            )
+            for jec_applied_on in ["none", "pt", "pt&mJ"]
+        }
+        particlenetddtmap = np.load(ddtmaps_particlenet_path, allow_pickle=True).item()
+        self._pNetMDWvsQCDddtmaps = {
+            jec_applied_on: coffea.lookup_tools.dense_lookup.dense_lookup(
+                particlenetddtmap[
+                    f"discddt_map_{year}_smooth_4_0p975{corrected_str[jec_applied_on]}"
+                ][0],
+                dims=(
+                    particlenetddtmap[
+                        f"discddt_map_{year}_smooth_4_0p975{corrected_str[jec_applied_on]}"
+                    ][1],
+                    particlenetddtmap[
+                        f"discddt_map_{year}_smooth_4_0p975{corrected_str[jec_applied_on]}"
                     ][2],
                 ),
             )
@@ -277,6 +295,10 @@ class JMSTemplates(processor.ProcessorABC):
                 # "substructure": {"pass": {"n2": True}, "fail": {"n2": False}},
                 "substructure": {"pass": {"n2ddt": True}, "fail": {"n2ddt": False}},
                 "particlenet": {"pass": {"particlenetMDWvsQCD": True}, "fail": {"particlenetMDWvsQCD": False}},
+                "particlenetDDT": {
+                    "pass": {"particlenetMDWvsQCD_DDT": True},
+                    "fail": {"particlenetMDWvsQCD_DDT": False}
+                },
             },
             "ttbar": {
                 "substructure": {
@@ -285,6 +307,11 @@ class JMSTemplates(processor.ProcessorABC):
                     "fail": {"tau32": False, "tau21": False},
                 },
                 "particlenet": {
+                    "pass": {"particlenetTvsQCD": True},
+                    "passW": {"particlenetTvsQCD": False, "particlenetWvsQCD": True},
+                    "fail": {"particlenetTvsQCD": False, "particlenetWvsQCD": False},
+                },
+                "particlenetDDT": {
                     "pass": {"particlenetTvsQCD": True},
                     "passW": {"particlenetTvsQCD": False, "particlenetWvsQCD": True},
                     "fail": {"particlenetTvsQCD": False, "particlenetWvsQCD": False},
@@ -495,6 +522,10 @@ class JMSTemplates(processor.ProcessorABC):
     def n2ddt(self, pt, rho, n2, corrected="none"):
         quantile = self._n2ddtmaps[corrected](rho, pt)
         return n2 - quantile
+
+    def pNetMDWvsQCDddt(self, pt, rho, val, corrected="none"):
+        quantile = self._pNetMDWvsQCDddtmaps[corrected](rho, pt)
+        return quantile - val
 
     def postprocess(self, accumulator):
         return accumulator
@@ -740,7 +771,16 @@ class JMSTemplates(processor.ProcessorABC):
             # selections.add("particlenetWvsQCD", events["ParticleNetDiscriminators_WvsQCD"] > 0.97)
             selections.add("particlenetTvsQCD", events["ParticleNetDiscriminators_TvsQCD"] > 0.96)
             selections.add("particlenetMDWvsQCD", events["ParticleNetMDDiscriminators_WvsQCD"] > 0.91)
-
+            selections.add(
+                "particlenetMDWvsQCD_DDT",
+                (events["ParticleNetMDDiscriminators_WvsQCD"] > 0)
+                & (
+                    self.pNetMDWvsQCDddt(
+                        pt_, rho_, events["ParticleNetMDDiscriminators_WvsQCD"], corrected=jec_applied_on
+                    )
+                    < 0
+                ),
+            )
             selections.add(
                 "unfolding",
                 (events.pass_reco_selection == 1) & (events.pass_gen_selection == 1),
@@ -895,7 +935,9 @@ if __name__ == "__main__":
     ])
     workflow.parser.add_argument("--triggersf", default="nominal", choices=["nominal", "up", "down"])
     workflow.parser.add_argument("--maxfiles", type=int, default=-1)
-    workflow.parser.add_argument("--tagger", default="substructure", choices=["substructure", "particlenet"])
+    workflow.parser.add_argument(
+        "--tagger", default="substructure", choices=["substructure", "particlenet", "particlenetDDT"]
+    )
 
     args = workflow.parse_args()
 
