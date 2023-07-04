@@ -74,11 +74,12 @@ class JMSPlotter:
         self.aPtHigh = None
         self.aPtEdges = None
         self.extract_fit_results()
-
+        self.dJecSyst = {}
         self.dHists = {}
 
     def extract_fit_results(self) -> None:
-        for fit in self.lFits:
+        fits_to_test = list(self.lFits)
+        for fit in fits_to_test:
             if "jms" not in self.dFitResults[fit]:
                 self.lFits.remove(fit)
                 print("Fit {} seemed to have failed. Removing from plotter.".format(fit))
@@ -87,6 +88,9 @@ class JMSPlotter:
                 # for split JMS ignore parameter that do not match
                 # i.e. do not include substring pattern (e.g. *_top_* or *_W_*)
                 if self.massScalePattern not in par:
+                    continue
+                # for top scale skip lowest pT bin
+                if "top" in self.massScalePattern and "200" in par:
                     continue
                 # getting parameter names for easier access ?
                 self.sJmsParameters.add(par)
@@ -183,6 +187,8 @@ class JMSPlotter:
         for fit in self.lFits:
             # pars = sorted(self.dFitResults[fit]["jms"].keys())
             if f"{fit}JECUP" in fit_results and f"{fit}JECDOWN" in fit_results:
+                if "jms" not in fit_results[f"{fit}JECUP"] or "jms" not in fit_results[f"{fit}JECDOWN"]:
+                    continue
                 unc_down = np.abs(
                     self.dJms[fit] - np.array(self.get_fit_result_pars(f"{fit}JECDOWN", fit_results, "central"))
                 )
@@ -191,10 +197,12 @@ class JMSPlotter:
                 )
                 unc_lower = np.min([unc_down, unc_up], axis=0)
                 unc_upper = np.max([unc_down, unc_up], axis=0)
-                unc = np.average([unc_lower, unc_upper], axis=0)
+                # unc = np.average([unc_lower, unc_upper], axis=0)
+                unc = np.max([unc_lower, unc_upper], axis=0)
                 # unc = np.where(unc_upper / self.dJms[fit] < 2.0, unc_upper, unc_lower)
-                unc = [unc_up, unc_down]
-                self.add_uncertainty(fit, unc, "JEC as input")
+                # unc = [unc_up, unc_down]
+                self.dJecSyst[fit] = np.array([self.dJms[fit]-unc, self.dJms[fit]+unc])
+                # self.add_uncertainty(fit, unc, "JEC as input")
 
     def add_uncertainty(
         self, fit, uncertainty: Union[List[np.ndarray], np.ndarray], source: Union[List[str], str] = "dummy"
@@ -209,12 +217,18 @@ class JMSPlotter:
 
     def construct_hists(self):
         for fit in self.lFits:
+            # mask = np.ones_like(self.dJms[fit])
+            # mask_edges = np.ones_like(self.aPtEdges)
+            # if "top" in self.massScalePattern:
+            #     mask[0] = 0
+            #     mask_edges[0] = 0
             self.dHists[fit] = SFHist(
                 self.dJms[fit],
                 self.aPtEdges,
                 True,
                 [np.array(self.dErrorsUp[fit]), np.array(self.dErrorsDown[fit])],
                 self.dUncSources[fit],
+                systs=self.dJecSyst.get(fit, None),
             )
 
     def __str__(self) -> str:
@@ -232,7 +246,8 @@ class SFHist(object):
         edges: np.ndarray,
         xerr: Union[bool, np.ndarray],
         yerr: Union[np.ndarray, List[np.ndarray]],
-        sources: Union[List[str], str] = ""
+        sources: Union[List[str], str] = "",
+        **kwargs
     ) -> None:
         # mask
         self.mask = ~np.isnan(content)
@@ -246,6 +261,7 @@ class SFHist(object):
         self.xerr = xerr
         self.update_yerr(yerr, sources)
         self.color = None
+        self.syst_band = kwargs.get("systs",None)
 
     @property
     def bin_content(self, m: np.ndarray = None) -> np.ndarray:
@@ -271,7 +287,7 @@ class SFHist(object):
         elif isinstance(source, str):
             if source != "":
                 if source not in self.unc_sources:
-                    self.unc_sources.add(source)
+                    self.unc_sources.append(source)
         else:
             raise NotImplementedError(f"Handling of provided uncertainty source type ({type(source)}) not implemented ")
 
@@ -323,6 +339,7 @@ class SFHist(object):
         uncertainty_index: int = -1,
         **kwargs,
     ) -> None:
+        legend_handlers = []
         if "color" in kwargs:
             self.save_color(kwargs["color"])
         elif self.color is not None:
@@ -333,6 +350,8 @@ class SFHist(object):
             error_linestyle = kwargs["linestyle"]
             del kwargs["linestyle"]
 
+        skip_syst_band = kwargs.pop("skip_syst_band", False)
+        
         if ax is None:
             ax = plt.gca()
         xerr = [self.bin_centers - self.pt_low, self.pt_high - self.bin_centers] if self.xerr else None
@@ -357,28 +376,58 @@ class SFHist(object):
 
                 kwargs_copy["color"] = split_unc_ebs[-1][0].get_color()
                 kwargs["color"] = kwargs_copy["color"]
-
-        if split_uncertainty:
-            kwargs["label"] += (
-                f" (unc. {'+'.join(self.unc_sources).replace('_',' ')})"
-                if len(self.unc_sources) > 0
-                else ""
-            )
-        else:
-            if uncertainty_index >= 0:
-                kwargs["label"] += (
-                    f" (unc. {self.unc_sources[uncertainty_index].replace('_',' ')})"
-                )
-
+            legend_handlers += split_unc_ebs
+        # if split_uncertainty:
+        #     kwargs["label"] += (
+        #         f" (unc. {'+'.join(self.unc_sources).replace('_',' ')})"
+        #         if len(self.unc_sources) > 0
+        #         else ""
+        #     )
+        # else:
+        #     if uncertainty_index >= 0:
+        #         kwargs["label"] += (
+        #             f" (unc. {self.unc_sources[uncertainty_index].replace('_',' ')})"
+        #         )
+        syst_kwargs = deepcopy(kwargs)
+        main_label = kwargs["label"] + r" (stat. $\bigoplus$ syst. unc.)"
+        kwargs.pop("label")
         eb = ax.errorbar(
             self.bin_centers,
             self.bin_content,
             yerr=self.yerr(sum_sources=uncertainty_index < 0, source_index=uncertainty_index),
             xerr=xerr,
-            # label=label,
+            label=main_label,
             capsize=5,
             **kwargs,
         )
+        legend_handlers.append(eb)
+        if self.syst_band is not None and not skip_syst_band:
+            alpha = syst_kwargs.pop("alpha")
+            syst_kwargs.pop("fmt")
+            syst_kwargs.pop("markersize")
+            syst_label = syst_kwargs["label"] + r" (stat. $\bigoplus$ syst. $\bigoplus$ JEC unc.)"
+            syst_kwargs.pop("label")
+            # constructing total uncertainty from sqrt(fit**2 + syst**2)
+            syst_band_total = [
+                self.bin_content
+                + (-1.0 if i == 0 else 1.0)
+                * np.sqrt(
+                    self.yerr(sum_sources=True)[i] ** 2
+                    + abs(self.bin_content - self.syst_band[i]) ** 2
+                )
+                for i in [0, 1]
+            ]
+            for ibin in range(len(self.bin_centers)):
+                syst_band_handler = ax.fill_between(
+                    # self.edges[ibin:ibin+2],
+                    [self.bin_centers[ibin] - 20, self.bin_centers[ibin] + 20],
+                    syst_band_total[0][ibin],
+                    syst_band_total[1][ibin],
+                    alpha=alpha / 4,
+                    label=syst_label if ibin == 0 else None,
+                    **syst_kwargs,
+                )
+            legend_handlers.append(syst_band_handler)
         if split_uncertainty:
             eb[2][0].set_linestyle(error_linestyle)
             eb[2][1].set_linestyle(error_linestyle)
@@ -387,6 +436,7 @@ class SFHist(object):
         except RuntimeError as e:
             print(e)
             self.save_color(None)
+        return tuple(legend_handlers)
 
     def save_color(self, color: Union[str, np.ndarray], alpha: float = -1.0) -> None:
         if self.color is None:
@@ -412,7 +462,7 @@ class SFHist(object):
             kwargs["linewidth"] = 0.5
 
         hatch_kwargs = deepcopy(kwargs)
-        del kwargs["hatch"]
+        # del kwargs["hatch"]
         del hatch_kwargs["label"]
         if "alpha" in hatch_kwargs:
             del hatch_kwargs["alpha"]
@@ -429,11 +479,11 @@ class SFHist(object):
         #     if uncertainty_index < 0
         #     else f" (unc. {'+'.join(self.unc_sources[:uncertainty_index+1]).replace('_',' ')})"
         # )
-        kwargs["label"] += (
-            " (unc. total)"
-            if uncertainty_index < 0
-            else f" (unc. {'+'.join(self.unc_sources[:uncertainty_index+1]).replace('_',' ')})"
-        )
+        # kwargs["label"] += (
+        #     ""
+        #     if uncertainty_index < 0
+        #     else f" (unc. {'+'.join(self.unc_sources[:uncertainty_index+1]).replace('_',' ')})"
+        # )
 
         lower = self.bin_content - np.abs(uncertainty[0])
         upper = self.bin_content + np.abs(uncertainty[1])
@@ -449,13 +499,14 @@ class SFHist(object):
                     lower[ibin],
                     upper[ibin],
                     **kwargs
+                    
                 )
-                ax.fill_between(
-                    self.edges[ibin:ibin+2],
-                    lower[ibin],
-                    upper[ibin],
-                    **hatch_kwargs
-                )
+                # ax.fill_between(
+                #     self.edges[ibin:ibin+2],
+                #     lower[ibin],
+                #     upper[ibin],
+                #     **hatch_kwargs
+                # )
                 ax.plot(
                     self.edges[ibin:ibin+2],
                     [self.bin_content[ibin], self.bin_content[ibin]],
@@ -480,7 +531,7 @@ def setup_ax(w: int = 10, h: int = 7, fontsize: float = 20.0) -> Tuple[plt.Figur
 
 
 def finalize_ax(
-    ax: plt.Axes, font_size: float = 20.0, fname: str = None, reversered_legend: bool = True, year: str = ""
+    ax: plt.Axes, font_size: float = 20.0, fname: str = None, reversered_legend: bool = True, year: str = "", **kwargs
 ) -> None:
     lumis = {
         "2017": 41528.9954019578 / 1000.0,
@@ -489,34 +540,57 @@ def finalize_ax(
         "UL17": 41479.68052876168 / 1000.0,
         "UL18": 59832.47533908866 / 1000.0,
     }
+
+    year_alias = {
+        "UL16preVFP": "legacy 2016 (early)",
+        "UL16postVFP": "legacy 2016 (late)",
+        "UL17": "legacy 2017",
+        "UL18": "legacy 2018",
+    }
+
     lumis["RunII"] = sum([lumi for year, lumi in lumis.items() if "UL" in year])
     lumis["UL16"] = sum([lumi for year, lumi in lumis.items() if "UL16" in year])
 
     f = ax.get_figure()
     # extra_text = ", private work"
-    exp_label = "Private work (CMS data/simulation)"
+    # exp_label = "Private work (CMS data/simulation)"
+    exp_label = ""
     print("year_str", year)
     # if year != "":
     #     hep.cms.label(label=extra_text, ax=ax, fontsize=font_size, year=year, lumi=round(lumis.get(year, None), 2))
     lumi = lumis.get(year, None)
     if lumi is not None:
-        lumi = round(lumi, 2)
-    hep.label.exp_label(exp="", llabel=exp_label, ax=ax, fontsize=font_size-2, year=year, lumi=lumi)
+        lumi = round(lumi, 1)
+    if exp_label == "":
+        # hep.label.exp_label(exp="", llabel=exp_label, ax=ax, fontsize=font_size - 2, year=year, lumi=lumi)
+        hep.cms.label("Preliminary", ax=ax, year=year_alias.get(year, year), lumi=lumi, fontsize=font_size-2, data=True)
+    else:
+        hep.label.exp_label(
+            exp="", llabel=exp_label, ax=ax, fontsize=font_size - 2, year=year_alias.get(year, year), lumi=lumi
+        )
     # else:
     #     hep.cms.text(exp_label, ax=ax, fontsize=font_size)
 
-    handles, labels = ax.get_legend_handles_labels()
+    legend_info = kwargs.pop("legend_info", [])
+    sort_legend_alphabet = kwargs.pop("sort_legend_alphabet", False)
+
+    handles, labels = ax.get_legend_handles_labels() if len(legend_info) == 0 else legend_info
+    if sort_legend_alphabet:
+        labels_sorted = sorted(labels)
+        handles = [handles[labels.index(label)] for label in labels_sorted]
+        labels = labels_sorted
     if reversered_legend:
         ax.legend(reversed(handles), reversed(labels), fontsize=font_size - 6, loc="upper left")
     else:
-        ax.legend(fontsize=font_size - 6, loc="upper left")
+        ax.legend(handles, labels, fontsize=font_size - 6, loc="upper left")
     plt.xticks(fontsize=font_size - 2)
     plt.yticks(fontsize=font_size - 2)
     ax.plot(ax.get_xlim(), [1] * 2, "k--", alpha=0.6)
 
-    ax.set_ylim(0.95, 1.05)
+    # ax.set_ylim(0.95, 1.05)
+    ax.set_ylim(0.92, 1.08)
     ax.set_xlabel(r"$p_{T}$ [GeV]")
-    ax.set_ylabel("JMS-SF", loc="center")
+    ax.set_ylabel("JMS correction factor", loc="center")
 
     if fname:
         if not os.path.exists(os.path.dirname(fname)):
