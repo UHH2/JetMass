@@ -5,7 +5,7 @@ w_pt_edges = [500, 650, 800, 1200]
 top_pt_edges = [200, 300, 400, 500, 650]
 configs = {
     "year": "UL16postVFP",
-    "ModelName": "CombinedUL16postVFPNOJEC",
+    "ModelName": "CombinedUL16postVFP",
     "gridHistFileName": "../Histograms/grid_oneScale.root",
     "histLocation": "../python/flat_templates/templates_UL16postVFP_1d_jecpt.root",
     "binning": [50, 300, 5],

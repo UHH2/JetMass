@@ -4,7 +4,7 @@ import common_configs
 pt_edges = [200, 300, 400, 500, 650]
 configs = {
     "year": "UL17",
-    "ModelName": "TTBarUL17NOJEC",
+    "ModelName": "TTBarUL17",
     "gridHistFileName": "../Histograms/grid_oneScale.root",
     "histLocation": "../python/flat_templates/templates_UL17_1d_jecpt.root",
     "binning": [50, 300, 5],
