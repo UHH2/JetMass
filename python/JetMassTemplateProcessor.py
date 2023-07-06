@@ -474,6 +474,33 @@ class JMSTemplates(processor.ProcessorABC):
                             ),
                         }
                     )
+                    hists.update(
+                        {
+                            f"{selection}_mjet_unfolding_{variation}_variation_{region}__up": hist.Hist(
+                                self._unfolding_ax[selection]["mJgen"],
+                                self._unfolding_ax[selection]["ptgen"],
+                                self._unfolding_ax[selection]["mJreco"],
+                                self._unfolding_ax[selection]["ptreco"],
+                                dataset_ax,
+                                jec_applied_ax,
+                                storage=hist.storage.Weight(),
+                            ),
+                        }
+                    )
+                    hists.update(
+                        {
+                            f"{selection}_mjet_unfolding_{variation}_variation_{region}__down": hist.Hist(
+                                self._unfolding_ax[selection]["mJgen"],
+                                self._unfolding_ax[selection]["ptgen"],
+                                self._unfolding_ax[selection]["mJreco"],
+                                self._unfolding_ax[selection]["ptreco"],
+                                dataset_ax,
+                                jec_applied_ax,
+                                storage=hist.storage.Weight(),
+                            ),
+                        }
+                    )
+
                 hists.update(
                     {
                         f"{selection}_mPnet_0_0_all_variation_{region}__up": hist.Hist(
@@ -903,6 +930,25 @@ class JMSTemplates(processor.ProcessorABC):
                             abs_eta_regions=np.abs(eta_[smask]),
                             weight=events.weight[smask],
                         )
+                        out[f"{selection}_mjet_unfolding_{variation}_variation_{region}__up"].fill(
+                            ptreco=pt_[smask_unfolding],
+                            mJreco=mJVar_[:, 0][smask_unfolding] * msd_correction,
+                            ptgen=ptgen_[smask_unfolding],
+                            mJgen=mJgen_[smask_unfolding],
+                            dataset=dataset,
+                            jecAppliedOn=jec_applied_on,
+                            weight=events.weight[smask_unfolding],
+                        )
+                        out[f"{selection}_mjet_unfolding_{variation}_variation_{region}__down"].fill(
+                            ptreco=pt_[smask_unfolding],
+                            mJreco=mJVar_[:, 1][smask_unfolding] * msd_correction,
+                            ptgen=ptgen_[smask_unfolding],
+                            mJgen=mJgen_[smask_unfolding],
+                            dataset=dataset,
+                            jecAppliedOn=jec_applied_on,
+                            weight=events.weight[smask_unfolding],
+                        )
+
                     out[f"{selection}_mPnet_0_0_all_variation_{region}__up"].fill(
                         dataset=dataset,
                         jecAppliedOn=jec_applied_on,
@@ -932,7 +978,6 @@ if __name__ == "__main__":
     workflow.parser.add_argument("--variation", default="nominal", choices=[
         "isr_up", "isr_down",
         "fsr_up", "fsr_down",
-        "triggersf_up", "triggersf_down",
         "pu_up", "pu_down",
         "toppt_off",
     ])
