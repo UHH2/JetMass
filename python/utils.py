@@ -2,6 +2,13 @@ import uproot
 import numpy as np
 import awkward as ak
 
+jms_correction_files = {
+    "n2ddt": "jms_corrections_n2ddt_quadratic_bbc3bd3f61.json",
+    "pNetddt": "jms_corrections_pNetddt_quadratic_1f9ff75161.json",
+}
+jms_correction_files["substructure"] = jms_correction_files["n2ddt"]
+jms_correction_files["particlenetDDT"] = jms_correction_files["pNetddt"]
+
 
 def numpy_to_th2(
     H, x_edges, y_edges, hist_title="", x_title="", y_title="", add_empty_flow=True

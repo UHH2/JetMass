@@ -11,6 +11,7 @@ from coffea.util import save
 import os
 import glob
 from coffea_util import CoffeaWorkflow
+from utils import jms_correction_files
 
 jetmass_path = "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass"
 ddtmaps_n2_path = f"{jetmass_path}/Histograms/ddtmaps_n2.npy"
@@ -181,7 +182,8 @@ class JMSTemplates(processor.ProcessorABC):
             "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/python/"
             # + "jms_corrections_quadratic_40c365c4ab.json"
             # + "jms_corrections_28-02-23_608835ecf6.json"
-            + "jms_corrections_01-07-23_6c213bacd7.json"
+            # + "jms_corrections_01-07-23_6c213bacd7.json"
+            + jms_correction_files[self._tagger_approach]
         )
 
         # get some corrections and pack them into dense_lookups

@@ -108,30 +108,55 @@ def load_tree(
 def apply_selection(
         events: ak.Array,
         selection: str = "vjets",
-        year: str = "UL17"
+        year: str = "UL17",
+        tagger: str = "n2ddt",
 ):
+    jetmass_path = "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass"
+    ddtmaps_n2_path = f"{jetmass_path}/Histograms/ddtmaps_n2.npy"
+    ddtmaps_particlenet_path = f"{jetmass_path}/Histograms/ddtmaps_particlenet.npy"
 
     if selection == "vjets":
-        ddtmaps_path = (
-            "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/"
-            "JetMass/Histograms/ddtmaps.npy"
-        )
 
-        n2ddtmap = np.load(ddtmaps_path, allow_pickle=True).item()
+        n2ddtmap = np.load(ddtmaps_n2_path, allow_pickle=True).item()
         corrected_str = '_corrected_pt_mass'
 
-        n2ddt_LOT = coffea.lookup_tools.dense_lookup.dense_lookup(
-            n2ddtmap[f'n2ddt_map_{year}_smooth_4_0p05{corrected_str}'][0],
-            dims=(n2ddtmap[f'n2ddt_map_{year}_smooth_4_0p05{corrected_str}'][1],
-                  n2ddtmap[f'n2ddt_map_{year}_smooth_4_0p05{corrected_str}'][2]))
+        n2ddt_LUT = coffea.lookup_tools.dense_lookup.dense_lookup(
+            n2ddtmap[f'discddt_map_{year}_smooth_4_0p05{corrected_str}'][0],
+            dims=(n2ddtmap[f'discddt_map_{year}_smooth_4_0p05{corrected_str}'][1],
+                  n2ddtmap[f'discddt_map_{year}_smooth_4_0p05{corrected_str}'][2]
+                  )
+        )
 
         def n2ddt(e):
-            return (e.N2 - n2ddt_LOT(e.rho, e.pt)) < 0
+            return (e.N2 - n2ddt_LUT(e.rho, e.pt)) < 0
+
+        particlenetddtmap = np.load(ddtmaps_particlenet_path, allow_pickle=True).item()
+        pNetMDWvsQCDddt_LUT = coffea.lookup_tools.dense_lookup.dense_lookup(
+            particlenetddtmap[
+                f"discddt_map_{year}_smooth_4_0p975{corrected_str}"
+            ][0],
+            dims=(
+                particlenetddtmap[
+                    f"discddt_map_{year}_smooth_4_0p975{corrected_str}"
+                ][1],
+                particlenetddtmap[
+                    f"discddt_map_{year}_smooth_4_0p975{corrected_str}"
+                ][2],
+            )
+        )
+
+        def tagger_ddt(e):
+            if tagger == "n2ddt":
+                # 5% QCD eff. -> (tagger score - 5th percentile ) < 0 )
+                return (e.N2 - n2ddt_LUT(e.rho, e.pt)) < 0
+            elif tagger == "pNetddt":
+                # for pNet tagger things have to reversed (5% QCD eff. -> ( 95th percentile - tagger score) < 0 )
+                return (pNetMDWvsQCDddt_LUT(e.rho, e.pt) - e["ParticleNetMDDiscriminators_XbbvsQCD"]) < 0
 
         events_sel = events[
             # (events.rho > -6.0)
             (events.rho < -2.1)
-            & (n2ddt(events))
+            & (tagger_ddt(events))
             & (events.IsMergedWZ == 1)
             & (events.trigger_bits[:, 7] == 1)
             & (events.jetpfid == 1)
@@ -172,16 +197,18 @@ def dump_tiny_tree(output_name: str, events: ak.Array):
 
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) != 2:
-        print("Usage: ./tiny_tree.py <year> (UL17,UL18,UL16preVFP,UL16postVFP)")
-        exit(-1)
-    year = sys.argv[1]
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--year", default="UL17")
+    parser.add_argument("--tagger", default="n2ddt", choices=["n2ddt", "pNetddt"])
+
+    args = parser.parse_args()
 
     preselection_tree = load_tree(
-        dirname=f"/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/workdir_vjets_{year}/",
+        dirname=f"/nfs/dust/cms/user/albrechs/UHH2/JetMassOutput/vjetsTrees/workdir_vjets_{args.year}/",
         fname_pattern="*WJetsToQQ*.root",
-        year=year,
+        year=args.year,
     )
-    selection_tree = apply_selection(preselection_tree, "vjets", year=year)
-    dump_tiny_tree(f"WJetsToQQ_tinyTree_{year}.parquet", selection_tree)
+    selection_tree = apply_selection(preselection_tree, "vjets", year=args.year, tagger=args.tagger)
+    dump_tiny_tree(f"WJetsToQQ_tinyTree_{args.year}_{args.tagger}.parquet", selection_tree)

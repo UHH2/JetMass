@@ -13,7 +13,7 @@ from matplotlib.colors import LogNorm
 import unfolding_plotting
 import correctionlib
 import os
-
+from utils import jms_correction_files
 hep.style.use("CMS")
 
 logging_styles = {
@@ -359,8 +359,9 @@ if __name__ == "__main__":
 
     optimization_step_choices = ["pt", "mjet", "mjetSimpleCorr", "mjetCorr", "all"]
 
-    parser.add_argument("--input", "-i", type=str, default="WJetsToQQ_tinyTree.parquet")
-    parser.add_argument("--optimize", nargs="+", choices=optimization_step_choices + ["menu"], default=["menu"])
+    parser.add_argument("--input", "-i", type=str, default="WJetsToQQ_tinyTree_UL17_n2ddt.parquet")
+    parser.add_argument("--tagger", default="n2ddt", choices=["n2ddt", "pNetddt"])
+    parser.add_argument("--optimize", nargs="+", choices=optimization_step_choices + ["menu"], default=["mjetCorr"])
     parser.add_argument("--threshold", "-t", type=float, default=0.5)
     parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()
@@ -376,7 +377,7 @@ if __name__ == "__main__":
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
-    fileHandler = logging.FileHandler(f"unfolding_binning_{year}.log")
+    fileHandler = logging.FileHandler(f"unfolding_binning_{year}_{args.tagger}.log")
     fileHandler.setFormatter(logFormatter)
     logger.addHandler(fileHandler)
 
@@ -420,7 +421,7 @@ if __name__ == "__main__":
 
     threshold_str = str(args.threshold).replace(".", "p")
 
-    plot_dir = f"unfolding_binning_plots_{year}"
+    plot_dir = f"unfolding_binning_plots_{year}_{args.tagger}"
 
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
@@ -542,7 +543,8 @@ if __name__ == "__main__":
 
         polynomial_msd_correction_set = correctionlib.CorrectionSet.from_file(
             # "jms_corrections_28-02-23_608835ecf6.json"
-            "jms_corrections_01-07-23_6c213bacd7.json"
+            # "jms_corrections_01-07-23_6c213bacd7.json"
+            jms_correction_files[args.tagger]
         )
 
         # optimization with dedicated JMS from MC (response)

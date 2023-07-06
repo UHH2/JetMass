@@ -19,3 +19,11 @@ If you run into problems with scripts that import a package/script from this dir
       3. finally `./data_mc_plots.sh` to make plots
 5. templates are ready to be used by ralph (see [JetMass/rhalp/README.md](../rhalph/README.md) for details)
   
+For the unfolding some intermediate steps are necessary once the UHH2 trees are ready and before the templates are created:
+
+1. convert WJets trees to parquet for faster studies: `./tiny_tree.py --year <UL16preVFP,UL16postVFP,UL17,UL18> --tagger <n2ddt, pNetddt>`
+   1. for parallel use something like: `printf "%s\n" UL16preVFP UL16postVFP UL17 UL18 | xargs -I{} -n1 -P4 ./tiny_tree.py --year {} --tagger n2ddt`
+2. using the trees derive reco to gen level correction factors for soft drop mass: `./JMS_from_MC.py --tagger <n2ddt, pNetddt>`
+   1. This will create one correctionset json including all years for one given tagger. Update the filename accordingly in `utils.py` - the filename includes part of the `sha512` sum to directly spot versions of sets.
+3. using the corrections check if binning seems reasonable with `printf "%s\n" UL16preVFP UL16postVFP UL17 UL18 | xargs -I{} -n1 -P4 ./unfolding_binning.py --input WJetsToQQ_tinyTree_{}_<n2ddt,pNetddt>.parquet --tagger <n2ddt,pNetddt>`
+   1. update binning in `JetMassTemplateProcessor.py` if necessary.

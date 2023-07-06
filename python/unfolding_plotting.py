@@ -492,16 +492,26 @@ def plot_migration_matrix(
 if __name__ == "__main__":
     import correctionlib
     import os
-    import sys
+    from utils import jms_correction_files
+    import argparse
+    import re
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--input", "-i", type=str, default="WJetsToQQ_tinyTree_UL17_n2ddt.parquet")
+    parser.add_argument("--tagger", default="n2ddt", choices=["n2ddt", "pNetddt"])
+    args = parser.parse_args()
+
     triggersf = True
-    if len(sys.argv) != 2:
-        print("Usage: ./unfolding_plotting.py <year> (UL16preVFP, UL17, UL18)")
-        exit(-1)
-    year = sys.argv[1]
+
+    year = "UL17"
+    year_re = re.search("(UL)*(20)*1[678]{1}(preVFP|postVFP)*", args.input)
+    if year_re:
+        year = year_re.group()
 
     workdir = "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/python"
 
-    events_sel = ak.from_parquet(f"{workdir}/WJetsToQQ_tinyTree_{year}.parquet")
+    events_sel = ak.from_parquet(f"{workdir}/{args.input}")
 
     if triggersf:
         events_sel["weight"] = events_sel["weight"]*events_sel["triggersf"]
@@ -516,7 +526,8 @@ if __name__ == "__main__":
     events_sel["rhogen"] = 2 * np.log(events_sel.mjetgen / events_sel.ptgen)
 
     polynomial_msd_correction_set = correctionlib.CorrectionSet.from_file(
-        f"{workdir}/jms_corrections_01-07-23_6c213bacd7.json"
+        f"{workdir}/{jms_correction_files[args.tagger]}"
+        # f"{workdir}/jms_corrections_01-07-23_6c213bacd7.json"
         # f"{workdir}/jms_corrections_28-02-23_608835ecf6.json"
     )
 

@@ -545,6 +545,7 @@ class JMSExtractor(object):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("--tagger", default="n2ddt", choices=["n2ddt", "pNetddt"])
     parser.add_argument("--ndpoly", type=int, default=2, help="degree of polynomial used for fitting the JMS")
     parser.add_argument("--output-suffix", type=str, default="quadratic",
                         help="descriptive suffix used both for jms-correctionset json and control-plot directory.")
@@ -555,8 +556,8 @@ if __name__ == "__main__":
     corrections = []
 
     for year in years:
-        wjets_jms_extractor = JMSExtractor(f"WJetsToQQ_tinyTree_{year}.parquet", year=year)
-        wjets_jms_extractor.plot_dir = f"jms_from_mc_plots_{args.output_suffix}"
+        wjets_jms_extractor = JMSExtractor(f"WJetsToQQ_tinyTree_{year}_{args.tagger}.parquet", year=year)
+        wjets_jms_extractor.plot_dir = f"jms_from_mc_plots_{args.tagger}_{args.output_suffix}"
         wjets_jms_extractor.pt_binning = np.array([500, 550, 650, 725, 800, 1000, 1200])
         print("set pt binning to", wjets_jms_extractor.pt_binning)
         print("constructing and filling hists")
@@ -579,6 +580,6 @@ if __name__ == "__main__":
 
     corrections_set_json = correction_set.json(exclude_unset=True)
     sha512sum = sha512(corrections_set_json.encode("utf-8")).hexdigest()
-    fname = f"jms_corrections_{args.output_suffix}_{sha512sum[-10:]}.json"
+    fname = f"jms_corrections_{args.tagger}_{args.output_suffix}_{sha512sum[-10:]}.json"
     with open(fname, "w") as fout:
         fout.write(corrections_set_json)
