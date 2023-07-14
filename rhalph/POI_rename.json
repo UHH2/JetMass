@@ -1,0 +1,18 @@
+{
+  "r_ptgen0_msdgen0":"r_{p_{T}^{0}, m^{0}}",
+  "r_ptgen0_msdgen1":"r_{p_{T}^{0}, m^{1}}",
+  "r_ptgen0_msdgen2":"r_{p_{T}^{0}, m^{2}}",
+  "r_ptgen0_msdgen3":"r_{p_{T}^{0}, m^{3}}",
+  "r_ptgen1_msdgen0":"r_{p_{T}^{0}, m^{0}}",
+  "r_ptgen1_msdgen1":"r_{p_{T}^{0}, m^{1}}",
+  "r_ptgen1_msdgen2":"r_{p_{T}^{0}, m^{2}}",
+  "r_ptgen1_msdgen3":"r_{p_{T}^{0}, m^{3}}",
+  "r_ptgen2_msdgen0":"r_{p_{T}^{0}, m^{0}}",
+  "r_ptgen2_msdgen1":"r_{p_{T}^{0}, m^{1}}",
+  "r_ptgen2_msdgen2":"r_{p_{T}^{0}, m^{2}}",
+  "r_ptgen2_msdgen3":"r_{p_{T}^{0}, m^{3}}",
+  "r_ptgen3_msdgen0":"r_{p_{T}^{0}, m^{0}}",
+  "r_ptgen3_msdgen1":"r_{p_{T}^{0}, m^{1}}",
+  "r_ptgen3_msdgen2":"r_{p_{T}^{0}, m^{2}}",
+  "r_ptgen3_msdgen3":"r_{p_{T}^{0}, m^{3}}"
+}
