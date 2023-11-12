@@ -63,6 +63,10 @@ colors = {
     "WMatched": 413,
     "WJetsUnmatched": 419,
     "WJetsMatched": 413,
+    "WJetsMatched0p4": 413,
+    "WJetsMatched0p2": 413,
+    "WJetsMatched0p1": 413,
+    "WJetsMatched_fakes": 430,
     "ZJets": 797,
     "DYJets": 797,
     "ZJetsUnmatched": 794,
@@ -124,6 +128,7 @@ legend_names = {
     "WMatched": "W+Jets (merged W)",
     "WJetsUnmatched": "W+Jets (not merged)",
     "WJetsMatched": "W+Jets (merged W)",
+    "WJetsMatched_fakes": "W+Jets (merged W) (fakes)",
     # 'WUnmatched': "W+Jets (Unmatched)",
     # 'WMatched': "W+Jets (Matched)",
     # 'WJetsUnmatched': "W+Jets (Unmatched)",
@@ -263,6 +268,17 @@ mc_samples = {
     # "top": ["other_ttbar",  "WJets",  "ST",  "TTbar"],
     # "top": ["other_ttbar",  "WJets",  "ST",  "TTbarNonSemiLep", "TTbar_semilep_notMerged",  "TTbar_semilep_mergedQB",
     # "TTbar_semilep_mergedW",  "TTbar_semilep_mergedTop" ],
+    # "top": [
+    #     "WJets",
+    #     "DYJets",
+    #     "TTToHadronic",
+    #     "TTToSemiLeptonic",
+    #     "TTTo2L2Nu",
+    #     "ST_t",
+    #     "ST_tW",
+    #     "ST_s",
+    #     "QCD",
+    # ],
     "top": [
         "other_ttbar",
         "WJets",
@@ -328,7 +344,7 @@ merged_hists = {
 
 selection_tex = {
     "top": "t#bar{t}#rightarrow #mu + jets",
-    "W": "V + jets",
+    "W": "W(q#bar{q}) + jets",
     "Zbb": "Zbb + jets",
 }
 
@@ -448,6 +464,14 @@ lumis = {
     "UL17": 41479.68052876168 / 1000.0,
     "UL18": 59832.47533908866 / 1000.0,
 }
+
+year_alias = {
+    "UL16preVFP": "legacy 2016 (early)",
+    "UL16postVFP": "legacy 2016 (late)",
+    "UL17": "legacy 2017",
+    "UL18": "legacy 2018",
+}
+
 lumis["RunII"] = sum([lumi for year, lumi in lumis.items() if "UL" in year])
 lumis["UL16"] = sum([lumi for year, lumi in lumis.items() if "UL16" in year])
 
@@ -460,7 +484,8 @@ obs_line_color = 1
 obs_marker_style = 8
 obs_marker_size = 0.5
 year = "2017"
-extra_text = "Preliminary"
+# extra_text = "Preliminary"
+extra_text = "Work_in_progress"
 lumi_text_padding = 0.4
 additional_text_padding = 0.4
 additional_text_size_modifier = 1.4
@@ -558,8 +583,11 @@ def get_hists(
             h_data = h_data.Rebin(rebin_factor)
         if new_binning is not None:
             h_data = h_data.Rebin(len(new_binning) - 1, "", new_binning)
+            # h_data.GetYaxis().SetTitle(
+            #     "Events / %i GeV" % (int(new_binning[1] - new_binning[0]))
+            # )
             h_data.GetYaxis().SetTitle(
-                "Events / %i GeV" % (int(new_binning[1] - new_binning[0]))
+                "Events"
             )
         elif yTitle is not None:
             h_data.GetYaxis().SetTitle(yTitle)
@@ -579,7 +607,7 @@ def get_hists(
             except BaseException as e:
                 this_subhist_ = None
                 logger.exception(
-                    ("hist" + str(hist_dir % sample_name) + "not found. Trying adding the year as suffix.")
+                    ("hist " + str(hist_dir % sample_name) + " not found. Trying adding the year as suffix.")
                 )
                 logger.exception(e)
                 sample_name_year = "{}_{}".format(sample_name, year)
@@ -588,7 +616,7 @@ def get_hists(
                 except BaseException as e:
                     this_subhist_ = None
                     logger.exception(
-                        "hist" + str(hist_dir % sample_name_year) + "not found. Taking empty hist or None instead."
+                        " hist" + str(hist_dir % sample_name_year) + "not found. Taking empty hist or None instead."
                     )
                     logger.exception(e)
             return this_subhist_
@@ -607,13 +635,18 @@ def get_hists(
                     this_hist.Add(this_subhist.Clone())
         else:
             this_hist = get_sample_hist(sample)
-
+        if this_hist is None:
+            logger.critical("Histogram of sample {} could not be found. Skipping.".format(sample))
+            continue
         if rebin_factor > 1:
             this_hist = this_hist.Rebin(rebin_factor)
         if new_binning is not None:
             this_hist = this_hist.Rebin(len(new_binning) - 1, "", new_binning)
+            # this_hist.GetYaxis().SetTitle(
+            #     "Events / %i GeV" % (int(new_binning[1] - new_binning[0]))
+            # )
             this_hist.GetYaxis().SetTitle(
-                "Events / %i GeV" % (int(new_binning[1] - new_binning[0]))
+                "Events"
             )
         elif yTitle is not None:
             this_hist.GetYaxis().SetTitle(yTitle)
@@ -690,7 +723,7 @@ def plot_data_mc(
 
     cms_style.draw_lumi(
         plotpad,
-        year=year,
+        year=year_alias.get(year,year),
         lumi=lumis[year],
         do_extra_text=draw_extra_text,
         out_of_frame=True,
@@ -739,7 +772,7 @@ def plot_data_mc(
         bkg_err.SetFillColor(MC_stat_err_color)
         bkg_err.SetLineWidth(0)
         bkg_err.SetMarkerSize(0)
-        legend.AddEntry(bkg_err, "Simul. stat. unc.", "f")
+        legend.AddEntry(bkg_err, "Simul. stat. #otimes syst. unc.", "f")
 
     frame_hist = (None, None)
     if h_data is not None:

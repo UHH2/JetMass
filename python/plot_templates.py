@@ -181,6 +181,7 @@ def plot_mass(
                     out_dir=output_dir,
                     legend_entries=legend_entries,
                     additional_text=additional_text,
+                    ratio_y_range=(0.55, 1.45),
                 )
 
 

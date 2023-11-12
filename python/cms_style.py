@@ -91,7 +91,7 @@ def draw_lumi(
     global additional_text_ypos
     global cms_text
     global extra_text
-    lumi_text = "%.2f fb^{-1}, %s (13 TeV)" % (float(lumi), str(year))
+    lumi_text = "%.1f fb^{-1}, %s (13 TeV)" % (float(lumi), str(year))
     if private_work:
         cms_text = "Private work"
         if data:
@@ -129,7 +129,7 @@ def draw_lumi(
         return
     # CMS Text
     if not private_work:
-        extra_text_size = cms_text_size
+        extra_text_size = cms_text_size * 0.9
         latex.SetTextFont(61)
     latex.SetTextAlign(11)
     latex.SetTextSize(cms_text_size * top_margin)
