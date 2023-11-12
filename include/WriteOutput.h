@@ -30,7 +30,6 @@ private:
   uhh2::Event::Handle<MatchingSelection> h_matching_selection;
   double CalculateMJet(vector<PFParticle> Particles);
   vector<double> CalculateMJetVariation(vector<PFParticle>particles, int i, int j, TString cat);
-  // vector<double> CalculateMJetResolutionVariation(vector<PFParticle>particles, int i, int j, TString cat);
   std::vector<LorentzVector> variedJets(std::vector<PFParticle> particles, int i, int j, TString cat, bool apply_puppi=true);
   std::vector<double> CalculateMJetVariation1(std::vector<PFParticle> particles, int i, int j, TString cat, bool apply_puppi=true);
   std::vector<double> CalculatePtVariation(std::vector<PFParticle> particles, int i, int j, TString cat, bool apply_puppi=true);

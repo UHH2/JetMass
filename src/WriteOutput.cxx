@@ -417,21 +417,6 @@ bool WriteOutput::process(uhh2::Event & event){
 
 
   int n_gentopjets = event.gentopjets->size();
-  // event.set(h_gen_pt_0);
-  // std::cout << std::endl;
-  // std::cout << "mass: \t" << mass << std::endl;
-  // std::cout << "mjet: \t" << mjet << std::endl;
-  // std::cout << "mjet_SD: \t" << mjet_SD << std::endl;
-  // std::cout << "mass*jec: \t" << mass*jecfactor << std::endl;
-  // std::cout << "mjet*jec: \t" << mjet*jecfactor << std::endl;
-  // std::cout << "mjet_SD*jec_SD: \t" << mjet_SD*jecfactor_SD << std::endl;
-
-  // std::cout << "pt: \t" << pt << std::endl;
-  // std::cout << "pt_SD: \t" << softdrop_jet_raw.pt() << std::endl;
-  // std::cout << "pt*jec: \t" << pt*jecfactor << std::endl;
-  // std::cout << "pt_SD*jec_SD: \t" << softdrop_jet_raw.pt()*jecfactor_SD << std::endl;
-
-  // double deepboost_WvsQCD = candidateJet.btag_DeepBoosted_WvsQCD();
   double tau32 = 0;
   if(candidateJet.tau2() > 0) tau32 = n_topjets>0 ? candidateJet.tau3()/candidateJet.tau2() : -1.0;
   double tau21 = 0;
@@ -459,19 +444,6 @@ bool WriteOutput::process(uhh2::Event & event){
   bool IsMergedWZ  = n_topjets>0 ? matching_selection.passes_matching(candidateJet,MatchingSelection::oIsMergedV) : false;
   bool IsNotMerged = n_topjets>0 ? matching_selection.passes_matching(candidateJet,MatchingSelection::oIsNotMerged) : false;
 
-  // std::cout << "IsMergedTop : IsMergedQB : IsMergedWZ : IsNotMerged"<< std::endl;
-  // std::cout << IsMergedTop << " : " << IsMergedQB << " : " << IsMergedWZ << " : " << IsNotMerged<< std::endl;
-  
-  // // V matching
-  // double genjetpt = -1;
-  // if(isVJetsSel && (is_WSample || is_ZSample)){
-  //   //get genjet pt for k factors
-  //   const GenJet * closest_genjet_1 = closestParticle(candidateJet, *event.genjets);
-  //   const GenJet * closest_genjet_2 = event.topjets->size() > 1 ? closestParticle(event.topjets->at(1), *event.genjets) : closest_genjet_1;
-  //   float gen_pt_1 = closest_genjet_1 ? closest_genjet_1->pt() : -999;
-  //   float gen_pt_2 = closest_genjet_2 ? closest_genjet_2->pt() : -999;
-  //   genjetpt = IsMergedWZ ? gen_pt_1 : gen_pt_2;
-  // }
 
   float genpt,m_genparticles,m_gensubjets;
 
