@@ -8,7 +8,9 @@ import awkward as ak
 import mplhep as hep
 from collections.abc import Callable
 from typing import Union
+from copy import deepcopy
 import itertools
+from utils import year_alias
 
 hep.style.use("CMS")
 
@@ -24,15 +26,16 @@ label_tex_dict = {
 lumi = 41.47968052876168  # fb^-1
 global year
 year = "UL17"
+common_plot_kwargs = dict(flow="none")
 
 
 def cms_label(ax, fs=20):
-    # hep.cms.label(label=", Work in Progress", year=2017, ax=ax, fontsize=fs)
-    try:
-        hep.label.exp_label(llabel="Private work (CMS simulation)", year=year, ax=ax, fontsize=fs)
-    except BaseException as e:
-        print(e)
-        hep._exp_label(llabel="Private work (CMS simulation)", year=year, ax=ax, fontsize=fs)
+    hep.cms.label("Work in Progress", year=year_alias.get(year, year), ax=ax, fontsize=fs, data=False)
+    # try:
+    #     hep.label.exp_label(llabel="Private work (CMS simulation)", year=year, ax=ax, fontsize=fs)
+    # except BaseException as e:
+    #     print(e)
+    #     hep._exp_label(llabel="Private work (CMS simulation)", year=year, ax=ax, fontsize=fs)
 
 
 def fax(w=9, h=9):
@@ -50,6 +53,9 @@ def migration_metric(h: hist.Hist, axis_name: str = "pt_reco", flow: bool = Fals
         raise NameError(f"Did not find {axis_name} among axes of hist!")
     axis_index = axes.index(axis_name)
     mat = h.to_numpy(flow=flow)[0]
+
+    # we assume relevant axis is 1, so if hist-axis is not index 0 transpose matrix
+    # in order to renorm along correct axis
     if axis_index != 0:
         mat = mat.T
     metric_bin_contents = []
@@ -57,7 +63,6 @@ def migration_metric(h: hist.Hist, axis_name: str = "pt_reco", flow: bool = Fals
     other_dim_edges = h.to_numpy(flow=flow)[(1 - axis_index) + 1]
     main_dim_max_bin = len(metric_bin_edges) - 1 - (2 if flow else 0)  # -1 for last edge and -2 for uflow oflow
     second_dim_max_bin = len(other_dim_edges) - 1 - (2 if flow else 0)
-
     renormed_mat = safe_div(mat, np.sum(mat, axis=1)[:, None])
 
     for bin_ind in range(main_dim_max_bin):
@@ -119,25 +124,39 @@ class Unfolding1DPlotter(object):
             events,
         )
 
+        stability, metric_edges = migration_metric(migmat, f"{self.variable}_gen", flow=self.flow)
+
+        def regular_tick(e):
+            if e > 1e4:
+                return r"$\infty$"
+            else:
+                return str(int(e))
+        metric_ticks = [regular_tick(e) for e in metric_edges]
+        if metric_edges[-1] > 1e4:
+            metric_edges[-1] = metric_edges[-2]+np.max(np.diff(metric_edges[:-1]))
+
         hep.histplot(
-            migration_metric(migmat, f"{self.variable}_reco", flow=self.flow),
+            (stability, metric_edges),
             label="stability",
             ax=ax,
             **{"color": stability_color},
+            **common_plot_kwargs,
         )
         hep.histplot(
-            migration_metric(migmat, f"{self.variable}_gen", flow=self.flow),
+            (migration_metric(migmat, f"{self.variable}_reco", flow=self.flow)[0], metric_edges),
             label="purity",
             ax=ax,
             **{"color": purity_color},
+            **common_plot_kwargs,
         )
         if threshold is not None:
             ax.plot(ax.get_xlim(), [threshold, threshold], "k--", alpha=0.6)
 
-        ax.legend()
+        ax.legend(loc="lower center")
+        ax.set_xticks(metric_edges, metric_ticks)
         ax.set_xlabel(r"$%s~$[GeV]" % label_tex_dict[self.variable])
         ax.set_ylabel("binning metric")
-        cms_label(ax)
+        cms_label(ax, fs = 18)
 
         return f, ax
 
@@ -158,12 +177,14 @@ class Unfolding1DPlotter(object):
                 events,
             )
             hep.histplot(
-                migration_metric(migmat, f"{self.variable}_reco", flow=self.flow),
+                migration_metric(migmat, f"{self.variable}_gen", flow=self.flow),
                 label=f"stability nbins={nbins}",
                 ax=ax,
+                **common_plot_kwargs,
             )
             hep.histplot(
-                migration_metric(migmat, f"{self.variable}_gen", flow=self.flow), label=f"purity nbins={nbins}", ax=ax
+                migration_metric(migmat, f"{self.variable}_reco", flow=self.flow), label=f"purity nbins={nbins}", ax=ax,
+                **common_plot_kwargs,
             )
         ax.legend()
         cms_label(ax, fs=25)
@@ -210,8 +231,14 @@ class Unfolding1DPlotter(object):
             events,
         )
 
-        hep.histplot(migmat[::sum, :], ax=ax, label=r"$%s^\mathrm{gen}}$" % label_tex_dict[self.variable])
-        hep.histplot(migmat[:, ::sum], ax=ax, label=r"$%s^\mathrm{reco}}$" % label_tex_dict[self.variable])
+        hep.histplot(
+            migmat[::sum, :], ax=ax, label=r"$%s^\mathrm{ptcl}}$" % label_tex_dict[self.variable],
+            **common_plot_kwargs,
+        )
+        hep.histplot(
+            migmat[:, ::sum], ax=ax, label=r"$%s^\mathrm{reco}}$" % label_tex_dict[self.variable],
+            **common_plot_kwargs,
+        )
         ax.legend()
         ax.set_xlabel(r"$%s~$[GeV]" % label_tex_dict[self.variable])
         cms_label(ax)
@@ -297,18 +324,18 @@ def plot_migration_matrix_old(
         span = len(reco_msd_edges) - 1
         span_arr = [span * i, span * i]
         ax.plot([min_, max_], span_arr, "k--", alpha=0.6)
-        if draw_diagonal:
-            i_0 = 0
-            j_0 = i
-            max_diff_i = len(gen_pt_edges) - 2 - i_0
-            max_diff_j = len(reco_pt_edges) - 2 - j_0
-            if max_diff_i < max_diff_j:
-                i_f = len(gen_pt_edges) - 2
-                j_f = j_0 - i_0 + i_f
-            else:
-                j_f = len(reco_pt_edges) - 2
-                i_f = i_0 - j_0 + j_f
-            diagonal_line(ax, (i_0, j_0), (i_f, j_f))
+        # if draw_diagonal:
+        #     i_0 = 0
+        #     j_0 = i
+        #     max_diff_i = len(gen_pt_edges) - 2 - i_0
+        #     max_diff_j = len(reco_pt_edges) - 2 - j_0
+        #     if max_diff_i < max_diff_j:
+        #         i_f = len(gen_pt_edges) - 2
+        #         j_f = j_0 - i_0 + i_f
+        #     else:
+        #         j_f = len(reco_pt_edges) - 2
+        #         i_f = i_0 - j_0 + j_f
+        #     diagonal_line(ax, (i_0, j_0), (i_f, j_f))
 
     for i in range(0, len(gen_pt_edges) - 1):
         # horizontal lines
@@ -319,19 +346,19 @@ def plot_migration_matrix_old(
             span_arr = [span * i, span * i]
             ax.plot(span_arr, [min_, max_], "k--", alpha=0.6)
 
-        if draw_diagonal:
-            # diagonal lines lower half
-            i_0 = i
-            j_0 = 0
-            max_diff_i = len(gen_pt_edges) - 2 - i_0
-            max_diff_j = len(reco_pt_edges) - 2 - j_0
-            if max_diff_i < max_diff_j:
-                i_f = len(gen_pt_edges) - 2
-                j_f = j_0 - i_0 + i_f
-            else:
-                j_f = len(reco_pt_edges) - 2
-                i_f = i_0 - j_0 + j_f
-            diagonal_line(ax, (i_0, j_0), (i_f, j_f))
+        # if draw_diagonal:
+        #     # diagonal lines lower half
+        #     i_0 = i
+        #     j_0 = 0
+        #     max_diff_i = len(gen_pt_edges) - 2 - i_0
+        #     max_diff_j = len(reco_pt_edges) - 2 - j_0
+        #     if max_diff_i < max_diff_j:
+        #         i_f = len(gen_pt_edges) - 2
+        #         j_f = j_0 - i_0 + i_f
+        #     else:
+        #         j_f = len(reco_pt_edges) - 2
+        #         i_f = i_0 - j_0 + j_f
+        #     diagonal_line(ax, (i_0, j_0), (i_f, j_f))
 
     generator_labels[-1] = r"$\infty$"
     ax.set_xticks(msd_tick_position_generator)
@@ -360,7 +387,7 @@ def plot_migration_matrix_old(
     ax.set_ylabel("$m_{SD,reco}$ [GeV]")
 
     hep.cms.text("Simulation, Work in progress", ax=ax, fontsize=23, pad=0.03)
-    ax.text(0.05 * x_shape, 0.9 * y_shape, r"$W$(qq)+jets")
+    ax.text(0.05 * x_shape, 0.9 * y_shape, r"$W(q\bar{q})$+jets")
     ax.text(0.05 * x_shape, 0.85 * y_shape, extratext)
     fig.tight_layout()
     plt.savefig(
@@ -479,7 +506,7 @@ def plot_migration_matrix(
             (max_ - min_reco) * msd_reco_subax_length / (max_reco - min_reco) + iptreco * msd_reco_subax_length,
         )
         ax.plot(gen_pos, reco_pos, "k--", alpha=0.6)
-    ax.text(0.05 * ax.get_xlim()[1], 0.9 * ax.get_ylim()[1], r"$W$(qq)+jets")
+    ax.text(0.05 * ax.get_xlim()[1], 0.9 * ax.get_ylim()[1], r"$W(q\bar{q})$+jets")
     ax.text(0.05 * ax.get_xlim()[1], 0.85 * ax.get_ylim()[1], extratext)
 
     f.colorbar(c, cax=cax, orientation="vertical", label="Events")
@@ -489,65 +516,267 @@ def plot_migration_matrix(
     )
 
 
+def plot_efficiencies(h, outdir):
+    f, ax_ = plt.subplots(2, 3, figsize=(3 * 9, 2 * 9))
+    pt_gen_tex = [
+        r"500 < $p_{T,\mathrm{gen}}$ < 650 GeV",
+        r"650 < $p_{T,\mathrm{gen}}$ < 800 GeV",
+        r"800 < $p_{T,\mathrm{gen}}$ < 1200 GeV",
+        r"$p_{T,\mathrm{gen}}$ > 1200 GeV",
+    ]
+
+    region = "inclusive"
+    for i in [0, 1, 2, 3]:
+        ax = ax_.flatten()[i]
+        msd_mat = deepcopy(h[{"pt_gen": i}].integrate("pt_reco", 575j))
+        h1d = msd_mat.integrate("msd_gen", 10j, 70j)
+        h1d_region_0 = h1d[{"msd_reco": slice(0j, 50j)}]
+        h1d_region = h1d[{"msd_reco": slice(50j, 70j)}]
+        h1d_region_2 = h1d[{"msd_reco": slice(70j, None)}]
+        h1d_sum = h1d.sum().value
+        h1d_region_sum = h1d_region.sum().value
+        h1d_region_2_sum = h1d_region_2.sum().value
+        h1d_region_0_sum = h1d_region_0.sum().value
+        hep.histplot(h1d, ax=ax, label=r"$10<m_\mathrm{SD, gen} < 70$ [GeV] -> total", flow="none")
+        hep.histplot(
+            h1d_region_0,
+            ax=ax,
+            histtype="fill",
+            color="tab:red",
+            alpha=0.3,
+            label=r"$m_\mathrm{SD, reco} < 50~\mathrm{[GeV]}$"
+            + f" -> {100.*(h1d_region_0_sum/h1d_sum):.2f}% of total",
+            flow="none",
+        )
+        hep.histplot(
+            h1d_region,
+            ax=ax,
+            histtype="fill",
+            color="k",
+            alpha=0.3,
+            label=r"$50<m_\mathrm{SD, reco} < 70~\mathrm{[GeV]}$"
+            + f" -> {100.*(h1d_region_sum/h1d_sum):.2f}% of total",
+            flow="none",
+        )
+        hep.histplot(
+            h1d_region_2,
+            ax=ax,
+            histtype="fill",
+            color="tab:orange",
+            alpha=0.3,
+            label=r"$m_\mathrm{SD, reco} > 70~\mathrm{[GeV]}$"
+            + f" -> {100.*(h1d_region_2_sum/h1d_sum):.2f}% of total",
+            flow="none",
+        )
+        hep.cms.label("Work in Progress", fontsize=16, ax=ax, year=year)
+        ax.legend(fontsize=15)
+        ax.set_xlim(0, 150)
+        # ax.set_yscale("log")
+        ymax = np.max(h1d.values()) * (1.0 / 0.6)
+        ymin = ax.get_ylim()[0]
+        
+        # ax.text(50, 10**((np.ceil(np.log10(ymin))+np.ceil(np.log10(ymax)))*0.5), pt_gen_tex[i], fontsize=16)
+        ax.text(50, ymax*0.65, pt_gen_tex[i], fontsize=16)
+
+        ax.set_ylim(None, ymax)
+    f.savefig(f"{outdir}/msd_bin_gen_comparison_ptgen_{year}_{region}.pdf")
+
+    f, ax_ = plt.subplots(2, 3, figsize=(3 * 9, 2 * 9))
+    f1, ax1_ = plt.subplots(2, 3, figsize=(3 * 9, 2 * 9))
+    pt_reco_tex = [
+        r"575 < $p_{T,\mathrm{reco}}$ < 650 GeV",
+        r"650 < $p_{T,\mathrm{reco}}$ < 725 GeV",
+        r"725 < $p_{T,\mathrm{reco}}$ < 800 GeV",
+        r"800 < $p_{T,\mathrm{reco}}$ < 1000 GeV",
+        r"1000 < $p_{T,\mathrm{reco}}$ < 1200 GeV",
+        r"$p_{T,\mathrm{reco}}$ > 1200 GeV",
+    ]
+    for i in [0, 1, 2, 3, 4, 5]:
+        ax = ax_.flatten()[i]
+        ax1 = ax1_.flatten()[i]
+        msd_mat = h[{"pt_reco": i}].integrate("pt_gen")
+        h1d = deepcopy(msd_mat[{"msd_reco": slice(50j, 300j)}]).integrate("msd_gen", 10j, 300j)
+        h1d_sum = h1d.sum().value
+        h1d_region_0 = deepcopy(msd_mat[{"msd_reco": slice(50j, 300j)}]).integrate("msd_gen", 10j, 50j)
+        h1d_region_0_sum = h1d_region_0.sum().value
+        h1d_region_1 = deepcopy(msd_mat[{"msd_reco": slice(50j, 300j)}]).integrate("msd_gen", 50j, None)
+        h1d_region_1_sum = h1d_region_1.sum().value
+
+        hep.histplot(h1d, ax=ax, label=r"$50<m_\mathrm{SD, reco} < 300$ [GeV] -> 100% of total", flow="none")
+        hists = [h1d_region_0, h1d_region_1]
+        labels = [
+            r"$10< m_\mathrm{SD, gen} < 50~\mathrm{[GeV]}$" + f" -> {100.*(h1d_region_0_sum/h1d_sum):.2f}% of total",
+            r"$m_\mathrm{SD, gen} > 50~\mathrm{[GeV]}$" + f" -> {100.*(h1d_region_1_sum/h1d_sum):.2f}% of total",
+        ]
+        colors = ["k", "tab:green"]
+        hep.histplot(hists, ax=ax, histtype="fill", stack=True, color=colors, alpha=0.3, label=labels, flow="none")
+        hep.cms.label("Work in Progress", fontsize=16, ax=ax, year=year)
+        ax.set_yscale("log")
+        ymax = ax.get_ylim()[1]
+        ymin = ax.get_ylim()[0]
+        ax.text(50, 10**((np.ceil(np.log10(ymin))+np.ceil(np.log10(ymax)))*0.5), pt_reco_tex[i], fontsize=16)
+
+        # ax.text(150, ax.get_ylim()[1] * 0.75, pt_reco_tex[i], fontsize=16)
+
+        ax.legend(fontsize=15)
+
+        h1d = deepcopy(msd_mat[{"msd_reco": slice(0j, 300j)}]).integrate("msd_gen", 10j, 300j)
+        h1d_sum = h1d.sum().value
+        h1d_region_0 = deepcopy(msd_mat[{"msd_reco": slice(0j, 300j)}]).integrate("msd_gen", 10j, 50j)
+        h1d_region_0_sum = h1d_region_0.sum().value
+        h1d_region_1 = deepcopy(msd_mat[{"msd_reco": slice(0j, 300j)}]).integrate("msd_gen", 50j, 300j)
+        h1d_region_1_sum = h1d_region_1.sum().value
+        labels_ratios = [
+            r"fraction of events with $10< m_\mathrm{SD, gen} < 50~\mathrm{[GeV]}$"
+            + f" -> {100.*(h1d_region_0_sum/h1d_sum):.2f}% of total",
+            r"fraction of events with $m_\mathrm{SD, gen} > 50~\mathrm{[GeV]}$"
+            + f" -> {100.*(h1d_region_1_sum/h1d_sum):.2f}% of total",
+        ]
+
+        hists_ratios = [(h.values() / h1d.values(), h1d.axes[0].edges) for h in [h1d_region_0, h1d_region_1]]
+        hep.histplot(
+            hists_ratios, ax=ax1, histtype="fill", stack=True, color=colors, alpha=0.3, label=labels_ratios, flow="none"
+        )
+        hep.cms.label("Work in Progress", fontsize=16, ax=ax1, year=year)
+        ax1.text(150, 0.75, pt_reco_tex[i], fontsize=14)
+        ax1.legend(fontsize=15)
+        ax1.set_ylim(0, 1.1)
+
+    f.savefig(f"{outdir}/msd_bin_reco_comparison_ptreco_{year}_{region}.pdf")
+    f1.savefig(f"{outdir}/msd_bin_reco_fractions_ptreco_{year}_{region}.pdf")
+
+
+    # same but with gen <-> reco swapped
+
+    f, ax_ = plt.subplots(2, 3, figsize=(3 * 9, 2 * 9))
+    f1, ax1_ = plt.subplots(2, 3, figsize=(3 * 9, 2 * 9))
+    pt_reco_tex = [
+        r"575 < $p_{T,\mathrm{reco}}$ < 650 GeV",
+        r"650 < $p_{T,\mathrm{reco}}$ < 725 GeV",
+        r"725 < $p_{T,\mathrm{reco}}$ < 800 GeV",
+        r"800 < $p_{T,\mathrm{reco}}$ < 1000 GeV",
+        r"1000 < $p_{T,\mathrm{reco}}$ < 1200 GeV",
+        r"$p_{T,\mathrm{reco}}$ > 1200 GeV",
+    ]
+    for i in [0, 1, 2, 3]:
+        ax = ax_.flatten()[i]
+        # ax1 = ax1_.flatten()[i]
+        msd_mat = h[{"pt_gen": i}].integrate("pt_reco")
+        h1d = deepcopy(msd_mat[{"msd_gen": slice(10j, 300j)}]).integrate("msd_reco", 50j, 300j)
+        h1d_sum = h1d.sum().value
+        h1d_region_0 = deepcopy(msd_mat[{"msd_gen": slice(10j, 300j)}]).integrate("msd_reco", 50j, 70j)
+        h1d_region_0_sum = h1d_region_0.sum().value
+        h1d_region_1 = deepcopy(msd_mat[{"msd_gen": slice(10j, 300j)}]).integrate("msd_reco", 70j, 300j)
+        h1d_region_1_sum = h1d_region_1.sum().value
+
+        hep.histplot(h1d, ax=ax, label=r"$50<m_\mathrm{SD, gen} < 300$ [GeV] -> 100% of total", flow="none")
+        hists = [h1d_region_0, h1d_region_1]
+        labels = [
+            r"$50< m_\mathrm{SD, reco} < 70~\mathrm{[GeV]}$" + f" -> {100.*(h1d_region_0_sum/h1d_sum):.2f}% of total",
+            r"$70 < m_\mathrm{SD, reco} < 300~\mathrm{[GeV]}$" + f" -> {100.*(h1d_region_1_sum/h1d_sum):.2f}% of total",
+        ]
+        colors = ["k", "tab:green"]
+        hep.histplot(hists, ax=ax, histtype="fill", stack=True, color=colors, alpha=0.3, label=labels, flow="none")
+        hep.cms.label("Work in Progress", fontsize=16, ax=ax, year=year)
+        ax.set_yscale("log")
+        ymax = ax.get_ylim()[1]
+        ymin = ax.get_ylim()[0]
+        ax.text(50, 10**((np.ceil(np.log10(ymin))+np.ceil(np.log10(ymax)))*0.5), pt_reco_tex[i], fontsize=16)
+
+        # ax.text(150, ax.get_ylim()[1] * 0.75, pt_reco_tex[i], fontsize=16)
+
+        ax.legend(fontsize=15)
+
+        # h1d = deepcopy(msd_mat[{"msd_reco": slice(0j, 300j)}]).integrate("msd_gen", 10j, 300j)
+        # h1d_sum = h1d.sum().value
+        # h1d_region_0 = deepcopy(msd_mat[{"msd_reco": slice(0j, 300j)}]).integrate("msd_gen", 10j, 50j)
+        # h1d_region_0_sum = h1d_region_0.sum().value
+        # h1d_region_1 = deepcopy(msd_mat[{"msd_reco": slice(0j, 300j)}]).integrate("msd_gen", 50j, 300j)
+        # h1d_region_1_sum = h1d_region_1.sum().value
+        # labels_ratios = [
+        #     r"fraction of events with $10< m_\mathrm{SD, gen} < 50~\mathrm{[GeV]}$"
+        #     + f" -> {100.*(h1d_region_0_sum/h1d_sum):.2f}% of total",
+        #     r"fraction of events with $m_\mathrm{SD, gen} > 50~\mathrm{[GeV]}$"
+        #     + f" -> {100.*(h1d_region_1_sum/h1d_sum):.2f}% of total",
+        # ]
+
+        # hists_ratios = [(h.values() / h1d.values(), h1d.axes[0].edges) for h in [h1d_region_0, h1d_region_1]]
+        # hep.histplot(
+        #     hists_ratios, ax=ax1, histtype="fill", stack=True, color=colors, alpha=0.3, label=labels_ratios, flow="none"
+        # )
+        # hep.cms.label("Work in Progress", fontsize=16, ax=ax1, year=year)
+        # ax1.text(150, 0.75, pt_reco_tex[i], fontsize=14)
+        # ax1.legend(fontsize=15)
+        # ax1.set_ylim(0, 1.1)
+
+    f.savefig(f"{outdir}/msd_bin_gen_reco_comparison_ptgen_{year}_{region}.pdf")
+    # f1.savefig(f"{outdir}/msd_bin_gen_fractions_ptgen_{year}_{region}.pdf")
+
+
 if __name__ == "__main__":
     import correctionlib
     import os
     from utils import jms_correction_files
     import argparse
-    import re
+    # import re
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--input", "-i", type=str, default="WJetsToQQ_tinyTree_UL17_n2ddt.parquet")
-    parser.add_argument("--tagger", default="n2ddt", choices=["n2ddt", "pNetddt"])
+    # parser.add_argument("--input", "-i", type=str, default="WJetsToQQ_tinyTree_UL17_n2ddt.parquet")
+    parser.add_argument("--year", default="RunII")
+    parser.add_argument("--tagger", default="notagger", choices=["n2ddt", "pNetddt", "notagger"])
     args = parser.parse_args()
 
     triggersf = True
 
-    year = "UL17"
-    year_re = re.search("(UL)*(20)*1[678]{1}(preVFP|postVFP)*", args.input)
-    if year_re:
-        year = year_re.group()
+    # year = "UL17"
+    # year_re = re.search("(UL)*(20)*1[678]{1}(preVFP|postVFP)*", args.input)
+    # if year_re:
+    #     year = year_re.group()
 
     workdir = "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/python"
+    outdir = f"unfolding_plots_{args.year}_{args.tagger}"
+    if not os.path.exists(f"{workdir}/{outdir}"):
+        os.makedirs(f"{workdir}/{outdir}")
 
-    events_sel = ak.from_parquet(f"{workdir}/{args.input}")
+    def load_tree(year):
+        events_sel = ak.from_parquet(f"{workdir}/WJetsToQQ_tinyTree_{year}_notagger.parquet")
 
-    if triggersf:
-        events_sel["weight"] = events_sel["weight"]*events_sel["triggersf"]
+        if triggersf:
+            events_sel["weight"] = events_sel["weight"]*events_sel["triggersf"]
 
-    events_sel["pt_raw"] = events_sel.Jets.pt[:, 0]
-    events_sel["pt"] = events_sel.pt_raw * events_sel.jecfactor[:, 0]
-    events_sel["ptgen"] = events_sel.pt_gen_ak8
-    events_sel["mjet_raw"] = events_sel.mjet
-    events_sel["mjet"] = events_sel.mjet_raw * events_sel.jecfactor[:, 0]
-    events_sel["mjetgen"] = events_sel.msd_gen_ak8
-    events_sel["rho"] = 2 * np.log(events_sel.mjet / events_sel.pt)
-    events_sel["rhogen"] = 2 * np.log(events_sel.mjetgen / events_sel.ptgen)
+        events_sel["pt_raw"] = events_sel.Jets.pt[:, 0]
+        events_sel["pt"] = events_sel.pt_raw * events_sel.jecfactor[:, 0]
+        events_sel["ptgen"] = events_sel.pt_gen_ak8
+        events_sel["mjet_raw"] = events_sel.mjet
+        events_sel["mjet"] = events_sel.mjet_raw * events_sel.jecfactor[:, 0]
+        events_sel["mjetgen"] = events_sel.msd_gen_ak8
+        events_sel["rho"] = 2 * np.log(events_sel.mjet / events_sel.pt)
+        events_sel["rhogen"] = 2 * np.log(events_sel.mjetgen / events_sel.ptgen)
+        events_sel = events_sel[
+            (events_sel.pass_reco_selection == 1)
+            & (events_sel.pass_gen_selection == 1)
+            & (events_sel.dR_reco_gen < 0.4)
+        ]
+
+        return events_sel
 
     polynomial_msd_correction_set = correctionlib.CorrectionSet.from_file(
-        f"{workdir}/{jms_correction_files[args.tagger]}"
-        # f"{workdir}/jms_corrections_01-07-23_6c213bacd7.json"
-        # f"{workdir}/jms_corrections_28-02-23_608835ecf6.json"
+        # f"{workdir}/{jms_correction_files[args.tagger]}"
+        f"{workdir}/"+jms_correction_files["notagger"]
     )
 
     pt_reco_ax = hist.axis.Variable(
-        np.array([500, 575, 650, 725, 800, 1000, 1200, np.inf]), name="pt_reco", label=r"$p_{T,\mathrm{reco}}$ [GeV]"
+        np.array([575, 650, 725, 800, 1000, 1200, np.inf]), name="pt_reco", label=r"$p_{T,\mathrm{reco}}$ [GeV]"
     )
+    years = ["UL16preVFP", "UL16postVFP", "UL17", "UL18"] if args.year == "RunII" else [args.year]
 
     # with correction on msd reco
     for correction in [True, False]:
 
-        def msd_corr(pt):
-            if correction:
-                return 1.0 / polynomial_msd_correction_set[f"response_g_jec_{year}"].evaluate(pt)
-            else:
-                return 1.0
-
-        correction_str = "_msdcorrected" if correction else ""
         h_2d_fine = hist.Hist(
             hist.axis.Variable(
-                np.array([0, 650, 800, 1200, np.inf]), name="pt_gen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"
+                np.array([500, 650, 800, 1200, np.inf]), name="pt_gen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"
             ),
             hist.axis.Regular(54, 30.0, 300.0, name="msd_gen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"),
             pt_reco_ax,
@@ -555,33 +784,64 @@ if __name__ == "__main__":
             storage=hist.storage.Weight(),
         )
 
-        h_2d_fine.fill(
-            **{
-                "pt_gen": events_sel.ptgen,
-                "pt_reco": events_sel.pt,
-                "msd_gen": events_sel.mjetgen,
-                "msd_reco": events_sel.mjet * msd_corr(events_sel.pt),
-                "weight": events_sel.weight,
-            }
+        h_2d_fine_large = hist.Hist(
+            hist.axis.Variable(
+                np.array([500, 650, 800, 1200, np.inf]), name="pt_gen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"
+            ),
+            hist.axis.Regular(60, 0.0, 300.0, name="msd_gen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"),
+            pt_reco_ax,
+            hist.axis.Regular(60, 0.0, 300.0, name="msd_reco", label=r"$m_{SD,\mathrm{reco}}$ [GeV]"),
+            storage=hist.storage.Weight(),
         )
 
-        plot_migration_matrix(
-            h_2d_fine,
-            # zlog=True,
-            extratext="msd corrected" if correction else "",
-            outname=f"{workdir}/unfolding_binning_plots/migration_matrix_fine_binning_{year}{correction_str}.pdf",
-        )
+        for year in years:
+            events_sel = load_tree(year)
 
+            def msd_corr(pt):
+                if correction:
+                    return 1.0 / polynomial_msd_correction_set[f"response_g_jec_{year}"].evaluate(pt)
+                else:
+                    return 1.0
+
+            correction_str = "_msdcorrected" if correction else ""
+
+            h_2d_fine.fill(
+                **{
+                    "pt_gen": events_sel.ptgen,
+                    "pt_reco": events_sel.pt,
+                    "msd_gen": events_sel.mjetgen,
+                    "msd_reco": events_sel.mjet * msd_corr(events_sel.pt),
+                    "weight": events_sel.weight,
+                }
+            )
+            h_2d_fine_large.fill(
+                **{
+                    "pt_gen": events_sel.ptgen,
+                    "pt_reco": events_sel.pt,
+                    "msd_gen": events_sel.mjetgen,
+                    "msd_reco": events_sel.mjet * msd_corr(events_sel.pt),
+                    "weight": events_sel.weight,
+                }
+            )
+
+            del events_sel
+
+            plot_migration_matrix(
+                h_2d_fine,
+                # zlog=True,
+                extratext="msd corrected" if correction else "",
+                outname=f"{workdir}/{outdir}/migration_matrix_fine_binning_{args.year}{correction_str}.pdf",
+            )
+
+            plot_efficiencies(h_2d_fine_large,
+                              outdir=f"{workdir}/{outdir}")
     cmd = (
         "convert -delay 100 "
-        + f"{workdir}/unfolding_binning_plots/migration_matrix_fine_binning_{year}.pdf "
-        + f"{workdir}/unfolding_binning_plots/migration_matrix_fine_binning_{year}_msdcorrected.pdf "
-        + f"{workdir}/unfolding_binning_plots/migration_matrix_fine_binning_{year}.gif"
+        + f"{workdir}/{outdir}/migration_matrix_fine_binning_{args.year}.pdf "
+        + f"{workdir}/{outdir}/migration_matrix_fine_binning_{args.year}_msdcorrected.pdf "
+        + f"{workdir}/{outdir}/migration_matrix_fine_binning_{args.year}.gif"
     )
     os.system(cmd)
-
-    def msd_corr(pt):
-        return 1.0 / polynomial_msd_correction_set[f"response_g_jec_{year}"].evaluate(pt)
 
     # final choice of binning
     # old binning
@@ -590,50 +850,61 @@ if __name__ == "__main__":
     # optimization on pass region in 575 < pT < 650 (response_g_jec JMS factor)
     # mjetgen_binning = np.array([0.0, 44.5, 68.0, 80.5, 92.0, 132.5, 300])
     # mjetgen_binning = np.array([0., 70., 80.5, 89.5, 300.0])
-    mjetgen_binning = np.array([0., 70., 80., 90., 300.0])
-
+    mjetgen_binning = np.array([30., 70., 80., 90., np.inf])
     h_2d = hist.Hist(
-        hist.axis.Variable(np.array([0, 650, 800, 1200, np.inf]), name="pt_gen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"),
+        hist.axis.Variable(np.array([500, 650, 800, 1200, np.inf]), name="pt_gen", label=r"$p_{T,\mathrm{gen}}$ [GeV]"),
         hist.axis.Variable(mjetgen_binning, name="msd_gen", label=r"$m_{SD,\mathrm{gen}}$ [GeV]"),
         pt_reco_ax,
-        hist.axis.Regular(54, 30.0, 300.0, name="msd_reco", label=r"$m_{SD,\mathrm{reco}}$ [GeV]"),
+        hist.axis.Regular(54, 50.0, 300.0, name="msd_reco", label=r"$m_{SD,\mathrm{reco}}$ [GeV]"),
         storage=hist.storage.Weight(),
     )
+    for year in years:
+        events_sel = load_tree(year)
 
-    h_2d.fill(
-        **{
-            "pt_gen": events_sel.ptgen,
-            "pt_reco": events_sel.pt,
-            "msd_gen": events_sel.mjetgen,
-            "msd_reco": events_sel.mjet * msd_corr(events_sel.pt),
-            "weight": events_sel.weight,
-        }
-    )
+        def msd_corr(pt):
+            return 1.0 / polynomial_msd_correction_set[f"response_g_jec_{year}"].evaluate(pt)
 
-    plot_migration_matrix(
-        h_2d,
-        # zlog=True,
-        outname=f"{workdir}/unfolding_binning_plots/migration_matrix_final_binning_{year}.pdf"
-    )
+        h_2d.fill(
+            **{
+                "pt_gen": events_sel.ptgen,
+                "pt_reco": events_sel.pt,
+                "msd_gen": events_sel.mjetgen,
+                "msd_reco": events_sel.mjet * msd_corr(events_sel.pt),
+                "weight": events_sel.weight,
+            }
+        )
+        plot_migration_matrix(
+            h_2d,
+            # zlog=True,
+            outname=f"{workdir}/{outdir}/migration_matrix_final_binning_{args.year}.pdf"
+        )
 
-    unfolding_1d_plotter = Unfolding1DPlotter("mjet", msd_corr)
-    for pt_low, pt_high in pt_reco_ax:
-        pt_low_str, pt_high_str = map(lambda b: str(b).replace(".0", ""), [pt_low, pt_high])
-        f, ax = unfolding_1d_plotter.plot_migration_metric(
-            mjetgen_binning,
-            events_sel[(events_sel.pt >= pt_low) & (events_sel.pt < pt_high)],
-            threshold=0.5,
-        )
-        ax.text(
-            1 / 3 * ax.get_xlim()[1],
-            2 / 3 * ax.get_ylim()[1],
-            r"$%s \leq p_T^\mathrm{reco} < %s$" % (pt_low_str, pt_high_str),
-            fontsize=18,
-        )
-        ax.set_ylim(0.0, 1.0)
-        f.savefig(
-            f"{workdir}/unfolding_binning_plots/"
-            + f"migration_metric_final_binning_{year}_pt"
-            + f"{pt_low_str}To{pt_high_str}.pdf",
-            bbox_inches="tight",
-        )
+        unfolding_1d_plotter = Unfolding1DPlotter("mjet", msd_corr)
+        for pt_low, pt_high in pt_reco_ax:
+            pt_low_str, pt_high_str = map(lambda b: str(b).replace(".0", ""), [pt_low, pt_high])
+            f, ax = unfolding_1d_plotter.plot_migration_metric(
+                mjetgen_binning,
+                events_sel[(events_sel.pt >= pt_low) & (events_sel.pt < pt_high)],
+                # threshold=0.5,
+            )
+            # ax.text(
+            #     1 / 3 * ax.get_xlim()[1],
+            #     2 / 3 * ax.get_ylim()[1],
+            #     r"$%s \leq p_T^\mathrm{reco} < %s$" % (pt_low_str, pt_high_str),
+            #     fontsize=18,
+            # )
+            ax.plot(
+                [],
+                [],
+                " ",
+                label=r"$%s \leq p_T^\mathrm{reco} < %s$" % (pt_low_str, pt_high_str),
+            )
+            ax.legend(loc="lower center")
+            ax.set_ylim(0.0, 1.0)
+            f.savefig(
+                f"{workdir}/{outdir}/"
+                + f"migration_metric_final_binning_{year}_pt"
+                + f"{pt_low_str}To{pt_high_str}.pdf",
+                bbox_inches="tight",
+            )
+        del events_sel
