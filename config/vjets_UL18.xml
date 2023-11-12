@@ -65,6 +65,8 @@
     <UserConfig>
       <Item Name="selection" Value="vjets"/>
       <Item Name="pileup_directory_data" Value="common/UHH2-data/UL18/MyDataPileupHistogram_UL18.root"/>
+      <Item Name="pileup_directory_data_down" Value="common/UHH2-data/UL18/MyDataPileupHistogram_UL18_66017.root"/>
+      <Item Name="pileup_directory_data_up" Value="common/UHH2-data/UL18/MyDataPileupHistogram_UL18_72383.root"/>
       <Item Name="pileup_directory" Value="common/UHH2-data/UL18/MyMCPileupHistogram_UL18.root"/>
       <Item Name="lumi_file" Value="common/UHH2-data/UL18/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON_normtag.root"/>
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>

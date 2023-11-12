@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE JobConfiguration PUBLIC "" "JobConfig.dtd" [
+<!ENTITY 	 SingleMuon_RunA 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL18/SingleMuon_Run2018A-UL2018_MiniAODv2_GT36-v1.xml">
 <!ENTITY 	 SingleMuon_RunB 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL18/SingleMuon_Run2018B-UL2018_MiniAODv2_GT36-v1.xml">
 <!ENTITY 	 SingleMuon_RunC 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL18/SingleMuon_Run2018C-UL2018_MiniAODv2_GT36-v2.xml">
 <!ENTITY 	 SingleMuon_RunD 	 SYSTEM 	 "/nfs/dust/cms/user/albrechs/UHH2/UHH2-Datasets/RunII_106X_v2/data/UL18/SingleMuon_Run2018D-UL2018_MiniAODv2_GT36-v1.xml">
@@ -55,6 +56,7 @@
   <Library Name="libSUHH2JetMass"/>
   <Package Name="SUHH2JetMass.par"/>
   <Cycle Name="uhh2::AnalysisModuleRunner" OutputDirectory="&OUTdir;" PostFix="" TargetLumi="59832.47533908866">
+    <InputData Version="SingleMuon_RunA_UL18" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_RunA;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="SingleMuon_RunB_UL18" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_RunB;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="SingleMuon_RunC_UL18" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_RunC;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
     <InputData Version="SingleMuon_RunD_UL18" Lumi="1.0" Type="Data" NEventsMax="-1" Cacheable="False">&SingleMuon_RunD;<InputTree Name="AnalysisTree"/><OutputTree Name="AnalysisTree"/></InputData>
@@ -97,6 +99,8 @@
     <UserConfig>
       <Item Name="selection" Value="ttbar"/>
       <Item Name="pileup_directory_data" Value="common/UHH2-data/UL18/MyDataPileupHistogram_UL18.root"/>
+      <Item Name="pileup_directory_data_down" Value="common/UHH2-data/UL18/MyDataPileupHistogram_UL18_66017.root"/>
+      <Item Name="pileup_directory_data_up" Value="common/UHH2-data/UL18/MyDataPileupHistogram_UL18_72383.root"/>
       <Item Name="pileup_directory" Value="common/UHH2-data/UL18/MyMCPileupHistogram_UL18.root"/>
       <Item Name="lumi_file" Value="common/UHH2-data/UL18/Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON_normtag.root"/>
       <Item Name="PrimaryVertexCollection" Value="offlineSlimmedPrimaryVertices"/>
