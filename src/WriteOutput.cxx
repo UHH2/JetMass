@@ -153,6 +153,7 @@ WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selec
   h_IsMergedTop = ctx.declare_event_output<bool>("IsMergedTop");
   h_IsMergedQB = ctx.declare_event_output<bool>("IsMergedQB");
   h_IsMergedWZ = ctx.declare_event_output<bool>("IsMergedWZ");
+  h_GenIsMatchedWZ = ctx.declare_event_output<bool>("GenIsMatchedWZ");
   h_IsNotMerged = ctx.declare_event_output<bool>("IsNotMerged");
 
   h_pdgId_Q1 = ctx.declare_event_output<int>("pdgIdQ1");
@@ -285,7 +286,15 @@ WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selec
     h_pt_gen_ak8 = ctx.declare_event_output<double>("pt_gen_ak8");
     h_mass_gen_ak8 = ctx.declare_event_output<double>("mass_gen_ak8");
     h_msd_gen_ak8 = ctx.declare_event_output<double>("msd_gen_ak8"); 
+    h_n2_beta1_gen = ctx.declare_event_output<double>("n2_beta1_gen");
+    h_n2_beta2_gen = ctx.declare_event_output<double>("n2_beta2_gen");
 
+    // h_gen_pt_0 = ctx.declare_event_output<double>("gen_pt_0");
+    // h_gen_eta_0 = ctx.declare_event_output<double>("gen_eta_0");
+    // h_gen_phi_0 = ctx.declare_event_output<double>("gen_phi_0");
+    // h_gen_pt_0 = ctx.declare_event_output<double>("gen_pt_0");
+    
+    
     h_dR_chs_puppi = ctx.declare_event_output<double>("dr_chs_puppi");
     h_dR_gen_puppi = ctx.declare_event_output<double>("dr_gen_puppi");
     h_dR_gen_chs = ctx.declare_event_output<double>("dr_gen_chs");
@@ -326,7 +335,7 @@ WriteOutput::WriteOutput(uhh2::Context & ctx, const std::string & matching_selec
 
 bool WriteOutput::process(uhh2::Event & event){
   vector<TopJet>* topjets = event.topjets;
-  if(topjets->size() < 1) return false;
+  if(topjets->size() < 1 && event.gentopjets->size() < 1) return false;
 
   //PartonShower weights
   std::vector<float> ps_weights = {};
@@ -379,32 +388,36 @@ bool WriteOutput::process(uhh2::Event & event){
   const GenParticle *genV = matching_selection.get_genV();
   if(genV)event.set(h_V_pt, genV->pt());
   
-  
-  vector<Jet> subjets = topjets->at(0).subjets();
-  vector<PFParticle>* allparticles = event.pfparticles;
-
-  vector<PFParticle> particles;
-
   LorentzVector softdrop_jet_raw;
-  // find all pf particles inside the subjets
-  for(auto subjet: subjets){
-    softdrop_jet_raw += subjet.v4()*subjet.JEC_factor_raw();
-    for(const auto candInd : subjet.pfcand_indexs()){
-      particles.push_back(allparticles->at(candInd));
+  vector<PFParticle>* allparticles = event.pfparticles;
+  vector<PFParticle> particles;
+  if(event.topjets->size()>0){
+    vector<Jet> subjets = topjets->at(0).subjets();  
+    // find all pf particles inside the subjets
+    for(auto subjet: subjets){
+      softdrop_jet_raw += subjet.v4()*subjet.JEC_factor_raw();
+      for(const auto candInd : subjet.pfcand_indexs()){
+        particles.push_back(allparticles->at(candInd));
+      }
     }
-  }
-  TopJet candidateJet = topjets->at(0);
-  double pt = candidateJet.v4().Pt()*candidateJet.JEC_factor_raw();
-  double eta = candidateJet.v4().Eta();
-  double phi = candidateJet.v4().Phi();
-  double mass = candidateJet.v4().M()*candidateJet.JEC_factor_raw();
+  }  
+  TopJet candidateJet;
+  int n_topjets = event.topjets->size();
+  if(event.topjets->size()>0) candidateJet = topjets->at(0);
+  double pt = n_topjets>0 ? candidateJet.v4().Pt()*candidateJet.JEC_factor_raw() : -1.0;
+  double eta = n_topjets>0 ? candidateJet.v4().Eta() : -1.0;
+  double phi = n_topjets>0 ? candidateJet.v4().Phi() : -1.0;
+  double mass = n_topjets>0 ? candidateJet.v4().M()*candidateJet.JEC_factor_raw() : -1.0;
   
-  double N2 = candidateJet.ecfN2_beta1();
-  double mjet = CalculateMJet(particles);
-  double jecfactor = 1.0/candidateJet.JEC_factor_raw();
-  double jecfactor_SD = softdrop_jec->getJecFactor(event,softdrop_jet_raw);
-  double mjet_SD = candidateJet.softdropmass();
+  double N2 = n_topjets>0 ? candidateJet.ecfN2_beta1() : -1.0;
+  double mjet = n_topjets>0 ? CalculateMJet(particles) : -1.0;
+  double jecfactor = n_topjets>0 ? 1.0/candidateJet.JEC_factor_raw() : -1.0;
+  double jecfactor_SD = n_topjets>0 ? softdrop_jec->getJecFactor(event,softdrop_jet_raw) : -1.0;
+  double mjet_SD = n_topjets>0 ? candidateJet.softdropmass() : -1.0;
 
+
+  int n_gentopjets = event.gentopjets->size();
+  // event.set(h_gen_pt_0);
   // std::cout << std::endl;
   // std::cout << "mass: \t" << mass << std::endl;
   // std::cout << "mjet: \t" << mjet << std::endl;
@@ -420,12 +433,12 @@ bool WriteOutput::process(uhh2::Event & event){
 
   // double deepboost_WvsQCD = candidateJet.btag_DeepBoosted_WvsQCD();
   double tau32 = 0;
-  if(candidateJet.tau2() > 0) tau32 = candidateJet.tau3()/candidateJet.tau2();
+  if(candidateJet.tau2() > 0) tau32 = n_topjets>0 ? candidateJet.tau3()/candidateJet.tau2() : -1.0;
   double tau21 = 0;
-  if(candidateJet.tau1() > 0) tau21 = candidateJet.tau2()/candidateJet.tau1();
+  if(candidateJet.tau1() > 0) tau21 = n_topjets>0 ? candidateJet.tau2()/candidateJet.tau1() : -1.0;
 
-  double AK8CHF = candidateJet.chargedHadronEnergyFraction();
-  double AK8NHF = candidateJet.neutralHadronEnergyFraction();
+  double AK8CHF = n_topjets>0 ? candidateJet.chargedHadronEnergyFraction() : -1.0;
+  double AK8NHF = n_topjets>0 ? candidateJet.neutralHadronEnergyFraction() : -1.0;
   
   // set variations for MC
   if(isMC & save_variations){
@@ -440,11 +453,11 @@ bool WriteOutput::process(uhh2::Event & event){
       }
     }
   }
-  bool IsMergedHiggs = matching_selection.passes_matching(candidateJet,MatchingSelection::oIsMergedHiggs);
-  bool IsMergedTop = matching_selection.passes_matching(candidateJet,MatchingSelection::oIsMergedTop);
-  bool IsMergedQB  = matching_selection.passes_matching(candidateJet,MatchingSelection::oIsMergedQB);
-  bool IsMergedWZ  = matching_selection.passes_matching(candidateJet,MatchingSelection::oIsMergedV);
-  bool IsNotMerged = matching_selection.passes_matching(candidateJet,MatchingSelection::oIsNotMerged);
+  bool IsMergedHiggs = n_topjets>0 ? matching_selection.passes_matching(candidateJet,MatchingSelection::oIsMergedHiggs) : false;
+  bool IsMergedTop = n_topjets>0 ? matching_selection.passes_matching(candidateJet,MatchingSelection::oIsMergedTop) : false;
+  bool IsMergedQB  = n_topjets>0 ? matching_selection.passes_matching(candidateJet,MatchingSelection::oIsMergedQB) : false;
+  bool IsMergedWZ  = n_topjets>0 ? matching_selection.passes_matching(candidateJet,MatchingSelection::oIsMergedV) : false;
+  bool IsNotMerged = n_topjets>0 ? matching_selection.passes_matching(candidateJet,MatchingSelection::oIsNotMerged) : false;
 
   // std::cout << "IsMergedTop : IsMergedQB : IsMergedWZ : IsNotMerged"<< std::endl;
   // std::cout << IsMergedTop << " : " << IsMergedQB << " : " << IsMergedWZ << " : " << IsNotMerged<< std::endl;
@@ -509,77 +522,77 @@ bool WriteOutput::process(uhh2::Event & event){
   event.set(h_N2, N2);
   event.set(h_tau32, tau32);
   event.set(h_tau21, tau21);
-  event.set(h_DeepBoostWQCD, candidateJet.btag_DeepBoosted_WvsQCD());
-  event.set(h_DeepBoostZQCD, candidateJet.btag_DeepBoosted_ZvsQCD());
-  event.set(h_DeepBoostZbbQCD, candidateJet.btag_DeepBoosted_ZbbvsQCD());
-  event.set(h_MDDeepBoostWQCD, candidateJet.btag_MassDecorrelatedDeepBoosted_WvsQCD());
-  event.set(h_MDDeepBoostZQCD, candidateJet.btag_MassDecorrelatedDeepBoosted_ZvsQCD());
-  event.set(h_MDDeepBoostZbbQCD, candidateJet.btag_MassDecorrelatedDeepBoosted_ZbbvsQCD());
+  event.set(h_DeepBoostWQCD, n_topjets>0 ? candidateJet.btag_DeepBoosted_WvsQCD() : -1.0);
+  event.set(h_DeepBoostZQCD, n_topjets>0 ? candidateJet.btag_DeepBoosted_ZvsQCD() : -1.0);
+  event.set(h_DeepBoostZbbQCD, n_topjets>0 ? candidateJet.btag_DeepBoosted_ZbbvsQCD() : -1.0);
+  event.set(h_MDDeepBoostWQCD, n_topjets>0 ? candidateJet.btag_MassDecorrelatedDeepBoosted_WvsQCD() : -1.0);
+  event.set(h_MDDeepBoostZQCD, n_topjets>0 ? candidateJet.btag_MassDecorrelatedDeepBoosted_ZvsQCD() : -1.0);
+  event.set(h_MDDeepBoostZbbQCD, n_topjets>0 ? candidateJet.btag_MassDecorrelatedDeepBoosted_ZbbvsQCD() : -1.0);
 
-  event.set(h_DeepDoubleBHbbprob, candidateJet.btag_DeepDoubleBvLJet_probHbb());
-  event.set(h_DeepDoubleBQCDprob, candidateJet.btag_DeepDoubleBvLJet_probQCD());
-  event.set(h_MIDeepDoubleBHbbprob, candidateJet.btag_MassIndependentDeepDoubleBvLJet_probHbb());
-  event.set(h_MIDeepDoubleBQCDprob, candidateJet.btag_MassIndependentDeepDoubleBvLJet_probQCD());
+  event.set(h_DeepDoubleBHbbprob, n_topjets>0 ? candidateJet.btag_DeepDoubleBvLJet_probHbb() : -1.0);
+  event.set(h_DeepDoubleBQCDprob, n_topjets>0 ? candidateJet.btag_DeepDoubleBvLJet_probQCD() : -1.0);
+  event.set(h_MIDeepDoubleBHbbprob, n_topjets>0 ? candidateJet.btag_MassIndependentDeepDoubleBvLJet_probHbb() : -1.0);
+  event.set(h_MIDeepDoubleBQCDprob, n_topjets>0 ? candidateJet.btag_MassIndependentDeepDoubleBvLJet_probQCD() : -1.0);
 
     //raw scores of ParticleNet tagger
-  event.set(h_btag_ParticleNetJetTags_probTbcq, candidateJet.btag_ParticleNetJetTags_probTbcq());
-  event.set(h_btag_ParticleNetJetTags_probTbqq, candidateJet.btag_ParticleNetJetTags_probTbqq());
-  event.set(h_btag_ParticleNetJetTags_probTbc, candidateJet.btag_ParticleNetJetTags_probTbc());
-  event.set(h_btag_ParticleNetJetTags_probTbq, candidateJet.btag_ParticleNetJetTags_probTbq());
-  event.set(h_btag_ParticleNetJetTags_probTbel, candidateJet.btag_ParticleNetJetTags_probTbel());
-  event.set(h_btag_ParticleNetJetTags_probTbmu, candidateJet.btag_ParticleNetJetTags_probTbmu());
-  event.set(h_btag_ParticleNetJetTags_probTbta, candidateJet.btag_ParticleNetJetTags_probTbta());
-  event.set(h_btag_ParticleNetJetTags_probWcq, candidateJet.btag_ParticleNetJetTags_probWcq());
-  event.set(h_btag_ParticleNetJetTags_probWqq, candidateJet.btag_ParticleNetJetTags_probWqq());
-  event.set(h_btag_ParticleNetJetTags_probZbb, candidateJet.btag_ParticleNetJetTags_probZbb());
-  event.set(h_btag_ParticleNetJetTags_probZcc, candidateJet.btag_ParticleNetJetTags_probZcc());
-  event.set(h_btag_ParticleNetJetTags_probZqq, candidateJet.btag_ParticleNetJetTags_probZqq());
-  event.set(h_btag_ParticleNetJetTags_probHbb, candidateJet.btag_ParticleNetJetTags_probHbb());
-  event.set(h_btag_ParticleNetJetTags_probHcc, candidateJet.btag_ParticleNetJetTags_probHcc());
-  event.set(h_btag_ParticleNetJetTags_probHqqqq, candidateJet.btag_ParticleNetJetTags_probHqqqq());
-  event.set(h_btag_ParticleNetJetTags_probQCDbb, candidateJet.btag_ParticleNetJetTags_probQCDbb());
-  event.set(h_btag_ParticleNetJetTags_probQCDcc, candidateJet.btag_ParticleNetJetTags_probQCDcc());
-  event.set(h_btag_ParticleNetJetTags_probQCDb, candidateJet.btag_ParticleNetJetTags_probQCDb());
-  event.set(h_btag_ParticleNetJetTags_probQCDc, candidateJet.btag_ParticleNetJetTags_probQCDc());
-  event.set(h_btag_ParticleNetJetTags_probQCDothers, candidateJet.btag_ParticleNetJetTags_probQCDothers());
-  event.set(h_btag_ParticleNetJetTags_probQCD, candidateJet.btag_ParticleNetJetTags_probQCD());
+  event.set(h_btag_ParticleNetJetTags_probTbcq, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probTbcq() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probTbqq, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probTbqq() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probTbc, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probTbc() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probTbq, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probTbq() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probTbel, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probTbel() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probTbmu, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probTbmu() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probTbta, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probTbta() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probWcq, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probWcq() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probWqq, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probWqq() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probZbb, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probZbb() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probZcc, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probZcc() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probZqq, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probZqq() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probHbb, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probHbb() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probHcc, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probHcc() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probHqqqq, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probHqqqq() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probQCDbb, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probQCDbb() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probQCDcc, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probQCDcc() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probQCDb, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probQCDb() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probQCDc, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probQCDc() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probQCDothers, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probQCDothers() : -1.0);
+  event.set(h_btag_ParticleNetJetTags_probQCD, n_topjets>0 ? candidateJet.btag_ParticleNetJetTags_probQCD() : -1.0);
   
   //binary scores of ParticleNet, see https://github.com/cms-sw/cmssw/blob/master/RecoBTag/ONNXRuntime/python/pfParticleNetDiscriminatorsJetTags_cfi.py
-  event.set(h_btag_ParticleNetDiscriminatorsJetTags_TvsQCD, candidateJet.btag_ParticleNetDiscriminatorsJetTags_TvsQCD());
-  event.set(h_btag_ParticleNetDiscriminatorsJetTags_WvsQCD, candidateJet.btag_ParticleNetDiscriminatorsJetTags_WvsQCD());
-  event.set(h_btag_ParticleNetDiscriminatorsJetTags_ZvsQCD, candidateJet.btag_ParticleNetDiscriminatorsJetTags_ZvsQCD());
-  event.set(h_btag_ParticleNetDiscriminatorsJetTags_ZbbvsQCD, candidateJet.btag_ParticleNetDiscriminatorsJetTags_ZbbvsQCD());
-  event.set(h_btag_ParticleNetDiscriminatorsJetTags_HbbvsQCD, candidateJet.btag_ParticleNetDiscriminatorsJetTags_HbbvsQCD());
-  event.set(h_btag_ParticleNetDiscriminatorsJetTags_HccvsQCD, candidateJet.btag_ParticleNetDiscriminatorsJetTags_HccvsQCD());
-  event.set(h_btag_ParticleNetDiscriminatorsJetTags_H4qvsQCD, candidateJet.btag_ParticleNetDiscriminatorsJetTags_H4qvsQCD());
+  event.set(h_btag_ParticleNetDiscriminatorsJetTags_TvsQCD, n_topjets>0 ? candidateJet.btag_ParticleNetDiscriminatorsJetTags_TvsQCD() : -1.0);
+  event.set(h_btag_ParticleNetDiscriminatorsJetTags_WvsQCD, n_topjets>0 ? candidateJet.btag_ParticleNetDiscriminatorsJetTags_WvsQCD() : -1.0);
+  event.set(h_btag_ParticleNetDiscriminatorsJetTags_ZvsQCD, n_topjets>0 ? candidateJet.btag_ParticleNetDiscriminatorsJetTags_ZvsQCD() : -1.0);
+  event.set(h_btag_ParticleNetDiscriminatorsJetTags_ZbbvsQCD, n_topjets>0 ? candidateJet.btag_ParticleNetDiscriminatorsJetTags_ZbbvsQCD() : -1.0);
+  event.set(h_btag_ParticleNetDiscriminatorsJetTags_HbbvsQCD, n_topjets>0 ? candidateJet.btag_ParticleNetDiscriminatorsJetTags_HbbvsQCD() : -1.0);
+  event.set(h_btag_ParticleNetDiscriminatorsJetTags_HccvsQCD, n_topjets>0 ? candidateJet.btag_ParticleNetDiscriminatorsJetTags_HccvsQCD() : -1.0);
+  event.set(h_btag_ParticleNetDiscriminatorsJetTags_H4qvsQCD, n_topjets>0 ? candidateJet.btag_ParticleNetDiscriminatorsJetTags_H4qvsQCD() : -1.0);
   
   //raw scores of mass decorrelated ParticleNet tagger
-  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probXbb, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probXbb());
-  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probXcc, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probXcc());
-  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probXqq, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probXqq());
-  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCDbb, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCDbb());
-  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCDcc, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCDcc());
-  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCDb, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCDb());
-  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCDc, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCDc());
-  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCDothers, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCDothers());
-  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCD, candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCD());
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probXbb, n_topjets>0 ? candidateJet.btag_MassDecorrelatedParticleNetJetTags_probXbb() : -1.0);
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probXcc, n_topjets>0 ? candidateJet.btag_MassDecorrelatedParticleNetJetTags_probXcc() : -1.0);
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probXqq, n_topjets>0 ? candidateJet.btag_MassDecorrelatedParticleNetJetTags_probXqq() : -1.0);
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCDbb, n_topjets>0 ? candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCDbb() : -1.0);
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCDcc, n_topjets>0 ? candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCDcc() : -1.0);
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCDb, n_topjets>0 ? candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCDb() : -1.0);
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCDc, n_topjets>0 ? candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCDc() : -1.0);
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCDothers, n_topjets>0 ? candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCDothers() : -1.0);
+  event.set(h_btag_MassDecorrelatedParticleNetJetTags_probQCD, n_topjets>0 ? candidateJet.btag_MassDecorrelatedParticleNetJetTags_probQCD() : -1.0);
 
   //binary scores of mass decorrelated ParticleNet tagger, see https://github.com/cms-sw/cmssw/blob/master/RecoBTag/ONNXRuntime/python/pfMassDecorrelatedParticleNetDiscriminatorsJetTags_cfi.py
-  event.set(h_btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XbbvsQCD, candidateJet.btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XbbvsQCD());
-  event.set(h_btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XccvsQCD, candidateJet.btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XccvsQCD());
-  event.set(h_btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XqqvsQCD, candidateJet.btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XqqvsQCD());
+  event.set(h_btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XbbvsQCD, n_topjets>0 ? candidateJet.btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XbbvsQCD() : -1.0);
+  event.set(h_btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XccvsQCD, n_topjets>0 ? candidateJet.btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XccvsQCD() : -1.0);
+  event.set(h_btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XqqvsQCD, n_topjets>0 ? candidateJet.btag_MassDecorrelatedParticleNetDiscriminatorsJetTags_XqqvsQCD() : -1.0);
 
   //mass from ParticleNet mass regression
-  event.set(h_ParticleNetMassRegressionJetTags_mass, candidateJet.ParticleNetMassRegressionJetTags_mass());
+  event.set(h_ParticleNetMassRegressionJetTags_mass, n_topjets>0 ? candidateJet.ParticleNetMassRegressionJetTags_mass() : -1.0);
 
   
 
 
   
-  event.set(h_NextraMBtagDR0p8, countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_MEDIUM),0.8));
-  event.set(h_NextraTBtagDR0p8, countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_TIGHT),0.8));
-  event.set(h_NextraMBtagDR1p0, countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_MEDIUM),1.0));
-  event.set(h_NextraTBtagDR1p0, countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_TIGHT),1.0));
+  event.set(h_NextraMBtagDR0p8, n_topjets>0 ? countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_MEDIUM),0.8):-1.0);
+  event.set(h_NextraTBtagDR0p8, n_topjets>0 ? countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_TIGHT),0.8):-1.0);
+  event.set(h_NextraMBtagDR1p0, n_topjets>0 ? countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_MEDIUM),1.0):-1.0);
+  event.set(h_NextraTBtagDR1p0, n_topjets>0 ? countBJetsAroundJet(event, candidateJet, *event.jets, DeepJetBTag(DeepJetBTag::WP_TIGHT),1.0):-1.0);
 
   //std::cout << "weight stored in tree: " << event.weight << std::endl;
   event.set(h_weight, event.weight);
@@ -587,13 +600,13 @@ bool WriteOutput::process(uhh2::Event & event){
   event.set(h_jecfactor, jecfactor);
   event.set(h_jecfactor_SD, jecfactor_SD);
 
-  event.set(h_jerfactor_SD_nominal, softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,0,1.0));
-  event.set(h_jerfactor_SD_up, softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,1,1.0));
-  event.set(h_jerfactor_SD_down, softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,-1,1.0));
+  event.set(h_jerfactor_SD_nominal, n_topjets>0 ? softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,0,1.0): -1.0);
+  event.set(h_jerfactor_SD_up, n_topjets>0 ? softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,1,1.0):-1.0);
+  event.set(h_jerfactor_SD_down, n_topjets>0 ? softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,-1,1.0):-1.0);
 
-  event.set(h_jerfactor_SD_JEC_nominal, softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,0,jecfactor_SD));
-  event.set(h_jerfactor_SD_JEC_up, softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,1,jecfactor_SD));
-  event.set(h_jerfactor_SD_JEC_down, softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,-1,jecfactor_SD));
+  event.set(h_jerfactor_SD_JEC_nominal, n_topjets>0 ? softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,0,jecfactor_SD):-1.0);
+  event.set(h_jerfactor_SD_JEC_up, n_topjets>0 ? softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,1,jecfactor_SD):-1.0);
+  event.set(h_jerfactor_SD_JEC_down, n_topjets>0 ? softdrop_jec->getJERSmearingFactor(event,softdrop_jet_raw,-1,jecfactor_SD):-1.0);
   
     
   double ak4_pt = -1.0;
@@ -635,16 +648,24 @@ bool WriteOutput::process(uhh2::Event & event){
 
   
     float pt_gen_ak8(-1.0),mass_gen_ak8(-1.0),msd_gen_ak8(-1.0);
+    float n2_beta1_gen(-1.0),n2_beta2_gen(-1.0);
+    bool GenIsMatchedWZ(false);
     if(gen_jet){
       pt_gen_ak8 = gen_jet->pt();
       mass_gen_ak8 = gen_jet->v4().M();
       msd_gen_ak8 = gen_jet->softdropmass();
+      n2_beta1_gen = gen_jet->ecfN2_beta1();
+      n2_beta2_gen = gen_jet->ecfN2_beta2();
+      GenIsMatchedWZ = matching_selection.passes_matching(*gen_jet,MatchingSelection::oIsMergedV);
     }
+    event.set(h_GenIsMatchedWZ,GenIsMatchedWZ);
     // std::cout << "mass_gen: \t" << mass_gen_ak8 << std::endl;
     // std::cout << "msd_gen: \t" << msd_gen_ak8 << std::endl;
     event.set(h_pt_gen_ak8,pt_gen_ak8);
     event.set(h_mass_gen_ak8,mass_gen_ak8);
     event.set(h_msd_gen_ak8,msd_gen_ak8);
+    event.set(h_n2_beta1_gen, n2_beta1_gen);
+    event.set(h_n2_beta2_gen, n2_beta2_gen);
 
     float pt_reco_ak8_puppi(-1.0),mass_reco_ak8_puppi(-1.0),msd_reco_ak8_puppi(-1.0);
     float pt_reco_ak8_puppi_pf(-1.0),pt_reco_ak8_puppi_pf_sd(-1.0);

@@ -146,7 +146,20 @@ private:
   uhh2::Event::Handle<double>h_phi_1;
   uhh2::Event::Handle<double>h_mass_1;
   uhh2::Event::Handle<double>h_jecfactor_1;
-  
+
+  uhh2::Event::Handle<double>h_gen_pt_0;
+  uhh2::Event::Handle<double>h_gen_eta_0;
+  uhh2::Event::Handle<double>h_gen_phi_0;
+  uhh2::Event::Handle<double>h_gen_mass_0;
+  uhh2::Event::Handle<double>h_n2_b1_0;
+  uhh2::Event::Handle<double>h_n2_b2_0;
+  uhh2::Event::Handle<double>h_gen_pt_1;
+  uhh2::Event::Handle<double>h_gen_eta_1;
+  uhh2::Event::Handle<double>h_gen_phi_1;
+  uhh2::Event::Handle<double>h_gen_mass_1;
+  uhh2::Event::Handle<double>h_n2_b1_1;
+  uhh2::Event::Handle<double>h_n2_b2_1;
+
   uhh2::Event::Handle<double>h_pt_AK4,h_genpt_AK4;
   uhh2::Event::Handle<double>h_N2;
   uhh2::Event::Handle<double>h_tau32;
@@ -201,7 +214,9 @@ private:
   uhh2::Event::Handle<double> h_jecfactor_puppi_sd, h_jecfactor_chs_sd;
   
   uhh2::Event::Handle<double> h_pt_gen_ak8, h_mass_gen_ak8, h_msd_gen_ak8;
-
+  uhh2::Event::Handle<double> h_n2_beta1_gen, h_n2_beta2_gen;
+  uhh2::Event::Handle<bool> h_GenIsMatchedWZ;
+  
   uhh2::Event::Handle<double> h_pt_reco_ak8_puppi, h_mass_reco_ak8_puppi, h_msd_reco_ak8_puppi;
   uhh2::Event::Handle<double> h_pt_pf_reco_ak8_puppi,h_pt_pf_sd_reco_ak8_puppi;
 
