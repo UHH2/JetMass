@@ -1,8 +1,5 @@
 #!/bin/bash
 
-if [ ! -d $outdir ]; then
-  mkdir -p  $outdir
-fi
 
 
 function flatten_eta_regions {
@@ -30,8 +27,11 @@ flatten_templates () {
 
   VAR=${1:-none}
   MASS=$2
-  if [ "$MASS" == "mPnet" ];then
-  outdir="${outdir}/mPnet/"
+  if [ "$MASS" == "mPnet" ]; then
+     outdir="${outdir}/mPnet/"
+  fi
+  if [ ! -d $outdir ]; then
+    mkdir -p  $outdir
   fi
 
   NAMEPREFIX=${3:-""}
@@ -40,7 +40,13 @@ flatten_templates () {
     echo "You have to provide a variation name!"
     exit -1
   fi
-  
+    VJETSONLY=""
+  if [[ ${VAR} == *"qcd"* ]]; then
+    VJETSONLY="--VJetsOnly"
+  elif [[ ${VAR} == *"ewk"* ]]; then
+    VJETSONLY="--VJetsOnly"
+  fi
+
   for YEAR in ${YEARS[@]};
   do
     NAME=templates_${YEAR}${NAMEPREFIX}
@@ -48,38 +54,40 @@ flatten_templates () {
       echo "flattening ${YEAR} templates for variation of ${VAR}"
       # JEC on pt
       ./create_root_templates.py -i $indir/${NAME}.coffea -o $outdir/${NAME}_1d_jecpt --JEC "pt" --mass ${MASS}
-      ./create_root_templates.py -i $indir/${NAME}.coffea -o $outdir/${NAME}_1d_jecpt_unfolding --JEC "pt" --unfolding --mass ${MASS}
+      ./create_root_templates.py -i $indir/${NAME}.coffea -o $outdir/${NAME}_1d_jecpt_unfolding --JEC "pt" --unfolding --mass ${MASS} ${VJETSONLY}
       
       # JEC on pt&mJ
       ./create_root_templates.py -i $indir/${NAME}.coffea -o $outdir/${NAME}_1d --JEC "pt&mJ" --mass ${MASS}
-      ./create_root_templates.py -i $indir/${NAME}.coffea -o $outdir/${NAME}_1d_unfolding --JEC "pt&mJ" --unfolding --mass ${MASS}
+      ./create_root_templates.py -i $indir/${NAME}.coffea -o $outdir/${NAME}_1d_unfolding --JEC "pt&mJ" --unfolding --mass ${MASS} ${VJETSONLY}
     elif [ "$VAR" == "toppt_off" ]; then
       echo "flattening ${YEAR} templates for variation of ${VAR}"
       # JEC on pt
-      ./create_root_templates.py -i $indir/${NAME}_${VAR}.coffea -o $outdir/${NAME}_1d_jecpt_${VAR} --JEC "pt" --mass ${MASS}
-      ./create_root_templates.py -i $indir/${NAME}_${VAR}.coffea -o $outdir/${NAME}_1d_jecpt_unfolding_${VAR} --JEC "pt" --unfolding --mass ${MASS}
+      ./create_root_templates.py -i $indir/${NAME}_${VAR}.coffea -o $outdir/${NAME}_1d_jecpt_${VAR} --JEC "pt" --mass ${MASS} ${VJETSONLY}
+      ./create_root_templates.py -i $indir/${NAME}_${VAR}.coffea -o $outdir/${NAME}_1d_jecpt_unfolding_${VAR} --JEC "pt" --unfolding --mass ${MASS} ${VJETSONLY}
 
       # JEC on pt&mJ
-      ./create_root_templates.py -i $indir/${NAME}_${VAR}.coffea -o $outdir/${NAME}_1d_${VAR} --JEC "pt&mJ" --mass ${MASS}
-      ./create_root_templates.py -i $indir/${NAME}_${VAR}.coffea -o $outdir/${NAME}_1d_unfolding_${VAR} --JEC "pt&mJ" --unfolding --mass ${MASS}
+      ./create_root_templates.py -i $indir/${NAME}_${VAR}.coffea -o $outdir/${NAME}_1d_${VAR} --JEC "pt&mJ" --mass ${MASS} ${VJETSONLY}
+      ./create_root_templates.py -i $indir/${NAME}_${VAR}.coffea -o $outdir/${NAME}_1d_unfolding_${VAR} --JEC "pt&mJ" --unfolding --mass ${MASS}${VJETSONLY}
     else
       for DIR in up down;
       do
         echo "flattening ${YEAR} templates for variation of ${VAR}"
         # JEC on pt
-        ./create_root_templates.py -i $indir/${NAME}_${VAR}_${DIR}.coffea -o $outdir/${NAME}_1d_jecpt_${VAR}_${DIR} --JEC "pt" --mass ${MASS}
-        ./create_root_templates.py -i $indir/${NAME}_${VAR}_${DIR}.coffea -o $outdir/${NAME}_1d_jecpt_unfolding_${VAR}_${DIR} --JEC "pt" --unfolding --mass ${MASS}
+        ./create_root_templates.py -i $indir/${NAME}_${VAR}_${DIR}.coffea -o $outdir/${NAME}_1d_jecpt_${VAR}_${DIR} --JEC "pt" --mass ${MASS} ${VJETSONLY}
+        ./create_root_templates.py -i $indir/${NAME}_${VAR}_${DIR}.coffea -o $outdir/${NAME}_1d_jecpt_unfolding_${VAR}_${DIR} --JEC "pt" --unfolding --mass ${MASS} ${VJETSONLY}
 
         # JEC on pt&mJ
-        ./create_root_templates.py -i $indir/${NAME}_${VAR}_${DIR}.coffea -o $outdir/${NAME}_1d_${VAR}_${DIR} --JEC "pt&mJ" --mass ${MASS}
-        ./create_root_templates.py -i $indir/${NAME}_${VAR}_${DIR}.coffea -o $outdir/${NAME}_1d_unfolding_${VAR}_${DIR} --JEC "pt&mJ" --unfolding --mass ${MASS}
+        ./create_root_templates.py -i $indir/${NAME}_${VAR}_${DIR}.coffea -o $outdir/${NAME}_1d_${VAR}_${DIR} --JEC "pt&mJ" --mass ${MASS} ${VJETSONLY}
+        ./create_root_templates.py -i $indir/${NAME}_${VAR}_${DIR}.coffea -o $outdir/${NAME}_1d_unfolding_${VAR}_${DIR} --JEC "pt&mJ" --unfolding --mass ${MASS} ${VJETSONLY}
       done
     fi
   done
 }
 
 # run the things
-VARS_ALL=(nominal jec fsr isr triggersf pu toppt_off)
+VARS_ALL=(nominal jec fsr isr triggersf pu toppt_off v_qcd w_ewk z_ewk)
+# VARS_ALL=(v_qcd w_ewk z_ewk)
+# VARS_ALL=(nominal)
 # VARS=(${2:-${VARS_ALL[@]}})
 VARS=(${VARS_ALL[@]})
 MAXPROCS=5

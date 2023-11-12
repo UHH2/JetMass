@@ -37,6 +37,7 @@ def load_tree(
             "mjet",
             "pt_gen_ak8",
             "msd_gen_ak8",
+            "mass_gen_ak8",
             "weight",
             "N2",
             "IsMergedWZ",
@@ -49,6 +50,19 @@ def load_tree(
             "ParticleNetMDDiscriminators_XbbvsQCD",
             "ParticleNetMDDiscriminators_XccvsQCD",
             "ParticleNetMDDiscriminators_XqqvsQCD",
+            "pass_reco_selection",
+            "pass_gen_selection",
+            "dR_reco_gen",
+            "gentopjet_pt_0",
+            "gentopjet_msd_0",
+            "gentopjet_mass_0",
+            "gentopjet_dR_reco_0",
+            "gentopjet_n2_0",
+            "gentopjet_pt_1",
+            "gentopjet_msd_1",
+            "gentopjet_mass_1",
+            "gentopjet_dR_reco_1",
+            "gentopjet_n2_1",
         ]
 
     events = uproot.concatenate(tree_paths, filter_name=filter_)
@@ -146,7 +160,9 @@ def apply_selection(
         )
 
         def tagger_ddt(e):
-            if tagger == "n2ddt":
+            if tagger == "notagger":
+                return np.ones_like(e.N2) == 1
+            elif tagger == "n2ddt":
                 # 5% QCD eff. -> (tagger score - 5th percentile ) < 0 )
                 return (e.N2 - n2ddt_LUT(e.rho, e.pt)) < 0
             elif tagger == "pNetddt":
@@ -156,10 +172,13 @@ def apply_selection(
         events_sel = events[
             # (events.rho > -6.0)
             (events.rho < -2.1)
-            & (tagger_ddt(events))
+            # & (tagger_ddt(events))
             & (events.IsMergedWZ == 1)
             & (events.trigger_bits[:, 7] == 1)
             & (events.jetpfid == 1)
+            # & events.pass_reco_selection
+            # & events.pass_gen_selection
+            # & (events.dR_reco_gen < 0.4)
         ]
 
     return events_sel
@@ -184,10 +203,14 @@ def dump_tiny_tree(output_name: str, events: ak.Array):
                 "N2",
                 "trigger_bits",
                 "jetpfid",
-                "jecfactor_1" "ParticleNetMDDiscriminators_XbbvsQCD",
+                "jecfactor_1",
+                "ParticleNetMDDiscriminators_XbbvsQCD",
                 "ParticleNetMDDiscriminators_XccvsQCD",
                 "ParticleNetMDDiscriminators_XqqvsQCD",
                 "ParticleNetMDDiscriminators_XQQvsQCD",
+                # "pass_reco_selection",
+                # "pass_gen_selection",
+                # "dR_reco_gen",
             ]
         ]
     ]
@@ -201,7 +224,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--year", default="UL17")
-    parser.add_argument("--tagger", default="n2ddt", choices=["n2ddt", "pNetddt"])
+    parser.add_argument("--tagger", default="n2ddt", choices=["n2ddt", "pNetddt", "notagger"])
 
     args = parser.parse_args()
 

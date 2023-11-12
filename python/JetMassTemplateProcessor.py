@@ -12,6 +12,7 @@ import os
 import glob
 from coffea_util import CoffeaWorkflow
 from utils import jms_correction_files
+from copy import deepcopy
 
 jetmass_path = "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass"
 ddtmaps_n2_path = f"{jetmass_path}/Histograms/ddtmaps_n2.npy"
@@ -26,13 +27,15 @@ class JMSTemplates(processor.ProcessorABC):
             jec: str = "nominal",
             variation_weight: str = "nominal",
             trigger_sf_var: str = "nominal",
-            tagger: str = "substructure"
+            tagger: str = "substructure",
+            gen_sort: str = "pt",
     ):
         self._year = year
         self._jec = jec
         self._variation_weight = variation_weight
         self._trigger_sf_variation = trigger_sf_var
         self._tagger_approach = tagger
+        self._gen_sort = gen_sort
         tagger_approaches = ["substructure", "particlenet", "particlenetDDT"]
         if self._tagger_approach not in tagger_approaches:
             raise NotImplementedError(
@@ -41,6 +44,8 @@ class JMSTemplates(processor.ProcessorABC):
             )
 
         dataset_ax = hist.axis.StrCategory([], name="dataset", growth=True)
+        # fakes_ax = hist.axis.StrCategory([], name="fakes", growth=True)
+        fakes_ax = hist.axis.Boolean(name="fakes")
         # shift_ax = hist.axis.StrCategory([], name="shift", growth=True)
         jec_applied_ax = hist.axis.StrCategory(
             [], name="jecAppliedOn", label="JEC applied on", growth=True
@@ -180,10 +185,7 @@ class JMSTemplates(processor.ProcessorABC):
 
         self.mjet_reco_correction = correctionlib.CorrectionSet.from_file(
             "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/python/"
-            # + "jms_corrections_quadratic_40c365c4ab.json"
-            # + "jms_corrections_28-02-23_608835ecf6.json"
-            # + "jms_corrections_01-07-23_6c213bacd7.json"
-            + jms_correction_files[self._tagger_approach]
+            + jms_correction_files["notagger"]
         )
 
         # get some corrections and pack them into dense_lookups
@@ -201,6 +203,11 @@ class JMSTemplates(processor.ProcessorABC):
         corrections_extractor.finalize()
 
         self.corrections = corrections_extractor.make_evaluator()
+
+        self._vjets_corrections = correctionlib.CorrectionSet.from_file(
+            "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/python/"
+            "ULvjets_corrections.json"
+        )
 
         self._selections = ["vjets", "ttbar"]
 
@@ -443,6 +450,18 @@ class JMSTemplates(processor.ProcessorABC):
                             self._unfolding_ax[selection]["ptreco"],
                             dataset_ax,
                             jec_applied_ax,
+                            fakes_ax,
+                            storage=hist.storage.Weight(),
+                        ),
+                    }
+                )
+
+                hists.update(
+                    {
+                        f"{selection}_mjetgen_unfolding_{region}": hist.Hist(
+                            self._unfolding_ax[selection]["mJgen"],
+                            self._unfolding_ax[selection]["ptgen"],
+                            dataset_ax,
                             storage=hist.storage.Weight(),
                         ),
                     }
@@ -557,6 +576,16 @@ class JMSTemplates(processor.ProcessorABC):
         quantile = self._pNetMDWvsQCDddtmaps[corrected](rho, pt)
         return quantile - val
 
+    def vjets_syst_weights(self, syst, vpt, boson="W"):
+        evaluator = self._vjets_corrections[f"{boson}_FixedOrderComponent"]
+        nominal = evaluator.evaluate("nominal", vpt)
+        return evaluator.evaluate(syst, vpt)/nominal
+
+    def vjets_syst_weights_envelope(self, systs, vpt, boson="W", edge="upper"):
+        vals = np.array([self.vjets_syst_weights(f"{syst}", vpt, boson) for syst in systs])
+        envelope_edge = np.max(vals, axis=0) if edge == "upper" else np.min(vals, axis=0)
+        return envelope_edge
+
     def postprocess(self, accumulator):
         return accumulator
 
@@ -582,9 +611,10 @@ class JMSTemplates(processor.ProcessorABC):
             & (events.phi > HEM_phi_min)
         )
         treat_HEM = False
+        event_weight_for_gen = deepcopy(events.weight)
         if isMC:
             if self._year == "UL18":
-                events.weight = ak.where(
+                events["weight"] = ak.where(
                     HEM_affected_event_jets, events.weight * (1 - HEM_affected_lumi_fraction), events.weight
                 )
         else:
@@ -604,7 +634,9 @@ class JMSTemplates(processor.ProcessorABC):
             matching_mask = matching_selection.any(
                 *self._matching_mappings[dataset].keys()
             )
+
         events = events[matching_mask]
+        event_weight_for_gen = event_weight_for_gen[matching_mask]
 
         out["nevents"][dataset] = len(events)
         out["sumw"][dataset] = ak.sum(events.weight)
@@ -631,26 +663,93 @@ class JMSTemplates(processor.ProcessorABC):
             jecfactor = jecfactors[self._jec]
 
         # apply top-pt reweighting weight
-        events.weight = events.weight * events["toppt_weight"]
+        events["weight"] = events.weight * events["toppt_weight"]
         if self._variation_weight != "nominal" and "data" not in dataset.lower() and len(events) > 0:
             variation_weights = {
                 "toppt_off": 1. / events["toppt_weight"],
                 "pu_down": events["weight_pu_down"]/events["weight_pu"],
-                "pu_up": events["weight_pu_down"]/events["weight_pu"],
+                "pu_up": events["weight_pu_up"]/events["weight_pu"],
             }
             if len(events["ps_weights"][0]) == 46:
                 variation_weights["fsr_down"] = events["ps_weights"][:, 4] / events["ps_weights"][:, 0]
                 variation_weights["fsr_up"] = events["ps_weights"][:, 5] / events["ps_weights"][:, 0]
                 variation_weights["isr_down"] = events["ps_weights"][:, 26] / events["ps_weights"][:, 0]
                 variation_weights["isr_up"] = events["ps_weights"][:, 27] / events["ps_weights"][:, 0]
+
             else:
                 variation_weights["fsr_down"] = 1.0
                 variation_weights["fsr_up"] = 1.0
                 variation_weights["isr_down"] = 1.0
                 variation_weights["isr_up"] = 1.0
 
-            events.weight = events.weight * variation_weights[self._variation_weight]
+            if "WJets" in dataset or "ZJets" in dataset:
+                boson = "W" if "W" in dataset else "Z"
+                v_qcd_systs = [
+                    f"{syst}_{direction}" for direction in ["up", "down"] for syst in ["d1K_NLO", "d2K_NLO", "d3K_NLO"]
+                ]
+                variation_weights["v_qcd_down"] = self.vjets_syst_weights_envelope(
+                    v_qcd_systs,
+                    events["V_pt"],
+                    edge="lower",
+                    boson=boson,
+                )
+                variation_weights["v_qcd_up"] = self.vjets_syst_weights_envelope(
+                    v_qcd_systs,
+                    events["V_pt"],
+                    edge="upper",
+                    boson=boson,
+                )
 
+                w_ewk_systs = [
+                    f"{syst}_{direction}"
+                    for direction in ["up", "down"]
+                    for syst in ["d1kappa_EW", "W_d2kappa_EW", "W_d3kappa_EW"]
+                ]
+                z_ewk_systs = [
+                    f"{syst}_{direction}"
+                    for direction in ["up", "down"]
+                    for syst in ["d1kappa_EW", "Z_d2kappa_EW", "Z_d3kappa_EW"]
+                ]
+                if boson == "W":
+                    variation_weights["w_ewk_down"] = self.vjets_syst_weights_envelope(
+                        w_ewk_systs,
+                        events["V_pt"],
+                        edge="lower",
+                        boson=boson,
+                    )
+                    variation_weights["w_ewk_up"] = self.vjets_syst_weights_envelope(
+                        w_ewk_systs,
+                        events["V_pt"],
+                        edge="upper",
+                        boson=boson,
+                    )
+                    variation_weights["z_ewk_down"] = 1.0
+                    variation_weights["z_ewk_up"] = 1.0
+                else:
+                    variation_weights["w_ewk_down"] = 1.0
+                    variation_weights["w_ewk_up"] = 1.0
+                    variation_weights["z_ewk_down"] = self.vjets_syst_weights_envelope(
+                        z_ewk_systs,
+                        events["V_pt"],
+                        edge="lower",
+                        boson=boson,
+                    )
+                    variation_weights["z_ewk_up"] = self.vjets_syst_weights_envelope(
+                        z_ewk_systs,
+                        events["V_pt"],
+                        edge="upper",
+                        boson=boson,
+                    )
+            else:
+                variation_weights["v_qcd_down"] = 1.0
+                variation_weights["v_qcd_up"] = 1.0
+                variation_weights["w_ewk_down"] = 1.0
+                variation_weights["w_ewk_up"] = 1.0
+                variation_weights["z_ewk_down"] = 1.0
+                variation_weights["z_ewk_up"] = 1.0
+
+            events["weight"] = events.weight * variation_weights[self._variation_weight]
+            event_weight_for_gen = event_weight_for_gen * variation_weights[self._variation_weight]
         pt_raw = events.pt
         pt = pt_raw * jecfactor
 
@@ -663,6 +762,27 @@ class JMSTemplates(processor.ProcessorABC):
         mPnet = mPnet_raw * jecfactor
 
         mJgen_ = events.msd_gen_ak8
+
+        # # not taking leading particle level jet but rather order by either dR(reco, gen) or N2(gen)
+        # if "WJetsMatched" in dataset:
+        #     if self._gen_sort == "n2":
+        #         ptgen_ = ak.where(
+        #             events.gentopjet_n2_0 < events.gentopjet_n2_1, events.gentopjet_pt_0, events.gentopjet_pt_1
+        #         )
+        #         mJgen_ = ak.where(
+        #             events.gentopjet_n2_0 < events.gentopjet_n2_1, events.gentopjet_msd_0, events.gentopjet_msd_1
+        #         )
+        #     elif self._gen_sort == "dR":
+        #         ptgen_ = ak.where(
+        #             events.gentopjet_dR_reco_0 < events.gentopjet_dR_reco_1,
+        #             events.gentopjet_pt_0,
+        #             events.gentopjet_pt_1,
+        #         )
+        #         mJgen_ = ak.where(
+        #             events.gentopjet_dR_reco_0 < events.gentopjet_dR_reco_1,
+        #             events.gentopjet_msd_0,
+        #             events.gentopjet_msd_1,
+        #         )
 
         rho = 2 * np.log(mjet / pt)
         rho_raw = 2 * np.log(mjet_raw / pt_raw)
@@ -681,7 +801,7 @@ class JMSTemplates(processor.ProcessorABC):
                 f"HLT_AK8PFJet500_triggersf_{self._year}"
             ]
             first_ptbin = (pt < 650.0)
-            events.weight = events.weight * ak.where(
+            events["weight"] = events.weight * ak.where(
                 first_ptbin,
                 trigger_sf_evaluator_450.evaluate(
                     pt, self._trigger_sf_variation
@@ -811,9 +931,24 @@ class JMSTemplates(processor.ProcessorABC):
                     < 0
                 ),
             )
+            # selections.add(
+            #     "gensel_drmatch",
+            #     (events.pass_gen_selection == 1) & (events.dR_reco_gen < 0.4) & (mJgen_ > 30.),
+            # )
+
+            if "n2_beta1_gen" not in events.fields:
+                events.n2_beta1_gen = ak.ones_like(events.pt)
+
             selections.add(
-                "unfolding",
-                (events.pass_reco_selection == 1) & (events.pass_gen_selection == 1),
+                "gensel_drmatch",
+                (events.pass_gen_selection == 1)
+                & (events.dR_reco_gen < 0.4)
+                & (mJgen_ > 30.)
+                & (events.n2_beta1_gen < 0.2),
+            )
+            selections.add(
+                "recosel",
+                (events.pass_reco_selection == 1)
             )
 
             passing_hem_treatment = (
@@ -835,24 +970,67 @@ class JMSTemplates(processor.ProcessorABC):
             )
 
             for region in self._regions[selection].keys():
-                smask_unfolding = selections.require(**self._regions[selection][region], unfolding=True, jetpfid=True)
+                smask_unfolding = selections.require(**self._regions[selection][region], recosel=True, jetpfid=True)
+                selection_no_trigger = deepcopy(self._regions[selection][region])
+                if "trigger" in selection_no_trigger:
+                    selection_no_trigger.pop("trigger")
+                smask_unfolding_gen = selections.require(**selection_no_trigger, recosel=True, jetpfid=True)
                 corrector = self.mjet_reco_correction[
                     "response_g_" + ("jec" if "mJ" in jec_applied_on else "nojec") + f"_{self._year}"
                 ]
                 msd_correction = (
-                    corrector.evaluate(pt_[smask_unfolding])
+                    1.0/corrector.evaluate(pt_[smask_unfolding])  # divide since this is the response msdrec/mgen
                     if selection == "vjets"
                     else 1.0  # ak.ones_like(pt_[smask_unfolding])
                 )
 
+                # smask_unfolding_phasespace = selections.require(unfolding=True)
                 out[f"{selection}_mjet_unfolding_{region}"].fill(
                     ptreco=pt_[smask_unfolding],
                     mJreco=mJ_[smask_unfolding] * msd_correction,
                     ptgen=ptgen_[smask_unfolding],
                     mJgen=mJgen_[smask_unfolding],
                     dataset=dataset,
+                    fakes=selections.require(gensel_drmatch=False)[smask_unfolding]
+                    if "WJetsMatched" in dataset
+                    else np.zeros_like(smask_unfolding)[smask_unfolding],
                     jecAppliedOn=jec_applied_on,
                     weight=events.weight[smask_unfolding],
+                )
+                for split_size in [90.0, 80.0, 60.0]:
+                    if "WJetsMatched" in dataset:
+                        split_dataset = np.where(
+                            np.random.rand(len(smask_unfolding[smask_unfolding])) < (split_size / 100.),
+                            "vjets_WJetsMatched0p%i" % (split_size/10.),
+                            "vjets_WJetsMatched0p%i" % (10 - (split_size/10.)),
+                        )
+                        out[f"{selection}_mjet_unfolding_{region}"].fill(
+                            ptreco=pt_[smask_unfolding],
+                            mJreco=mJ_[smask_unfolding] * msd_correction,
+                            ptgen=ptgen_[smask_unfolding],
+                            mJgen=mJgen_[smask_unfolding],
+                            dataset=split_dataset,
+                            fakes=selections.require(gensel_drmatch=False)[smask_unfolding],
+                            jecAppliedOn=jec_applied_on,
+                            weight=events.weight[smask_unfolding],
+                        )
+
+                # out[f"{selection}_mjet_unfolding_{region}"].fill(
+                #     ptreco=pt_[smask_unfolding & smask_unfolding_phasespace],
+                #     mJreco=mJ_[smask_unfolding & smask_unfolding_phasespace] * msd_correction,
+                #     ptgen=ptgen_[smask_unfolding & smask_unfolding_phasespace],
+                #     mJgen=mJgen_[smask_unfolding & smask_unfolding_phasespace],
+                #     dataset=dataset,
+                #     fakes="fakes",
+                #     jecAppliedOn=jec_applied_on,
+                #     weight=events.weight[smask_unfolding],
+                # )
+
+                out[f"{selection}_mjetgen_unfolding_{region}"].fill(
+                    ptgen=ptgen_[smask_unfolding_gen],
+                    mJgen=mJgen_[smask_unfolding_gen],
+                    dataset=dataset,
+                    weight=event_weight_for_gen[smask_unfolding_gen],
                 )
 
                 smask = selections.require(**self._regions[selection][region], jetpfid=True)
@@ -930,24 +1108,24 @@ class JMSTemplates(processor.ProcessorABC):
                             abs_eta_regions=np.abs(eta_[smask]),
                             weight=events.weight[smask],
                         )
-                        out[f"{selection}_mjet_unfolding_{variation}_variation_{region}__up"].fill(
-                            ptreco=pt_[smask_unfolding],
-                            mJreco=mJVar_[:, 0][smask_unfolding] * msd_correction,
-                            ptgen=ptgen_[smask_unfolding],
-                            mJgen=mJgen_[smask_unfolding],
-                            dataset=dataset,
-                            jecAppliedOn=jec_applied_on,
-                            weight=events.weight[smask_unfolding],
-                        )
-                        out[f"{selection}_mjet_unfolding_{variation}_variation_{region}__down"].fill(
-                            ptreco=pt_[smask_unfolding],
-                            mJreco=mJVar_[:, 1][smask_unfolding] * msd_correction,
-                            ptgen=ptgen_[smask_unfolding],
-                            mJgen=mJgen_[smask_unfolding],
-                            dataset=dataset,
-                            jecAppliedOn=jec_applied_on,
-                            weight=events.weight[smask_unfolding],
-                        )
+                        # out[f"{selection}_mjet_unfolding_{variation}_variation_{region}__up"].fill(
+                        #     ptreco=pt_[smask_unfolding],
+                        #     mJreco=mJVar_[:, 0][smask_unfolding] * msd_correction,
+                        #     ptgen=ptgen_[smask_unfolding],
+                        #     mJgen=mJgen_[smask_unfolding],
+                        #     dataset=dataset,
+                        #     jecAppliedOn=jec_applied_on,
+                        #     weight=events.weight[smask_unfolding],
+                        # )
+                        # out[f"{selection}_mjet_unfolding_{variation}_variation_{region}__down"].fill(
+                        #     ptreco=pt_[smask_unfolding],
+                        #     mJreco=mJVar_[:, 1][smask_unfolding] * msd_correction,
+                        #     ptgen=ptgen_[smask_unfolding],
+                        #     mJgen=mJgen_[smask_unfolding],
+                        #     dataset=dataset,
+                        #     jecAppliedOn=jec_applied_on,
+                        #     weight=events.weight[smask_unfolding],
+                        # )
 
                     out[f"{selection}_mPnet_0_0_all_variation_{region}__up"].fill(
                         dataset=dataset,
@@ -980,12 +1158,17 @@ if __name__ == "__main__":
         "fsr_up", "fsr_down",
         "pu_up", "pu_down",
         "toppt_off",
+        "v_qcd_up", "v_qcd_down",
+        "w_ewk_up", "w_ewk_down",
+        "z_ewk_up", "z_ewk_down",
     ])
     workflow.parser.add_argument("--triggersf", default="nominal", choices=["nominal", "up", "down"])
     workflow.parser.add_argument("--maxfiles", type=int, default=-1)
     workflow.parser.add_argument(
         "--tagger", default="substructure", choices=["substructure", "particlenet", "particlenetDDT"]
     )
+
+    workflow.parser.add_argument("--VJetsOnly", action="store_true")
 
     args = workflow.parse_args()
 
@@ -1035,9 +1218,21 @@ if __name__ == "__main__":
             "QCD",
         ],
     }
+    if args.VJetsOnly:
+        sample_names = {
+            "vjets": [
+                "WJets",
+                "WJetsMatched",
+                "WJetsUnmatched",
+                "ZJets",
+                "ZJetsMatched",
+                "ZJetsUnmatched",
+            ]
+        }
 
     files = {}
-    for selection in ["vjets", "ttbar"]:
+    # for selection in ["vjets", "ttbar"]:
+    for selection in sample_names.keys():
         def parent_samplename(s):
             return min(
                 [
@@ -1087,7 +1282,10 @@ if __name__ == "__main__":
         # if(workflow.args.debug):
         #     workflow.init_dask_local_client()
         # else:
-        workflow.init_dask_htcondor_client(1, 8, 5)
+        # q = __import__("functools").partial(__import__("os")._exit, 0)  # FIXME
+        # __import__("IPython").embed()  # FIXME
+        workflow.processor_args["chunksize"] = 500000
+        workflow.init_dask_htcondor_client(1, 2, 5)
 
     print("starting coffea runner")
 
