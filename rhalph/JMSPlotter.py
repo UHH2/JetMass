@@ -332,6 +332,20 @@ class SFHist(object):
     def to_numpy(self) -> Tuple[np.ndarray]:
         return (self.bin_content, self.edges)
 
+    def plot_ratio(
+            self,
+            other,
+            ax=None,
+            **kwargs
+    ) -> None:
+        xerr = [self.bin_centers - self.pt_low, self.pt_high - self.bin_centers] if self.xerr else None
+        if ax is None:
+            ax = plt.gca()
+        num = self.bin_content
+        denom = other.bin_content
+        ratio = np.divide(num, denom, out=np.zeros_like(num), where=denom != 0)
+        ax.errorbar(self.bin_centers, ratio, xerr=xerr, **kwargs)
+
     def plot_errorbar(
         self,
         ax=None,
@@ -351,7 +365,7 @@ class SFHist(object):
             del kwargs["linestyle"]
 
         skip_syst_band = kwargs.pop("skip_syst_band", False)
-        
+
         if ax is None:
             ax = plt.gca()
         xerr = [self.bin_centers - self.pt_low, self.pt_high - self.bin_centers] if self.xerr else None
@@ -575,6 +589,13 @@ def finalize_ax(
     sort_legend_alphabet = kwargs.pop("sort_legend_alphabet", False)
 
     handles, labels = ax.get_legend_handles_labels() if len(legend_info) == 0 else legend_info
+
+    def replace_year(label):
+        for old_year, new_year in year_alias.items():
+            label = label.replace(old_year, new_year)
+        return label
+    labels = [replace_year(label) for label in labels]
+
     if sort_legend_alphabet:
         labels_sorted = sorted(labels)
         handles = [handles[labels.index(label)] for label in labels_sorted]
@@ -588,9 +609,10 @@ def finalize_ax(
     ax.plot(ax.get_xlim(), [1] * 2, "k--", alpha=0.6)
 
     # ax.set_ylim(0.95, 1.05)
-    ax.set_ylim(0.92, 1.08)
+    ax.set_ylim(kwargs.get("ylim", (0.92, 1.08)))
+    ax.set_yticks([0.94, 0.96, 0.98, 1.0, 1.02, 1.04, 1.06])
     ax.set_xlabel(r"$p_{T}$ [GeV]")
-    ax.set_ylabel("JMS correction factor", loc="center")
+    ax.set_ylabel(kwargs.get("ylabel", "JMS correction factor"), loc="center")
 
     if fname:
         if not os.path.exists(os.path.dirname(fname)):

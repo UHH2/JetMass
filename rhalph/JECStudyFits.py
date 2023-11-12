@@ -139,8 +139,11 @@ if __name__ == "__main__":
     years = ["UL16preVFP", "UL16postVFP", "UL17", "UL18"]
     taggers = ["Substructure", "ParticleNet"]
 
-    # date_str = "02-07-23"
-    date_str = "04-07-23_noRobustHesse_range8_Strat1"
+    # date_str = "04-07-23"
+    # date_str = "05-07-23_noRobustHesse_range10_Strat1"
+    # date_str = "05-07-23_noRobustHesse_range10_Strat1"
+    date_str = "05-07-23_noRobustHesse_range15_Strat0_rrange"
+    # date_str = "05-07-23_noRobustHesse_range15_Strat0"
     base_dir = "/nfs/dust/cms/user/albrechs/JetMassFits/JMSFits/{}/".format(date_str)
     submitter = JobSubmitter(base_dir)
     common_wrapper_lines = [
@@ -264,7 +267,7 @@ if __name__ == "__main__":
             "ParticleNet": ["UL16preVFP", "UL16postVFP", "UL17", "UL18"],
         }
         # years = {tagger: sep_years[tagger] + ["RunII"] for tagger in taggers}
-        years = {tagger: sep_years[tagger]for tagger in taggers}
+        years = {tagger: sep_years[tagger] for tagger in taggers}
         for tagger in taggers:
             print(tagger)
             for year in years[tagger]:
@@ -319,7 +322,7 @@ if __name__ == "__main__":
                         markersize=markersize,
                         linewidth=0.9,
                         color="#bf77c8",
-                    skip_syst_band=True,
+                        skip_syst_band=True,
                     )
 
                 finalize_ax(ax, fname=f"JMSSF_{date_str}_{tagger}/{year}_Combined_sep_scales.pdf", year=year)
@@ -343,6 +346,34 @@ if __name__ == "__main__":
                     "marker": "o",
                 },
             }
+            # plot ratio of JMS over UL17 ones
+            for fit_collection in fit_collections:
+                jms_plotter = plotter[fit_collection]
+                for sample in samples:
+                    for denom_year in ["UL16postVFP", "UL17", "UL18"]:
+                        fr, axr = setup_ax(10, 7)
+                        for iy, year in enumerate(years[tagger]):
+                            label_ = f"{fit_info[fit_collection]['label']} {year}"
+                            if (
+                                f"{sample}{year}" in jms_plotter.dHists.keys()
+                                and f"{sample}{denom_year}" in jms_plotter.dHists.keys()
+                            ):
+                                jms_plotter.dHists[f"{sample}{year}"].plot_ratio(
+                                    jms_plotter.dHists[f"{sample}{denom_year}"],
+                                    ax=axr,
+                                    alpha=0.8,
+                                    label=label_,
+                                    fmt=fit_info[fit_collection]["marker"],
+                                    markersize=markersize,
+                                    linewidth=0.9,
+                                    color=color_palette[iy],
+                                )
+                        finalize_ax(
+                            axr,
+                            fname=f"JMSSF_{date_str}_{tagger}/{sample}_{fit_collection}_ratio_{denom_year}_comparison.pdf",
+                            ylabel=f"jms correction ratio (Year/{denom_year})",
+                        )
+
             for sample in samples:
                 for year in years[tagger]:
                     f, ax = setup_ax(10, 7)

@@ -6,6 +6,7 @@ import subprocess
 from CombineWorkflows import CombineWorkflows
 from CombineUtils import import_config
 
+
 class FitSubmitter(object):
     def __init__(self, config, workdir, dry_run=False):
 
@@ -125,14 +126,16 @@ queue ConfigName from (""" + "\n".join(job_workdirs) + """
         batch_wrapper.write("cd " + self._workdir + "\n")
         # batch_wrapper.write("source setup_ralph.sh\n")
         jetmass_options = self.extra_jetmass_options + ("" if defaultFit else " --customCombineWrapper")
-        
+
         # produce ModelDir with datacards using rhalphalib
         if job_workdirs[0].endswith(".json"):
             batch_wrapper.write("python jetmass.py $1 %s\n" % jetmass_options)
         else:
             batch_wrapper.write("cd $1\n")
-            batch_wrapper.write("for i in *.json; do python jetmass.py -M %s $i %s;done\n" % (self.jetmass_mode, jetmass_options))
-            
+            batch_wrapper.write(
+                "for i in *.json; do python jetmass.py -M %s $i %s;done\n" % (self.jetmass_mode, jetmass_options)
+            )
+
         # write wrapper that runs combine workflow if previous command did not do that yet!
         if "--build" in self.extra_jetmass_options:
             # batch_wrapper.write('env -i bash $1/'+('qcdmodel/' if self.fit_qcd_model else '')+'wrapper.sh\n')
