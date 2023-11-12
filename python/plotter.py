@@ -723,7 +723,7 @@ def plot_data_mc(
 
     cms_style.draw_lumi(
         plotpad,
-        year=year_alias.get(year,year),
+        year=year_alias.get(year, year),
         lumi=lumis[year],
         do_extra_text=draw_extra_text,
         out_of_frame=True,

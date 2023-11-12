@@ -472,21 +472,6 @@ def plot_unfolded_mass(
         for matching in matchings
     }
 
-    # truth_mc_years = {
-    #     matching: [
-    #         [
-    #             deepcopy(
-    #                 f_[f"vjets_mjet_unfolding_{region}"][
-    #                     {"ptgen": iptgen, "dataset": "vjets_WJetsMatched" if matching == "matching" else "vjets_WJets"}
-    #                 ]
-    #             )
-    #             for f_ in files
-    #         ]
-    #         for iptgen in range(len(pt_edges) - 1)
-    #     ]
-    #     for matching in matchings
-    # }
-
     truth_mc_years = {
         "matching": [
             [
@@ -498,7 +483,10 @@ def plot_unfolded_mass(
     }
     if "no matching" in matchings:
         truth_mc_years["no matching"] = [
-            [deepcopy(f_["pass_gen_pass_reco_pass_dR_withSFHEM"][{"ptgen": iptgen}]) for f_ in acceptance_files["no matching"]]
+            [
+                deepcopy(f_["pass_gen_pass_reco_pass_dR_withSFHEM"][{"ptgen": iptgen}])
+                for f_ in acceptance_files["no matching"]
+            ]
             for iptgen in range(len(pt_edges) - 1)
         ]
 
@@ -806,16 +794,6 @@ def plot_unfolded_mass(
 
         ax.set_ylabel(y_label)
         ax.set_xlabel(x_label)
-        max_y = max(
-            np.max(np.array([truth_values[matching] + np.sqrt(truth_variances[matching]) for matching in matchings]))
-            if plot_truth
-            else -1,
-            np.max(
-                np.array(
-                    [unfolding_values[matching] + np.sqrt(unfolding_variances[matching]) for matching in matchings]
-                )
-            ),
-        )
         ax.set_xlim(msd_min, msd_max)
         ax.set_xticks([30.0, 50.0, 100.0, 150.0, 200.0, 250.0])
         ax.set_ylim(0, ymaxs[ipt])
@@ -887,10 +865,6 @@ def plot_unfolded_mass(
         fontsize=20
     )
 
-    max_y = max(
-        np.max(np.array([mc_truth_sum[m]+np.sqrt(mc_truth_variance_sum[m]) for m in matchings])) if plot_truth else -1,
-        np.max(np.array([(unfolding_sum[m]+np.sqrt(unfolding_variance_sum[m])) for m in matchings])),
-    )
     ax.set_xlim(msd_min, msd_max)
     ax.set_xticks([30.0, 50.0, 100.0, 150.0, 200.0, 250.0])
 
