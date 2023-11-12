@@ -156,7 +156,7 @@ class Unfolding1DPlotter(object):
         ax.set_xticks(metric_edges, metric_ticks)
         ax.set_xlabel(r"$%s~$[GeV]" % label_tex_dict[self.variable])
         ax.set_ylabel("binning metric")
-        cms_label(ax, fs = 18)
+        cms_label(ax, fs=18)
 
         return f, ax
 
@@ -302,7 +302,6 @@ def plot_migration_matrix_old(
 
     n_reco_bins = len(reco_msd_edges) - 1
     n_gen_bins = len(gen_msd_edges) - 1
-    draw_diagonal = n_reco_bins == n_gen_bins
 
     def diagonal_line(ax, starting_bin, ending_bin):
         ax.plot(
@@ -574,7 +573,7 @@ def plot_efficiencies(h, outdir):
         # ax.set_yscale("log")
         ymax = np.max(h1d.values()) * (1.0 / 0.6)
         ymin = ax.get_ylim()[0]
-        
+
         # ax.text(50, 10**((np.ceil(np.log10(ymin))+np.ceil(np.log10(ymax)))*0.5), pt_gen_tex[i], fontsize=16)
         ax.text(50, ymax*0.65, pt_gen_tex[i], fontsize=16)
 
@@ -645,7 +644,6 @@ def plot_efficiencies(h, outdir):
     f.savefig(f"{outdir}/msd_bin_reco_comparison_ptreco_{year}_{region}.pdf")
     f1.savefig(f"{outdir}/msd_bin_reco_fractions_ptreco_{year}_{region}.pdf")
 
-
     # same but with gen <-> reco swapped
 
     f, ax_ = plt.subplots(2, 3, figsize=(3 * 9, 2 * 9))
@@ -702,7 +700,8 @@ def plot_efficiencies(h, outdir):
 
         # hists_ratios = [(h.values() / h1d.values(), h1d.axes[0].edges) for h in [h1d_region_0, h1d_region_1]]
         # hep.histplot(
-        #     hists_ratios, ax=ax1, histtype="fill", stack=True, color=colors, alpha=0.3, label=labels_ratios, flow="none"
+        #     hists_ratios, ax=ax1, histtype="fill", stack=True,
+        #     color=colors, alpha=0.3, label=labels_ratios, flow="none"
         # )
         # hep.cms.label("Work in Progress", fontsize=16, ax=ax1, year=year)
         # ax1.text(150, 0.75, pt_reco_tex[i], fontsize=14)

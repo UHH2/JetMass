@@ -15,7 +15,6 @@ import mplhep as hep
 import matplotlib as mpl
 from scipy.stats import chisquare
 from scipy.stats import kstest
-import correctionlib.convert
 import correctionlib.schemav2 as cs
 from hashlib import sha512
 import argparse

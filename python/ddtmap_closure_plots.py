@@ -70,6 +70,7 @@ def plot_closure_pt_bin(
     rax.plot(xlim, [0.055, 0.055], "k--", alpha=0.6)
     fig.savefig(f"{out_dir}/ddt_closure_{pt_bin_str}_{year}.pdf", bbox_inches="tight")
 
+
 if __name__ == "__main__":
     for suffix in ["", "_particlenetDDT", "_particlenet"]:
         for sample in ["QCD", "Data"]:
@@ -91,4 +92,12 @@ if __name__ == "__main__":
                 qcd_fail = hists_fail[bin_identifiers]
 
                 for ipt in range(-1, len(hists_pass.axes[1])):
-                    plot_closure_pt_bin(ipt, qcd_pass, qcd_fail, rebin_factor=5, year=year, out_dir=f"ddt_closure_{sample}{suffix}", sample=sample)
+                    plot_closure_pt_bin(
+                        ipt,
+                        qcd_pass,
+                        qcd_fail,
+                        rebin_factor=5,
+                        year=year,
+                        out_dir=f"ddt_closure_{sample}{suffix}",
+                        sample=sample,
+                    )

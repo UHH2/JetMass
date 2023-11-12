@@ -5,6 +5,7 @@ from coffea.util import load
 from utils import numpy_to_th2
 import scipy.ndimage.filters as filters
 
+
 def build_ddt_map(hqcd: hist.Hist, qcd_eff: float, year: str = "UL17", gauss_radius: int = -1):
 
     # extract values
