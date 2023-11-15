@@ -1,14 +1,22 @@
 #!/bin/env python
 from __future__ import print_function
+from collections import OrderedDict
 import sys
 import os
 import numpy as np
 import common_configs
 import ROOT  # type: ignore
+from copy import deepcopy
+import re
+import logging
 ROOT.PyConfig.IgnoreCommandLineOptions = True
-from jetmass_scale_fit_utils import scale_lumi, build_pseudo, build_mass_scale_variations, extract_fit_results  # noqa
+from jetmass_scale_fit_utils import scale_lumi, build_pseudo, build_mass_scale_variations, extract_fit_results, correlation_coefficient  # noqa
 import rhalphalib as rl         # noqa
 rl.util.install_roofit_helpers()
+
+logging.basicConfig()
+logger = logging.getLogger()
+logger.setLevel(logging.ERROR)
 
 
 def nuisance_name_(name, configs):
@@ -44,9 +52,9 @@ def jet_mass_producer(args, configs):
 
     # channels for combined fit
     channels = configs["channels"]
-    qcd_estimation_channels = {
-        k: v for k, v in channels.items() if "QcdEstimation" in v and v["QcdEstimation"] == "True"
-    }
+    qcd_estimation_channels = OrderedDict([
+        (k, v) for k, v in channels.items() if "QcdEstimation" in v and v["QcdEstimation"] == "True"
+    ])
 
     if args.verbose > 0:
         print("channels:", channels.keys())
@@ -63,10 +71,15 @@ def jet_mass_producer(args, configs):
 
     for var in [
             "jec_up", "jec_down",
+            "triggersf_up", "triggersf_down",
+            "pu_up", "pu_down",
             "jer_up", "jer_down",
             "isr_up", "isr_down",
             "fsr_up", "fsr_down",
             "toppt_off",
+            "v_qcd_up", "v_qcd_down",
+            "w_ewk_up", "w_ewk_down",
+            "z_ewk_up", "z_ewk_down",
     ]:
         fname = configs["histLocation"].replace(".root", "_{}.root".format(var))
         if os.path.isfile(fname):
@@ -85,15 +98,14 @@ def jet_mass_producer(args, configs):
         lumi_scale = float(configs["Pseudo"][0].split(":")[-1])
 
     def get_hist(hist_dir, hist_file_="nominal"):
-        # print(hist_dir)
         if hist_file_ == "nominal":
             hist = hist_file.Get(str(hist_dir))
         else:
             hist = aux_hist_files[hist_file_].Get(str(hist_dir))
 
-        for sample_name_pattern, xsec_prior in xsec_priors.items():
-            if sample_name_pattern in hist_dir:
-                hist.Scale(xsec_prior)
+        # for sample_name_pattern, xsec_prior in xsec_priors.items():
+        #     if sample_name_pattern in hist_dir:
+        #         hist.Scale(xsec_prior)
 
         hist.SetName("msd")
         hist.GetXaxis().SetTitle("msd")
@@ -101,6 +113,13 @@ def jet_mass_producer(args, configs):
             hist = hist.Rebin(len(msd_bins) - 1, "msd", msd_bins)
         if lumi_scale != 1.0:
             hist = scale_lumi(hist, lumi_scale)
+
+        split_sample_match = re.search("(?P<suffix>0p[0-9])", hist_dir)
+        if split_sample_match:
+            split_sample_suffix = split_sample_match.groupdict()["suffix"]
+            dataset_fraction = float(split_sample_suffix.replace("p", "."))
+            print("found {} -> scaling by {:.2f}".format(dataset_fraction, 1./dataset_fraction))
+            hist.Scale(1./dataset_fraction)
         return hist
 
     model_name = configs.get("ModelName", "Jet_Mass_Model")  # get name from config, or fall back to default
@@ -112,9 +131,15 @@ def jet_mass_producer(args, configs):
     ################
     # derive pt bins from channel names for the pt,rho grid for the Bernstein-Polynomial
 
-    def get_process_normalizations(process):
+    def get_process_normalizations(process_):
         norms = {"channels": [], "fail": [], "pass": []}
         for channel_name, config in qcd_estimation_channels.items():
+            if process_ == "QCDfromData":
+                process = "Data"
+                mc_procs = [sample for sample in config["samples"] if "qcd" not in sample.lower()]
+            else:
+                process = process_
+                mc_procs = []
             if args.verbose > 0:
                 print(config["selection"] + "_%s__mjet_" % process + config["pt_bin"] + additional_bin + "_fail")
             fail_hist = get_hist(
@@ -123,6 +148,14 @@ def jet_mass_producer(args, configs):
             pass_hist = get_hist(
                 config["selection"] + "_%s__mjet_" % process + config["pt_bin"] + additional_bin + "_pass"
             )
+            for mc_process in mc_procs:
+                fail_hist -= get_hist(
+                    config["selection"] + "_%s__mjet_" % mc_process + config["pt_bin"] + additional_bin + "_fail"
+                )
+                pass_hist -= get_hist(
+                    config["selection"] + "_%s__mjet_" % mc_process + config["pt_bin"] + additional_bin + "_pass"
+                )
+
             # fail_hist = hist_file.Get('W_%s__mjet_'%process+config['pt_bin']+ additional_bin+'_fail')
             # pass_hist = hist_file.Get('W_%s__mjet_'%process+config['pt_bin']+ additional_bin+'_pass')
             # if(rebin_msd > 0):
@@ -133,9 +166,9 @@ def jet_mass_producer(args, configs):
             norms["pass"].append(pass_hist.Integral())
         norms["fail"] = np.array(norms["fail"])
         norms["pass"] = np.array(norms["pass"])
-        norms["eff"] = norms["pass"] / norms["fail"]
+        norms["eff"] = norms["pass"] / (norms["fail"]+norms["pass"])
         channels_sorted = norms["channels"]
-        channels_sorted.sort()
+        # channels_sorted.sort()
         # norms["eff_arr"] = np.array([[norms["eff"][i]] * (len(msd_bins) - 1) for i in range(len(norms["eff"]))])
         norms["eff_arr"] = np.array(
             [[norms["eff"][norms["channels"].index(ch)]] * (len(msd_bins) - 1) for ch in channels_sorted]
@@ -208,8 +241,8 @@ def jet_mass_producer(args, configs):
             qcd_pass += pass_ch.getObservation().sum()
         qcd_eff = qcd_pass / qcd_fail
         qcd_norms = get_process_normalizations("QCD")
-        data_norms = get_process_normalizations("Data")
-
+        # data_norms = get_process_normalizations("Data")
+        data_norms = get_process_normalizations("QCDfromData")
         # get all lower edges from channel names
         # pt_edges = configs.get('pt_edges',[500,550,600,675,800,1200])
         pt_edges = configs.get("pt_edges", [500, 650, 800, 1200])
@@ -351,11 +384,12 @@ def jet_mass_producer(args, configs):
     # setting up rhalphalib roofit model
     model = rl.Model(model_name)
 
+    # config["signal_fail"] = deepcopy(config["signal"])
+    # config["samples_fail"] = deepcopy(config["samples"])
+
     if args.unfolding:
         for channel_name, config in channels.items():
             # Signal sample division in genbins
-            from copy import deepcopy
-
             signal_samples = deepcopy(config["signal"])
             unfolding_bins = configs["unfolding_bins"]
             genbins = [
@@ -364,17 +398,25 @@ def jet_mass_producer(args, configs):
                     for imsdgen in range(len(unfolding_bins["msdgen"]) - 1)
                 ]
             configs["genbins"] = genbins
+            # config["signal_fail"] = deepcopy(signal_samples)
+            # config["samples_fail"] = deepcopy(config["samples"])
             for signal_sample in signal_samples:
                 config["samples"].remove(signal_sample)
                 config["signal"].remove(signal_sample)
                 for genbin in genbins:
-                    sample_genbin_name = "{SAMPLE}_{GENBIN}".format(SAMPLE=signal_sample, GENBIN=genbin)
+                    asimov_split_dataset_suffix = ""
+                    if args.prefitAsimov and args.splitPseudo:
+                        asimov_split_dataset_suffix = "0p4"
+                    sample_genbin_name = "{SAMPLE}{ASIMOV}_{GENBIN}".format(
+                        SAMPLE=signal_sample, GENBIN=genbin, ASIMOV=asimov_split_dataset_suffix
+                    )
                     config["samples"].append(sample_genbin_name)
                     config["signal"].append(sample_genbin_name)
 
     # setting up nuisances for systematic uncertainties
     lumi = rl.NuisanceParameter(nuisance_name("CMS_lumi"), "lnN")
-    lumi_effect = 1.027
+    # lumi_effect = 1.027
+    lumi_effect = 1.016
 
     pt_bins_for_jmr_nuisances = list(configs["channels"].keys())
     pt_bins_for_jmr_nuisances.append("inclusive")
@@ -434,8 +476,13 @@ def jet_mass_producer(args, configs):
     # jec variation nuisances
     jec_var_nuisance = rl.NuisanceParameter(nuisance_name("jec_variation"), "shape", 0, -10, 10)
     extra_nuisances = {
+        "triggersf": rl.NuisanceParameter(nuisance_name("triggersf_variation"), "shape", 0, -10, 10),
+        "pu": rl.NuisanceParameter(nuisance_name("pu_variation"), "shape", 0, -10, 10),
         "isr": rl.NuisanceParameter(nuisance_name("isr_variation"), "shape", 0, -10, 10),
         "fsr": rl.NuisanceParameter(nuisance_name("fsr_variation"), "shape", 0, -10, 10),
+        "v_qcd": rl.NuisanceParameter(nuisance_name("v_dKEnv"), "shape", 0, -10, 10),
+        "w_ewk": rl.NuisanceParameter(nuisance_name("w_dkappaEnv"), "shape", 0, -10, 10),
+        "z_ewk": rl.NuisanceParameter(nuisance_name("z_dkappaEnv"), "shape", 0, -10, 10),
         "toppt": rl.NuisanceParameter(nuisance_name("toppt_reweight"), "shape", 0, -10, 10),
     }
     # tagging eff sf for ttbar semileptonic samples
@@ -443,9 +490,9 @@ def jet_mass_producer(args, configs):
     # top_tag_eff = rl.IndependentParameter("top_tag_eff_sf",1.,-10,10)
     # W_tag_eff = rl.IndependentParameter("W_tag_eff_sf",1.,-10,10)
     for channel_name, config in channels.items():
-        ttbar_top_tag_eff = rl.IndependentParameter(nuisance_name("%sttbar_top_tag_eff_sf" % channel_name), 1.0, -4, 4)
-        ttbar_W_tag_eff = rl.IndependentParameter(nuisance_name("%sttbar_W_tag_eff_sf" % channel_name), 1.0, -4, 4)
-        wjets_W_tag_eff = rl.IndependentParameter(nuisance_name("%swjets_W_tag_eff_sf" % channel_name), 1.0, -4, 4)
+        ttbar_top_tag_eff = rl.IndependentParameter(nuisance_name("%sttbar_top_tag_eff_sf" % channel_name), 1.0, 0, 4)
+        ttbar_W_tag_eff = rl.IndependentParameter(nuisance_name("%sttbar_W_tag_eff_sf" % channel_name), 1.0, 0, 4)
+        wjets_W_tag_eff = rl.IndependentParameter(nuisance_name("%swjets_W_tag_eff_sf" % channel_name), 1.0, 0, 4)
 
         # using hists with /variable/ in their name (default: Mass, if defined get from config)
         variable = "mjet" if "variable" not in config else config["variable"]
@@ -480,13 +527,25 @@ def jet_mass_producer(args, configs):
             #         "NormUnc", set([norm_nuisances[sample_name][0] for sample_name in norm_nuisances.keys()])
             #     )
 
-            for sample_name in samples:
+            samples_ = deepcopy(samples)
+            if args.unfolding:
+                # if region == "pass":
+                samples_.append("WJetsMatched_fakes")
+                # elif region == "fail":
+                #     samples_ = config["samples_fail"]
+
+            for sample_name in samples_:
                 # do not include QCD template here, but rather use qcd estimation below
                 if ("QcdEstimation" in config and config["QcdEstimation"] == "True") and "qcd" in sample_name.lower():
                     continue
 
                 # specify if sample is signal or background type
-                sample_type = rl.Sample.SIGNAL if sample_name in config["signal"] else rl.Sample.BACKGROUND
+                # sample_type = rl.Sample.SIGNAL if sample_name in config["signal"] else rl.Sample.BACKGROUND
+                sample_type = rl.Sample.SIGNAL if (
+                    sample_name in config["signal"]
+                    # and (not args.unfolding or region == "pass")
+                ) else rl.Sample.BACKGROUND
+
                 sample_hist = get_hist(hist_dir % (sample_name, ""))
 
                 # setup actual rhalphalib sample
@@ -494,7 +553,8 @@ def jet_mass_producer(args, configs):
 
                 # if we want to use massScales in fit, we add the actual ParamEffect to NuisanceParamters,
                 # this will get them rendered into the workspace.
-                if args.massScales or True:
+                # if args.massScales or True:
+                if args.massScales:
                     # setting effects of constituent variation nuisances (up/down)
                     for grid_nuisance_dict, x, y, category in grid_nuisances:
                         for grid_nuisance_name in grid_nuisance_dict.keys():
@@ -537,27 +597,73 @@ def jet_mass_producer(args, configs):
                             )
 
                 if not args.noNuisances:
+
+                    if config["selection"] == "W":
+                        if "WJets" in sample_name or "ZJets" in sample_name:
+                            if "v_qcd_up" in aux_hist_files and "v_qcd_down" in aux_hist_files:
+                                hist_v_qcd_up = get_hist(hist_dir % (sample_name, ""), "v_qcd_up")
+                                hist_v_qcd_down = get_hist(hist_dir % (sample_name, ""), "v_qcd_down")
+                                sample.setParamEffect(extra_nuisances["v_qcd"], hist_v_qcd_up, hist_v_qcd_down)
+                            else:
+                                logger.warn("V QCD unc variation hists not present.")
+                        if "WJets" in sample_name:
+                            if "w_ewk_up" in aux_hist_files and "w_ewk_down" in aux_hist_files:
+                                hist_w_ewk_up = get_hist(hist_dir % (sample_name, ""), "w_ewk_up")
+                                hist_w_ewk_down = get_hist(hist_dir % (sample_name, ""), "w_ewk_down")
+                                sample.setParamEffect(extra_nuisances["w_ewk"], hist_w_ewk_up, hist_w_ewk_down)
+                            else:
+                                logger.warn("W EWK unc variation hists not present.")
+                        if "ZJets" in sample_name:
+                            if "z_ewk_up" in aux_hist_files and "z_ewk_down" in aux_hist_files:
+                                hist_z_ewk_up = get_hist(hist_dir % (sample_name, ""), "z_ewk_up")
+                                hist_z_ewk_down = get_hist(hist_dir % (sample_name, ""), "z_ewk_down")
+                                sample.setParamEffect(extra_nuisances["z_ewk"], hist_z_ewk_up, hist_z_ewk_down)
+                            else:
+                                logger.warn("Z EWK unc variation hists not present.")
+
                     if args.JECVar and (
-                        sample.sampletype == rl.Sample.SIGNAL or sample.sampletype == rl.Sample.BACKGROUND
+                        (sample.sampletype == rl.Sample.SIGNAL or sample.sampletype == rl.Sample.BACKGROUND)
                     ):
-                        hist_jec_up = get_hist(hist_dir % (sample_name, ""), "jec_up")
-                        hist_jec_down = get_hist(hist_dir % (sample_name, ""), "jec_down")
-                        sample.setParamEffect(jec_var_nuisance, hist_jec_up, hist_jec_down)
+                        if "jec_up" in aux_hist_files and "jec_down" in aux_hist_files:
+                            hist_jec_up = get_hist(hist_dir % (sample_name, ""), "jec_up")
+                            hist_jec_down = get_hist(hist_dir % (sample_name, ""), "jec_down")
+                            sample.setParamEffect(jec_var_nuisance, hist_jec_up, hist_jec_down)
+                        else:
+                            logger.warn("JEC variation hists not present.")
+
+                    # TriggeSF down
+                    if "triggersf_up" in aux_hist_files and "triggersf_down" in aux_hist_files:
+                        hist_triggersf_up = get_hist(hist_dir % (sample_name, ""), "triggersf_up")
+                        hist_triggersf_down = get_hist(hist_dir % (sample_name, ""), "triggersf_down")
+                        sample.setParamEffect(extra_nuisances["triggersf"], hist_triggersf_up, hist_triggersf_down)
+                    else:
+                        logger.warn("Trigger SF variation hists not present.")
+
+                    # PU reweight up/down
+                    if "pu_up" in aux_hist_files and "pu_down" in aux_hist_files:
+                        hist_pu_up = get_hist(hist_dir % (sample_name, ""), "pu_up")
+                        hist_pu_down = get_hist(hist_dir % (sample_name, ""), "pu_down")
+                        sample.setParamEffect(extra_nuisances["pu"], hist_pu_up, hist_pu_down)
+                    else:
+                        logger.warn("PU variation hists not present.")
 
                     # ISR down
-                    if sample.sampletype == rl.Sample.SIGNAL and (
-                        "isr_up" in aux_hist_files and "isr_down" in aux_hist_files
-                    ):
-                        hist_isr_up = get_hist(hist_dir % (sample_name, ""), "isr_up")
-                        hist_isr_down = get_hist(hist_dir % (sample_name, ""), "isr_down")
-                        sample.setParamEffect(extra_nuisances["isr"], hist_isr_up, hist_isr_down)
+                    if sample.sampletype == rl.Sample.SIGNAL:
+                        if "isr_up" in aux_hist_files and "isr_down" in aux_hist_files:
+                            hist_isr_up = get_hist(hist_dir % (sample_name, ""), "isr_up")
+                            hist_isr_down = get_hist(hist_dir % (sample_name, ""), "isr_down")
+                            sample.setParamEffect(extra_nuisances["isr"], hist_isr_up, hist_isr_down)
+                        else:
+                            logger.warn("ISR variation hists not present.")
+
                     # FSR down
-                    if sample.sampletype == rl.Sample.SIGNAL and (
-                        "fsr_up" in aux_hist_files and "fsr_down" in aux_hist_files
-                    ):
-                        hist_fsr_up = get_hist(hist_dir % (sample_name, ""), "fsr_up")
-                        hist_fsr_down = get_hist(hist_dir % (sample_name, ""), "fsr_down")
-                        sample.setParamEffect(extra_nuisances["fsr"], hist_fsr_up, hist_fsr_down)
+                    if sample.sampletype == rl.Sample.SIGNAL:
+                        if "fsr_up" in aux_hist_files and "fsr_down" in aux_hist_files:
+                            hist_fsr_up = get_hist(hist_dir % (sample_name, ""), "fsr_up")
+                            hist_fsr_down = get_hist(hist_dir % (sample_name, ""), "fsr_down")
+                            sample.setParamEffect(extra_nuisances["fsr"], hist_fsr_up, hist_fsr_down)
+                        else:
+                            logger.warn("FSR variation hists not present.")
 
                     if "TTTo" in sample.name and "toppt_off" in aux_hist_files:
                         hist_toppt_off = get_hist(hist_dir % (sample_name, ""), "toppt_off")
@@ -647,14 +753,32 @@ def jet_mass_producer(args, configs):
                 ttbar_W_pass_sample.setParamEffect(ttbar_W_tag_eff, (1 - ttbar_W_tag_eff) * rpf_W_topfail + 1.0)
                 ttbar_W_fail_sample.setParamEffect(ttbar_W_tag_eff, (1 - ttbar_W_tag_eff) * rpf_W_topfail + 1.0)
             if config["selection"] == "W":
-                wjets_W_pass_sample = model[channel_name + "pass"]["WJetsMatched"]
-                wjets_W_fail_sample = model[channel_name + "fail"]["WJetsMatched"]
-                rpf = (
-                    wjets_W_pass_sample.getExpectation(nominal=True).sum()
-                    / wjets_W_fail_sample.getExpectation(nominal=True).sum()
+                signals = ["WJetsMatched"]
+                if args.unfolding:
+                    signals = deepcopy(config["signal"])
+
+                expec_pass = sum(
+                    [
+                        model[channel_name + "pass"][signal].getExpectation(nominal=True).sum()
+                        for signal in config["signal"]
+                    ]
                 )
-                wjets_W_pass_sample.setParamEffect(wjets_W_tag_eff, 1.0 * wjets_W_tag_eff)
-                wjets_W_fail_sample.setParamEffect(wjets_W_tag_eff, (1 - wjets_W_tag_eff) * rpf + 1.0)
+                expec_fail = sum(
+                    [
+                        model[channel_name + "fail"][signal].getExpectation(nominal=True).sum()
+                        # for signal in config["signal_fail"]
+                        for signal in config["signal"]
+                    ]
+                )
+                rpf = np.divide(expec_pass, expec_fail, out=np.zeros_like(expec_pass), where=expec_fail != 0)
+                for signal in signals:
+                    wjets_W_pass_sample = model[channel_name + "pass"][signal]
+                    wjets_W_fail_sample = model[channel_name + "fail"][signal]
+                    if rpf > 0.0 and not args.unfolding:
+                        wjets_W_pass_sample.setParamEffect(wjets_W_tag_eff, 1.0 * wjets_W_tag_eff)
+                        wjets_W_fail_sample.setParamEffect(wjets_W_tag_eff, (1 - wjets_W_tag_eff) * rpf + 1.0)
+                # for signal in config["signal_fail"]:
+                    # if rpf > 0.0 and not args.unfolding:
 
     if do_qcd_estimation:
         # QCD TF
@@ -670,7 +794,8 @@ def jet_mass_producer(args, configs):
             if args.verbose > 0:
                 print("Using QCD efficiency (N2-ddt) of %.2f%% to scale initial QCD in pass region" % (qcd_eff * 100))
             tf_params = data_norms["eff_arr"] * tf_params(ptscaled, rhoscaled)
-
+        print(year_str, list(data_norms["eff_arr"][:, 0]))
+        exit(0)
         for channel_name, config in channels.items():
             if "QcdEstimation" not in config or config["QcdEstimation"] == "False":
                 continue
@@ -742,10 +867,35 @@ def jet_mass_producer(args, configs):
             for sample in c.samples:
                 if "qcd" in sample.name.lower():
                     continue
-                prefit_asimov += sample.getExpectation(nominal=True)
+                split_sample_suffixe = {
+                    "0p1": "0p9",
+                    "0p2": "0p8",
+                    "0p4": "0p6",
+                }
+                split_sample_match = re.search("(?P<suffix>0p[124])", sample.name)
+                if split_sample_match and args.splitPseudo:
+                    split_sample_suffix = split_sample_match.groupdict()["suffix"]
+                    sample_match = re.search(
+                        "WJetsPt(?P<pt>[0-9]+)(?P<region>(pass|fail){1})_(?P<sample>WJetsMatched0p[0-9]"
+                        + "_ptgen[0-9]_msdgen[0-9])",
+                        sample.name,
+                    )
+                    hist_path = ""
+                    if sample_match:
+                        sample_dict = sample_match.groupdict()
+                        ch_config = configs["channels"]["WJetsPt{}".format(sample_dict["pt"])]
+                        hist_path = "{}_{}__mjet_{}_{}".format(
+                            ch_config["selection"], sample_dict["sample"], ch_config["pt_bin"], sample_dict["region"]
+                        )
+                        hist_path = hist_path.replace(split_sample_suffix, split_sample_suffixe[split_sample_suffix])
+                        print(hist_path)
+                    th1 = get_hist(hist_path)
+
+                    prefit_asimov += rl.util._to_numpy(th1)[0]
+                else:
+                    prefit_asimov += sample.getExpectation(nominal=True)
             prefit_asimov_data = (prefit_asimov, c.observable.binning, c.observable.name)
             c.setObservation(prefit_asimov_data)
-
     model.renderCombine(model_dir)
 
 
@@ -754,7 +904,7 @@ if __name__ == "__main__":
     import argparse
     import fitplotter
     from CombineWorkflows import CombineWorkflows
-
+    import logging
     parser = argparse.ArgumentParser()
     parser.add_argument("config", type=str, help="path to json with config")
     parser.add_argument("--workdir", type=str, help="path to workdir containing modeldir", default=".")
@@ -767,6 +917,7 @@ if __name__ == "__main__":
     parser.add_argument("--customCombineWrapper", action="store_true")
     parser.add_argument("--noNuisances", action="store_true")
     parser.add_argument("--JMRparameter", action="store_true")
+    parser.add_argument("--splitPseudo", action="store_true")
     parser.add_argument("--prefitAsimov", action="store_true")
     parser.add_argument("--pTdependetJMRParameter", action="store_true")
     parser.add_argument("--noNormUnc", action="store_true")
@@ -775,6 +926,8 @@ if __name__ == "__main__":
     parser.add_argument("--freezeParameters", nargs="+", default=[])
     parser.add_argument("--separateMassScales", action="store_true")
     parser.add_argument("--uncertainty_breakdown", action="store_true")
+    parser.add_argument("--correlationCoeffcients", action="store_true")
+    # parser.add_argument("--VJetsUnc", action="store_true")
     parser.add_argument(
         "--initialQCDTF",
         action="store_true",
@@ -805,12 +958,20 @@ if __name__ == "__main__":
         ),
         default=""
     )
+    parser.add_argument("--config-update", type=str, default="{}")
 
     args = parser.parse_args()
 
     args.unfolding = args.mode == "unfolding"
     args.massScales = args.mode == "jms"
     args.defaultPOI = args.mode == "default"
+
+    logging.basicConfig()
+    logger = logging.getLogger()
+    if args.verbose > 0:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.CRITICAL)
 
     try:
         if args.config.endswith(".json"):
@@ -834,36 +995,47 @@ if __name__ == "__main__":
 
     configs["ModelName"] = configs["ModelName"] + str(args.job_index)
 
+    if args.config_update != "":
+        try:
+            configs.update(eval(args.config_update))
+        except BaseException as e:
+            logger.exception(e)
+            logger.exception("Could not update config from provided CLI argument ({}) !".format(args.config_update))
     model_dir = "{}/{}".format(args.workdir, configs["ModelName"])
     configs["ModelDir"] = model_dir
 
-    particlenet = "particlenet" in args.tagger
     if "BernsteinOrders" not in configs:
+        starting_at_30 = configs.get("binning", [50, 300, 51])[0] == 30.0
+
         print("taking default BernsteinOrders from common configs..")
         configs["BernsteinOrders"] = common_configs.bernstein_orders(
-            configs["year"], TF="Data", particlenet=particlenet
+            configs["year"], TF="Data", tagger=args.tagger, starting_at_30=starting_at_30
         )
         if args.initialQCDTF:
             configs["BernsteinOrders"] = common_configs.bernstein_orders(
-                configs["year"], TF="Data2TF", particlenet=particlenet
+                configs["year"], TF="Data2TF", tagger=args.tagger, starting_at_30=starting_at_30
             )
 
     if args.initialQCDTF:
         if "InitialQCDFitOrders" not in configs or args.forceCommonConfig:
             configs["InitialQCDFitOrders"] = common_configs.bernstein_orders(
-                configs["year"], TF="QCD", particlenet=particlenet
+                configs["year"], TF="QCD", tagger=args.tagger, starting_at_30=starting_at_30
             )
         configs["InitialQCDFit"] = "True"
 
     if not args.tagger.startswith("_") and args.tagger != "":
         args.tagger = "_" + args.tagger
-    configs["histLocation"] = configs["histLocation"].replace(configs["year"], configs["year"] + args.tagger)
+    configs["histLocation"] = configs["histLocation"].replace(configs["year"], configs["year"] + args.tagger).replace("/flat_templates/", "/flat_templates/" if args.unfolding else "/flat_templates/DPNote_06-07-23/")
+    
 
     configs["nuisance_year_decorrelation"] = [
-        "CMS_lumi",
-        "normUnc",
-        "jec_variation", "isr_variation", "fsr_variation",
-        "toppt_reweight", "tag_eff_sf", "jec_variation"
+        # "CMS_lumi",
+        # "normUnc",
+        "triggersf_variation",
+        "jec_variation",
+        # "isr_variation", "fsr_variation",
+        "toppt_reweight",
+        "tag_eff_sf",
     ]
 
     args.freezeParameters = [nuisance_name_(par_name, configs) for par_name in args.freezeParameters]
@@ -890,7 +1062,10 @@ if __name__ == "__main__":
                     # cw.freezeParameters = ["r"]+args.freezeParameters
                     cw.freezeParameters = args.freezeParameters
                     cw.extraOptions += " --preFitValue 0"
-                    cw.POIRange = (-100, 100)
+                    # cw.extraOptions += " --robustHesse 1 --robustFit 1 "
+                    cw.extraOptions += " --robustFit 1 "
+                    cw.POIRange = (-15, 15)
+                    cw._parameterRanges.append("r=0,1.5")
                 if args.defaultPOI:
                     cw.POIRange = (0.01, 100.0)
                 cw.POI = "r" if args.defaultPOI else build_mass_scale_variations(configs, args)[1]
@@ -937,6 +1112,7 @@ if __name__ == "__main__":
             do_postfit=do_postfit,
             use_config_samples=args.unfolding,
             pseudo_data=False,
+            unfolding=args.unfolding,
         )
         fitplotter.plot_fit_result(
             configs,
@@ -945,6 +1121,7 @@ if __name__ == "__main__":
             do_postfit=do_postfit,
             use_config_samples=args.unfolding,
             pseudo_data=False,
+            unfolding=args.unfolding
         )
     if do_postfit and args.massScales:
         fitplotter.plot_mass_scale_nuisances(configs)
@@ -963,6 +1140,12 @@ if __name__ == "__main__":
         except BaseException as e:
             print("QCD TF plots failed.")
             print(e)
+    if do_postfit and args.correlationCoeffcients:
+        pois = ["r_{}".format(genbin) for genbin in configs.get("genbins", [])]
+        corr_coeff = correlation_coefficient(
+            "{}/fitDiagnostics.root".format(model_dir), pois
+        )
+        np.save("{}/corr_coeff.npy".format(model_dir), corr_coeff)
     if (
         args.JECVar
         and not args.unfolding

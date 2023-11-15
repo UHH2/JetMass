@@ -109,5 +109,7 @@ combineTool.py -M Impacts -d model_combined.root -m 0 --robustFit 1 --doFits --e
 - plot impacts for each POI and use renaming json to texify POI name
 
 ```shell
+combineTool.py -M Impacts -d model_combined.root -m 0 -o impacts.json
+
 for ipt in 0 1 2 3; do echo $ipt ;printf "%s\n" 0 1 2 3 |xargs -I{} -P 5 -n1 plotImpacts.py -i impacts.json -o impacts_r_ptgen${ipt}_msdgen{} --POI r_ptgen${ipt}_msdgen{} --per-page 35 --translate ../../POI_rename.json --height 600;done
 ```
