@@ -15,7 +15,6 @@ import mplhep as hep
 import matplotlib as mpl
 from scipy.stats import chisquare
 from scipy.stats import kstest
-import correctionlib.convert
 import correctionlib.schemav2 as cs
 from hashlib import sha512
 import argparse
@@ -40,9 +39,16 @@ logger = logging.getLogger(__name__)
 def cms_label(ax, fs=20, year=2017):
     if isinstance(year, str):
         year_substr = re.search("[1678]{2}", year)
+        year_prefix = ""
+        if "pre" in year:
+            year_prefix = "early "
+        elif "post" in year:
+            year_prefix = "late "
+
         if year_substr:
-            year = 2000 + int(year_substr.group())
-    hep.cms.label(label=", Work in Progress", year=year, ax=ax, fontsize=fs)
+            year = "20" + year_substr.group()
+    # hep.cms.label(label=", Work in Progress", year=year, ax=ax, fontsize=fs)
+    hep.cms.label("Preliminary", year=year_prefix+year, ax=ax, fontsize=fs, data=False)
 
 
 def fax(w=9, h=9):
@@ -93,28 +99,43 @@ class JMSFitter(object):
         self.jms_names = []
         self.poly_dim = poly_dim
 
-    def fit_jms(self, obs):
-
-        jms_corr, fit_diag = correctionlib.convert.ndpolyfit(
-            points=[self.x],
-            values=obs,
-            weights=np.ones_like(self.x),
-            varnames=["pt"],
-            degree=(self.poly_dim,),
+    def fit_jms(self, name, obs):
+        edges = self.x - self.xerr
+        edges = np.concatenate([edges, [self.x[-1]+self.xerr[-1]]])
+        jms_corr = cs.Correction(
+            name=name,
+            version=1,
+            inputs=[cs.Variable(name="pt", type="real", description="Jet transverse momentum")],
+            output=cs.Variable(name="msdcorr", type="real", description="Multiplicative msd correction factor"),
+            data=cs.Binning(
+                nodetype="binning",
+                input="pt",
+                edges=list(edges),
+                content=list(obs),
+                flow="clamp",
+            ),
         )
+        fit_diag = None
+        # jms_corr, fit_diag = correctionlib.convert.ndpolyfit(
+        #     points=[self.x],
+        #     values=obs,
+        #     weights=np.ones_like(self.x),
+        #     varnames=["pt"],
+        #     degree=(self.poly_dim,),
+        # )
         return (jms_corr, fit_diag)
 
     def add_jms(self, name, obs, label):
         self.jms_names.append(name)
 
         ndof = len(obs) - (self.poly_dim + 1)
-        self.fit_results.append(self.fit_jms(obs))
+        self.fit_results.append(self.fit_jms(name, obs))
 
         def corr_eval(pt):
             return self.fit_results[-1][0].to_evaluator().evaluate(pt)
 
         ks_result = GOF(obs, corr_eval(self.x), ndof)
-        pt = np.linspace(500, 1200, 300)
+        pt = np.linspace(575, 3000, 500)
 
         self.jms_artists.append(
             self.ax.errorbar(
@@ -125,14 +146,19 @@ class JMSFitter(object):
                 marker="*",
                 label=(
                     label
-                    + " | KS p-val: "
-                    + str(round(ks_result[0], 2))
-                    + r"| $\chi^2$ p-val: "
-                    + str(round(ks_result[1], 2))
+                    # + " | KS p-val: "
+                    # + str(round(ks_result[0], 2))
+                    # + r"| $\chi^2$ p-val: "
+                    # + str(round(ks_result[1], 2))
                 ),
             )
         )
-
+        print(
+            " | KS p-val: "
+            + str(round(ks_result[0], 2))
+            + r"| $\chi^2$ p-val: "
+            + str(round(ks_result[1], 2))
+        )
         color = self.jms_artists[-1][0].get_color()
 
         self.fit_artists.append(self.ax.plot(pt, corr_eval(pt), color=color))
@@ -247,9 +273,11 @@ class JMSExtractor(object):
         return self._tree
 
     @tree.setter
-    def tree(self, tree_file):
+    def tree(self, tree_file, triggersf=True):
         # getting raw tree without High-Level behaviour
         raw_tree = ak.from_parquet(tree_file)
+        if triggersf:
+            raw_tree.weight = raw_tree.weight * raw_tree.triggersf
 
         raw_tree.Jets = ak.zip(
             {
@@ -261,6 +289,9 @@ class JMSExtractor(object):
             with_name="PtEtaPhiMLorentzVector",
             behavior=vector.behavior,
         )
+        raw_tree = raw_tree[
+            (raw_tree.pass_reco_selection == 1) & (raw_tree.pass_gen_selection == 1) & (raw_tree.dR_reco_gen < 0.4)
+        ]
 
         self._tree = raw_tree
 
@@ -303,7 +334,7 @@ class JMSExtractor(object):
         self._plot_dir = path
 
     def construct_hists(self, groomed=True, JEC=True):
-        m_min = 30
+        m_min = 10
         m_max = 300
         n_bins = 2 * (m_max - m_min)
 
@@ -402,7 +433,7 @@ class JMSExtractor(object):
         fitfunc_dict = {"means_reco": gauss, "means_gen": gauss, "response": gauss}
 
         self.jms_from_mc = {}
-        iterations = 2
+        iterations = 1
         for grooming in self.groomings:
             for jec in jecs:
                 h_ = self.hists[f"{grooming}_{jec}"]
@@ -542,6 +573,7 @@ class JMSExtractor(object):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("--tagger", default="notagger", choices=["notagger", "n2ddt", "pNetddt"])
     parser.add_argument("--ndpoly", type=int, default=2, help="degree of polynomial used for fitting the JMS")
     parser.add_argument("--output-suffix", type=str, default="quadratic",
                         help="descriptive suffix used both for jms-correctionset json and control-plot directory.")
@@ -552,9 +584,9 @@ if __name__ == "__main__":
     corrections = []
 
     for year in years:
-        wjets_jms_extractor = JMSExtractor(f"WJetsToQQ_tinyTree_{year}.parquet", year=year)
-        wjets_jms_extractor.plot_dir = f"jms_from_mc_plots_{args.output_suffix}"
-        wjets_jms_extractor.pt_binning = np.array([500, 550, 650, 725, 800, 1000, 1200])
+        wjets_jms_extractor = JMSExtractor(f"WJetsToQQ_tinyTree_{year}_{args.tagger}.parquet", year=year)
+        wjets_jms_extractor.plot_dir = f"jms_from_mc_plots_{args.tagger}_{args.output_suffix}"
+        wjets_jms_extractor.pt_binning = np.array([575, 650, 725, 800, 1000, 1200, 3000])
         print("set pt binning to", wjets_jms_extractor.pt_binning)
         print("constructing and filling hists")
         wjets_jms_extractor.create_hist_dict()
@@ -576,6 +608,6 @@ if __name__ == "__main__":
 
     corrections_set_json = correction_set.json(exclude_unset=True)
     sha512sum = sha512(corrections_set_json.encode("utf-8")).hexdigest()
-    fname = f"jms_corrections_{args.output_suffix}_{sha512sum[-10:]}.json"
+    fname = f"jms_corrections_{args.tagger}_{args.output_suffix}_{sha512sum[-10:]}.json"
     with open(fname, "w") as fout:
         fout.write(corrections_set_json)

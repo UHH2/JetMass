@@ -13,7 +13,7 @@ from matplotlib.colors import LogNorm
 import unfolding_plotting
 import correctionlib
 import os
-
+from utils import jms_correction_files
 hep.style.use("CMS")
 
 logging_styles = {
@@ -86,8 +86,8 @@ class BinOptimizer(object):
             events,
         )
 
-        stability = unfolding_plotting.migration_metric(migmat, f"{self.variable}_reco", flow=flow)[0]
-        purity = unfolding_plotting.migration_metric(migmat, f"{self.variable}_gen", flow=flow)[0]
+        stability = unfolding_plotting.migration_metric(migmat, f"{self.variable}_gen", flow=flow)[0]
+        purity = unfolding_plotting.migration_metric(migmat, f"{self.variable}_reco", flow=flow)[0]
 
         if bin_merger == "sequential":
             for bin_ind in range(len(binning) - 1):
@@ -254,18 +254,22 @@ class BinOptimizer(object):
             (f1, ax1), (f2, ax2), (f01, ax01), (f02, ax02) = tuple(unfolding_plotting.fax() for i in range(4))
             f = [f1, f2, f01, f02]
 
+        common_plot_kwargs = dict(flow="none")
+
         # plot stability and purity
         hep.histplot(
-            unfolding_plotting.migration_metric(migmat, f"{self.variable}_reco", flow=flow),
+            unfolding_plotting.migration_metric(migmat, f"{self.variable}_gen", flow=flow),
             label="stability",
             ax=ax01,
             **{"color": unfolding_plotting.stability_color},
+            **common_plot_kwargs,
         )
         hep.histplot(
-            unfolding_plotting.migration_metric(migmat, f"{self.variable}_gen", flow=flow),
+            unfolding_plotting.migration_metric(migmat, f"{self.variable}_reco", flow=flow),
             label="purity",
             ax=ax01,
             **{"color": unfolding_plotting.purity_color},
+            **common_plot_kwargs,
         )
         ax01.legend(loc="lower center")
         ax01.plot(ax01.get_xlim(), [self.threshold, self.threshold], "k--", alpha=0.6)
@@ -277,6 +281,7 @@ class BinOptimizer(object):
             label=r"$%s^{\mathrm{gen}}$" % unfolding_plotting.label_tex_dict[self.variable],
             # density=True,
             binwnorm=True,
+            **common_plot_kwargs,
         )
         hep.histplot(
             migmat_initial[:, ::sum],
@@ -284,6 +289,7 @@ class BinOptimizer(object):
             label=r"$%s^{\mathrm{reco}}$" % unfolding_plotting.label_tex_dict[self.variable],
             # density=True,
             binwnorm=True,
+            **common_plot_kwargs,
         )
 
         hep.histplot(
@@ -292,6 +298,7 @@ class BinOptimizer(object):
             label=r"$%s{^{\mathrm{gen}}$ (optimized)" % unfolding_plotting.label_tex_dict[self.variable],
             # density=True,
             binwnorm=True,
+            **common_plot_kwargs,
         )
         if isinstance(mjet_reco_correction, float) and mjet_reco_correction != 1.0:
             ax02.text(
@@ -353,29 +360,31 @@ if __name__ == "__main__":
     import numpy as np
     import argparse
     import logging
-    import re
 
     parser = argparse.ArgumentParser()
 
     optimization_step_choices = ["pt", "mjet", "mjetSimpleCorr", "mjetCorr", "all"]
 
-    parser.add_argument("--input", "-i", type=str, default="WJetsToQQ_tinyTree.parquet")
-    parser.add_argument("--optimize", nargs="+", choices=optimization_step_choices + ["menu"], default=["menu"])
+    # parser.add_argument("--input", "-i", type=str, default="WJetsToQQ_tinyTree_UL17_n2ddt.parquet")
+    parser.add_argument("--year", default="UL17")
+    parser.add_argument("--tagger", default="n2ddt", choices=["n2ddt", "pNetddt"])
+    parser.add_argument("--optimize", nargs="+", choices=optimization_step_choices + ["menu"], default=["mjetCorr"])
     parser.add_argument("--threshold", "-t", type=float, default=0.5)
     parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()
+    triggersf = True
 
-    year = "UL17"
-    year_re = re.search("(UL)*(20)*1[678]{1}(preVFP|postVFP)*", args.input)
-    if year_re:
-        year = year_re.group()
-    unfolding_plotting.year = year
+    # year = "UL17"
+    # year_re = re.search("(UL)*(20)*1[678]{1}(preVFP|postVFP)*", args.input)
+    # if year_re:
+    #     year = year_re.group()
+    unfolding_plotting.year = args.year
 
     logFormatter = logging.Formatter("%(asctime)s %(funcName)s %(message)s")
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
-    fileHandler = logging.FileHandler("unfolding_binning.log")
+    fileHandler = logging.FileHandler(f"unfolding_binning_{args.year}_{args.tagger}.log")
     fileHandler.setFormatter(logFormatter)
     logger.addHandler(fileHandler)
 
@@ -403,7 +412,10 @@ if __name__ == "__main__":
     if "all" in args.optimize:
         args.optimize = optimization_step_choices
 
-    events_sel = ak.from_parquet(args.input)
+    events_sel = ak.from_parquet(f"WJetsToQQ_tinyTree_{args.year}_notagger.parquet")
+
+    if triggersf:
+        events_sel["weight"] = events_sel["weight"]*events_sel["triggersf"]
 
     events_sel["pt_raw"] = events_sel.Jets.pt[:, 0]
     events_sel["pt"] = events_sel.pt_raw * events_sel.jecfactor[:, 0]
@@ -414,9 +426,14 @@ if __name__ == "__main__":
     events_sel["rho"] = 2 * np.log(events_sel.mjet / events_sel.pt)
     events_sel["rhogen"] = 2 * np.log(events_sel.mjetgen / events_sel.ptgen)
 
+    events_sel = events_sel[
+        (events_sel.pass_reco_selection == 1) & (events_sel.pass_gen_selection == 1) & (events_sel.dR_reco_gen < 0.4)
+    ]
+
     threshold_str = str(args.threshold).replace(".", "p")
 
-    plot_dir = "unfolding_binning_plots"
+    # plot_dir = f"unfolding_binning_plots_{args.year}_{args.tagger}"
+    plot_dir = f"unfolding_binning_plots_{args.year}_{args.tagger}"
 
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
@@ -424,13 +441,13 @@ if __name__ == "__main__":
     def save_plot(fax, outname):
         fax[0].savefig((plot_dir + "/" + outname), bbox_inches="tight")
 
-    pt_gen_binning = np.array([0, 575, 650, 800, 1200])  # , np.inf])
-    pt_reco_binning = np.array([500, 575, 650, 725, 800, 1000, 1200, np.inf])
+    pt_gen_binning = np.array([500, 650, 800, 1200, np.inf])
+    pt_reco_binning = np.array([575, 650, 725, 800, 1000, 1200, np.inf])
 
     # pt binning
     if "pt" in args.optimize:
         logger.info(logging_styles["red_bold_underline"]("optimize pt binning (simple)"))
-        initial_pt_binning = np.arange(500, 1500, 5)
+        initial_pt_binning = np.arange(500, 3000, 5)
 
         unfolding_plotter_pt = unfolding_plotting.Unfolding1DPlotter("pt")
         save_plot(
@@ -438,11 +455,11 @@ if __name__ == "__main__":
             "pt_metrics.pdf",
         )
         save_plot(
-            unfolding_plotter_pt.plot_migration_matrix(pt_reco_binning[:-1], pt_gen_binning[2:], events_sel, w=9, h=9),
+            unfolding_plotter_pt.plot_migration_matrix(pt_reco_binning[:-1], pt_gen_binning[:-1], events_sel, w=9, h=9),
             "pt_migration_matrix.pdf",
         )
         save_plot(
-            unfolding_plotter_pt.plot_distributions(pt_reco_binning[:-1], pt_gen_binning[2:], events_sel, w=9, h=9),
+            unfolding_plotter_pt.plot_distributions(pt_reco_binning[:-1], pt_gen_binning[:-1], events_sel, w=9, h=9),
             "pt_distributions.pdf",
         )
 
@@ -454,7 +471,7 @@ if __name__ == "__main__":
 
     if any("mjet" in step for step in args.optimize):
         # mjet binning
-        initial_mjet_binning = np.arange(30, 300, 0.5)
+        initial_mjet_binning = np.arange(10, 300, 0.5)
         mjet_bin_optimizer = BinOptimizer(
             events_sel, initial_mjet_binning, args.threshold, variable="mjet", plot_dir=plot_dir
         )
@@ -537,12 +554,14 @@ if __name__ == "__main__":
         logger.info(logging_styles["red_bold_underline"]("optimize mjet binning (\"advanced\" correction (response))"))
 
         polynomial_msd_correction_set = correctionlib.CorrectionSet.from_file(
-            "jms_corrections_28-02-23_608835ecf6.json"
+            # "jms_corrections_28-02-23_608835ecf6.json"
+            # "jms_corrections_01-07-23_6c213bacd7.json"
+            jms_correction_files[args.tagger]
         )
 
         # optimization with dedicated JMS from MC (response)
         def polynomial_msd_corr_response(pt):
-            return 1.0 / polynomial_msd_correction_set[f"response_g_jec_{year}"].evaluate(pt)
+            return 1.0 / polynomial_msd_correction_set[f"response_g_jec_{args.year}"].evaluate(pt)
 
         # sequential bin merging
         logger.info(logging_styles["orange_bold"]("pt-scan sequential"))
@@ -568,28 +587,28 @@ if __name__ == "__main__":
 
         logger.info(logging_styles["red_bold_underline"]("optimize mjet binning (\"advanced\" correction (means))"))
 
-        # optimization with dedicated JMS from MC (response)
-        def polynomial_msd_corr_means(pt):
-            return 1.0 / polynomial_msd_correction_set[f"means_g_jec_{year}"].evaluate(pt)
+        # # optimization with dedicated JMS from MC (response)
+        # def polynomial_msd_corr_means(pt):
+        #     return 1.0 / polynomial_msd_correction_set[f"means_g_jec_{args.year}"].evaluate(pt)
 
-        # sequential bin merging
-        logger.info(logging_styles["orange_bold"]("pt-scan sequential"))
-        correction_means_sequential_binning = mjet_bin_optimizer.optimization_pt_scan(
-            pt_reco_binning,
-            "mjet_binning_polynomial_means_msdcorr_sequential",
-            events_sel,
-            mjet_reco_correction=polynomial_msd_corr_means,
-        )
-        logger.info(str(correction_means_sequential_binning))
+        # # sequential bin merging
+        # logger.info(logging_styles["orange_bold"]("pt-scan sequential"))
+        # correction_means_sequential_binning = mjet_bin_optimizer.optimization_pt_scan(
+        #     pt_reco_binning,
+        #     "mjet_binning_polynomial_means_msdcorr_sequential",
+        #     events_sel,
+        #     mjet_reco_correction=polynomial_msd_corr_means,
+        # )
+        # logger.info(str(correction_means_sequential_binning))
 
-        # bidirectional bin merging
-        logger.info(logging_styles["orange_bold"]("pt-scan bidirectional"))
-        correction_means_bidirectional_binning = mjet_bin_optimizer.optimization_pt_scan(
-            pt_reco_binning,
-            "mjet_binning_polynomial_means_msdcorr_bidirectional",
-            events_sel,
-            bin_merger="bidirectional",
-            split_value=-1.,
-            mjet_reco_correction=polynomial_msd_corr_means,
-        )
-        logger.info(str(correction_means_bidirectional_binning))
+        # # bidirectional bin merging
+        # logger.info(logging_styles["orange_bold"]("pt-scan bidirectional"))
+        # correction_means_bidirectional_binning = mjet_bin_optimizer.optimization_pt_scan(
+        #     pt_reco_binning,
+        #     "mjet_binning_polynomial_means_msdcorr_bidirectional",
+        #     events_sel,
+        #     bin_merger="bidirectional",
+        #     split_value=-1.,
+        #     mjet_reco_correction=polynomial_msd_corr_means,
+        # )
+        # logger.info(str(correction_means_bidirectional_binning))

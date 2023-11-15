@@ -64,7 +64,9 @@ xmin = 0.0
 
 
 cms_text = "CMS"
-extra_text = "Preliminary Simulation"
+isData = True
+extra_text = "Preliminary"
+
 extra_text_rel_X = 0.12
 font_size_modifier = 1.0
 text_padding = 0.1
@@ -88,13 +90,16 @@ def draw_lumi(
     global additional_text_size
     global additional_text_ypos
     global cms_text
-    lumi_text = "(%s) %.2f fb^{-1} (13 TeV)" % (str(year), float(lumi))
+    global extra_text
+    lumi_text = "%.1f fb^{-1}, %s (13 TeV)" % (float(lumi), str(year))
     if private_work:
         cms_text = "Private work"
         if data:
             extra_text = "________________(CMS_data/simulation)"
         else:
             extra_text = "________________(CMS_simulation)"
+    else:
+        extra_text = ("" if data else "Simulation ") + extra_text
     latex = ROOT.TLatex()
     latex.SetNDC()
 
@@ -124,7 +129,7 @@ def draw_lumi(
         return
     # CMS Text
     if not private_work:
-        extra_text_size = cms_text_size
+        extra_text_size = cms_text_size * 0.9
         latex.SetTextFont(61)
     latex.SetTextAlign(11)
     latex.SetTextSize(cms_text_size * top_margin)
@@ -134,6 +139,7 @@ def draw_lumi(
         latex.DrawLatex(left_margin, y_pos, cms_text)
     else:
         y_pos -= top_margin + top_margin * text_padding
+        latex.SetTextAlign(11)
         latex.DrawLatex(left_margin * (1 + text_padding), y_pos, cms_text)
 
     if do_extra_text:
@@ -152,11 +158,12 @@ def draw_lumi(
             y_pos -= extra_text_size * top_margin
         for extra_t in extra_text.split(" "):
             extra_t = extra_t.replace("_", " ")
+            latex.SetTextAlign(11)
             latex.SetTextSize(extra_text_size * top_margin * (1 - 0.1 * (counter - 1)))
-            latex.SetText(extra_x_pos, y_pos, extra_t)
-            latex.DrawLatex(extra_x_pos, y_pos, extra_t)
+            # latex.SetText(extra_x_pos, y_pos, extra_t)
+            latex.DrawLatex(extra_x_pos, y_pos-0.001, extra_t)
             if out_of_frame:
-                extra_x_pos += latex.GetXsize() * 1.1
+                extra_x_pos += latex.GetXsize() * 1
             else:
                 y_pos -= extra_text_size * top_margin
             counter += 1

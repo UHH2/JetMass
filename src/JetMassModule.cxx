@@ -38,7 +38,6 @@
 #include "UHH2/common/include/MCLargeWeightKiller.h"
 #include "UHH2/JetMass/include/WriteOutput.h"
 #include "UHH2/JetMass/include/PFHists.h"
-#include "UHH2/JetMass/include/UnfoldingHists.h"
 #include "UHH2/JetMass/include/JetMassGenHists.h"
 #include "UHH2/JetMass/include/TriggerHists.h"
 #include "UHH2/JetMass/include/JetMassUtils.h"
@@ -107,11 +106,6 @@ private:
 
   std::unique_ptr<uhh2::Hists> h_hlt_eff;
   std::unique_ptr<uhh2::Hists> h_gen_hists_commonmodules,h_gen_hists_gensel;
-  // std::unique_ptr<uhh2::Hists> h_unfolding_hists, h_unfolding_hists_fine;
-  // std::unique_ptr<uhh2::Hists> h_unfolding_hists_gensubstructure;
-  // std::unique_ptr<uhh2::Hists> h_unfolding_hists_no_merged_partons;
-  // std::unique_ptr<uhh2::Hists> h_unfolding_hists_rhocut,h_unfolding_hists_no_merged_partons_rhocut;
-  // std::unique_ptr<uhh2::Hists> h_unfolding_hists_sel_part1, h_unfolding_hists_sel_part2;
   
   std::unique_ptr<AnalysisModule> writer;
 
@@ -145,6 +139,10 @@ private:
 
   //JEC factors
   uhh2::Event::Handle<double> handle_jecfactor_nominal, handle_jecfactor_up, handle_jecfactor_down;
+
+  //genjet values handles
+  uhh2::Event::Handle<double> handle_gentopjet_pt_0,handle_gentopjet_msd_0,handle_gentopjet_mass_0,handle_gentopjet_dR_reco_0,handle_gentopjet_n2_0;
+  uhh2::Event::Handle<double> handle_gentopjet_pt_1,handle_gentopjet_msd_1,handle_gentopjet_mass_1,handle_gentopjet_dR_reco_1,handle_gentopjet_n2_1;
 
   TopJetId jetpfid;
 
@@ -187,12 +185,6 @@ JetMassModule::JetMassModule(Context & ctx){
   nlo_weights_UL.reset(new NLOWeights(ctx,V_pt_handlename,true));
   do_genStudies = string2bool(ctx.get("doGenStudies", "true"));
   doOnlyTriggerHists = string2bool(ctx.get("justDoTriggerHists", "false"));
-  // common modules
-  // MuonId muid = AndId<Muon>(MuonID(Muon::CutBasedIdTight), PtEtaCut(55., 2.4));
-  // ElectronId eleid = AndId<Electron>(ElectronID_Fall17_medium_noIso, PtEtaCut(55., 2.4));
-  // MuonId muid = uhh2::muid;
-  // ElectronId eleid = uhh2::eleid;
-  // // ElectronId eleid = AndId<Electron>(ElectronTagID(Electron::tagname2tag("cutBasedElectronID-Fall17-94X-V2-medium")), PtEtaCut(55., 2.4));
 
   JetId jetid = AndId<Jet>(JetPFID(JetPFID::WP_TIGHT_CHS), PtEtaCut(30.0, 2.4));
 
@@ -200,7 +192,6 @@ JetMassModule::JetMassModule(Context & ctx){
 
   if(is_buggyPU){
     TString pu_file_path = (TString) ctx.get("dataset_version");
-    // pu_file_path = pu_file_path.ReplaceAll("MC","");
     pu_file_path = pu_file_path.ReplaceAll("_buggyPU","");
     pu_file_path = pu_file_path.ReplaceAll("_test","");
     pu_file_path = "common/data/2017/Pileup_QCD_PtBinned/MyMCPileupHistogram_"+pu_file_path+".root";
@@ -223,9 +214,7 @@ JetMassModule::JetMassModule(Context & ctx){
   common->switch_metcorrection(true);
   common->switch_jetPtSorter();
   common->set_HTjetid(jetid);
-  // if(is_mc || isvjetsSel) common->disable_metfilters(); //TODO: remove || isVJets as soon as updated JetHT-samples with correct MET
-  if(is_mc) common->disable_metfilters(); //TODO: remove || isVJets as soon as updated JetHT-samples with correct METFilters are available
-  // impact of disabling metfilters for jetht seems to negligible
+  
   common->init(ctx);
 
   if(is_mc && isvjetsSel && is_QCD){
@@ -240,8 +229,6 @@ JetMassModule::JetMassModule(Context & ctx){
                                                 "genjets" // name of genjet collection to be used
                           ));
   }
-
-
 
   //HandleNames
   std::string reco_selection_handlename("pass_reco_selection");
@@ -300,6 +287,20 @@ JetMassModule::JetMassModule(Context & ctx){
   handle_jecfactor_nominal = ctx.declare_event_output<double>("jecfactor_nominal");
   handle_jecfactor_up = ctx.declare_event_output<double>("jecfactor_up");
   handle_jecfactor_down = ctx.declare_event_output<double>("jecfactor_down");
+
+  // save gentopjets
+  handle_gentopjet_pt_0 = ctx.declare_event_output<double>("gentopjet_pt_0");
+  handle_gentopjet_msd_0 = ctx.declare_event_output<double>("gentopjet_msd_0");
+  handle_gentopjet_mass_0 = ctx.declare_event_output<double>("gentopjet_mass_0");
+  handle_gentopjet_dR_reco_0 = ctx.declare_event_output<double>("gentopjet_dR_reco_0");
+  handle_gentopjet_n2_0 = ctx.declare_event_output<double>("gentopjet_n2_0");
+
+  handle_gentopjet_pt_1 = ctx.declare_event_output<double>("gentopjet_pt_1");
+  handle_gentopjet_msd_1 = ctx.declare_event_output<double>("gentopjet_msd_1");
+  handle_gentopjet_mass_1 = ctx.declare_event_output<double>("gentopjet_mass_1");
+  handle_gentopjet_dR_reco_1 = ctx.declare_event_output<double>("gentopjet_dR_reco_1");
+  handle_gentopjet_n2_1 = ctx.declare_event_output<double>("gentopjet_n2_1");
+
   
   //AnalysisModules
   ttgen_producer.reset(new TTbarGenProducer(ctx,ttbargen_handlename,false));
@@ -345,11 +346,9 @@ JetMassModule::JetMassModule(Context & ctx){
     OrSelection trigger_sel =  OrSelection();
     trigger_sel.add<TriggerSelection>("HLT_Mu50_v*");
     if(extract_year(ctx) == Year::isUL16preVFP || extract_year(ctx) == Year::isUL16postVFP){
-      trigger_sel.add<TriggerSelection>("HLT_TkMu50_v*");
+      trigger_sel.add<TriggerSelection>("HLT_TkMu50_v*", true);
     }
     reco_selection_part1->add<OrSelection>("Trigger selection", trigger_sel);
-    // reco_selection_part1->add<TriggerSelection>("Trigger selection","HLT_Mu50_v*");
-    // reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 200 GeV", 1,-1,TopJetId(PtEtaCut(200.,100000.)));
     reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1", 1);
     reco_selection_part1->add<TopJetPtCut>("p_{T, AK8} #geq 200 GeV", ctx, 200);
     reco_selection_part1->add<NMuonSelection>("N_{#mu} #geq 1", 1,1);
@@ -358,16 +357,11 @@ JetMassModule::JetMassModule(Context & ctx){
     reco_selection_part1->add<TwoDCut>("2D-Cut",0.4,25.);
     reco_selection_part1->add<NMuonBTagSelection>("b-jet in muon hemisphere", 1, 999, DeepJetBTag(DeepJetBTag::WP_MEDIUM));
 
-    // reco_selection_part2->add<JetIdSelection<TopJet>>("selected jet - p_{T} > 200 GeV", ctx, TopJetId(PtEtaCut(200.,100000.)) ,recotopjet_handlename);
   }else if(isvjetsSel){
     reco_selection_part1->add<NElectronSelection>("ele-veto",0,0);
     reco_selection_part1->add<NMuonSelection>("muon-veto",0,0);
-    // reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1, p_{T} > 500 GeV", 1,-1,TopJetId(PtEtaCut(500.,100000.)));
     reco_selection_part1->add<NTopJetSelection>("N_{AK8} #geq 1", 1);
     reco_selection_part1->add<TopJetPtCut>("p_{T, AK8} #geq 500 GeV", ctx, 500);
-    // reco_selection_part1->add<HTCut>("H_{T} > 1000 GeV",ctx, 1000.); 
-
-    // reco_selection_part2->add<JetIdSelection<TopJet>>("selected jet - p_{T} > 500 GeV", ctx, TopJetId(PtEtaCut(500.,100000.)) ,recotopjet_handlename);
     reco_selection_part2->add<RhoCut<TopJet>>("rhocut",ctx, -6.0, -2.1,recotopjet_handlename);
   }
 
@@ -375,24 +369,11 @@ JetMassModule::JetMassModule(Context & ctx){
   gen_selection_part1.reset(new AndSelection(ctx,"gen_selection_part1"));
   gen_selection_part2.reset(new AndSelection(ctx,"gen_selection_part2"));
   if(isttbarSel){
-    // gen_selection->add<TriggerSelection>("Trigger selection","HLT_Mu50_v*");
     gen_selection_part1->add<NGenTopJetSelection>("N_{gen,AK8} #geq 1, p_{T} > 200 GeV", 1,-1,GenTopJetId(PtEtaCut(200.,100000.)));
     gen_selection_part1->add<TTbarGenSemilepSelection>("gen semilep-selection",ctx, ttbargen_handlename,55.);
-    // gen_selection->add<NMuonSelection>("N_{#mu} #geq 1", 1,1);
-    // gen_selection->add<NElectronSelection>("N_{e} = 0", 0,0);
     gen_selection_part1->add<METCut>("MET > 50 GeV", 50.,100000.,true);
-    // gen_selection->add<TwoDCut>("2D-Cut",0.4,25.);
-    // gen_selection->add<NMuonBTagSelection>("b-jet in muon hemisphere", 1, 999, DeepJetBTag(DeepJetBTag::WP_MEDIUM));
-    // gen_selection_part2->add<JetIdSelection<GenTopJet>>("selected jet - p_{T} > 200 GeV", ctx, GenTopJetId(PtEtaCut(200.,100000.)) ,gentopjet_handlename); // used to make sure we only get jets over pt-threshold (only useful if we do not select leading jet in pT, e.g. for the test where i picked the trailing jet in N2)
   }else if(isvjetsSel){
-    // gen_selection->add<GenParticleIdSelection>("genele-veto",GenParticleId(GenParticlePDGIdId(11)),0,0);
-    // gen_selection->add<GenParticleIdSelection>("genmuon-veto",GenParticleId(GenParticlePDGIdId(13)),0,0);
-    // uhh2::Event::Handle<std::vector<Jet>> gentopjet_handle = ctx.get_handle<std::vector<GenTopJet>> (ctx.get("GenTopJetCollection"));
     gen_selection_part1->add<NGenTopJetSelection>("N_{gen,AK8} #geq 1, p_{T} > 500 GeV", 1,-1,GenTopJetId(PtEtaCut(500.,100000.)));
-    // gen_selection_part1->add<HTCut>("H_{T} > 1000 GeV",ctx, 1000., infinity, genHT_handlename);
-    
-    // gen_selection_part2->add<JetIdSelection<GenTopJet>>("selected jet - p_{T} > 500 GeV", ctx, GenTopJetId(PtEtaCut(500.,100000.)) ,gentopjet_handlename);
-    // gen_selection_part2->add<RhoCut<GenTopJet>>("rhocut",ctx, -6.0, -2.1,gentopjet_handlename);
   }
   
   
@@ -411,116 +392,16 @@ JetMassModule::JetMassModule(Context & ctx){
 
   
   h_hlt_eff.reset(new TriggerHists(ctx, "HLTEffHists"));
-  
-  // h_pfhists_200to500.reset(new PFHists(ctx, "PFHists_200to500"));
-  // h_pfhists_500to1000.reset(new PFHists(ctx, "PFHists_500to1000"));
-  // h_pfhists_1000to2000.reset(new PFHists(ctx, "PFHists_1000to2000"));
-  // h_pfhists_2000to3000.reset(new PFHists(ctx, "PFHists_2000to3000"));
-  // h_pfhists_3000to4000.reset(new PFHists(ctx, "PFHists_3000to4000"));
-  // h_pfhists_4000to5000.reset(new PFHists(ctx, "PFHists_4000to5000"));
-
-  // h_pfhists_inclusive.reset(new PFHists(ctx, "PFHists_inclusive"));
-  // h_pfhists_500to550.reset(new PFHists(ctx, "PFHists_500to550"));
-  // h_pfhists_550to600.reset(new PFHists(ctx, "PFHists_550to600"));
-  // h_pfhists_600to675.reset(new PFHists(ctx, "PFHists_600to675"));
-  // h_pfhists_675to800.reset(new PFHists(ctx, "PFHists_675to800"));
-  // h_pfhists_800to1200.reset(new PFHists(ctx, "PFHists_800to1200"));
-  // h_pfhists_1200toInf.reset(new PFHists(ctx, "PFHists_1200toInf"));
 
   h_gen_hists_commonmodules.reset(new JetMassGenHists(ctx,"GenHistsCommonModules",ttbargen_handlename,genHT_handlename));
   h_gen_hists_gensel.reset(new JetMassGenHists(ctx, "GenHistsGenSel",ttbargen_handlename,genHT_handlename));
 
-
-  // const std::vector<double> pt_edges = {200.00,300.00,400.00,500.00,650.00,800.00,1200.00};
-
-  // const std::vector<double> msd_edges = {50.00,60.00,70.00,80.00,90.00,100.00,110.00,120.00,130.00,140.00,150.00,160.00,170.00,180.00,190.00,200.00,210.00,220.00,230.00,240.00,250.00,260.00,270.00,280.00,290.00,300.00};
-
-  // const std::vector<double> pt_edges_fine = {200.00,250.00,300.00,350.00,400.00,450.00,500.00,550.00,600.00,650.00,700.00,750.00,800.00,850.00,900.00,950.00,1000.00,1050.00,1100.00,1150.00,1200.00};
-  
-  // const std::vector<double> msd_edges_fine = {50.00,55.00,60.00,65.00,70.00,75.00,80.00,85.00,90.00,95.00,100.00,105.00,110.00,115.00,120.00,125.00,130.00,135.00,140.00,145.00,150.00,155.00,160.00,165.00,170.00,175.00,180.00,185.00,190.00,195.00,200.00,205.00,210.00,215.00,220.00,225.00,230.00,235.00,240.00,245.00,250.00,255.00,260.00,265.00,270.00,275.00,280.00,285.00,290.00,295.00,300.00};
-
-  // h_unfolding_hists_sel_part1.reset(new UnfoldingHists(ctx,"unfolding_hists_sel_part1",
-  //                                            msd_edges,
-  //                                            pt_edges,
-  //                                            reco_selection_handlename,
-  //                                            gen_selection_handlename,
-  //                                            matching_selection_handlename,
-  //                                            recotopjet_handlename,
-  //                                            gentopjet_handlename));
-
-  // h_unfolding_hists_sel_part2.reset(new UnfoldingHists(ctx,"unfolding_hists_sel_part2",
-  //                                            msd_edges,
-  //                                            pt_edges,
-  //                                            reco_selection_handlename,
-  //                                            gen_selection_handlename,
-  //                                            matching_selection_handlename,
-  //                                            recotopjet_handlename,
-  //                                            gentopjet_handlename));
-
-  // h_unfolding_hists.reset(new UnfoldingHists(ctx,"unfolding_hists",
-  //                                            msd_edges,
-  //                                            pt_edges,
-  //                                            reco_selection_handlename,
-  //                                            gen_selection_handlename,
-  //                                            matching_selection_handlename,
-  //                                            recotopjet_handlename,
-  //                                            gentopjet_handlename));
-
-  // h_unfolding_hists_rhocut.reset(new UnfoldingHists(ctx,"unfolding_hists_rhocut",
-  //                                            msd_edges,
-  //                                            pt_edges,
-  //                                            reco_selection_handlename,
-  //                                            gen_selection_handlename,
-  //                                            matching_selection_handlename,
-  //                                            recotopjet_handlename,
-  //                                            gentopjet_handlename));
-
-  // h_unfolding_hists_gensubstructure.reset(new UnfoldingHists(ctx,"unfolding_hists_gensubstructure",
-  //                                            msd_edges,
-  //                                            pt_edges,
-  //                                            reco_selection_handlename,
-  //                                            gen_selection_handlename,
-  //                                            matching_selection_handlename,
-  //                                            recotopjet_handlename,
-  //                                            gentopjet_handlename));
-
-  // h_unfolding_hists_no_merged_partons.reset(new UnfoldingHists(ctx,"unfolding_hists_no_merged_partons",
-  //                                            msd_edges,
-  //                                            pt_edges,
-  //                                            reco_selection_handlename+"_no_merged_partons",
-  //                                            gen_selection_handlename+"_no_merged_partons",
-  //                                            matching_selection_handlename,
-  //                                            recotopjet_handlename,
-  //                                            gentopjet_handlename));
-
-  // h_unfolding_hists_no_merged_partons_rhocut.reset(new UnfoldingHists(ctx,"unfolding_hists_no_merged_partons_rhocut",
-  //                                            msd_edges,
-  //                                            pt_edges,
-  //                                            reco_selection_handlename+"_no_merged_partons",
-  //                                            gen_selection_handlename+"_no_merged_partons",
-  //                                            matching_selection_handlename,
-  //                                            recotopjet_handlename,
-  //                                            gentopjet_handlename));
-
-  // h_unfolding_hists_fine.reset(new UnfoldingHists(ctx,"unfolding_hists_fine",
-  //                                                 msd_edges_fine,
-  //                                                 pt_edges_fine,
-  //                                                 reco_selection_handlename,
-  //                                                 gen_selection_handlename,
-  //                                                 matching_selection_handlename,
-  //                                                 recotopjet_handlename,
-  //                                                 gentopjet_handlename));
-
-  
-
-  writer.reset(new WriteOutput(ctx,matching_selection_handlename,recotopjet_handlename,recotopjet_chs_handlename,gentopjet_nocut_handlename,write_output_level));
+  writer.reset(new WriteOutput(ctx,matching_selection_handlename,recotopjet_handlename,recotopjet_chs_handlename,gentopjet_handlename,write_output_level));
 
   std::string N2DDT_file_path = "JetMass/Histograms/ddtmaps/QCD_2017_PFMass_smooth_gaus4p00sigma.root";
   std::string N2DDT_hist_name = "N2_v_pT_v_rho_0p05_smooth_gaus4p00sigma_maps_cleaner_PFMass";
   reco_n2ddt_computer.reset(new N2DDTComputer<TopJet>(N2DDT_file_path,N2DDT_hist_name));
   gen_n2ddt_computer.reset(new N2DDTComputer<GenTopJet>(N2DDT_file_path,N2DDT_hist_name));
-  // TFile* f_N2DDT = new TFile(locate_file(N2DDT_file_path).c_str(),"READ");  
-  // hist_N2DDT = (TH2D*)f_N2DDT->Get(N2DDT_hist_name.c_str());
 }
 
 bool JetMassModule::process(Event & event) {
@@ -584,7 +465,6 @@ bool JetMassModule::process(Event & event) {
   if(EXTRAOUT || extra_out) std::cout << "N topjets after topjetcorrections: " << event.topjets->size() << std::endl;
   
   // CLEANER
-  // ak4cleaner15->process(event);
   ak4cleaner->process(event);
   ak8cleaner->process(event);
   ak8cleaner_dRlep->process(event);
@@ -600,16 +480,6 @@ bool JetMassModule::process(Event & event) {
 
   double genjetpt(-1.0), bosonpt(-1.0);
   if(is_mc){
-    //find gen(top)jet from gen V boson and save it to handle for use in nloweight application
-    // const Particle gen_V_particle = event.genparticles->at(get_V_index(*event.genparticles));
-    // std::cout << "N jets: " << event.gentopjets->size() << " " << event.genjets->size() << std::endl;
-    // const GenTopJet * v_gentopjet = closestParticle(gen_V_particle,*event.gentopjets);
-    // const GenJet * v_genjet = closestParticle(gen_V_particle,*event.genjets);
-    // const GenTopJet * v_gentopjet = find_Vmatched_jet<GenTopJet>(*event.gentopjets, matching_selection);
-    // const GenJet * v_genjet = find_Vmatched_jet<GenJet>(*event.genjets, matching_selection);
-    // std::cout << "genV jets pt: " << (v_gentopjet?v_gentopjet->pt():-1.0) << " " << (v_genjet?v_genjet->pt():-1.0) <<" " << gen_V_particle.pt() << std::endl; 
-    // std::cout << "genV jets mass: " << v_gentopjet->softdropmass() << " " << v_genjet->v4().M() <<" " << gen_V_particle.v4().M() << std::endl; 
-    // event.set(handle_gentopjet_matched_V,v_gentopjet);
     if(isvjetsSel && (is_WSample || is_ZSample)){
       const Particle gen_V_particle = event.genparticles->at(get_V_index(*event.genparticles));
       bosonpt = gen_V_particle.pt();
@@ -632,23 +502,7 @@ bool JetMassModule::process(Event & event) {
   }
   h_hlt_eff->fill(event);
   if(doOnlyTriggerHists) return false;
-  // if(event.topjets->size()>0){
-  //   //PFHists
-  //   float AK8_pt = event.topjets->at(0).pt();
-  //   h_pfhists_inclusive->fill(event);
-  //   if(AK8_pt>200 && AK8_pt<500)h_pfhists_200to500->fill(event);
-  //   if(AK8_pt>500 && AK8_pt<1000)h_pfhists_500to1000->fill(event);
-  //   if(AK8_pt>1000 && AK8_pt<2000)h_pfhists_1000to2000->fill(event);
-  //   if(AK8_pt>2000 && AK8_pt<3000)h_pfhists_2000to3000->fill(event);
-  //   if(AK8_pt>3000 && AK8_pt<4000)h_pfhists_3000to4000->fill(event);
-  //   if(AK8_pt>4000 && AK8_pt<5000)h_pfhists_4000to5000->fill(event);
-  //   if(AK8_pt>500 && AK8_pt<550)h_pfhists_500to550->fill(event);
-  //   if(AK8_pt>550 && AK8_pt<600)h_pfhists_550to600->fill(event);
-  //   if(AK8_pt>600 && AK8_pt<675)h_pfhists_600to675->fill(event);
-  //   if(AK8_pt>675 && AK8_pt<800)h_pfhists_675to800->fill(event);
-  //   if(AK8_pt>800 && AK8_pt<1200)h_pfhists_800to1200->fill(event);
-  //   if(AK8_pt>1200)h_pfhists_1200toInf->fill(event);
-  // }
+
   float jecfactor_standalone_nominal(-1.),jecfactor_standalone_up(-1.),jecfactor_standalone_down(-1.);
   if(event.topjets->size() >0){
     jecfactor_standalone_nominal = topjet_jec_ev->getJecFactor(event, event.topjets->at(0), 0);
@@ -669,41 +523,91 @@ bool JetMassModule::process(Event & event) {
   }
   if(EXTRAOUT || extra_out) std::cout << "JetMassModule: RecoSelection done!" << std::endl;
 
-    
+
   bool pass_gen_selection_part1(false),pass_gen_selection_part2(false);
   if(is_mc)pass_gen_selection_part1 = gen_selection_part1->passes(event);
   else pass_gen_selection_part1 = true;
-
+  
+  float gentopjet_pt_0(-1.0);
+  float gentopjet_msd_0(-1.0);
+  float gentopjet_mass_0(-1.0);
+  float gentopjet_dR_0(-1.0);
+  float gentopjet_n2_0(-1.0);
+  float gentopjet_pt_1(-1.0);
+  float gentopjet_msd_1(-1.0);
+  float gentopjet_mass_1(-1.0);
+  float gentopjet_dR_1(-1.0);
+  float gentopjet_n2_1(-1.0);
+  
   //putting leading genjet into handle used for Unfolding stuff // TODO: make sure selection is applies correctly since i now also set genjet handle with jets that do not explicitily pass selection!!!
   if(is_mc){
-    genjet_selector->process(event);
-    const GenTopJet * ungroomed_gentopjet(NULL);
-    // if(event.is_valid(handle_gentopjet))ungroomed_gentopjet = const_cast<GenTopJet*>(event.get(handle_gentopjet));
-    if(event.is_valid(handle_gentopjet))ungroomed_gentopjet = event.get(handle_gentopjet);
-    GenTopJet * ungroomed_gentopjet_new = new GenTopJet();    
+
+    if(event.gentopjets->size()>0){
+        gentopjet_pt_0 = event.gentopjets->at(0).pt();
+        gentopjet_mass_0 = event.gentopjets->at(0).v4().M();
+        const TopJet* recojet(NULL);
+        if(event.is_valid(handle_recotopjet))recojet = event.get(handle_recotopjet);
+        if(recojet) gentopjet_dR_0 = deltaR(event.gentopjets->at(0),*recojet);
+        if(sd_gen_jets.size()>0){
+          const GenTopJet * groomed = closestParticle(event.gentopjets->at(0),sd_gen_jets);
+          if(deltaR(*groomed,event.gentopjets->at(0)) < 0.4){
+            gentopjet_n2_0 = groomed->ecfN2_beta1();
+            gentopjet_msd_0 = groomed->softdropmass();            
+          }
+        }
+      }
+    if(event.gentopjets->size()>1){
+        gentopjet_pt_1 = event.gentopjets->at(1).pt();
+        gentopjet_mass_1 = event.gentopjets->at(1).v4().M();
+        const TopJet* recojet(NULL);
+        if(event.is_valid(handle_recotopjet))recojet = event.get(handle_recotopjet);
+        if(recojet) gentopjet_dR_1 = deltaR(event.gentopjets->at(1),*recojet);
+        if(sd_gen_jets.size()>0){
+          const GenTopJet * groomed = closestParticle(event.gentopjets->at(1),sd_gen_jets);
+          if(deltaR(*groomed,event.gentopjets->at(1)) < 0.4){
+            gentopjet_n2_1 = groomed->ecfN2_beta1();
+            gentopjet_msd_1 = groomed->softdropmass();
+          }
+        }
+      }
     
+    genjet_selector->process(event);
+        
+    const GenTopJet * ungroomed_gentopjet(NULL);
+    if(event.is_valid(handle_gentopjet))ungroomed_gentopjet = event.get(handle_gentopjet);
+    GenTopJet * ungroomed_gentopjet_new = new GenTopJet();
     if(ungroomed_gentopjet && sd_gen_jets.size()>0){
       ungroomed_gentopjet_new->set_v4(ungroomed_gentopjet->v4());
       ungroomed_gentopjet_new->set_tau1(ungroomed_gentopjet->tau1());
       ungroomed_gentopjet_new->set_tau2(ungroomed_gentopjet->tau2());
       ungroomed_gentopjet_new->set_tau3(ungroomed_gentopjet->tau3());
       ungroomed_gentopjet_new->set_tau4(ungroomed_gentopjet->tau4());
-      ungroomed_gentopjet_new->set_ecfN2_beta1(ungroomed_gentopjet->ecfN2_beta1());
-      ungroomed_gentopjet_new->set_ecfN2_beta2(ungroomed_gentopjet->ecfN2_beta2());
-      ungroomed_gentopjet_new->set_ecfN3_beta1(ungroomed_gentopjet->ecfN3_beta1());
-      ungroomed_gentopjet_new->set_ecfN3_beta2(ungroomed_gentopjet->ecfN3_beta2());
-      
       const GenTopJet * groomed_gentopjet = closestParticle(*ungroomed_gentopjet_new,sd_gen_jets);
+      ungroomed_gentopjet_new->set_ecfN2_beta1(groomed_gentopjet->ecfN2_beta1());
+      ungroomed_gentopjet_new->set_ecfN2_beta2(groomed_gentopjet->ecfN2_beta2());
+      ungroomed_gentopjet_new->set_ecfN3_beta1(groomed_gentopjet->ecfN3_beta1());
+      ungroomed_gentopjet_new->set_ecfN3_beta2(groomed_gentopjet->ecfN3_beta2());
+      
       for(unsigned int isj=0; isj < groomed_gentopjet->subjets().size(); isj++) {
         GenJet subjet = groomed_gentopjet->subjets().at(isj); 
         ungroomed_gentopjet_new->add_subjet(subjet);
       }
-      
-      // std::cout << "ungroomed gentopjet: " << "pt :" << ungroomed_gentopjet_new->pt() << " nsubjets: " <<  ungroomed_gentopjet_new->subjets().size() << " softdropmass: " << ungroomed_gentopjet_new->softdropmass() << std::endl;
-      // std::cout << "groomed gentopjet: " << "pt :" << groomed_gentopjet->pt() << " nsubjets: " <<  groomed_gentopjet->subjets().size() << " softdropmass: " << groomed_gentopjet->softdropmass() << std::endl;
-      event.set(handle_gentopjet,ungroomed_gentopjet_new);
+     
+      event.set(handle_gentopjet, ungroomed_gentopjet_new);
     }
   }
+
+  event.set(handle_gentopjet_pt_0,gentopjet_pt_0);
+  event.set(handle_gentopjet_msd_0,gentopjet_msd_0);
+  event.set(handle_gentopjet_mass_0,gentopjet_mass_0);
+  event.set(handle_gentopjet_dR_reco_0,gentopjet_dR_0);
+  event.set(handle_gentopjet_n2_0,gentopjet_n2_0);
+  event.set(handle_gentopjet_pt_1,gentopjet_pt_1);
+  event.set(handle_gentopjet_msd_1,gentopjet_msd_1);
+  event.set(handle_gentopjet_mass_1,gentopjet_mass_1);
+  event.set(handle_gentopjet_dR_reco_1,gentopjet_dR_1);
+  event.set(handle_gentopjet_n2_1,gentopjet_n2_1);
+  
   if(pass_gen_selection_part1 && is_mc){
     pass_gen_selection_part2 = gen_selection_part2->passes(event);
   }
@@ -732,7 +636,8 @@ bool JetMassModule::process(Event & event) {
       }
       genjet = genjet_ungroomed;
     }
-  }  
+  }
+
   event.set(handle_gentopjet_nocut,genjet);
   event.set(handle_recotopjet_chs,chs_jet);
 
@@ -790,44 +695,19 @@ bool JetMassModule::process(Event & event) {
   }
   if(EXTRAOUT || extra_out) std::cout << "JetMassModule: SubstructureSelection done!" << std::endl;
 
-  //fill first round of unfolding hists with part1 of selections
-  //IMPORTANT: setting selection bits before filling UnfoldingHists, since those rely on correct setting of handles!
-  // event.set(handle_reco_selection,pass_reco_selection_part1);
-  // event.set(handle_gen_selection,pass_gen_selection_part1);
-  // h_unfolding_hists_sel_part1->fill(event);
-
   
   //fill second round of unfolding hists with part2 of selections
   bool pass_gen_selection = pass_gen_selection_part1; // keep part 2 out since it is empty at the moment anyway! && pass_gen_selection_part2;
-  // event.set(handle_reco_selection, pass_reco_selection_part1 && pass_reco_selection_part2 && pass_substructure_cut);
-  // event.set(handle_gen_selection, pass_gen_selection);
-  // h_unfolding_hists_sel_part2->fill(event);  
-  // if(pass_gen_selection) h_gen_hists_gensel->fill(event);
 
-  //last round of unfolding hists with dR matching
-  // event.set(handle_reco_selection, (pass_reco_selection_part1 && pass_substructure_cut && pass_dR_reco_gen));
-  // h_unfolding_hists->fill(event);
-  // h_unfolding_hists_fine->fill(event);
-
-  // event.set(handle_reco_selection, (pass_reco_selection_part1 && pass_reco_selection_part2 && pass_substructure_cut && pass_dR_reco_gen));
   event.set(handle_reco_selection, pass_reco_selection_part1 );
-  // h_unfolding_hists_rhocut->fill(event);
 
   event.set(handle_gen_selection, pass_gen_selection);// && pass_gen_substructure);
-  // h_unfolding_hists_gensubstructure->fill(event);
 
   event.set(handle_reco_selection_no_merged_partons, pass_reco_selection_part1 && pass_substructure_cut && pass_dR_reco_gen && (n_merged_partons_reco_jet==0));
   event.set(handle_gen_selection_no_merged_partons, pass_gen_selection && (n_merged_partons_gen_jet==0));
-  // h_unfolding_hists_no_merged_partons->fill(event);
 
   event.set(handle_reco_selection_no_merged_partons, pass_reco_selection_part1 && pass_substructure_cut && pass_reco_selection_part2 && pass_dR_reco_gen && (n_merged_partons_reco_jet==0));
-  // h_unfolding_hists_no_merged_partons_rhocut->fill(event);
-
-  
-  // if(EXTRAOUT || extra_out) std::cout << "JetMassModule: UnfoldingHistFilling done!" << std::endl;
-
   //Write everything used for JetMassCalibration to Tree if first part of reco-selection passes
-  // if(pass_reco_selection_part1){
   for(auto & h: hists_nosel) h->fill(event);
   if(
     (event.topjets->size() >0 && save_all_jets) ||
@@ -835,6 +715,11 @@ bool JetMassModule::process(Event & event) {
     ){  
     // FILL HISTS
     for(auto & h: hists) h->fill(event);
+  }
+  if(
+    (event.topjets->size() >0 && save_all_jets) ||
+    ((pass_reco_selection_part1) ||  (pass_gen_selection && is_WSample && isvjetsSel))
+    ){  
     // STORE EVENT
     writer->process(event);
     

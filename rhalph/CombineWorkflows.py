@@ -78,6 +78,7 @@ class CombineWorkflows(object):
         self.altmodel = None
         self.workers = 1
         self._freezeParameters = []
+        self._parameterRanges = []
         self.lumi = 41.8
         self.name = ""
         self.seed = 123456
@@ -160,8 +161,11 @@ class CombineWorkflows(object):
             self._set_poi_default = " --expectSignal 1 "
         elif isinstance(pois, list):
             self._poi = "--redefineSignalPOIs " + ",".join(pois)
-            range_str = "=%i,%i:" % (self.POIRange[0], self.POIRange[1])
-            self._poi += " --setParameterRanges " + range_str.join(pois) + range_str[:-1]
+            range_str = "=%i,%i" % (self.POIRange[0], self.POIRange[1])
+            self._parameterRanges += [
+                poi+range_str for poi in pois
+            ]
+            # self._poi += " --setParameterRanges " + range_str.join(pois) + range_str[:-1]
             if "massScale" in self._poi:
                 # self._poi += " --preFitValue 0"
                 self._set_poi_default = " --setParameters " + ",".join("%s=0" % param for param in pois)
@@ -207,7 +211,7 @@ class CombineWorkflows(object):
 
         configs = json.load(open(self.modeldir + "/config.json", "r"))
 
-        bin_signal_strenght_constructor = "[1,0.1,10.0]"
+        bin_signal_strenght_constructor = "[1,0.0,10.0]"
 
         genbins = configs["genbins"]
 
@@ -253,7 +257,7 @@ class CombineWorkflows(object):
 
         # genbins = [bin_name for bin_name in genbins if not is_flow(bin_name)]
 
-        regularization_strength = configs.get("regularizationStrength", 0.1)
+        regularization_strength = float(configs.get("regularizationStrength", 0.1))
         datacard = self.workspace.replace(".root", ".txt")
         command_string += exec_bash('sed -i "s/kmax/kmax * # /g" {DATACARD} \n'.format(DATACARD=datacard), debug)
         command_string += exec_bash('echo "" >> {DATACARD}'.format(DATACARD=datacard), debug)
@@ -356,7 +360,6 @@ class CombineWorkflows(object):
                         sub_c_final = sub_c
                     else:
                         sub_c_final = np.multiply(sub_c, ws) if density else sub_c
-
                     for row in sub_c_final:
                         row_final = np.zeros((n_bins[1]*n_bins[2]))
                         for ic, c in enumerate(row):
@@ -421,13 +424,13 @@ class CombineWorkflows(object):
         poi_defaults = ",".join(["r_{GENBIN}=1".format(GENBIN=genbin) for genbin in genbins])
         command_string += exec_bash(
             (
-                "{BUILDPREFIX}combine -M FitDiagnostics -d {WORKSPACE} --saveShapes -n '' "
-                # "--cminDefaultMinimizerStrategy 0 --robustFit 1 "
+                "combine -M FitDiagnostics -d {WORKSPACE} --saveShapes -n '' "
+                "--cminDefaultMinimizerStrategy 0 --robustFit 1 "
                 "--robustHesse 1 "
-                "{FREEZEPARAMS}"
+                "{FREEZEPARAMS} &> /dev/null"
             ).format(
-                BUILDPREFIX=self._build_prefix,
-                FREEZEPARAMS=self.freeze_Parameters,
+                # BUILDPREFIX=self._build_prefix,
+                FREEZEPARAMS=self.freezeParameters,
                 WORKSPACE=self.workspace,
             ),
             debug,
@@ -522,24 +525,29 @@ class CombineWorkflows(object):
         return command_string
 
     def diagnostics(self, debug=True):
+        rangeStr = "--setParameterRanges " + ":".join(self._parameterRanges) if (self._parameterRanges) > 0 else ""
         command_string = """#FitDiagnostics Workflow\n"""
         command_string += exec_bash("cd " + self.modeldir + "\n", debug)
         command_string += exec_bash("source build.sh\n", debug)
         command_string += exec_bash(
             "combine -M FitDiagnostics {WORKSPACE} {POI} --saveShapes {EXTRA} -n '' "
-            "--cminDefaultMinimizerStrategy 0 {FREEZE}".format(
+            "--cminDefaultMinimizerStrategy 0 "
+            " {RANGES} "
+            " {FREEZE}".format(
                 WORKSPACE=self.workspace, POI=self.POI, EXTRA=self.extraOptions,
-                FREEZE=self.freezeParameters
+                FREEZE=self.freezeParameters,
+                RANGES=rangeStr
             ),
             debug,
         )
-        command_string += exec_bash(
-            "PostFitShapesFromWorkspace -w {WORKSPACE} --output {MODELDIR}fit_shapes.root --postfit "
-            "--sampling -f {MODELDIR}fitDiagnostics.root:fit_s".format(
-                WORKSPACE=self.workspace, MODELDIR=self.modeldir
-            ),
-            debug,
-        )
+        if not self._skip_plotting:
+            command_string += exec_bash(
+                "PostFitShapesFromWorkspace -w {WORKSPACE} --output {MODELDIR}fit_shapes.root --postfit "
+                "--sampling -f {MODELDIR}fitDiagnostics.root:fit_s".format(
+                    WORKSPACE=self.workspace, MODELDIR=self.modeldir
+                ),
+                debug,
+            )
         return command_string
 
     def GOF(self, debug=True, merge=False):
@@ -643,7 +651,8 @@ class CombineWorkflows(object):
                 NAME=self.name,
                 POI=self.POI + (" --preFitValue 0 " if "massScale" in self.POI else ""),
                 SEED=self.seed,
-                FREEZEPARAMS=self.freezeParameters,
+                # FREEZEPARAMS=self.freezeParameters,
+                FREEZEPARAMS="",
              ),
             debug,
         )

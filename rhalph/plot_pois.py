@@ -11,6 +11,7 @@ hep.set_style(hep.style.CMS)
 
 
 def extract_pois(fname, pois_pattern, fit_result_name="fit_s"):
+    print(fname)
     file_ = ROOT.TFile.Open(fname, "READ")
     try:
         fit_result = file_.Get(fit_result_name)
@@ -34,10 +35,12 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--fitDiagnostics", help="fitDiagnostics file containing fitResults.")
-    parser.add_argument("-P", "--pois", default="r_")
+    parser.add_argument("-P", "--pois", default="r_pt")
     parser.add_argument("-e", "--expectSignal", default=1.0, type=float)
+    parser.add_argument("-r", "--range", nargs="+", default=[0, 5])
 
     args = parser.parse_args()
+    print(args.fitDiagnostics)
 
     fit_dir = os.path.dirname(os.path.abspath(args.fitDiagnostics))
 
@@ -58,9 +61,16 @@ if __name__ == "__main__":
         label="postfit",
         fmt=".",
     )
+    ymin, ymax = 0, 5
+    if len(args.range) > 0:
+        ymin = float(args.range[0])
+    if len(args.range) > 1:
+        ymax = float(args.range[1])
+    ax.set_ylim(ymin, ymax)
+
     ax.plot(ax.get_xlim(), [args.expectSignal]*2, "k--", label="expectSignal", alpha=0.7)
 
     plt.xticks(xtick_ids, xtick_labels, rotation=20)
     ax.legend()
-    ax.set_ylim(-11,11)
+    # ax.set_ylim(-11,11)
     f.savefig(f"{args.fitDiagnostics.replace('.root','')}_pois.pdf", bbox_inches="tight")

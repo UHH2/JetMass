@@ -60,6 +60,7 @@ sample_lists = {
     },
     "ttbar": {
         "Data": [
+            "SingleMuon_RunA",
             "SingleMuon_RunB",
             "SingleMuon_RunC",
             "SingleMuon_RunD",
@@ -126,10 +127,13 @@ lumi_files = {
 
 
 class Sample(object):
-    def __init__(self, name, xml, lumi=1.0):
+    def __init__(self, name, xml, lumi=1.0, xsec=None, nevents=None, das=None):
         self.name = name
         self.xml = xml if xml != "" else None
         self.lumi = float(lumi)
+        self.das = das
+        self.nevt = nevents
+        self.xsec = xsec
         if self.xml is None:
             self.test_file = None
         else:
@@ -172,6 +176,8 @@ class SFrameConfig(object):
             {
                 "selection": self.selection,
                 "pileup_directory_data": f"common/UHH2-data/{year}/MyDataPileupHistogram_{year}.root",
+                "pileup_directory_data_down": f"common/UHH2-data/{year}/MyDataPileupHistogram_{year}_66017.root",
+                "pileup_directory_data_up": f"common/UHH2-data/{year}/MyDataPileupHistogram_{year}_72383.root",
                 "pileup_directory": f"common/UHH2-data/{year}/MyMCPileupHistogram_{year}.root",
                 "lumi_file": f"common/UHH2-data/{year}/{lumi_files[year]}",
             }
@@ -195,9 +201,24 @@ class SFrameConfig(object):
     def setup_samples(self, samples, year):
         samples_db = MCSampleValuesHelper()
         self.samples = {
-            "Data": {s: Sample(s, samples_db.get_xml(s, "13TeV", year)) for s in samples["Data"]},
+            "Data": {
+                s: Sample(
+                    name=s,
+                    xml=samples_db.get_xml(s, "13TeV", year),
+                    nevents=samples_db.get_nevt(s, "13TeV", year),
+                    das=samples_db.get_value(s, "13TeV", year, "XMLname", info="Source"),
+                )
+                for s in samples["Data"]
+            },
             "MC": {
-                s: Sample(s, samples_db.get_xml(s, "13TeV", year), samples_db.get_lumi(s, "13TeV", year))
+                s: Sample(
+                    name=s,
+                    xml=samples_db.get_xml(s, "13TeV", year),
+                    lumi=samples_db.get_lumi(s, "13TeV", year),
+                    nevents=samples_db.get_nevt(s, "13TeV", year),
+                    xsec=samples_db.get_xs(s, "13TeV", year),
+                    das=samples_db.get_value(s, "13TeV", year, "XMLname", info="Source"),
+                )
                 for s in samples["MC"]
             },
         }
@@ -209,6 +230,49 @@ class SFrameConfig(object):
                     samples_to_remove.append(s)
             for s in samples_to_remove:
                 del self.samples[t][s]
+
+    def build_latex_table(self, tex_name, sample_type="MC"):
+        selection_tex = {
+            "ttbar": "semileptonic \\ttbar",
+            "vjets": "fully-hadronic \\wjets",
+        }
+        columns = "c"
+        columns_header = ["Dataset name", "$N_\\mathrm{events}$"]
+        if sample_type == "MC":
+            columns += "|c"
+            columns_header.append("$\\sigma~[\\mathrm{pb}]$")
+
+        tex_table = "\\begin{sidewaystable}\n\t\\centering\n\t\\resizebox{\\textheight}{!}{%"
+        tex_table += "\n\t\t\\begin{tabular}{l|%s}\n" % (columns)
+        if sample_type == "MC":
+            tex_table += "\t\t %s & %s & %s\\\\\n" % tuple(columns_header)
+            for sample in self.samples[sample_type].values():
+                tex_table += "\t\t \\texttt{%s} & $%.2f$ & $%.2f$\\\\\n" % (
+                    sample.das.replace("_", "\\_"),
+                    sample.nevt,
+                    sample.xsec,
+                )
+        else:
+            tex_table += "\t\t %s & %s\\\\\n" % tuple(columns_header)
+            for sample in self.samples[sample_type].values():
+                tex_table += "\t\t \\texttt{%s} & $%i$\\\\\n" % (
+                    sample.das.replace("_", "\\_"),
+                    sample.nevt,
+                )
+        tex_table += (
+            "\t\\end{tabular}}\n\t\\caption{Summary of %s-samples used for %s in the %s selection."
+            "\\label{tab:%s-samples-%s-%s}}\n\\end{sidewaystable}\n"
+        ) % (
+            sample_type.replace("Data", "data"),
+            selection_tex[self.selection],
+            self.year,
+            sample_type.lower(),
+            self.year.lower(),
+            self.selection,
+        )
+        with open(tex_name, "w") as tex_file:
+            tex_file.write(tex_table)
+        return tex_table
 
     def build_xml(self, xml_name):
         element_maker = ElementMaker()
@@ -251,7 +315,7 @@ class SFrameConfig(object):
                         Version=f"{name}_{self.year}" + ("_test" if self.test_config else ""),
                         Lumi=str(sample.lumi),
                         Type="Data",
-                        NEventsMax="1000" if self.test_config else "-1",
+                        NEventsMax="10000" if self.test_config else "-1",
                         Cacheable="False",
                     )
                     for name, sample in self.samples["Data"].items()
@@ -264,7 +328,7 @@ class SFrameConfig(object):
                         Version=f"{name}_{self.year}" + ("_test" if self.test_config else ""),
                         Lumi=str(sample.lumi),
                         Type="MC",
-                        NEventsMax="1000" if self.test_config else "-1",
+                        NEventsMax="10000" if self.test_config else "-1",
                         Cacheable="False",
                     )
                     for name, sample in self.samples["MC"].items()
@@ -307,6 +371,8 @@ if __name__ == "__main__":
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--test", action="store_true")
     parser.add_argument("--ddt", action="store_true")
+    parser.add_argument("--trigger", action="store_true")
+    parser.add_argument("--latex", action="store_true")
 
     args = parser.parse_args()
 
@@ -382,6 +448,24 @@ if __name__ == "__main__":
                             samples_to_remove.append(s)
                     for s in samples_to_remove:
                         del sfconfig.samples[t][s]
+
+            if args.trigger:
+                write_output_level = "-1"
+                config_prefix = "trigger_"
+                save_all_jets = "false"
+                sfconfig.output_directory += "ForTriggerEff/"
+                sfconfig.sframe_batch_workdir = f"workdir_{sample}_trigger_{year}"
+                if not os.path.isdir(sfconfig.output_directory):
+                    os.makedirs(sfconfig.output_directory)
+                sample_list = {"Data": sample_lists[sample]["Data"]}
+                sample_list["MC"] = [s for s in sample_lists["vjets"]["MC"] if "QCD" in s]
+                if args.test:
+                    sample_list = {k: v[-1:] for k, v in sample_list.items()}
+                    sample_list["Data"] = test_sample_list[sample]["Data"]
+                sfconfig.setup_samples(sample_list, year)
+                # sfconfig.samples["MC"] = {k:v for k,v in sfconfig.samples["MC"].items() if "QCD" in }
+                common_user_settings["justDoTriggerHists"] = "true"
+
             sfconfig.user_config.update(
                 OrderedDict(
                     {
@@ -391,5 +475,9 @@ if __name__ == "__main__":
                 )
             )
             sfconfig.file_split = sframe_batch_config[sample]["file_split"]
-
-            sfconfig.build_xml(f"{config_prefix}{sample}_{year}")
+            config_name = f"{config_prefix}{sample}_{year}"
+            if args.latex:
+                print(sfconfig.build_latex_table(f"{config_name}_mc_table.tex", sample_type="MC"))
+                print(sfconfig.build_latex_table(f"{config_name}_data_table.tex", sample_type="Data"))
+            else:
+                sfconfig.build_xml(config_name)

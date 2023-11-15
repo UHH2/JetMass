@@ -5,7 +5,7 @@ w_pt_edges = [500, 650, 800, 1200]
 top_pt_edges = [200, 300, 400, 500, 650]
 configs = {
     "year": "UL18",
-    "ModelName": "CombinedUL18NOJEC",
+    "ModelName": "CombinedUL18",
     "gridHistFileName": "../Histograms/grid_oneScale.root",
     "histLocation": "../python/flat_templates/templates_UL18_1d_jecpt.root",
     "binning": [50, 300, 5],

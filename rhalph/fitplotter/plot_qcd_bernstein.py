@@ -77,7 +77,7 @@ def plot_qcd_fail_parameters(config={"ModelName": "WMassModel"}):
         ]
     )
 
-    result = ROOT.TFile(model_dir+ "/fitDiagnostics.root", "READ").Get("fit_s")
+    result = ROOT.TFile(model_dir + "/fitDiagnostics.root", "READ").Get("fit_s")
     args = result.floatParsFinal()
     qcd_param_names = [
         name
@@ -121,7 +121,7 @@ def plot_qcd_fail_parameters(config={"ModelName": "WMassModel"}):
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     for file_ext in [".pdf", ".png"]:
-        c.SaveAs(out_dir + "qcdparams" + file_ext)
+        c.SaveAs(out_dir + "qcdparams" + config.get("TFSuffix", "") + file_ext)
 
 
 def plot_qcd_bernstein3D(config, parameter_suffix="params"):
@@ -160,7 +160,7 @@ def plot_qcd_bernstein3D(config, parameter_suffix="params"):
 def plot_qcd_bernstein(config={"ModelName": "WMassModel"}, do_3d_plot=True):
     model_dir = config.get("ModelDir", config["ModelName"])
     parameter_suffixes = ["params"]
-    if config["InitialQCDFit"] == "True":
+    if config.get("InitialQCDFit", "False") == "True":
         parameter_suffixes = ["MCtempl", "dataResidual"] + parameter_suffixes
     out_dir = model_dir + "/plots/"
 
@@ -364,7 +364,10 @@ def plot_qcd_bernstein(config={"ModelName": "WMassModel"}, do_3d_plot=True):
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
         for f_type in [".pdf", ".png"]:
-            plt.savefig(out_dir + "bernstein%s" % (parameter_suffix + config.get("TFSuffix", "") + f_type))
+            plt.savefig(
+                out_dir
+                + "bernstein%s" % (parameter_suffix + config.get("TFSuffix", "") + f_type)
+            )
 
         # Mathematica 3D
         if do_3d_plot and (config["InitialQCDFit"] == "True" and parameter_suffix != "params"):

@@ -135,6 +135,7 @@ def make_unfolding_templates(
                 "jecAppliedOn": jec_applied_on,
                 "mJgen": sum,
                 "ptgen": sum,
+                "fakes": sum,
             }
 
             h_ = hists[hist_name][hist_id_dict]
@@ -145,6 +146,36 @@ def make_unfolding_templates(
                 templates[
                     legacy_hist_name.replace(sample_name, f"{sample_name}_onegenbin")
                 ] = h_
+
+            legacy_hist_name_fakes = legacy_hist_name_pattern
+            legacy_hist_name_fakes = legacy_hist_name_fakes.replace(
+                "vjets_", f"W_{sample}_fakes__"
+            )
+            legacy_hist_name_fakes = legacy_hist_name_fakes.replace(
+                "vjets_", ""
+            )
+            legacy_hist_name_fakes = legacy_hist_name_fakes.replace(
+                "ttbar_", f"top_{sample}_fakes__"
+            )
+            legacy_hist_name_fakes = legacy_hist_name_fakes.replace(
+                "ttbar_", ""
+            )
+            legacy_hist_name_fakes = legacy_hist_name_fakes.replace(
+                "PTBIN", pt_bin_name
+            )
+
+            hist_id_dict = {
+                "ptreco": sum if pt_inclusive else pt_bin,
+                "dataset": sample,
+                "jecAppliedOn": jec_applied_on,
+                "mJgen": sum,
+                "ptgen": sum,
+                "fakes": True,
+            }
+
+            h_ = hists[hist_name][hist_id_dict]
+
+            templates[legacy_hist_name_fakes] = h_
 
             for iptgen in range(len(pt_gen_edges) - 1):
                 for imsdgen in range(len(msd_gen_edges) - 1):
@@ -175,6 +206,7 @@ def make_unfolding_templates(
                             "jecAppliedOn": jec_applied_on,
                             "mJgen": imsdgen,
                             "ptgen": iptgen,
+                            "fakes": False,
                         }
                         h_ = hists[hist_name][hist_id_dict]
 
@@ -184,12 +216,15 @@ def make_unfolding_templates(
         for iptgen in range(len(pt_gen_edges) - 1):
             for sample in samples:
                 if sample in signal_samples:
+                    if sample not in hists[hist_name].axes["dataset"]:
+                        continue
                     hist_id_dict = {
                         "ptreco": sum,
                         "mJreco": sum,
                         "dataset": sample,
                         "jecAppliedOn": jec_applied_on,
                         "ptgen": iptgen,
+                        "fakes": sum
                     }
 
                     h_ = hists[hist_name][hist_id_dict]
@@ -216,6 +251,7 @@ if __name__ == "__main__":
     parser.add_argument("--JEC", default="pt&mJ", choices=["none", "pt", "pt&mJ"])
     parser.add_argument("--mass", default="mjet", choices=["mjet", "mPnet"])
     parser.add_argument("--eta", default="inclusive", choices=["inclusive", "barrel", "endcap"])
+    parser.add_argument("--VJetsOnly", action="store_true")
     parser.add_argument("--unfolding", action="store_true")
 
     args = parser.parse_args()
@@ -231,6 +267,12 @@ if __name__ == "__main__":
                 "WJets",
                 "WJetsUnmatched",
                 "WJetsMatched",
+                "WJetsMatched0p9",
+                "WJetsMatched0p1",
+                "WJetsMatched0p8",
+                "WJetsMatched0p2",
+                "WJetsMatched0p6",
+                "WJetsMatched0p4",
                 "ZJets",
                 "ZJetsUnmatched",
                 "ZJetsMatched",
@@ -240,7 +282,15 @@ if __name__ == "__main__":
                 "ST_tW_antitop",
             ],
             # 'signal_samples':["WJets","WJetsMatched","ZJets"]
-            "signal_samples": ["WJetsMatched"],
+            "signal_samples": [
+                "WJetsMatched",
+                "WJetsMatched0p9",
+                "WJetsMatched0p1",
+                "WJetsMatched0p8",
+                "WJetsMatched0p2",
+                "WJetsMatched0p6",
+                "WJetsMatched0p4",
+            ],
         },
         "ttbar": {
             "regions": ["inclusive", "pass", "passW", "fail"],
@@ -264,6 +314,36 @@ if __name__ == "__main__":
             "signal_samples": ["TTToSemiLeptonic_mergedW"],
         },
     }
+    if args.VJetsOnly:
+        selections = {
+            "vjets": {
+                "regions": ["inclusive", "pass", "fail"],
+                "samples": [
+                    "WJets",
+                    "WJetsUnmatched",
+                    "WJetsMatched",
+                    "WJetsMatched0p9",
+                    "WJetsMatched0p1",
+                    "WJetsMatched0p8",
+                    "WJetsMatched0p2",
+                    "WJetsMatched0p6",
+                    "WJetsMatched0p4",
+                    "ZJets",
+                    "ZJetsUnmatched",
+                    "ZJetsMatched",
+                ],
+                "signal_samples": [
+                    "WJetsMatched",
+                    "WJetsMatched0p9",
+                    "WJetsMatched0p1",
+                    "WJetsMatched0p8",
+                    "WJetsMatched0p2",
+                    "WJetsMatched0p6",
+                    "WJetsMatched0p4",
+                ],
+            }
+        }
+
     templates = {}
     if args.control:
         for selection in selections.keys():
@@ -294,6 +374,28 @@ if __name__ == "__main__":
                             legacy_hist_name_pattern=f"{selection}_mjet_PTBIN_{region}",
                         )
                     )
+
+                    for variation in variations:
+                        templates.update(
+                            make_unfolding_templates(
+                                hists,
+                                f"{selection}_mjet_unfolding_0_0_{variation}_variation_{region}__down",
+                                samples=samples,
+                                signal_samples=signal_samples,
+                                jec_applied_on=args.JEC,
+                                legacy_hist_name_pattern=f"{selection}_mjet_0_0_{variation}_PTBIN_{region}__down",
+                            )
+                        )
+                        templates.update(
+                            make_unfolding_templates(
+                                hists,
+                                f"{selection}_mjet_unfolding_0_0_{variation}_variation_{region}__up",
+                                samples=samples,
+                                signal_samples=signal_samples,
+                                jec_applied_on=args.JEC,
+                                legacy_hist_name_pattern=f"{selection}_mjet_0_0_{variation}_PTBIN_{region}__up",
+                            )
+                        )
                 else:
                     templates.update(
                         flatten_templates(

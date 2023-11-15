@@ -11,9 +11,9 @@ class FitResults:
         fit_result_path = f"{fit_dir}/{self.name}fitResult.json"
         self.fit_result = None if not os.path.isfile(fit_result_path) else json.load(open(fit_result_path, "r"))
         self.poi_scan_result = None
-        scan_result_path = f"{fit_dir}/{self.name}fitResultSplitUnc.json"
-        if os.path.isfile(scan_result_path):
-            self.poi_scan_result = json.load(open(scan_result_path, "r"))
+        # scan_result_path = f"{fit_dir}/{self.name}fitResultSplitUnc.json"
+        # if os.path.isfile(scan_result_path):
+        #     self.poi_scan_result = json.load(open(scan_result_path, "r"))
 
         shapes_file_path = fit_dir + "/fit_shapes.root"
         if os.path.isfile(shapes_file_path):
@@ -31,7 +31,7 @@ class FitResults:
         massScales_parameters = [
             [name, *self.fit_result[name]] for name in self.fit_result.keys() if "massScale" in name
         ]
-        print(massScales_parameters)
+        # print(massScales_parameters)
         for param in massScales_parameters:
             pt_edges = None
             for channel_name, channel in self._config["channels"].items():
