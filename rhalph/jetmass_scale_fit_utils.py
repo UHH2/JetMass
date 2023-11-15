@@ -1,9 +1,33 @@
+#!/usr/bin/env python3
 import ROOT
 from ROOT import gSystem
 import numpy as np
 import rhalphalib as rl
 import json
+from CombineUtils import import_config
 ROOT.PyConfig.IgnoreCommandLineOptions = True
+
+
+def correlation_coefficient(fname, pois):
+    file_ = ROOT.TFile.Open(fname, "READ")
+    fit_s = None
+    corr_coeff = np.array([-1])
+    try:
+        fit_s = file_.Get("fit_s")
+        n_pars = fit_s.floatParsFinal().getSize()
+
+        poi_ind = [fit_s.floatParsFinal().index(p) for p in pois]
+
+        cov = np.array([[fit_s.covarianceMatrix()[row][col] for col in range(n_pars)] for row in range(n_pars)])
+        cov_inv = np.linalg.inv(cov)
+        corr_coeff = np.sqrt(1 - 1 / (cov_inv[poi_ind, poi_ind] * cov[poi_ind, poi_ind]))
+        file_.Close()
+        del fit_s
+
+        del cov, cov_inv
+    except BaseException as e:
+        print(e)
+    return corr_coeff
 
 
 def scale_lumi(hist, lumiscale):
@@ -174,6 +198,8 @@ def extract_fit_results(configs, return_result=False):
     '''
     extracting postfit parameters from fitDiagnostics.root
     '''
+    if isinstance(configs, str):
+        configs = import_config(configs)
     model_dir = configs.get("ModelDir", configs.get("ModelName"))
     fit_succeded = True
     try:
@@ -182,7 +208,14 @@ def extract_fit_results(configs, return_result=False):
 
         fit_result_parameters = {}
         for p in fit_result.floatParsFinal():
-            fit_result_parameters[p.GetName()] = [p.getVal(), p.getErrorHi(), p.getErrorLo()]
+            value = p.getVal()
+            err_hi = p.getErrorHi()
+            err_low = p.getErrorLo()
+            err = p.getError()
+            if err_hi == 0 or err_low == 0:
+                err_low = -1.0 * err
+                err_hi = err
+            fit_result_parameters[p.GetName()] = [value, err_hi, err_low]
         fit_succeded = fit_result.status() <= 3
         if return_result and fit_succeded:
             return fit_result_parameters
@@ -195,3 +228,54 @@ def extract_fit_results(configs, return_result=False):
         print(e)
         fit_succeded = False
     return fit_succeded
+
+
+def extract_correlation_matrix(configs):
+    if isinstance(configs, str):
+        configs = import_config(configs)
+    model_dir = configs.get("ModelDir", configs.get("ModelName"))
+    file_ = ROOT.TFile.Open(model_dir + "/fitDiagnostics.root", "READ")
+    fit_s = None
+    pois = ["r_{}".format(genbin) for genbin in configs.get("genbins", [])]
+    if pois == []:
+        genbininfo = configs.get("unfolding_bins", {})
+        msdgen_edges = genbininfo.get("msdgen", [])
+        ptgen_edges = genbininfo.get("ptgen", [])
+        pois = [
+            "r_ptgen{}_msdgen{}".format(ipt, imsd)
+            for ipt in range(len(ptgen_edges)-1)
+            for imsd in range(len(msdgen_edges)-1)
+        ]
+    print(pois)
+    if pois == []:
+        raise AttributeError("config does not have genbin info")
+    try:
+        fit_s = file_.Get("fit_s")
+        poi_ind = [fit_s.floatParsFinal().index(p) for p in pois]
+        corr_matrix = np.array([[fit_s.correlationMatrix()[row][col] for col in poi_ind] for row in poi_ind])
+        cov_matrix = np.array([[fit_s.covarianceMatrix()[row][col] for col in poi_ind] for row in poi_ind])
+        np.save("{}/poi_correlation_matrix.npy".format(model_dir),
+                {
+                    "pois": pois,
+                    "correlationMatrix": corr_matrix,
+                    "covarianceMatrix": cov_matrix,
+                })
+        del fit_s, corr_matrix
+    except BaseException as e:
+        print(e)
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--extract", action="store_true")
+    parser.add_argument("--corrmatrix", action="store_true")
+    parser.add_argument("-i", "--input", default="")
+
+    args = parser.parse_args()
+
+    if args.extract:
+        extract_fit_results(args.input)
+    if args.corrmatrix:
+        extract_correlation_matrix(args.input)

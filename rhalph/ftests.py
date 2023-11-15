@@ -26,7 +26,7 @@ def nlls(filename):
 
 class FTest(object):
     def __init__(self):
-        self._nbins = 50 * 3
+        self._nbins = 117
         self._maxNToys = -1
         self._orders_1 = (0, 0)
         self._orders_2 = (0, 0)
@@ -301,7 +301,7 @@ class FTest(object):
 
         if method == "FTest":
             fdist = ROOT.TF1("fDist", "[0]*TMath::FDist(x, [1], [2])", 0, max_x + 1)
-            fdist.SetParameter(0, lH.Integral() * ((max_x + 1) / 70.0))
+            fdist.SetParameter(0, lH.Integral() * ((max_x + 1) / nbins))
             fdist.SetParameter(1, self._np2 - self._np1)
             fdist.SetParameter(2, self._nbins - self._np2)
             fdist.Draw("same")
@@ -398,7 +398,7 @@ def process_TF_prep(dir_pattern, model_dir_pattern, output_dir, algo="KS", n_p_o
 
 if __name__ == "__main__":
     import argparse
-
+    import re
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--processScan", type=str, default="")
@@ -410,9 +410,14 @@ if __name__ == "__main__":
     parser.add_argument("--seed", default="1234567")
 
     args = parser.parse_args()
-
     if args.processScan != "":
-        model_prefix = args.processScan.split("_")[-1]  # "VJets"
+        model_prefix = ""
+        model_prefix_pattern = r"WJets(UL(16preVFP|16postVFP)|UL\d{2})"
+        match = re.search(model_prefix_pattern, args.processScan)
+        if match:
+            model_prefix = match.group(0)
+        else:
+            raise RuntimeError("could not extract model_prefix from the FTest scan path.")
 
         if len(glob.glob(args.processScan + "*")) == 0:
             raise BaseException(
@@ -423,7 +428,15 @@ if __name__ == "__main__":
             )
         # for algo in ["AD","KS","saturated"]:
         # for algo in ["saturated"]:
-        for algo in ["saturated"]:
+        for algo in ["KS"]:
+            output_dir = (
+                (
+                    "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/"
+                    "rhalph/{MODELPREFIX}DataTfFTestPlots{ALGO}/"
+                ).format(MODELPREFIX=model_prefix, ALGO=algo)
+                if args.outDir == ""
+                else args.outDir
+            )
             # process_TF_prep('{PREFIX}_QCDTFScan_{ALGO}_Seed*'.format(PREFIX=args.processScan,ALGO=algo),
             #                 # 'VJetsSelectionMCTFPt%iRho%iDataResTFPt0Rho0/qcdmodel/',
             #                 model_prefix+'MCTFPt%iRho%iDataResTFPt0Rho0/qcdmodel/',
@@ -432,20 +445,17 @@ if __name__ == "__main__":
 
             # if algo == "saturated":
 
-                #     process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_DataTFScan_QCDOrder0x4_%s_Seed*'%algo,
-                #                     'VJetsMCTFPt0Rho4DataResTFPt%iRho%i/',
-                #                     "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/Data2TfFTestPlots%s/"%algo,
-                #                     algo,
-                #                     n_p_other = 1 + (0+1)*(4+1))
+            #     process_TF_prep('/nfs/dust/cms/user/albrechs/JetMassCalibration/FTest_DataTFScan_QCDOrder0x4_%s_Seed*'%algo,
+            #                     'VJetsMCTFPt0Rho4DataResTFPt%iRho%i/',
+            #                     "/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_2_17/CMSSW_10_2_17/src/UHH2/JetMass/rhalph/Data2TfFTestPlots%s/"%algo,
+            #                     algo,
+            #                     n_p_other = 1 + (0+1)*(4+1))
 
             process_TF_prep(
-                "{PREFIX}_DataTFScan_{ALGO}_Seed*".format(PREFIX=args.processScan, ALGO=algo),
-                model_prefix + "TFPt%iRho%i/",
-                ("/afs/desy.de/user/a/albrechs/xxl/af-cms/UHH2/10_6_28/CMSSW_10_6_28/src/UHH2/JetMass/"
-                 "rhalph/{MODELPREFIX}DataTfFTestPlots{ALGO}/").format(
-                     MODELPREFIX=model_prefix, ALGO=algo
-                 ),
-                algo,
+                dir_pattern="{PREFIX}_DataTFScan_{ALGO}_Seed*".format(PREFIX=args.processScan, ALGO=algo),
+                model_dir_pattern=model_prefix + "TFPt%iRho%i/",
+                output_dir=output_dir,
+                algo=algo,
             )
     else:
 
