@@ -1,40 +1,95 @@
 
 
-def bernstein_orders(year, particlenet=False, TF="Data"):
-    orders_particlenet = {
-        "Data": {
-            "UL16preVFP": [2, 5],
-            "UL16postVFP": [2, 5],
-            "UL17": [2, 6],
-            "UL18": [2, 6],
+def bernstein_orders(year, TF="Data", tagger="substructure", starting_at_30=False):
+    if tagger == "":
+        tagger = "substructure"
+    # orders when fitting in [50,300]
+    orders_50 = {
+        "particlenet": {
+            "Data": {
+                # old orders before trigger fix
+                # "UL16preVFP": [2, 5],
+                # "UL16postVFP": [2, 5],
+                # "UL17": [2, 6],
+                # "UL18": [2, 6],
+                "UL16preVFP": [2, 5],
+                "UL16postVFP": [2, 5],
+                "UL17": [2, 6],
+                "UL18": [2, 6],
+            },
+            "QCD": {
+                "UL16preVFP": [0, 2],
+                "UL16postVFP": [1, 1],
+                "UL17": [0, 1],
+                "UL18": [0, 1],
+            },
+            "Data2TF": {
+                "UL16preVFP": [2, 4],
+                "UL16postVFP": [2, 3],
+                "UL17": [2, 0],
+                "UL18": [1, 0],
+            },
         },
-        "QCD": {
-            "UL16preVFP": [2, 5],
-            "UL16postVFP": [2, 5],
-            "UL17": [2, 6],
-            "UL18": [2, 6],
+        "particlenetDDT": {
+            "Data": {
+                "UL16preVFP": [2, 3],
+                "UL16postVFP": [2, 3],
+                "UL17": [2, 3],
+                "UL18": [2, 3],
+            },
+            "QCD": {},
+            "Data2TF": {},
         },
-        "Data2TF": {
-            "UL16preVFP": [0, 0],
-            "UL16postVFP": [0, 0],
-            "UL17": [0, 0],
-            "UL18": [0, 0],
+        "substructure": {
+            "Data": {
+                # old orders before trigger fix
+                # "UL16preVFP": [1, 4],
+                # "UL16postVFP": [1, 2],
+                # "UL17": [2, 3],
+                # "UL18": [1, 4],
+                "UL16preVFP": [0, 2],
+                "UL16postVFP": [1, 2],
+                "UL17": [2, 2],
+                "UL18": [1, 4],
+            },
+            "QCD": {},
+            "Data2TF": {},
         },
     }
-    orders_substructure = {
-        "Data": {
-            "UL16preVFP": [1, 4],
-            "UL16postVFP": [1, 2],
-            "UL17": [2, 3],
-            "UL18": [1, 4],
+    # orders when fitting in [30, 300]
+    orders_30 = {
+        "particlenet": {
+            "Data": {
+                "UL16preVFP": [2, 5],
+                "UL16postVFP": [2, 5],
+                "UL17": [2, 6],
+                "UL18": [2, 6],
+            },
         },
-        "QCD": {},
-        "Data2TF": {},
+        "particlenetDDT": {
+            "Data": {
+                "UL16preVFP": [2, 3],
+                "UL16postVFP": [2, 5],
+                "UL17": [2, 1],
+                "UL18": [2, 1],
+            },
+            "QCD": {},
+            "Data2TF": {},
+        },
+        "substructure": {
+            "Data": {
+                "UL16preVFP": [1, 2],
+                "UL16postVFP": [2, 3],
+                "UL17": [2, 4],
+                "UL18": [1, 5],
+            },
+            "QCD": {},
+            "Data2TF": {},
+        },
     }
-    if particlenet:
-        return orders_particlenet[TF][year]
-    else:
-        return orders_substructure[TF][year]
+
+    orders = orders_30 if starting_at_30 else orders_50
+    return orders[tagger][TF][year]
 
 
 def w_channels(w_pt_edges):

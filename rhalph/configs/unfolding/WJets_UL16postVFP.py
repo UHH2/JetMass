@@ -4,10 +4,10 @@ import common_configs
 # pt_edges = [500, 575, 650, 725, 800, 1000, 1200, "Inf"]
 pt_edges = [575, 650, 725, 800, 1000, 1200, "Inf"]
 configs = {
-    "year": "UL17",
-    "ModelName": "WJetsUL17Unfolding",
+    "year": "UL16postVFP",
+    "ModelName": "WJetsUL16postVFPUnfolding",
     "gridHistFileName": "../Histograms/grid_oneScale.root",
-    "histLocation": "../python/flat_templates/templates_UL17_1d_unfolding.root",
+    "histLocation": "../python/flat_templates/templates_UL16postVFP_1d_unfolding.root",
     # "Pseudo": ["fromMC"],
     "binning": [50, 300, 5],
     "massScaleFactor": 2.0,
@@ -15,7 +15,7 @@ configs = {
     "QCDSigmaScale": 10.0,
     "QCDFailConstant": "False",
     "separateMassScales": "False",
-    "regularization": ["pt"],
+    "regularization": ["msd", "pt"],
     "regularizationStrength": 0.825,
     "uniformGenbins": "True",
     "scaleGenBinWidth": "False",
